@@ -1,7 +1,7 @@
 {
   "name": "js-server-helper-queue-aws-sqs-test",
   "description": "Test Cases for js-server-helper-queue-aws-sqs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "test.js",
   "private": true,
   "license": "MIT",

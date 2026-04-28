@@ -1,7 +1,7 @@
 {
   "name": "js-server-helper-aws-dynamodb-test",
   "description": "Test Cases for js-server-helper-aws-dynamodb",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "test.js",
   "private": true,
   "license": "MIT",

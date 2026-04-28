@@ -1,6 +1,6 @@
 {
   "name": "js-server-helper-aws-s3-url-signer-test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Test suite for js-server-helper-aws-s3-url-signer",
   "private": true,
   "dependencies": {

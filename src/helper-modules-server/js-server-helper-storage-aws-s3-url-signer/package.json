@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-server-helper-storage-aws-s3-url-signer",
   "description": "S3 presigned URL signer for direct browser uploads and downloads. AWS SDK v3.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "s3-url-signer.js",
   "private": false,
   "license": "MIT",

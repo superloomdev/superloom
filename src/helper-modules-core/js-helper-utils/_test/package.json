@@ -1,7 +1,7 @@
 {
   "name": "js-helper-utils-test",
   "description": "Test Cases for js-helper-utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "test.js",
   "private": true,
   "license": "MIT",

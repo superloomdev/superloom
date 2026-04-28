@@ -1,7 +1,7 @@
 {
   "name": "js-server-helper-verify-integration-tests",
   "description": "Integration test suite for js-server-helper-verify against Postgres, MySQL, SQLite, MongoDB, DynamoDB",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "test.js",
   "private": true,
   "license": "MIT",

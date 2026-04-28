@@ -1,7 +1,7 @@
 {
   "name": "js-server-helper-sqlite-test",
   "description": "Test suite for js-server-helper-sqlite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "test.js",
   "private": true,
   "license": "MIT",
