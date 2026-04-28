@@ -639,7 +639,7 @@ jobs:
   # ###########################################################################
 
   test-http:
-    needs: [detect, publish-utils, publish-debug, publish-instance]
+    needs: [detect, publish-utils, publish-debug]
     if: |
       always() &&
       !cancelled() &&
@@ -1221,7 +1221,7 @@ jobs:
   #   MODULE: js-server-helper-storage-aws-s3-url-signer (needs MinIO)
 
   test-storage-aws-s3-url-signer:
-    needs: [detect, publish-utils, publish-debug, publish-instance]
+    needs: [detect, publish-utils, publish-debug]
     if: |
       always() &&
       !cancelled() &&
