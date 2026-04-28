@@ -291,7 +291,7 @@ jobs:
   # ###########################################################################
 
   test-time:
-    needs: [detect]
+    needs: [detect, publish-utils, publish-debug]
     if: |
       always() &&
       !cancelled() &&
@@ -308,20 +308,13 @@ jobs:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
 
-      - name: Link local dependencies
-        run: |
-          cd src/helper-modules-core/js-helper-utils && npm link
-          cd ../js-helper-debug && npm link
-
       - name: Install module dependencies
         working-directory: src/helper-modules-core/js-helper-time
         run: npm install
 
-      - name: Link local packages in test directory
+      - name: Install test dependencies
         working-directory: src/helper-modules-core/js-helper-time/_test
-        run: |
-          npm link @superloomdev/js-helper-utils
-          npm link @superloomdev/js-helper-debug
+        run: npm install
 
       - name: Run lint
         working-directory: src/helper-modules-core/js-helper-time
@@ -385,7 +378,7 @@ jobs:
   # ###########################################################################
 
   test-client-crypto:
-    needs: [detect]
+    needs: [detect, publish-utils, publish-debug]
     if: |
       always() &&
       !cancelled() &&
@@ -402,20 +395,13 @@ jobs:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
 
-      - name: Link local dependencies
-        run: |
-          cd src/helper-modules-core/js-helper-utils && npm link
-          cd ../../helper-modules-core/js-helper-debug && npm link
-
       - name: Install module dependencies
         working-directory: src/helper-modules-client/js-client-helper-crypto
         run: npm install
 
-      - name: Link local packages in test directory
+      - name: Install test dependencies
         working-directory: src/helper-modules-client/js-client-helper-crypto/_test
-        run: |
-          npm link @superloomdev/js-helper-utils
-          npm link @superloomdev/js-helper-debug
+        run: npm install
 
       - name: Run lint
         working-directory: src/helper-modules-client/js-client-helper-crypto
@@ -479,7 +465,7 @@ jobs:
   # ###########################################################################
 
   test-server-crypto:
-    needs: [detect]
+    needs: [detect, publish-utils, publish-debug]
     if: |
       always() &&
       !cancelled() &&
@@ -496,20 +482,13 @@ jobs:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
 
-      - name: Link local dependencies
-        run: |
-          cd src/helper-modules-core/js-helper-utils && npm link
-          cd ../../helper-modules-core/js-helper-debug && npm link
-
       - name: Install module dependencies
         working-directory: src/helper-modules-server/js-server-helper-crypto
         run: npm install
 
-      - name: Link local packages in test directory
+      - name: Install test dependencies
         working-directory: src/helper-modules-server/js-server-helper-crypto/_test
-        run: |
-          npm link @superloomdev/js-helper-utils
-          npm link @superloomdev/js-helper-debug
+        run: npm install
 
       - name: Run lint
         working-directory: src/helper-modules-server/js-server-helper-crypto
@@ -573,7 +552,7 @@ jobs:
   # ###########################################################################
 
   test-instance:
-    needs: [detect]
+    needs: [detect, publish-utils, publish-debug]
     if: |
       always() &&
       !cancelled() &&
@@ -590,20 +569,13 @@ jobs:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
 
-      - name: Link local dependencies
-        run: |
-          cd src/helper-modules-core/js-helper-utils && npm link
-          cd ../../helper-modules-core/js-helper-debug && npm link
-
       - name: Install module dependencies
         working-directory: src/helper-modules-server/js-server-helper-instance
         run: npm install
 
-      - name: Link local packages in test directory
+      - name: Install test dependencies
         working-directory: src/helper-modules-server/js-server-helper-instance/_test
-        run: |
-          npm link @superloomdev/js-helper-utils
-          npm link @superloomdev/js-helper-debug
+        run: npm install
 
       - name: Run lint
         working-directory: src/helper-modules-server/js-server-helper-instance
@@ -667,7 +639,7 @@ jobs:
   # ###########################################################################
 
   test-http:
-    needs: [detect]
+    needs: [detect, publish-utils, publish-debug, publish-instance]
     if: |
       always() &&
       !cancelled() &&
@@ -684,20 +656,13 @@ jobs:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
 
-      - name: Link local dependencies
-        run: |
-          cd src/helper-modules-core/js-helper-utils && npm link
-          cd ../../helper-modules-core/js-helper-debug && npm link
-
       - name: Install module dependencies
         working-directory: src/helper-modules-server/js-server-helper-http
         run: npm install
 
-      - name: Link local packages in test directory
+      - name: Install test dependencies
         working-directory: src/helper-modules-server/js-server-helper-http/_test
-        run: |
-          npm link @superloomdev/js-helper-utils
-          npm link @superloomdev/js-helper-debug
+        run: npm install
 
       - name: Run lint
         working-directory: src/helper-modules-server/js-server-helper-http
@@ -761,7 +726,7 @@ jobs:
   # ###########################################################################
 
   test-sql-sqlite:
-    needs: [detect]
+    needs: [detect, publish-utils, publish-debug, publish-instance]
     if: |
       always() &&
       !cancelled() &&
@@ -778,22 +743,13 @@ jobs:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
 
-      - name: Link local dependencies
-        run: |
-          cd src/helper-modules-core/js-helper-utils && npm link
-          cd ../../helper-modules-core/js-helper-debug && npm link
-          cd ../../helper-modules-server/js-server-helper-instance && npm link
-
       - name: Install module dependencies
         working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
         run: npm install
 
-      - name: Link local packages in test directory
+      - name: Install test dependencies
         working-directory: src/helper-modules-server/js-server-helper-sql-sqlite/_test
-        run: |
-          npm link @superloomdev/js-helper-utils
-          npm link @superloomdev/js-helper-debug
-          npm link @superloomdev/js-server-helper-instance
+        run: npm install
 
       - name: Run lint
         working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
