@@ -1,0 +1,14 @@
+# ElasticMQ for SQS module testing
+# Lifecycle managed by npm scripts: npm test starts → tests → stops and removes
+# Ephemeral — data lost on container stop
+
+name: superloom-test-sqs
+
+services:
+
+  elasticmq:
+    container_name: superloom-test-sqs
+    image: softwaremill/elasticmq:1.6.9
+    ports:
+      - "127.0.0.1:9324:9324"   # SQS API (localhost only)
+      - "127.0.0.1:9325:9325"   # Management UI (localhost only)

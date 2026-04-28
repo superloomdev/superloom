@@ -1,0 +1,20 @@
+{
+  "name": "js-server-helper-sqlite-test",
+  "description": "Test suite for js-server-helper-sqlite",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0"
+  },
+  "scripts": {
+    "test": "node --test test.js"
+  }
+}

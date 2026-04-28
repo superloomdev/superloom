@@ -1,0 +1,57 @@
+# Deploy Docusaurus Documentation to AWS S3
+# Triggered on changes to docs/ folder
+
+name: Deploy Docs to S3
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: docs
+        run: npm install
+
+      - name: Build site
+        working-directory: docs
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync docs/build/ s3://${{ secrets.S3_BUCKET_NAME }}/superloom/ \
+            --delete \
+            --cache-control "max-age=31536000, immutable" \
+            --exclude "*.html" \
+            --exclude "page-data/*"
+          
+          # HTML files with shorter cache
+          aws s3 sync docs/build/ s3://${{ secrets.S3_BUCKET_NAME }}/superloom/ \
+            --delete \
+            --cache-control "max-age=0, s-maxage=60, must-revalidate" \
+            --include "*.html"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"

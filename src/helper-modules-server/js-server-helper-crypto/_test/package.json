@@ -1,0 +1,19 @@
+{
+  "name": "js-server-helper-crypto-test",
+  "description": "Test Cases for js-server-helper-crypto",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-server-helper-crypto": "file:../"
+  },
+  "scripts": {
+    "test": "node --test test.js"
+  }
+}

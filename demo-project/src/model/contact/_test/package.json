@@ -1,0 +1,15 @@
+{
+  "name": "contact-model-test",
+  "description": "Test Cases for Contact model module",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {},
+  "scripts": {
+    "test": "node --test test.js"
+  }
+}

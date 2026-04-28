@@ -1,0 +1,29 @@
+{
+  "name": "@superloomdev/js-client-helper-crypto",
+  "description": "Client-side crypto utilities. UUID generation, random strings, base64 helpers. Browser-optimized.",
+  "version": "1.0.0",
+  "main": "crypto.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "bundleDependencies": false,
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

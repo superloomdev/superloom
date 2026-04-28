@@ -1,0 +1,26 @@
+# Environment Variables (Shared across all AWS Lambda functions)
+# Secrets are loaded from AWS SSM Parameter Store
+# Non-secret values can be set directly here
+
+# General
+STAGE: ${self:provider.stage}
+NODE_ENV: ${self:provider.stage}
+
+# Debug / Logging
+# Use 'json' for AWS CloudWatch structured logging, 'text' for local dev
+CFG_LOG_LEVEL: 'info'
+CFG_LOG_FORMAT: 'json'
+
+# Database (from AWS SSM Parameter Store)
+# CFG_DB_HOST: ${ssm:/CFG_DB_HOST}
+# CFG_DB_PORT: ${ssm:/CFG_DB_PORT}
+# CFG_DB_NAME: ${ssm:/CFG_DB_NAME}
+# CFG_DB_USER: ${ssm:/CFG_DB_USER}
+# CFG_DB_PASSWORD: ${ssm:/CFG_DB_PASSWORD}
+
+# AWS S3 (from AWS SSM Parameter Store)
+# CFG_AWS_REGION: 'us-east-1'
+# CFG_AWS_S3_BUCKET: ${ssm:/CFG_AWS_S3_BUCKET}
+
+# Auth (from AWS SSM Parameter Store)
+# CFG_AUTH_TOKEN_SECRET: ${ssm:/CFG_AUTH_TOKEN_SECRET}

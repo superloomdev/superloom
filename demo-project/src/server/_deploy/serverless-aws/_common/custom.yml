@@ -1,0 +1,7 @@
+# Custom Variables (Shared across all entity deployments)
+# Paths are relative to the _deploy/[entity]/ directory
+
+sourceRootPath: ../../
+sourceApiPath: ${self:custom.sourceRootPath}interfaces/api/lambda-aws/
+sourceHookPath: ${self:custom.sourceRootPath}interfaces/hook/
+sourceJobPath: ${self:custom.sourceRootPath}interfaces/job/

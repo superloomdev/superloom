@@ -1,0 +1,79 @@
+# Local services for the verify integration test suite.
+# Brings up the four backends that need a service (Postgres, MySQL, MongoDB,
+# DynamoDB Local). SQLite needs nothing - it runs in-memory inside Node.
+# Lifecycle managed by npm scripts: npm test starts → tests → stops and removes
+#
+# Ports collide with the per-helper docker-compose files. Stop those first if
+# they are running. All data is ephemeral (no named volumes).
+
+name: superloom-test-verify
+
+services:
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: verify-test-postgres
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U test_user -d test_db
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mysql:
+    image: mysql:8.0.44
+    container_name: verify-test-mysql
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: test_root_pw
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+        - -u
+        - root
+        - -ptest_root_pw
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  mongodb:
+    image: mongo:8.2
+    container_name: verify-test-mongodb
+    ports:
+      - "127.0.0.1:27017:27017"
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "db.adminCommand('ping').ok"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: verify-test-dynamodb
+    ports:
+      - "127.0.0.1:8000:8000"
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]

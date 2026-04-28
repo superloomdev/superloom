@@ -1,0 +1,20 @@
+# DynamoDB Local for module testing
+# Lifecycle managed by npm scripts: npm test starts → tests → stops and removes
+# Ephemeral — data lost on container stop
+
+name: superloom-test-dynamodb
+
+services:
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: superloom-test-dynamodb
+    ports:
+      - "127.0.0.1:8000:8000"
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]
+    healthcheck:
+      test: ["CMD-SHELL", "java -version 2>&1 || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+      start_period: 5s

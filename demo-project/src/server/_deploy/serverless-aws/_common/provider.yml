@@ -1,0 +1,38 @@
+# AWS Provider Configuration (Shared across all entity deployments)
+name: aws
+runtime: nodejs24.x
+# role: ${ssm:/CFG_IAM_ROLE}
+stage: dev
+# profile: project-aws-${self:provider.stage}
+region: 'us-east-1'
+# deploymentBucket:
+#   name: ${ssm:/CFG_DEPLOYMENT_BUCKET_NAME}
+environment: ${file(../_common/config.yml)}
+memorySize: 256
+timeout: 10
+versionFunctions: false
+logRetentionNormal: 7
+logRetentionLow: 1
+architecture: arm64
+httpApi:
+  disableDefaultEndpoint: false
+  metrics: true
+  useProviderTags: true
+  payload: '2.0'
+  cors:
+    allowedOrigins:
+      - https://*
+      - http://*
+    allowedHeaders:
+      - Authorization
+      - Cookie
+      - Content-Type
+      - Accept
+    allowedMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowCredentials: true
+    maxAge: 0

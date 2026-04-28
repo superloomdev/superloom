@@ -1,0 +1,49 @@
+# User Entity - AWS Lambda Functions
+# Each function is a separate AWS Lambda endpoint with its own handler file
+# Memory and timeout can be overridden per function if needed
+service: Demo-Server-User
+
+custom: ${file(../_common/custom.yml)}
+
+provider:
+  name: aws
+  runtime: ${file(../_common/provider.yml):runtime}
+  stage: ${file(../_common/provider.yml):stage}
+  region: ${file(../_common/provider.yml):region}
+  environment: ${file(../_common/provider.yml):environment}
+  memorySize: ${file(../_common/provider.yml):memorySize}
+  timeout: ${file(../_common/provider.yml):timeout}
+  logRetentionInDays: ${file(../_common/provider.yml):logRetentionNormal}
+  versionFunctions: ${file(../_common/provider.yml):versionFunctions}
+  architecture: ${file(../_common/provider.yml):architecture}
+  httpApi: ${file(../_common/provider.yml):httpApi}
+
+
+functions:
+
+  # POST /user/create
+  create:
+    handler: ${self:custom.sourceApiPath}user/create.handler
+    description: API to Create User
+    events:
+      - httpApi:
+          path: /user/create
+          method: post
+
+  # GET /user/{id}
+  get-data:
+    handler: ${self:custom.sourceApiPath}user/get-data.handler
+    description: API to Get User Data
+    events:
+      - httpApi:
+          path: /user/{id}
+          method: get
+
+  # PUT /user/{id}
+  update:
+    handler: ${self:custom.sourceApiPath}user/update.handler
+    description: API to Update User
+    events:
+      - httpApi:
+          path: /user/{id}
+          method: put

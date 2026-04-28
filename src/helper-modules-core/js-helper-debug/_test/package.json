@@ -1,0 +1,17 @@
+{
+  "name": "js-helper-debug-test",
+  "description": "Test Cases for js-helper-debug",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {
+    "@superloomdev/js-helper-debug": "file:../"
+  },
+  "scripts": {
+    "test": "node --test test.js"
+  }
+}

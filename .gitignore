@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Personal dev workspace (machine-specific, never committed)
+__dev__/
+
+# Legacy cleanup folder (never committed)
+_cleanup/
+
+# IDE workspace files (machine-specific)
+*.code-workspace
+
+# Work in progress (personal planning, never committed)
+wip/
+
+# Environment files (never commit secrets)
+.env
+
+# Config with secrets
+config/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/

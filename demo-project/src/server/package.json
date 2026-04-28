@@ -1,0 +1,35 @@
+{
+  "name": "@superloomdev/demo-project-server",
+  "description": "Server-side application logic for demo-project. Express routes, controllers, service business logic, and AWS Lambda handlers.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "@superloomdev/demo-project-model-server": "file:../model-server",
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "start": "node interfaces/api/express/server.js",
+    "test:model-server": "cd ../model-server && npm test",
+    "test:controller": "node --test controller/_test/user/test.js",
+    "test:all": "npm run test:model-server && npm run test:controller"
+  }
+}

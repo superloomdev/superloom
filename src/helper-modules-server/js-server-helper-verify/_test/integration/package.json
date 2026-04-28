@@ -1,0 +1,33 @@
+{
+  "name": "js-server-helper-verify-integration-tests",
+  "description": "Integration test suite for js-server-helper-verify against Postgres, MySQL, SQLite, MongoDB, DynamoDB",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": "Superloom <hi@superloom.dev>",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@aws-sdk/client-dynamodb": "^3.665.0",
+    "@aws-sdk/lib-dynamodb": "^3.665.0",
+    "mongodb": "^6.10.0",
+    "pg": "^8.11.0",
+    "mysql2": "^3.11.0"
+  },
+  "scripts": {
+    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait && sleep 10",
+    "test": "node --preserve-symlinks --test --test-timeout 120000 test.js",
+    "posttest": "docker compose down -v --remove-orphans"
+  }
+}

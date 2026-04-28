@@ -1,0 +1,15 @@
+{
+  "name": "survey-model-server-test",
+  "description": "Test Cases for Survey server model extension",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {},
+  "scripts": {
+    "test": "node --test test.js"
+  }
+}

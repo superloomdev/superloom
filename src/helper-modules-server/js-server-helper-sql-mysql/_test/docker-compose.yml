@@ -1,0 +1,36 @@
+# MySQL 8.0.44 for module testing
+# Matches AWS Aurora MySQL 3.x compatibility version
+# Lifecycle managed by npm scripts: npm test starts → tests → stops and removes
+# Ephemeral — data lost on container stop
+
+name: superloom-test-mysql
+
+services:
+
+  mysql:
+    container_name: superloom-test-mysql
+    image: mysql:8.0.44
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: test_root_pw
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+        - -u
+        - root
+        - -ptest_root_pw
+      interval: 5s
+      timeout: 3s
+      retries: 10

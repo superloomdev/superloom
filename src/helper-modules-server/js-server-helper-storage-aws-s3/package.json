@@ -1,0 +1,31 @@
+{
+  "name": "@superloomdev/js-server-helper-storage-aws-s3",
+  "description": "AWS S3 wrapper for cloud file storage. List, upload, download, delete, copy, move. AWS SDK v3.",
+  "version": "1.0.0",
+  "main": "s3.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
+  "bundleDependencies": false,
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1032.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

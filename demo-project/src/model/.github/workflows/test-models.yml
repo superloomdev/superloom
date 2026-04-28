@@ -1,0 +1,40 @@
+# CI/CD Pipeline: Test Model Package
+# Runs all model tests on push to main or PR
+# Model is a standalone publishable package under @superloomdev scope
+
+name: Test Model Package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'demo-project/src/model/**'
+  pull_request:
+    paths:
+      - 'demo-project/src/model/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install model dependencies
+        working-directory: demo-project/src/model
+        run: npm install
+
+      - name: Run model tests
+        working-directory: demo-project/src/model
+        run: npm test
+
+      - name: Run individual entity tests
+        working-directory: demo-project/src/model
+        run: |
+          npm run test:contact
+          npm run test:user
+          npm run test:survey

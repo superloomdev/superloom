@@ -1,0 +1,24 @@
+{
+  "name": "js-server-helper-aws-dynamodb-test",
+  "description": "Test Cases for js-server-helper-aws-dynamodb",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-.*": "1.0.0",
+    "@aws-sdk/client-dynamodb": "^3.1031.0",
+    "@aws-sdk/lib-dynamodb": "^3.1031.0"
+  },
+  "scripts": {
+    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait && sleep 2",
+    "test": "AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local AWS_REGION=us-east-1 DYNAMODB_ENDPOINT=http://localhost:8000 node --test --test-timeout 120000 test.js",
+    "posttest": "docker compose down -v --remove-orphans"
+  }
+}

@@ -1,0 +1,50 @@
+# Survey Entity - AWS Lambda Functions
+service: Demo-Server-Survey
+
+custom: ${file(../_common/custom.yml)}
+
+provider:
+  name: aws
+  runtime: ${file(../_common/provider.yml):runtime}
+  stage: ${file(../_common/provider.yml):stage}
+  region: ${file(../_common/provider.yml):region}
+  environment: ${file(../_common/provider.yml):environment}
+  memorySize: ${file(../_common/provider.yml):memorySize}
+  timeout: ${file(../_common/provider.yml):timeout}
+  logRetentionInDays: ${file(../_common/provider.yml):logRetentionNormal}
+  versionFunctions: ${file(../_common/provider.yml):versionFunctions}
+  architecture: ${file(../_common/provider.yml):architecture}
+  httpApi: ${file(../_common/provider.yml):httpApi}
+
+
+functions:
+
+  # POST /survey/create
+  create:
+    handler: ${self:custom.sourceApiPath}survey/create.handler
+    description: API to Create Survey
+    # Override for larger payload handling:
+    # memorySize: 512
+    # timeout: 30
+    events:
+      - httpApi:
+          path: /survey/create
+          method: post
+
+  # GET /survey/{id}
+  get-data:
+    handler: ${self:custom.sourceApiPath}survey/get-data.handler
+    description: API to Get Survey Data
+    events:
+      - httpApi:
+          path: /survey/{id}
+          method: get
+
+  # PUT /survey/{id}
+  update:
+    handler: ${self:custom.sourceApiPath}survey/update.handler
+    description: API to Update Survey
+    events:
+      - httpApi:
+          path: /survey/{id}
+          method: put
