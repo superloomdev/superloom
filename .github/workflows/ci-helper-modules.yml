@@ -694,19 +694,6 @@ jobs:
       S3_FORCE_PATH_STYLE: 'true'
     steps:
       - uses: actions/checkout@v6
-      - name: Start MinIO
-        run: |
-          docker run -d --name minio-s3 -p 127.0.0.1:9000:9000 \
-            -e MINIO_ROOT_USER=dev_access_key \
-            -e MINIO_ROOT_PASSWORD=dev_secret_key \
-            minio/minio:latest server /data
-          for i in {1..30}; do
-            if curl -sf http://127.0.0.1:9000/minio/health/live > /dev/null 2>&1; then
-              echo "MinIO ready"
-              break
-            fi
-            sleep 1
-          done
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -772,11 +759,6 @@ jobs:
       DYNAMODB_ENDPOINT: http://localhost:8000
     steps:
       - uses: actions/checkout@v6
-      - name: Start DynamoDB Local
-        run: |
-          docker run -d --name dynamodb -p 127.0.0.1:8000:8000 \
-            amazon/dynamodb-local:latest
-          sleep 3
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -840,11 +822,6 @@ jobs:
       MONGODB_DATABASE: test_db
     steps:
       - uses: actions/checkout@v6
-      - name: Start MongoDB
-        run: |
-          docker run -d --name mongodb -p 127.0.0.1:27017:27017 \
-            mongo:latest
-          sleep 5
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -910,11 +887,6 @@ jobs:
       SQS_ENDPOINT: http://localhost:9324
     steps:
       - uses: actions/checkout@v6
-      - name: Start ElasticMQ
-        run: |
-          docker run -d --name elasticmq -p 127.0.0.1:9324:9324 \
-            softwaremill/elasticmq:latest
-          sleep 3
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -982,15 +954,6 @@ jobs:
       MYSQL_ROOT_PASSWORD: test_root_pw
     steps:
       - uses: actions/checkout@v6
-      - name: Start MySQL
-        run: |
-          docker run -d --name mysql -p 127.0.0.1:3306:3306 \
-            -e MYSQL_DATABASE=test_db \
-            -e MYSQL_USER=test_user \
-            -e MYSQL_PASSWORD=test_pw \
-            -e MYSQL_ROOT_PASSWORD=test_root_pw \
-            mysql:8
-          sleep 5
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -1057,14 +1020,6 @@ jobs:
       POSTGRES_PASSWORD: test_pw
     steps:
       - uses: actions/checkout@v6
-      - name: Start Postgres
-        run: |
-          docker run -d --name postgres -p 127.0.0.1:5432:5432 \
-            -e POSTGRES_DB=test_db \
-            -e POSTGRES_USER=test_user \
-            -e POSTGRES_PASSWORD=test_pw \
-            postgres:15
-          sleep 3
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
