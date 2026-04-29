@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-server-helper-queue-aws-sqs",
   "description": "AWS SQS message queue wrapper. Send, receive, delete, and schedule messages. AWS SDK v3.",
-  "version": "1.0.6",
+  "version": "1.0.0",
   "main": "sqs.js",
   "private": false,
   "license": "MIT",

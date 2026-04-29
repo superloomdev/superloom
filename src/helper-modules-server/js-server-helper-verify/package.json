@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-server-helper-verify",
   "description": "One-time verification code lifecycle: generate, store, validate, consume. Storage-agnostic adapter pattern. Supports numeric pins, alphanumeric codes, and URL-safe magic-link tokens.",
-  "version": "1.0.3",
+  "version": "1.0.0",
   "main": "verify.js",
   "private": false,
   "license": "MIT",

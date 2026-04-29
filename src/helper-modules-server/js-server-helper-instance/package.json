@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-server-helper-instance",
   "description": "Request instance lifecycle manager. Initialize, cleanup, and background routine tracking.",
-  "version": "1.0.3",
+  "version": "1.0.0",
   "main": "instance.js",
   "private": false,
   "license": "MIT",
