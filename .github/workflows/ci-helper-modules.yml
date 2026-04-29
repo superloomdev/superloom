@@ -1,33 +1,34 @@
 # CI/CD Pipeline: Test and Publish Helper Modules
 #
 # Strategy:
-#   - Each module has its own dedicated test + publish job pair
-#   - One module's test failure does NOT block another module's publish
-#   - Tests run ONLY for modules whose files changed (change-gated)
-#   - Publishing is triggered ONLY by a version bump in package.json
-#   - Registry check prevents accidental duplicate-publish failures
-#   - Orphan/initial commits are handled (no parent = all modules changed/bumped)
+#   - STRICTLY SEQUENTIAL execution: test → publish → test → publish ...
+#   - One module at a time, in dependency order
+#   - This prevents race conditions and ensures dependencies are published
+#     before dependent modules attempt to install them
 #
-# Publish ordering (tier system):
-#   - Tier 1 (no deps):        utils, debug - run immediately
-#   - Tier 2 (needs tier 1):   time, client-crypto, server-crypto, instance, http
-#   - Tier 3 (needs instance): sqlite, postgres, mysql, aws-s3, aws-dynamodb
-#   Test jobs wait for upstream publish jobs via needs: + always() so that
-#   skipped publishes (no version bump) do not block downstream tests.
+# Execution Order:
+#   1. detect
+#   2. test-utils → publish-utils
+#   3. test-debug → publish-debug
+#   4. test-time → publish-time
+#   5. test-client-crypto → publish-client-crypto
+#   6. test-server-crypto → publish-server-crypto
+#   7. test-instance → publish-instance
+#   8. test-http → publish-http
+#   9. test-storage-aws-s3-url-signer → publish-storage-aws-s3-url-signer
+#   10. test-sql-sqlite → publish-sql-sqlite
+#   11. test-storage-aws-s3 → publish-storage-aws-s3
+#   12. test-nosql-aws-dynamodb → publish-nosql-aws-dynamodb
+#   13. test-nosql-mongodb → publish-nosql-mongodb
+#   14. test-queue-aws-sqs → publish-queue-aws-sqs
+#   15. test-sql-mysql → publish-sql-mysql
+#   16. test-sql-postgres → publish-sql-postgres
+#   17. test-verify → publish-verify
 #
 # Workflow behavior:
-#   - Commit "wip: small fix"           → tests run, no publish
-#   - Commit "fix: bug (bump to 1.0.1)" → tests run AND module publishes
+#   - Commit "wip: small fix"           → tests run sequentially, no publish
+#   - Commit "fix: bug (bump to 1.0.1)" → tests run AND modules publish
 #   - Commit reverting a version bump   → skipped gracefully at publish step
-#
-# Structure:
-#   - detect job: scans changed modules (always) and version bumps (main push)
-#   - Per-module sections: test-<name> → publish-<name> (grouped together)
-#   - New modules: append a new section at the end of the file
-#
-# Workflow display name is "Test" (not "CI") so the README status badge
-# reads "Test passing" — matches the label users expect and the pre-merge
-# behavior. The file is ci-helper-modules.yml (scoped to helper modules).
 
 name: Test
 
@@ -47,8 +48,7 @@ jobs:
 
   # =========================================================================
   # Detect: which modules changed (for testing) and which had version
-  # bumps (for publishing). Runs on every trigger so test jobs can be
-  # change-gated. Publishing is still main-push only.
+  # bumps (for publishing). Runs on every trigger.
   # =========================================================================
   detect:
     runs-on: ubuntu-latest
@@ -129,7 +129,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE: js-helper-utils
+  #   MODULE 1: js-helper-utils (no dependencies)
   # ###########################################################################
 
   test-utils:
@@ -140,23 +140,16 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-core/js-helper-utils
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-core/js-helper-utils
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-core/js-helper-utils/_test
-        run: npm install && npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-utils:
     needs: [detect, test-utils]
@@ -172,70 +165,52 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-core/js-helper-utils
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-core/js-helper-utils
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-core/js-helper-utils
-        run: npm publish
 
 
   # ###########################################################################
-  #   MODULE: js-helper-debug
+  #   MODULE 2: js-helper-debug (no dependencies)
   # ###########################################################################
 
   test-debug:
-    needs: [detect]
-    if: contains(needs.detect.outputs.test_modules, 'js-helper-debug')
+    needs: [detect, publish-utils]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-helper-debug')
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-core/js-helper-debug
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-core/js-helper-debug
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-core/js-helper-debug/_test
-        run: npm install && npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-debug:
     needs: [detect, test-debug]
@@ -251,47 +226,32 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-core/js-helper-debug
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-core/js-helper-debug
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-core/js-helper-debug
-        run: npm publish
 
 
   # ###########################################################################
-  #   MODULE: js-helper-time
+  #   MODULE 3: js-helper-time (needs utils, debug)
   # ###########################################################################
 
   test-time:
-    needs: [detect, publish-utils, publish-debug]
+    needs: [detect, publish-debug]
     if: |
       always() &&
       !cancelled() &&
@@ -302,27 +262,16 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-core/js-helper-time
-        run: npm install
-
-      - name: Install test dependencies
-        working-directory: src/helper-modules-core/js-helper-time/_test
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-core/js-helper-time
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-core/js-helper-time/_test
-        run: npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-time:
     needs: [detect, test-time]
@@ -338,47 +287,32 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-core/js-helper-time
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-core/js-helper-time
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-core/js-helper-time
-        run: npm publish
 
 
   # ###########################################################################
-  #   MODULE: js-client-helper-crypto
+  #   MODULE 4: js-client-helper-crypto (needs utils, debug)
   # ###########################################################################
 
   test-client-crypto:
-    needs: [detect, publish-utils, publish-debug]
+    needs: [detect, publish-time]
     if: |
       always() &&
       !cancelled() &&
@@ -389,27 +323,16 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-client/js-client-helper-crypto
-        run: npm install
-
-      - name: Install test dependencies
-        working-directory: src/helper-modules-client/js-client-helper-crypto/_test
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-client/js-client-helper-crypto
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-client/js-client-helper-crypto/_test
-        run: npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-client-crypto:
     needs: [detect, test-client-crypto]
@@ -425,47 +348,32 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-client/js-client-helper-crypto
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-client/js-client-helper-crypto
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-client/js-client-helper-crypto
-        run: npm publish
 
 
   # ###########################################################################
-  #   MODULE: js-server-helper-crypto
+  #   MODULE 5: js-server-helper-crypto (needs utils, debug)
   # ###########################################################################
 
   test-server-crypto:
-    needs: [detect, publish-utils, publish-debug]
+    needs: [detect, publish-client-crypto]
     if: |
       always() &&
       !cancelled() &&
@@ -476,27 +384,16 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-crypto
-        run: npm install
-
-      - name: Install test dependencies
-        working-directory: src/helper-modules-server/js-server-helper-crypto/_test
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-crypto
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-crypto/_test
-        run: npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-server-crypto:
     needs: [detect, test-server-crypto]
@@ -512,47 +409,32 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-crypto
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-server/js-server-helper-crypto
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-crypto
-        run: npm publish
 
 
   # ###########################################################################
-  #   MODULE: js-server-helper-instance
+  #   MODULE 6: js-server-helper-instance (needs utils, debug)
   # ###########################################################################
 
   test-instance:
-    needs: [detect, publish-utils, publish-debug]
+    needs: [detect, publish-server-crypto]
     if: |
       always() &&
       !cancelled() &&
@@ -563,27 +445,16 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-instance
-        run: npm install
-
-      - name: Install test dependencies
-        working-directory: src/helper-modules-server/js-server-helper-instance/_test
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-instance
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-instance/_test
-        run: npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-instance:
     needs: [detect, test-instance]
@@ -599,47 +470,32 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-instance
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-server/js-server-helper-instance
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-instance
-        run: npm publish
 
 
   # ###########################################################################
-  #   MODULE: js-server-helper-http
+  #   MODULE 7: js-server-helper-http (needs utils, debug)
   # ###########################################################################
 
   test-http:
-    needs: [detect, publish-utils, publish-debug]
+    needs: [detect, publish-instance]
     if: |
       always() &&
       !cancelled() &&
@@ -650,27 +506,16 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-http
-        run: npm install
-
-      - name: Install test dependencies
-        working-directory: src/helper-modules-server/js-server-helper-http/_test
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-http
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-http/_test
-        run: npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-http:
     needs: [detect, test-http]
@@ -686,542 +531,32 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-http
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-server/js-server-helper-http
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
 
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-http
-        run: npm publish
-
 
   # ###########################################################################
-  #   MODULE: js-server-helper-sql-sqlite
+  #   MODULE 8: js-server-helper-storage-aws-s3-url-signer (needs utils, debug)
   # ###########################################################################
-
-  test-sql-sqlite:
-    needs: [detect, publish-utils, publish-debug, publish-instance]
-    if: |
-      always() &&
-      !cancelled() &&
-      needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-sql-sqlite')
-    runs-on: ubuntu-latest
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
-        working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
-        run: npm install
-
-      - name: Install test dependencies
-        working-directory: src/helper-modules-server/js-server-helper-sql-sqlite/_test
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-sql-sqlite/_test
-        run: npm test
-
-  publish-sql-sqlite:
-    needs: [detect, test-sql-sqlite]
-    if: >-
-      needs.detect.outputs.publish_modules != '[]' &&
-      needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-sql-sqlite')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
-        run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
-        working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
-        run: |
-          PKG_NAME=$(jq -r '.name' package.json)
-          PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
-          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
-          else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
-          fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
-        run: npm publish
-
-
-  # ###########################################################################
-  #   MODULE: js-server-helper-storage-aws-s3 (needs MinIO)
-  # ###########################################################################
-
-  test-storage-aws-s3:
-    needs: [detect, publish-utils, publish-debug, publish-instance]
-    if: |
-      always() &&
-      !cancelled() &&
-      needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-storage-aws-s3')
-    runs-on: ubuntu-latest
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      S3_ACCESS_KEY: dev_access_key
-      S3_SECRET_KEY: dev_secret_key
-      S3_REGION: us-east-1
-      S3_ENDPOINT: http://localhost:9000
-      S3_FORCE_PATH_STYLE: 'true'
-    steps:
-      - uses: actions/checkout@v6
-
-      # MinIO is started via docker run (not services:) because minio/minio
-      # requires the "server /data" arg which GitHub Actions services cannot set.
-      - name: Start MinIO
-        run: |
-          docker run -d --name minio \
-            -p 127.0.0.1:9000:9000 \
-            -e MINIO_ROOT_USER=dev_access_key \
-            -e MINIO_ROOT_PASSWORD=dev_secret_key \
-            minio/minio:latest server /data
-          for i in {1..30}; do
-            if curl -sf http://127.0.0.1:9000/minio/health/live > /dev/null 2>&1; then
-              echo "MinIO is ready"
-              break
-            fi
-            echo "Waiting for MinIO..."
-            sleep 1
-          done
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3/_test
-        run: npm install && npm test
-
-  publish-storage-aws-s3:
-    needs: [detect, test-storage-aws-s3]
-    if: >-
-      needs.detect.outputs.publish_modules != '[]' &&
-      needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-storage-aws-s3')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
-        run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3
-        run: |
-          PKG_NAME=$(jq -r '.name' package.json)
-          PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
-          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
-          else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
-          fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3
-        run: npm publish
-
-
-  # ###########################################################################
-  #   MODULE: js-server-helper-nosql-aws-dynamodb (needs DynamoDB Local)
-  # ###########################################################################
-
-  test-nosql-aws-dynamodb:
-    needs: [detect, publish-utils, publish-debug, publish-instance]
-    if: |
-      always() &&
-      !cancelled() &&
-      needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-nosql-aws-dynamodb')
-    runs-on: ubuntu-latest
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AWS_ACCESS_KEY_ID: local
-      AWS_SECRET_ACCESS_KEY: local
-      AWS_REGION: us-east-1
-      DYNAMODB_ENDPOINT: http://localhost:8000
-    services:
-      dynamodb:
-        image: amazon/dynamodb-local:latest
-        ports:
-          - 8000:8000
-        options: >-
-          --health-cmd "curl -sf http://localhost:8000 || exit 0"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
-        working-directory: src/helper-modules-server/js-server-helper-nosql-aws-dynamodb
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-nosql-aws-dynamodb
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/_test
-        run: npm install && npm test
-
-  publish-nosql-aws-dynamodb:
-    needs: [detect, test-nosql-aws-dynamodb]
-    if: >-
-      needs.detect.outputs.publish_modules != '[]' &&
-      needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-nosql-aws-dynamodb')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
-        run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-nosql-aws-dynamodb
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
-        working-directory: src/helper-modules-server/js-server-helper-nosql-aws-dynamodb
-        run: |
-          PKG_NAME=$(jq -r '.name' package.json)
-          PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
-          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
-          else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
-          fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-nosql-aws-dynamodb
-        run: npm publish
-
-
-  # ###########################################################################
-  #   MODULE: js-server-helper-sql-mysql (needs MySQL 8)
-  # ###########################################################################
-
-  test-sql-mysql:
-    needs: [detect, publish-utils, publish-debug, publish-instance]
-    if: |
-      always() &&
-      !cancelled() &&
-      needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-sql-mysql')
-    runs-on: ubuntu-latest
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      MYSQL_HOST: 127.0.0.1
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: test_db
-      MYSQL_USER: test_user
-      MYSQL_PASSWORD: test_pw
-      MYSQL_ROOT_PASSWORD: test_root_pw
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: test_root_pw
-          MYSQL_DATABASE: test_db
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_pw
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping -h localhost -u root -ptest_root_pw"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 10
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
-        working-directory: src/helper-modules-server/js-server-helper-sql-mysql
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-sql-mysql
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-sql-mysql/_test
-        run: npm install && npm test
-
-  publish-sql-mysql:
-    needs: [detect, test-sql-mysql]
-    if: >-
-      needs.detect.outputs.publish_modules != '[]' &&
-      needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-sql-mysql')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
-        run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-sql-mysql
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
-        working-directory: src/helper-modules-server/js-server-helper-sql-mysql
-        run: |
-          PKG_NAME=$(jq -r '.name' package.json)
-          PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
-          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
-          else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
-          fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-sql-mysql
-        run: npm publish
-
-
-  # ###########################################################################
-  #   MODULE: js-server-helper-sql-postgres (needs Postgres 17)
-  # ###########################################################################
-
-  test-sql-postgres:
-    needs: [detect, publish-utils, publish-debug, publish-instance]
-    if: |
-      always() &&
-      !cancelled() &&
-      needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-sql-postgres')
-    runs-on: ubuntu-latest
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      POSTGRES_HOST: 127.0.0.1
-      POSTGRES_PORT: 5432
-      POSTGRES_DATABASE: test_db
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_pw
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_pw
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U test_user -d test_db"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 10
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
-        working-directory: src/helper-modules-server/js-server-helper-sql-postgres
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-sql-postgres
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-sql-postgres/_test
-        run: npm install && npm test
-
-  publish-sql-postgres:
-    needs: [detect, test-sql-postgres]
-    if: >-
-      needs.detect.outputs.publish_modules != '[]' &&
-      needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-sql-postgres')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
-        run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-sql-postgres
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
-        working-directory: src/helper-modules-server/js-server-helper-sql-postgres
-        run: |
-          PKG_NAME=$(jq -r '.name' package.json)
-          PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
-          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
-          else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
-          fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-sql-postgres
-        run: npm publish
-
-
-  # ###########################################################################
-  #   MODULE: js-server-helper-storage-aws-s3-url-signer (needs MinIO)
 
   test-storage-aws-s3-url-signer:
-    needs: [detect, publish-utils, publish-debug]
+    needs: [detect, publish-http]
     if: |
       always() &&
       !cancelled() &&
@@ -1230,48 +565,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      S3_ACCESS_KEY: dev_access_key
-      S3_SECRET_KEY: dev_secret_key
-      S3_REGION: us-east-1
-      S3_ENDPOINT: http://localhost:9000
-      S3_FORCE_PATH_STYLE: 'true'
     steps:
       - uses: actions/checkout@v6
-
-      # MinIO is started via docker run (not services:) because minio/minio
-      # requires the "server /data" arg which GitHub Actions services cannot set.
-      - name: Start MinIO
-        run: |
-          docker run -d --name minio \
-            -p 127.0.0.1:9000:9000 \
-            -e MINIO_ROOT_USER=dev_access_key \
-            -e MINIO_ROOT_PASSWORD=dev_secret_key \
-            minio/minio:latest server /data
-          for i in {1..30}; do
-            if curl -sf http://127.0.0.1:9000/minio/health/live > /dev/null 2>&1; then
-              echo "MinIO is ready"
-              break
-            fi
-            echo "Waiting for MinIO..."
-            sleep 1
-          done
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer/_test
-        run: npm install && npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-storage-aws-s3-url-signer:
     needs: [detect, test-storage-aws-s3-url-signer]
@@ -1287,47 +592,242 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer
-        run: npm publish
 
 
   # ###########################################################################
-  #   MODULE: js-server-helper-nosql-mongodb (needs MongoDB)
+  #   MODULE 9: js-server-helper-sql-sqlite (needs utils, debug, instance)
+  # ###########################################################################
+
+  test-sql-sqlite:
+    needs: [detect, publish-storage-aws-s3-url-signer]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-sql-sqlite')
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Install and test
+        working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
+
+  publish-sql-sqlite:
+    needs: [detect, test-sql-sqlite]
+    if: >-
+      needs.detect.outputs.publish_modules != '[]' &&
+      needs.detect.outputs.publish_modules != '' &&
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-sql-sqlite')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
+      - name: Publish
+        working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
+        run: |
+          npm install
+          PKG_NAME=$(jq -r '.name' package.json)
+          PKG_VERSION=$(jq -r '.version' package.json)
+          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
+          else
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
+          fi
+
+
+  # ###########################################################################
+  #   MODULE 10: js-server-helper-storage-aws-s3 (needs utils, debug, instance)
+  # ###########################################################################
+
+  test-storage-aws-s3:
+    needs: [detect, publish-sql-sqlite]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-storage-aws-s3')
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      S3_ACCESS_KEY: dev_access_key
+      S3_SECRET_KEY: dev_secret_key
+      S3_REGION: us-east-1
+      S3_ENDPOINT: http://localhost:9000
+      S3_FORCE_PATH_STYLE: 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio-s3 -p 127.0.0.1:9000:9000 \
+            -e MINIO_ROOT_USER=dev_access_key \
+            -e MINIO_ROOT_PASSWORD=dev_secret_key \
+            minio/minio:latest server /data
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:9000/minio/health/live > /dev/null 2>&1; then
+              echo "MinIO ready"
+              break
+            fi
+            sleep 1
+          done
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Install and test
+        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
+
+  publish-storage-aws-s3:
+    needs: [detect, test-storage-aws-s3]
+    if: >-
+      needs.detect.outputs.publish_modules != '[]' &&
+      needs.detect.outputs.publish_modules != '' &&
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-storage-aws-s3')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
+      - name: Publish
+        working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3
+        run: |
+          npm install
+          PKG_NAME=$(jq -r '.name' package.json)
+          PKG_VERSION=$(jq -r '.version' package.json)
+          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
+          else
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
+          fi
+
+
+  # ###########################################################################
+  #   MODULE 11: js-server-helper-nosql-aws-dynamodb (needs utils, debug, instance)
+  # ###########################################################################
+
+  test-nosql-aws-dynamodb:
+    needs: [detect, publish-storage-aws-s3]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-nosql-aws-dynamodb')
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      AWS_REGION: us-east-1
+      DYNAMODB_ENDPOINT: http://localhost:8000
+    steps:
+      - uses: actions/checkout@v6
+      - name: Start DynamoDB Local
+        run: |
+          docker run -d --name dynamodb -p 127.0.0.1:8000:8000 \
+            amazon/dynamodb-local:latest
+          sleep 3
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Install and test
+        working-directory: src/helper-modules-server/js-server-helper-nosql-aws-dynamodb
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
+
+  publish-nosql-aws-dynamodb:
+    needs: [detect, test-nosql-aws-dynamodb]
+    if: >-
+      needs.detect.outputs.publish_modules != '[]' &&
+      needs.detect.outputs.publish_modules != '' &&
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-nosql-aws-dynamodb')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
+      - name: Publish
+        working-directory: src/helper-modules-server/js-server-helper-nosql-aws-dynamodb
+        run: |
+          npm install
+          PKG_NAME=$(jq -r '.name' package.json)
+          PKG_VERSION=$(jq -r '.version' package.json)
+          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
+          else
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
+          fi
+
+
+  # ###########################################################################
+  #   MODULE 12: js-server-helper-nosql-mongodb (needs utils, debug, instance)
   # ###########################################################################
 
   test-nosql-mongodb:
-    needs: [detect, publish-utils, publish-debug, publish-instance]
+    needs: [detect, publish-nosql-aws-dynamodb]
     if: |
       always() &&
       !cancelled() &&
@@ -1336,37 +836,25 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      MONGODB_CONNECTION_STRING: mongodb://localhost:27017
+      MONGODB_CONNECTION_STRING: mongodb://localhost:27017/?directConnection=true
       MONGODB_DATABASE: test_db
-    services:
-      mongodb:
-        image: mongo:7.0
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v6
-
+      - name: Start MongoDB
+        run: |
+          docker run -d --name mongodb -p 127.0.0.1:27017:27017 \
+            mongo:latest
+          sleep 5
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-nosql-mongodb
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-nosql-mongodb
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-nosql-mongodb/_test
-        run: npm install && npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-nosql-mongodb:
     needs: [detect, test-nosql-mongodb]
@@ -1382,46 +870,32 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-nosql-mongodb
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-server/js-server-helper-nosql-mongodb
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
 
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-nosql-mongodb
-        run: npm publish
 
   # ###########################################################################
-  #   MODULE: js-server-helper-queue-aws-sqs (needs ElasticMQ)
+  #   MODULE 13: js-server-helper-queue-aws-sqs (needs utils, debug, instance)
   # ###########################################################################
 
   test-queue-aws-sqs:
-    needs: [detect, publish-utils, publish-debug, publish-instance]
+    needs: [detect, publish-nosql-mongodb]
     if: |
       always() &&
       !cancelled() &&
@@ -1434,35 +908,23 @@ jobs:
       AWS_SECRET_ACCESS_KEY: local
       AWS_REGION: us-east-1
       SQS_ENDPOINT: http://localhost:9324
-    services:
-      elasticmq:
-        image: softwaremill/elasticmq:1.6.9
-        ports:
-          - 9324:9324
-        options: >-
-          --health-cmd "curl -sf http://localhost:9324 || exit 0"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v6
-
+      - name: Start ElasticMQ
+        run: |
+          docker run -d --name elasticmq -p 127.0.0.1:9324:9324 \
+            softwaremill/elasticmq:latest
+          sleep 3
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-queue-aws-sqs
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-queue-aws-sqs
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-queue-aws-sqs/_test
-        run: npm install && npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-queue-aws-sqs:
     needs: [detect, test-queue-aws-sqs]
@@ -1476,59 +938,184 @@ jobs:
       packages: write
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    services:
-      elasticmq:
-        image: softwaremill/elasticmq:1.6.9
-        ports:
-          - 9324:9324
-        options: >-
-          --health-cmd "curl -sf http://localhost:9324 || exit 0"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-queue-aws-sqs
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-server/js-server-helper-queue-aws-sqs
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-queue-aws-sqs
-        run: npm publish
 
 
   # ###########################################################################
-  #   MODULE: js-server-helper-verify (offline - in-memory adapter for tests)
+  #   MODULE 14: js-server-helper-sql-mysql (needs utils, debug, instance)
+  # ###########################################################################
+
+  test-sql-mysql:
+    needs: [detect, publish-queue-aws-sqs]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-sql-mysql')
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MYSQL_HOST: localhost
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_pw
+      MYSQL_ROOT_PASSWORD: test_root_pw
+    steps:
+      - uses: actions/checkout@v6
+      - name: Start MySQL
+        run: |
+          docker run -d --name mysql -p 127.0.0.1:3306:3306 \
+            -e MYSQL_DATABASE=test_db \
+            -e MYSQL_USER=test_user \
+            -e MYSQL_PASSWORD=test_pw \
+            -e MYSQL_ROOT_PASSWORD=test_root_pw \
+            mysql:8
+          sleep 5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Install and test
+        working-directory: src/helper-modules-server/js-server-helper-sql-mysql
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
+
+  publish-sql-mysql:
+    needs: [detect, test-sql-mysql]
+    if: >-
+      needs.detect.outputs.publish_modules != '[]' &&
+      needs.detect.outputs.publish_modules != '' &&
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-sql-mysql')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
+      - name: Publish
+        working-directory: src/helper-modules-server/js-server-helper-sql-mysql
+        run: |
+          npm install
+          PKG_NAME=$(jq -r '.name' package.json)
+          PKG_VERSION=$(jq -r '.version' package.json)
+          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
+          else
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
+          fi
+
+
+  # ###########################################################################
+  #   MODULE 15: js-server-helper-sql-postgres (needs utils, debug, instance)
+  # ###########################################################################
+
+  test-sql-postgres:
+    needs: [detect, publish-sql-mysql]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-sql-postgres')
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pw
+    steps:
+      - uses: actions/checkout@v6
+      - name: Start Postgres
+        run: |
+          docker run -d --name postgres -p 127.0.0.1:5432:5432 \
+            -e POSTGRES_DB=test_db \
+            -e POSTGRES_USER=test_user \
+            -e POSTGRES_PASSWORD=test_pw \
+            postgres:15
+          sleep 3
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Install and test
+        working-directory: src/helper-modules-server/js-server-helper-sql-postgres
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
+
+  publish-sql-postgres:
+    needs: [detect, test-sql-postgres]
+    if: >-
+      needs.detect.outputs.publish_modules != '[]' &&
+      needs.detect.outputs.publish_modules != '' &&
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-sql-postgres')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
+      - name: Publish
+        working-directory: src/helper-modules-server/js-server-helper-sql-postgres
+        run: |
+          npm install
+          PKG_NAME=$(jq -r '.name' package.json)
+          PKG_VERSION=$(jq -r '.version' package.json)
+          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
+          else
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
+          fi
+
+
+  # ###########################################################################
+  #   MODULE 16: js-server-helper-verify (needs utils, debug, instance, crypto)
   # ###########################################################################
 
   test-verify:
-    needs: [detect, publish-utils, publish-debug, publish-server-crypto, publish-instance]
+    needs: [detect, publish-sql-postgres]
     if: |
       always() &&
       !cancelled() &&
@@ -1539,23 +1126,16 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Install module dependencies
+      - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-verify
-        run: npm install
-
-      - name: Run lint
-        working-directory: src/helper-modules-server/js-server-helper-verify
-        run: npm run lint --if-present
-
-      - name: Run tests
-        working-directory: src/helper-modules-server/js-server-helper-verify/_test
-        run: npm install && npm test
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
 
   publish-verify:
     needs: [detect, test-verify]
@@ -1571,37 +1151,21 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Pin npm to v10 (npm 11 crashes on GitHub Packages publish)
+      - name: Pin npm to v10
         run: npm install -g npm@10
-
-      - name: Install dependencies
-        working-directory: src/helper-modules-server/js-server-helper-verify
-        run: npm install
-
-      - name: Check if version already published (safety net)
-        id: check
+      - name: Publish
         working-directory: src/helper-modules-server/js-server-helper-verify
         run: |
+          npm install
           PKG_NAME=$(jq -r '.name' package.json)
           PKG_VERSION=$(jq -r '.version' package.json)
-          echo "Checking if $PKG_NAME@$PKG_VERSION is already published..."
-
           if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-            echo "  ⚠  $PKG_NAME@$PKG_VERSION is already published — skipping"
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
           else
-            echo "already_published=false" >> $GITHUB_OUTPUT
-            echo "  ✓ $PKG_NAME@$PKG_VERSION not yet published — proceeding"
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
           fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.already_published == 'false'
-        working-directory: src/helper-modules-server/js-server-helper-verify
-        run: npm publish
-
