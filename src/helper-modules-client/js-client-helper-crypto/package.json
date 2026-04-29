@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-client-helper-crypto",
   "description": "Client-side crypto utilities. UUID generation, random strings, base64 helpers. Browser-optimized.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "crypto.js",
   "private": false,
   "license": "MIT",

@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-server-helper-sql-sqlite",
   "description": "SQLite client built on the Node.js built-in 'node:sqlite' module. Async/await API, multi-DB capable, MySQL/Postgres-compatible placeholder syntax.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "sqlite.js",
   "private": false,
   "license": "MIT",

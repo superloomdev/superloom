@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-server-helper-http",
   "description": "Outgoing HTTP client for Node.js. Native fetch wrapper with auth support, timeouts, and normalized response shape.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "http.js",
   "private": false,
   "license": "MIT",
