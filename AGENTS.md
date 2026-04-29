@@ -71,6 +71,18 @@ rm /tmp/migration-entry.md
 
 This pattern is also documented in `.windsurf/workflows/migrate-module.md` Section 7a.
 
+**Always specify `Cwd` for module commands.** Every `run_command` targeting a module (`npm install`, `npm test`, `docker compose`) must have `Cwd` set to the module's `_test/` directory explicitly. Omitting `Cwd` silently runs from the repo root, which has a different `package.json` and produces misleading `ETARGET` version errors.
+
+```bash
+# Correct — Cwd set to _test/
+# npm install && npm test  (with Cwd: .../js-server-helper-sql-postgres/_test)
+
+# Wrong — no Cwd, runs from repo root, wrong package.json
+# npm install  (with no Cwd)
+```
+
+**Module testing contract — `npm test` is self-contained.** For all modules that have `pretest`/`posttest` scripts, `npm test` manages the full Docker container lifecycle. Never start containers manually before `npm test` — `pretest` runs `docker compose down -v` first and will conflict. Always run `npm install && npm test` from the module's `_test/` directory. See `docs/dev/testing-local-modules.md` for the full guide and common pitfalls.
+
 ## Boundaries
 
 ### Always (do without asking)

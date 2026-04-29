@@ -16,7 +16,7 @@
     "mongodb": "^6.10.0"
   },
   "scripts": {
-    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait && sleep 5",
+    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait",
     "test": "MONGODB_CONNECTION_STRING=mongodb://localhost:27017/?directConnection=true MONGODB_DATABASE=test_db node --test --test-timeout 120000 test.js",
     "posttest": "docker compose down -v --remove-orphans"
   }

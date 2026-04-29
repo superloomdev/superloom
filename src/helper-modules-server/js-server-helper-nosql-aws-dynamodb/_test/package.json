@@ -17,7 +17,7 @@
     "@aws-sdk/lib-dynamodb": "^3.1031.0"
   },
   "scripts": {
-    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait && sleep 2",
+    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait",
     "test": "AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local AWS_REGION=us-east-1 DYNAMODB_ENDPOINT=http://localhost:8000 node --test --test-timeout 120000 test.js",
     "posttest": "docker compose down -v --remove-orphans"
   }
