@@ -130,8 +130,7 @@ jobs:
                 echo "  on registry:    $PKG_NAME@$PKG_VERSION"
               else
                 echo "  needs publish:  $PKG_NAME@$PKG_VERSION"
-                PUBLISH_MODULES="$PUBLISH_MODULES$MODULE
-"
+                PUBLISH_MODULES="${PUBLISH_MODULES}${MODULE}"$'\n'
               fi
             done
           fi
