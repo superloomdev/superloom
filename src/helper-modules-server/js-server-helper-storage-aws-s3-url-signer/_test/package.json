@@ -9,6 +9,6 @@
     "@superloomdev/js-server-helper-storage-aws-s3-url-signer": "file:../"
   },
   "scripts": {
-    "test": "node --test test.js"
+    "test": "S3_REGION=us-east-1 S3_ACCESS_KEY=dev_access_key S3_SECRET_KEY=dev_secret_key node --test --test-timeout 30000 test.js"
   }
 }

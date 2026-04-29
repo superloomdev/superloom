@@ -200,6 +200,22 @@ docker compose down -v --remove-orphans
 
 **Lesson.** For commit messages: prefer a single-line `-m`, or stack multiple `-m` flags, or use `-F /tmp/file` after writing the file via a non-shell tool. For file content: never use heredocs through a shell bridge; write to a file with the editor tool and `cat` it from there.
 
+### 10. AWS SDK test hangs ~1-2s, then `success: false` with no clear error
+
+**Symptom.** A test that exercises an AWS SDK function (`getSignedUrl`, `S3Client.send`, `DynamoDBClient.send`, etc.) takes 1-2 seconds and fails with `success === true` assertion failing. Stack trace points to your module's catch block but the underlying error is silent or absorbed.
+
+**Cause.** No AWS credentials are passed to the SDK. The SDK walks the default credential provider chain: env vars -> shared config file -> EC2/ECS instance metadata (`http://169.254.169.254`). On a developer machine and on a GitHub Actions runner there is no instance metadata service, so the chain times out. The 1-2 second test duration is the metadata-service connection timeout.
+
+**Lesson.** Every test that uses an AWS SDK client must inject dummy credentials, even when no real network call is made (URL signing, command construction, etc.). The dummies do not need to be valid -- they just need to exist so the SDK does not enter the default-chain code path.
+
+The canonical pattern is to set them in the `test` script of `_test/package.json`:
+
+```json
+"test": "AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local AWS_REGION=us-east-1 ... node --test test.js"
+```
+
+For service-specific env vars (`S3_ACCESS_KEY`, `DYNAMODB_ENDPOINT`, etc.), use the names the module's loader reads. The same env vars must also exist in `__dev__/.env.dev` and `docs/dev/.env.dev.example` per the four-file rule.
+
 ---
 
 ## When something does not match this guide
