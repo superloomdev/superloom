@@ -47,21 +47,39 @@ permissions:
 jobs:
 
   # =========================================================================
-  # Detect: which modules changed (for testing) and which had version
-  # bumps (for publishing). Runs on every trigger.
+  # Detect: which modules need testing and which need publishing.
+  # Runs on every trigger.
+  #
+  # test_modules    = (modules with file changes) UNION (modules needing publish)
+  # publish_modules = modules whose <name>@<version> is not yet on the registry
+  #
+  # The registry-existence check supports BOTH:
+  #   - Steady-state version bumps (new version not yet on registry)
+  #   - Fresh-state recovery (registry wiped, modules at unchanged versions)
+  # See docs/dev/cicd-publishing.md for the full rationale.
   # =========================================================================
   detect:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     outputs:
       test_modules: ${{ steps.scan.outputs.test_modules }}
       publish_modules: ${{ steps.scan.outputs.publish_modules }}
       is_main_push: ${{ steps.scan.outputs.is_main_push }}
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 2
 
-      - name: Scan for changed modules and version bumps
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Scan for changed modules and unpublished versions
         id: scan
         run: |
           # Determine trigger context
@@ -72,59 +90,69 @@ jobs:
           fi
           echo "is_main_push=$IS_MAIN_PUSH" >> $GITHUB_OUTPUT
 
-          # Any module with any file change → run tests
-          # Handle orphan/initial commit (no parent) by listing all tracked files
+          # Step 1: Modules with file changes since the previous commit.
+          # On orphan / initial commit (no parent), treat every tracked file as changed.
           if git rev-parse HEAD~1 >/dev/null 2>&1; then
             FILE_LIST=$(git diff --name-only HEAD~1 HEAD)
           else
             FILE_LIST=$(git ls-tree -r --name-only HEAD)
           fi
-          CHANGED=$(echo "$FILE_LIST" \
+          CHANGED_MODULES=$(echo "$FILE_LIST" \
             | grep -oP 'src/helper-modules-[\w-]+/js-[\w-]+' \
-            | sort -u \
-            | jq -R -s -c 'split("\n") | map(select(length > 0))')
-          echo "test_modules=$CHANGED" >> $GITHUB_OUTPUT
+            | sort -u)
 
-          # Only modules whose package.json version field changed → publish
-          # On orphan/initial commit (no parent), every module is treated as bumped
-          HAS_PARENT=true
-          if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
-            HAS_PARENT=false
-          fi
+          # Step 2: Find every module on disk (canonical list)
+          ALL_MODULES=$(ls -d src/helper-modules-*/js-* 2>/dev/null | sort -u)
 
-          PUBLISH_LIST="[]"
-          if [ "$IS_MAIN_PUSH" == "true" ] && [ "$CHANGED" != "[]" ]; then
-            BUMPED=()
-            for MODULE in $(echo "$CHANGED" | jq -r '.[]'); do
+          # Step 3: Build PUBLISH_MODULES via registry-existence check.
+          # A module needs publishing if its current <name>@<version> is not on the registry.
+          # Only run on main pushes — PRs and other refs never publish.
+          PUBLISH_MODULES=""
+          if [ "$IS_MAIN_PUSH" == "true" ]; then
+            echo ""
+            echo "=== Registry check (publish detection) ==="
+            for MODULE in $ALL_MODULES; do
               PKG_PATH="$MODULE/package.json"
-
               if [ ! -f "$PKG_PATH" ]; then
                 continue
               fi
 
-              if [ "$HAS_PARENT" == "true" ]; then
-                OLD_VERSION=$(git show HEAD~1:$PKG_PATH 2>/dev/null | jq -r '.version // "none"' 2>/dev/null || echo "none")
-              else
-                OLD_VERSION="none"
+              PKG_NAME=$(jq -r '.name // ""' "$PKG_PATH")
+              PKG_VERSION=$(jq -r '.version // ""' "$PKG_PATH")
+              if [ -z "$PKG_NAME" ] || [ -z "$PKG_VERSION" ]; then
+                continue
               fi
-              NEW_VERSION=$(jq -r '.version' "$PKG_PATH")
 
-              if [ "$OLD_VERSION" != "$NEW_VERSION" ] && [ "$NEW_VERSION" != "none" ]; then
-                echo "  Version bumped: $MODULE ($OLD_VERSION -> $NEW_VERSION)"
-                BUMPED+=("$MODULE")
+              # npm view returns 0 if the version exists, non-zero otherwise.
+              # On non-zero (404 or transient error), we err on the side of publishing —
+              # the per-job safety net will skip if the version is actually present.
+              if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null >/dev/null; then
+                echo "  on registry:    $PKG_NAME@$PKG_VERSION"
+              else
+                echo "  needs publish:  $PKG_NAME@$PKG_VERSION"
+                PUBLISH_MODULES="$PUBLISH_MODULES$MODULE
+"
               fi
             done
-
-            if [ ${#BUMPED[@]} -gt 0 ]; then
-              PUBLISH_LIST=$(printf '%s\n' "${BUMPED[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-            fi
           fi
-          echo "publish_modules=$PUBLISH_LIST" >> $GITHUB_OUTPUT
+
+          # Step 4: TEST_MODULES = CHANGED_MODULES UNION PUBLISH_MODULES.
+          # We always test before publishing, even when no file changed in this commit.
+          TEST_MODULES=$(printf '%s\n%s' "$CHANGED_MODULES" "$PUBLISH_MODULES" \
+            | grep -v '^$' \
+            | sort -u)
+
+          # Encode both lists as JSON arrays for the workflow output
+          TEST_JSON=$(printf '%s' "$TEST_MODULES" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          PUBLISH_JSON=$(printf '%s' "$PUBLISH_MODULES" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+          echo "test_modules=$TEST_JSON" >> $GITHUB_OUTPUT
+          echo "publish_modules=$PUBLISH_JSON" >> $GITHUB_OUTPUT
 
           echo ""
           echo "=== CI Summary ==="
-          echo "Test modules:    $CHANGED"
-          echo "Publish modules: $PUBLISH_LIST"
+          echo "Test modules:    $TEST_JSON"
+          echo "Publish modules: $PUBLISH_JSON"
           echo "Main push:       $IS_MAIN_PUSH"
 
 
