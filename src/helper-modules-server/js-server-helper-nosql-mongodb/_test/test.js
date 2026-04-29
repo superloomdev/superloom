@@ -26,6 +26,9 @@ let nativeClient = null;
 let nativeDb = null;
 
 
+describe('MongoDB', { concurrency: false }, function () {
+
+
 // ============================================================================
 // 0. COLLECTION SETUP / TEARDOWN
 // ============================================================================
@@ -1157,5 +1160,8 @@ describe('large-scale operations (1000 records)', function () {
     assert.strictEqual(get.document.name, 'updated');
     assert.strictEqual(get.document.value, 11);
   });
+
+});
+
 
 });

@@ -19,6 +19,9 @@ const TEST_TABLE = 'test_table';
 
 
 
+describe('SQLite', { concurrency: false }, function () {
+
+
 // ============================================================================
 // 0. TABLE SETUP / TEARDOWN
 // ----------------------------------------------------------------------------
@@ -1267,5 +1270,8 @@ describe('close — edge cases', function () {
     await temp.close();
 
   });
+
+});
+
 
 });

@@ -29,6 +29,9 @@ const TEST_TABLE = 'test_table';
 
 
 
+describe('Postgres', { concurrency: false }, function () {
+
+
 // ============================================================================
 // 0. TABLE SETUP / TEARDOWN
 // ============================================================================
@@ -514,7 +517,7 @@ describe('multiple instances', function () {
 
   it('should allow independent pools via multiple loader calls', async function () {
 
-    const ModuleFactory = require('@superloomdev/js-server-helper-postgres');
+    const ModuleFactory = require('@superloomdev/js-server-helper-sql-postgres');
 
     const A = ModuleFactory(Lib, {
       HOST: Config.postgres_host,
@@ -581,5 +584,8 @@ describe('placeholder translator', function () {
     assert.strictEqual(res.value, 1);
 
   });
+
+});
+
 
 });

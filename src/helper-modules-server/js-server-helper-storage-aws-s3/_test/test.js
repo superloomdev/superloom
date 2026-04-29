@@ -97,6 +97,9 @@ async function emptyBucket (bucket) {
 
 
 
+describe('S3', { concurrency: false }, function () {
+
+
 // ============================================================================
 // 0. BUCKET SETUP / TEARDOWN
 // ============================================================================
@@ -572,5 +575,8 @@ describe('commandBuilderForCopyObject', function () {
     assert.strictEqual(params_private.ACL, 'private');
 
   });
+
+});
+
 
 });

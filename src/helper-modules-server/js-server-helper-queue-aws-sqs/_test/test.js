@@ -39,6 +39,9 @@ const AdminClient = new SQSClient(admin_options);
 const TEST_QUEUE = 'test_sqs_module';
 
 
+describe('SQS', { concurrency: false }, function () {
+
+
 // ============================================================================
 // 0. QUEUE SETUP / TEARDOWN
 // ============================================================================
@@ -251,5 +254,8 @@ describe('sendDelayed', function () {
     assert.strictEqual(result.error, null);
 
   });
+
+});
+
 
 });

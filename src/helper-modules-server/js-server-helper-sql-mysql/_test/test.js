@@ -30,6 +30,9 @@ const TEST_TABLE = 'test_table';
 
 
 
+describe('MySQL', { concurrency: false }, function () {
+
+
 // ============================================================================
 // 0. TABLE SETUP / TEARDOWN
 // ============================================================================
@@ -500,7 +503,7 @@ describe('multiple instances', function () {
 
   it('should allow independent pools via multiple loader calls', async function () {
 
-    const ModuleFactory = require('@superloomdev/js-server-helper-mysql');
+    const ModuleFactory = require('@superloomdev/js-server-helper-sql-mysql');
 
     // Two instances pointing at the same DB with different pool sizes
     const A = ModuleFactory(Lib, {
@@ -531,5 +534,8 @@ describe('multiple instances', function () {
     await B.close();
 
   });
+
+});
+
 
 });

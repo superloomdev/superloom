@@ -40,6 +40,9 @@ const TEST_TABLE = 'test_crud';
 const TEST_TABLE_COMPOSITE = 'test_composite';
 
 
+describe('DynamoDB', { concurrency: false }, function () {
+
+
 // ============================================================================
 // 0. TABLE SETUP / TEARDOWN
 // ============================================================================
@@ -1793,5 +1796,8 @@ describe('large-scale operations (1000 records)', function () {
     assert.strictEqual(query_result.count, 0);
 
   });
+
+});
+
 
 });
