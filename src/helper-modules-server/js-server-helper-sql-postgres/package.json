@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-server-helper-sql-postgres",
   "description": "PostgreSQL client with connection pooling (Postgres 15+). Async/await API, multi-DB capable, MySQL-compatible placeholder syntax.",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "main": "postgres.js",
   "private": false,
   "license": "MIT",
