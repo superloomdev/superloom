@@ -1,6 +1,20 @@
 # Superloom - AI Assistant Configuration
 
-> **This file is the single source of truth for AI agents.** It contains all project rules, coding standards, and architecture context needed to work on this codebase correctly. Detailed human-readable documentation lives in `docs/`. When `docs/` changes, this file must be updated via the `/propagate-changes` workflow.
+> ## GOLDEN RULE - READ FIRST
+>
+> **AGENTS.md is a derived, compact summary of `docs/`. Never edit AGENTS.md directly.**
+>
+> To change a rule:
+> 1. Update or add the source-of-truth file in `docs/` (architecture, dev, ops, philosophy, etc.)
+> 2. Run `/propagate-changes` to sync the compact summary into AGENTS.md
+>
+> Bypassing this rule causes drift: AGENTS.md will assert things `docs/` no longer says (or vice versa), humans lose the rationale behind the rule, and the same lesson gets re-learned the hard way. **No exceptions** -- even small wording fixes go through `docs/` first.
+>
+> When you discover a new failure mode, document it as a journal entry in the appropriate `docs/dev/*.md` file (testing, CI/CD, etc.) before fixing it. The journal is how the framework remembers what it has already learned.
+
+---
+
+> **This file is the single source of truth for AI agents at conversation start.** It contains all project rules, coding standards, and architecture context needed to work on this codebase correctly. Detailed human-readable documentation lives in `docs/`. When `docs/` changes, this file must be updated via the `/propagate-changes` workflow.
 
 ## Persona
 
@@ -618,8 +632,10 @@ module.exports = function (shared_libs, config_override) {
   - `registry=https://registry.npmjs.org/` (safeguard - prevents env var overrides from breaking public package resolution)
 - **CI/CD only** - push to `main` triggers `.github/workflows/ci-helper-modules.yml` (unified test + publish)
 - `NODE_AUTH_TOKEN` set at **job level** using `GITHUB_TOKEN`
-- **Publish triggers on version bump, not on file change** - the `detect` job compares `HEAD~1:package.json` to `HEAD:package.json` and schedules a publish job only when the `version` field changed. A registry safety-net then skips `npm publish` if that version is already on the registry
-- Version bump → conventional commit → push → CI tests, then publishes only the bumped modules
+- **Publish triggers on registry absence, not on git diff.** The `detect` job calls `npm view <name>@<version>` for every module and schedules a publish job whenever the current version is not yet on the registry. This subsumes "version bump in this commit" and also handles fresh-state recovery (e.g., after a registry wipe, all modules at `1.0.0` get published on the next push without needing a version bump). Each publish job retains a per-job safety-net that skips if the version is actually present
+- `test_modules` is the union of (modules with file changes) and (modules needing publish), so tests always run before publishing -- even when no file changed in this commit
+- Version bump → conventional commit → push → CI tests, then publishes only the modules whose new version is missing from the registry
+- Full rationale and pitfall journal: `docs/dev/cicd-publishing.md`
 
 ## Testing
 
@@ -660,6 +676,15 @@ module.exports = function (shared_libs, config_override) {
 - Test badge uses GitHub's **native** endpoint (`ci-helper-modules.yml/badge.svg?branch=main`) - works with private repos. Label reads "Test" because the workflow is named `Test` in `ci-helper-modules.yml`
 - Service-dependent modules add a Testing status table with an `Integration Tests` row inside the `## Testing` section - not in the header. Integration badge is static (manual update) since integration tests are run manually, not in CI
 - Source: `docs/architecture/module-testing.md`
+
+### Healthcheck and concurrency rules (Docker-dependent modules)
+
+These rules apply to every module that uses `_test/docker-compose.yml` and to every CI job that runs Docker-dependent tests. Full journal of past failures: `docs/dev/testing-local-modules.md` and `docs/dev/cicd-publishing.md`.
+
+- **Probe at the application level, not the process.** A healthcheck must use the credentials, database, and transport (`127.0.0.1`, not `localhost`) the tests will actually use. `mysqladmin ping -u root` is a false positive during MySQL's two-phase init -- probe with `test_user` instead. `pg_isready -U test_user -d test_db` is the canonical Postgres pattern
+- **No `sleep` in `pretest`.** If a sleep is needed, the healthcheck is wrong. Fix the healthcheck so `docker compose up -d --wait` truly returns only when the service is ready
+- **One owner of the Docker lifecycle.** `pretest` already starts the container locally and in CI. Never duplicate it with a workflow-level `docker run` step or a `services:` declaration on the same port
+- **Wrap stateful module tests in `describe('Module', { concurrency: false }, ...)`.** The Node.js test runner runs top-level `describe` blocks concurrently by default; lazy-init resources (DB pools, AWS SDK clients) race each other and the cancelled block leaves a half-initialized resource behind
 
 ## Security
 
