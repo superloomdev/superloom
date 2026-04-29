@@ -213,6 +213,27 @@ Each entry below maps a CI symptom to its root cause and the durable fix. Update
 
 The publish job has `needs: [detect, test-*]`, so it never runs if tests fail. Fix the tests and push again. The detect job will pick the same set of unpublished modules and try again.
 
+### 9. `Invalid workflow file: ... You have an error in your yaml syntax on line N`
+
+**Cause.** A bash assignment inside a `run: |` block scalar contained an embedded literal newline:
+
+```yaml
+run: |
+  PUBLISH_MODULES="$PUBLISH_MODULES$MODULE
+"
+```
+
+YAML block scalars (`|`) require every non-empty line to be indented at least to the block's indent level. The closing `"` on its own line had zero leading spaces -- less than the block's indent -- which terminates the block scalar early and fails YAML parsing.
+
+**Lesson.** Never embed a literal newline inside a bash string assignment within a YAML `run: |` block. Use bash's `$'\n'` escape (or `printf '%s\n'`, or a bash array) so every line of YAML respects the block's indentation:
+
+```yaml
+run: |
+  PUBLISH_MODULES="${PUBLISH_MODULES}${MODULE}"$'\n'
+```
+
+This applies anywhere YAML uses block scalars: GitHub Actions `run:`, Docker Compose `command:`, Helm chart values, CI configs, etc.
+
 ---
 
 ## Troubleshooting
