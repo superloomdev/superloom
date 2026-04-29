@@ -13,8 +13,8 @@ services:
       - "127.0.0.1:8000:8000"
     command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]
     healthcheck:
-      test: ["CMD-SHELL", "java -version 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:8000 2>/dev/null; [ $? -ne 7 ]"]
       interval: 2s
-      timeout: 2s
-      retries: 5
+      timeout: 3s
+      retries: 15
       start_period: 5s

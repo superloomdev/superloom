@@ -12,3 +12,9 @@ services:
     ports:
       - "127.0.0.1:9324:9324"   # SQS API (localhost only)
       - "127.0.0.1:9325:9325"   # Management UI (localhost only)
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:9324 2>/dev/null; [ $? -ne 7 ]"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
