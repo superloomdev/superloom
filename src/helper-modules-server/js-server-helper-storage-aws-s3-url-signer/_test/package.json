@@ -4,6 +4,8 @@
   "description": "Test suite for js-server-helper-aws-s3-url-signer",
   "private": true,
   "dependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
     "@superloomdev/js-server-helper-storage-aws-s3-url-signer": "file:../"
   },
   "scripts": {

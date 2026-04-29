@@ -9,8 +9,8 @@
     "name": "sj00"
   },
   "dependencies": {
-    "@superloomdev/js-helper-utils": "1.0.1",
-    "@superloomdev/js-helper-debug": "1.0.1",
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
     "@superloomdev/js-server-helper-http": "file:../"
   },
   "scripts": {
