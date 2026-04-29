@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-helper-debug",
   "description": "Structured logging library with log levels, dual output formats (text/JSON), and performance audit support. Zero runtime dependencies.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "debug.js",
   "private": false,
   "license": "MIT",
