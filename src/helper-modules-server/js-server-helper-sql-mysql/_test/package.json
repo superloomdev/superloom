@@ -9,10 +9,10 @@
     "name": "sj00"
   },
   "dependencies": {
-    "@superloomdev/js-.*": "1.0.0",
-    "@superloomdev/js-.*": "1.0.0",
-    "@superloomdev/js-.*": "1.0.0",
-    "@superloomdev/js-.*": "1.0.0",
+    "@superloomdev/js-helper-utils": "1.0.1",
+    "@superloomdev/js-helper-debug": "1.0.1",
+    "@superloomdev/js-server-helper-instance": "1.0.1",
+    "@superloomdev/js-server-helper-sql-mysql": "file:../",
     "mysql2": "^3.22.0"
   },
   "scripts": {
