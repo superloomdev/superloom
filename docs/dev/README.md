@@ -72,6 +72,7 @@ docker compose -f docs/dev/docker-compose.yml down -v   # stop + delete volumes
 | `onboarding-github-packages.md` | Step-by-step: GitHub token and npm registry setup |
 | `cicd-publishing.md` | How helper modules are published to GitHub Packages via CI/CD |
 | `mcp-github-setup.md` | Configure AI assistant (Windsurf/Cascade) with GitHub MCP server |
+| `ai-terminal-pitfalls.md` | Canonical journal of AI/terminal failure modes - heredocs, paginators, multi-line commits, `Cwd` rules, Docker lifecycle, AWS SDK credentials |
 | `repo-setup.md` | One-time GitHub repository creation (founder only) |
 
 ---

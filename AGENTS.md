@@ -48,54 +48,38 @@ You assist developers working on **Superloom**, a modular, transport-agnostic ap
 
 ### Safe Terminal Patterns (AI-Specific)
 
-**Direct file tools vs Terminal workaround:**
+> Full journal lives in `docs/dev/ai-terminal-pitfalls.md`. The rules below are the compact summary - read the journal whenever a new failure mode is encountered or before adding a new rule here.
 
-- **Normal files** (not gitignored): Use `read_file`, `edit`, `write_to_file` directly - the IDE has full access
-- **Gitignored files** (e.g., `__dev__/migration-changelog.md`): IDE tools cannot access these - use the terminal workaround below
+**File tools vs terminal:**
 
-**Never use shell heredocs** (`cat <<'EOF' ... EOF`) for multi-line content. Heredocs with complex content (backticks, code blocks, special characters) hang or fail due to shell parsing issues.
+- **Normal files** (not gitignored): use `read_file`, `edit`, `write_to_file` directly.
+- **Gitignored files** (`__dev__/...`, `.env*`): IDE tools refuse them. Write content via `write_to_file` to `/tmp/...`, then `cat /tmp/file >> /path/to/target` from the shell.
 
-**Never pass a multi-line message to `git commit -m "..."`.** The same shell-bridge issue as heredocs: when the closing `"` lands on a line different from the opening `"`, zsh enters `dquote>` continuation mode and the command hangs. Special characters in the body (`` ` ``, `$`, `!`, `(...)`) make this worse. The approval popup also renders multi-line commands poorly. Use one of:
+**Never make the shell parse multi-line strings.** Three common offenders, all caused by zsh entering `dquote>` / `heredoc>` continuation mode where the bridge cannot send the closing token:
 
-- **Single-line `-m`** (preferred for almost every commit):
-  ```bash
-  git commit -m "feat(module): one-line summary of what changed"
-  ```
-- **Multiple `-m` flags** (each becomes a paragraph in `git log`):
-  ```bash
-  git commit -m "feat(module): summary" -m "Body paragraph one." -m "Body paragraph two."
-  ```
-- **`-F /tmp/commit-msg`** (only when a long structured body is genuinely needed):
-  ```bash
-  # Step 1: Write content to temp file via write_to_file tool (not heredoc)
-  # Step 2: Commit from the file
-  git commit -F /tmp/commit-msg
-  rm /tmp/commit-msg
-  ```
-
-**Safe terminal pattern for gitignored files (e.g., `__dev__/migration-changelog.md`):**
-```bash
-# Step 1: Write content to temp file via write_to_file tool (not terminal heredoc)
-# Step 2: Append via simple cat
-cat /tmp/migration-entry.md >> /Users/sj/Projects/codebase-superloom/__dev__/migration-changelog.md
-rm /tmp/migration-entry.md
-```
-
-**General rule:** any time a `run_command` payload would span multiple lines because of an embedded quoted string, route the multi-line content through `write_to_file` to a temp file first, then have the shell command read from that file. Multi-line shell strings are not safe through this terminal bridge.
-
-This pattern is also documented in `.windsurf/workflows/migrate-module.md` Section 7a.
-
-**Always specify `Cwd` for module commands.** Every `run_command` targeting a module (`npm install`, `npm test`, `docker compose`) must have `Cwd` set to the module's `_test/` directory explicitly. Omitting `Cwd` silently runs from the repo root, which has a different `package.json` and produces misleading `ETARGET` version errors.
+1. **Heredocs** (`cat <<'EOF' ... EOF`). Always use `write_to_file` instead.
+2. **Multi-line `git commit -m "..."`**. Use a single-line `-m`, or stack multiple `-m` flags, or `git commit -F /tmp/commit-msg` (file written via `write_to_file`).
+3. **Any other quoted argument** that spans multiple lines. Same fix - route the multi-line content through a temp file first.
 
 ```bash
-# Correct — Cwd set to _test/
-# npm install && npm test  (with Cwd: .../js-server-helper-sql-postgres/_test)
+# Single-line summary (preferred)
+git commit -m "feat(module): one-line summary"
 
-# Wrong — no Cwd, runs from repo root, wrong package.json
-# npm install  (with no Cwd)
+# Multi-paragraph - each `-m` becomes a paragraph
+git commit -m "feat(module): summary" -m "Body paragraph one." -m "Body paragraph two."
 ```
 
-**Module testing contract — `npm test` is self-contained.** For all modules that have `pretest`/`posttest` scripts, `npm test` manages the full Docker container lifecycle. Never start containers manually before `npm test` — `pretest` runs `docker compose down -v` first and will conflict. Always run `npm install && npm test` from the module's `_test/` directory. See `docs/dev/testing-local-modules.md` for the full guide and common pitfalls.
+**Never invoke an interactive viewer** (`less`, `more`, `vi`, `man`) - the bridge cannot type. `PAGER=cat` is set in the env, but commands that ignore it need an explicit flag: `git log -n 20`, `git --no-pager diff`, `journalctl --no-pager`, `systemctl --no-pager status`.
+
+**Foreground long-runners** (`node server.js`, `tail -f`, `docker compose logs -f`) must be launched with `Blocking: false` and a small `WaitMsBeforeAsync`, then later polled via `command_status`. Stop the process at the end of the task.
+
+**Always specify `Cwd` for module commands.** Every `run_command` targeting a module (`npm install`, `npm test`, `docker compose`) must pass `Cwd` set to the module's `_test/` directory explicitly. Omitting it silently runs from the repo root with a different `package.json` and produces misleading `ETARGET` errors. Same rule for any other path-sensitive command - `cd <path> &&` does **not** persist between `run_command` calls because each call is a fresh shell. The user's preference is to **never propose a `cd` command**.
+
+**Module testing contract - `npm test` is self-contained.** For modules with `pretest`/`posttest` scripts, `npm test` manages the full Docker container lifecycle. Never start containers manually before `npm test` - `pretest` runs `docker compose down -v` first and will conflict. Always run `npm install && npm test` from the module's `_test/` directory. See `docs/dev/testing-local-modules.md` for the full healthcheck-and-lifecycle guide.
+
+**AWS SDK calls need dummy credentials in tests.** No env credentials = SDK walks the EC2 metadata chain = 1-2 s timeout per call. Set `AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local AWS_REGION=us-east-1` in the `_test/package.json` `test` script even when no real AWS call happens (URL signing, command construction, etc.).
+
+**Auto-run is for read-only or idempotent operations only.** Never set `SafeToAutoRun: true` for `rm -rf`, `git push --force`, `docker volume rm`, `npm publish`, or any other state mutation, even if the user previously approved a similar command. The user's `Boundaries` section spells this out explicitly.
 
 ## Boundaries
 
