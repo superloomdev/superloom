@@ -1,7 +1,7 @@
 {
   "name": "@superloomdev/js-server-helper-nosql-mongodb",
   "description": "MongoDB wrapper using native driver with factory pattern. Per-instance state and lazy loading.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "mongodb.js",
   "private": false,
   "license": "MIT",

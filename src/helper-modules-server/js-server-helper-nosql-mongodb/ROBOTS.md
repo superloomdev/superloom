@@ -29,7 +29,7 @@ Each loader call returns an independent MongoDB interface with its own `Lib`, `C
 | MAX_POOL_SIZE | Number | 10 | no |
 | SERVER_SELECTION_TIMEOUT | Number | 5000 | no |
 
-## Exported Functions (14 total)
+## Exported Functions (15 total)
 
 All functions with `instance` param use instance for request-level performance tracing.
 
@@ -91,6 +91,13 @@ transactWriteRecords(instance, callback) → { success, result, error } | async:
   Atomic multi-collection write. callback = async function(session, db) { ... }
   All operations inside callback must pass { session } as option.
   Requires replica set (Atlas has this by default; local Docker: --replSet rs0).
+
+### Indexes
+
+createIndex(instance, collection, spec, options?) → { success, index_name, error } | async:yes
+  Create or verify an index. Idempotent when the same name+spec is used.
+  spec: key map (e.g. { field: 1 } ascending, { field: 'text' } text)
+  options: { name, unique, sparse, expireAfterSeconds }
 
 ### Connection
 

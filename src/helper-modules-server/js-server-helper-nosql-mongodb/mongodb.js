@@ -798,6 +798,56 @@ const createInterface = function (Lib, CONFIG, state) {
 
 
     /********************************************************************
+    Create (or verify) an index on a collection. Idempotent - MongoDB's
+    createIndex is a no-op when an equivalent index already exists with
+    the same name and spec, which means callers can safely invoke this
+    at boot time on every startup without worrying about duplicates.
+
+    @param {Object} instance - Request instance for performance tracing
+    @param {String} collection - Collection name
+    @param {Object} spec - Index key spec (e.g. { field: 1 } ascending, { field: -1 } descending, { field: 'text' } text index)
+    @param {Object} [options] - createIndex options
+    @param {String} [options.name] - Explicit index name (recommended for idempotency)
+    @param {Boolean} [options.unique] - Enforce uniqueness
+    @param {Boolean} [options.sparse] - Skip documents missing the indexed field
+    @param {Number} [options.expireAfterSeconds] - TTL index (field must be a Date type)
+
+    @return {Promise<Object>} - { success, index_name, error }
+    *********************************************************************/
+    createIndex: async function (instance, collection, spec, options) {
+
+      void instance;
+
+      // Ensure MongoDB client is initialized
+      await _MongoDB.initIfNot();
+
+      try {
+
+        // MongoDB's createIndex returns the index name
+        const index_name = await state.db.collection(collection).createIndex(spec, options || {});
+
+        return {
+          success: true,
+          index_name: index_name,
+          error: null
+        };
+
+      } catch (error) {
+
+        Lib.Debug.debug('MongoDB createIndex failed', { collection: collection, error: error.message });
+
+        return {
+          success: false,
+          index_name: null,
+          error: { type: 'DATABASE_ERROR', message: error.message }
+        };
+
+      }
+
+    },
+
+
+    /********************************************************************
     Close the MongoDB connection for this instance.
 
     @param {Object} instance - Request instance for performance tracing
