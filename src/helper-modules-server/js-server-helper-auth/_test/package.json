@@ -1,0 +1,38 @@
+{
+  "name": "js-server-helper-auth-test",
+  "description": "Test Cases for js-server-helper-auth",
+  "version": "1.0.1",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
+    "@superloomdev/js-server-helper-crypto": "^1.0.0",
+    "@superloomdev/js-server-helper-instance": "^1.0.0",
+    "@superloomdev/js-server-helper-sql-sqlite": "^1.0.0",
+    "@superloomdev/js-server-helper-sql-postgres": "^1.0.0",
+    "@superloomdev/js-server-helper-sql-mysql": "^1.0.0",
+    "@superloomdev/js-server-helper-nosql-mongodb": "file:../../js-server-helper-nosql-mongodb",
+    "@superloomdev/js-server-helper-nosql-aws-dynamodb": "file:../../js-server-helper-nosql-aws-dynamodb",
+    "@superloomdev/js-server-helper-auth": "file:../",
+    "mongodb": "^6.10.0",
+    "pg": "^8.20.0",
+    "mysql2": "^3.11.0"
+  },
+  "scripts": {
+    "test:memory": "node --test test.js",
+    "test:jwt": "node --test test-jwt.js",
+    "test:sqlite": "SQL_KIND=sqlite node --test test-sqlite.js",
+    "test:postgres": "SQL_KIND=postgres POSTGRES_HOST=localhost POSTGRES_PORT=5432 POSTGRES_DATABASE=test_db POSTGRES_USER=test_user POSTGRES_PASSWORD=test_pw node --test --test-timeout 120000 test-postgres.js",
+    "test:mysql": "SQL_KIND=mysql MYSQL_HOST=127.0.0.1 MYSQL_PORT=3306 MYSQL_DATABASE=test_db MYSQL_USER=test_user MYSQL_PASSWORD=test_pw node --test --test-timeout 120000 test-mysql.js",
+    "test:mongodb": "BACKEND_KIND=mongodb MONGO_URL=mongodb://test_user:test_pw@127.0.0.1:27017/test_db?authSource=admin MONGO_DATABASE=test_db node --test --test-timeout 120000 test-mongodb.js",
+    "test:dynamodb": "BACKEND_KIND=dynamodb DYNAMO_ENDPOINT=http://127.0.0.1:8000 AWS_REGION=us-east-1 AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake node --test --test-timeout 120000 test-dynamodb.js",
+    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait",
+    "test": "npm run test:memory && npm run test:jwt && npm run test:sqlite && npm run test:postgres && npm run test:mysql && npm run test:mongodb && npm run test:dynamodb",
+    "posttest": "docker compose down -v --remove-orphans"
+  }
+}

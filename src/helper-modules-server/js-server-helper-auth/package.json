@@ -1,0 +1,27 @@
+{
+  "name": "@superloomdev/js-server-helper-auth",
+  "description": "Session lifecycle and authentication: create, verify, list, remove. Multi-instance per actor_type, built-in stores for Postgres / MySQL / SQLite / DynamoDB / MongoDB. Optional JWT mode with refresh-token rotation.",
+  "version": "1.1.0",
+  "main": "auth.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

@@ -1,0 +1,98 @@
+# Services for js-server-helper-auth multi-backend tests.
+# One compose file spins up Postgres, MySQL, MongoDB, and DynamoDB-Local
+# so a single `npm test` can exercise every backend against ephemeral
+# containers. Individual test:<backend> scripts run while the compose
+# lifecycle is managed by pretest / posttest.
+
+name: superloom-test-auth
+
+services:
+
+  postgres:
+    container_name: superloom-test-auth-postgres
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U test_user -d test_db
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mysql:
+    container_name: superloom-test-auth-mysql
+    image: mysql:8.0.44
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: test_root_pw
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - 127.0.0.1
+        - -u
+        - test_user
+        - -ptest_pw
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  mongodb:
+    container_name: superloom-test-auth-mongodb
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: test_user
+      MONGO_INITDB_ROOT_PASSWORD: test_pw
+      MONGO_INITDB_DATABASE: test_db
+    ports:
+      - "127.0.0.1:27017:27017"
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - -u
+        - test_user
+        - -p
+        - test_pw
+        - --authenticationDatabase
+        - admin
+        - --eval
+        - "db.adminCommand('ping').ok"
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  dynamodb:
+    # DynamoDB Local is a slim Java image without curl/wget/nc, so we
+    # cannot run a container-internal healthcheck. We rely on the
+    # short boot time (< 2 s) plus the test's internal readiness loop
+    # (createTable retries). Startup ordering is "best-effort" via
+    # pretest waiting on other services first.
+    container_name: superloom-test-auth-dynamodb
+    image: amazon/dynamodb-local:2.5.3
+    command:
+      - "-jar"
+      - "DynamoDBLocal.jar"
+      - "-sharedDb"
+      - "-inMemory"
+    ports:
+      - "127.0.0.1:8000:8000"
