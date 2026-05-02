@@ -31,9 +31,15 @@ const TEST_ERRORS = {
 };
 
 
-// Helper - shorthand to construct a verify instance with the test ERRORS
+// Helper - shorthand to construct a verify instance backed by an injected
+// store fixture (registry's `__inject` test store). Real applications use a
+// store name like 'memory' / 'postgres' / etc.
 const buildVerify = function (store) {
-  return VerifyLoader(Lib, { STORE: store, ERRORS: TEST_ERRORS });
+  return VerifyLoader(Lib, {
+    STORE: '__inject',
+    STORE_CONFIG: { store: store },
+    ERRORS: TEST_ERRORS
+  });
 };
 
 
@@ -178,98 +184,69 @@ const defaultVerifyOptions = function (overrides) {
 
 describe('Loader validation', function () {
 
-  it('should throw when CONFIG.STORE is missing', function () {
+  it('throws when CONFIG.STORE is missing', function () {
     assert.throws(function () {
       VerifyLoader(Lib, { ERRORS: TEST_ERRORS });
     }, /CONFIG\.STORE is required/);
   });
 
 
-  it('should throw when CONFIG.STORE is null', function () {
+  it('throws when CONFIG.STORE is null', function () {
     assert.throws(function () {
       VerifyLoader(Lib, { STORE: null, ERRORS: TEST_ERRORS });
     }, /CONFIG\.STORE is required/);
   });
 
 
-  it('should throw when STORE.getRecord is missing', function () {
-    const store = createInMemoryStore();
-    delete store.getRecord;
+  it('throws when CONFIG.STORE names an unknown backend', function () {
     assert.throws(function () {
-      VerifyLoader(Lib, { STORE: store, ERRORS: TEST_ERRORS });
-    }, /CONFIG\.STORE\.getRecord must be an async function/);
+      VerifyLoader(Lib, { STORE: 'pigeon-mail', STORE_CONFIG: {}, ERRORS: TEST_ERRORS });
+    }, /Unknown CONFIG\.STORE "pigeon-mail"/);
   });
 
 
-  it('should throw when STORE.setRecord is not a function', function () {
-    const store = createInMemoryStore();
-    store.setRecord = 'not a function';
+  it('throws when CONFIG.STORE_CONFIG is missing', function () {
     assert.throws(function () {
-      VerifyLoader(Lib, { STORE: store, ERRORS: TEST_ERRORS });
-    }, /CONFIG\.STORE\.setRecord must be an async function/);
+      VerifyLoader(Lib, { STORE: 'memory', ERRORS: TEST_ERRORS });
+    }, /CONFIG\.STORE_CONFIG is required/);
   });
 
 
-  it('should throw when STORE.incrementFailCount is missing', function () {
-    const store = createInMemoryStore();
-    delete store.incrementFailCount;
+  it('throws when CONFIG.ERRORS is missing', function () {
     assert.throws(function () {
-      VerifyLoader(Lib, { STORE: store, ERRORS: TEST_ERRORS });
-    }, /CONFIG\.STORE\.incrementFailCount must be an async function/);
-  });
-
-
-  it('should throw when STORE.deleteRecord is missing', function () {
-    const store = createInMemoryStore();
-    delete store.deleteRecord;
-    assert.throws(function () {
-      VerifyLoader(Lib, { STORE: store, ERRORS: TEST_ERRORS });
-    }, /CONFIG\.STORE\.deleteRecord must be an async function/);
-  });
-
-
-  it('should throw when CONFIG.ERRORS is missing', function () {
-    assert.throws(function () {
-      VerifyLoader(Lib, { STORE: createInMemoryStore() });
+      VerifyLoader(Lib, { STORE: 'memory', STORE_CONFIG: {} });
     }, /CONFIG\.ERRORS is required/);
   });
 
 
-  it('should throw when CONFIG.ERRORS is missing a required key', function () {
+  it('throws when CONFIG.ERRORS is missing a required key', function () {
     const partial = Object.assign({}, TEST_ERRORS);
     delete partial.COOLDOWN_ACTIVE;
     assert.throws(function () {
-      VerifyLoader(Lib, { STORE: createInMemoryStore(), ERRORS: partial });
+      VerifyLoader(Lib, { STORE: 'memory', STORE_CONFIG: {}, ERRORS: partial });
     }, /CONFIG\.ERRORS\.COOLDOWN_ACTIVE is required/);
   });
 
 
-  it('should throw when STORE.cleanupExpiredRecords is present but not a function', function () {
-    const store = createInMemoryStore();
-    store.cleanupExpiredRecords = 'not a function';
+  it('throws when the postgres store is missing required STORE_CONFIG keys', function () {
     assert.throws(function () {
-      VerifyLoader(Lib, { STORE: store, ERRORS: TEST_ERRORS });
-    }, /CONFIG\.STORE\.cleanupExpiredRecords must be an async function when provided/);
+      VerifyLoader(Lib, {
+        STORE: 'postgres',
+        STORE_CONFIG: {}, // missing table_name + lib_sql
+        ERRORS: TEST_ERRORS
+      });
+    }, /STORE_CONFIG\.table_name is required for postgres/);
   });
 
 
-  it('should construct successfully when STORE has no cleanupExpiredRecords', function () {
-    const Verify = buildVerify(createInMemoryStore());
+  it('constructs successfully with the memory store', function () {
+    const Verify = VerifyLoader(Lib, { STORE: 'memory', STORE_CONFIG: {}, ERRORS: TEST_ERRORS });
     assert.strictEqual(typeof Verify.createPin, 'function');
     assert.strictEqual(typeof Verify.createCode, 'function');
     assert.strictEqual(typeof Verify.createToken, 'function');
     assert.strictEqual(typeof Verify.verify, 'function');
     assert.strictEqual(typeof Verify.cleanupExpiredRecords, 'function');
-  });
-
-
-  it('should construct successfully when STORE has cleanupExpiredRecords', function () {
-    const store = createInMemoryStore();
-    store.cleanupExpiredRecords = async function () {
-      return { success: true, deleted_count: 0, error: null };
-    };
-    const Verify = buildVerify(store);
-    assert.strictEqual(typeof Verify.cleanupExpiredRecords, 'function');
+    assert.strictEqual(typeof Verify.initializeStore, 'function');
   });
 
 });

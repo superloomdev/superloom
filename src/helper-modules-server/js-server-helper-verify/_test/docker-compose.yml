@@ -1,10 +1,10 @@
-# Local services for the verify integration test suite.
+# Local services for the verify module integration test suite.
 # Brings up the four backends that need a service (Postgres, MySQL, MongoDB,
 # DynamoDB Local). SQLite needs nothing - it runs in-memory inside Node.
-# Lifecycle managed by npm scripts: npm test starts → tests → stops and removes
+# Lifecycle managed by npm scripts: npm test starts -> tests -> stops & removes.
 #
-# Ports collide with the per-helper docker-compose files. Stop those first if
-# they are running. All data is ephemeral (no named volumes).
+# Ports may collide with the per-helper docker-compose files. Stop those first
+# if they are running. All data is ephemeral (no named volumes).
 
 name: superloom-test-verify
 
@@ -12,7 +12,7 @@ services:
 
   postgres:
     image: postgres:17-alpine
-    container_name: verify-test-postgres
+    container_name: superloom-test-verify-postgres
     environment:
       POSTGRES_DB: test_db
       POSTGRES_USER: test_user
@@ -23,13 +23,14 @@ services:
       test:
         - CMD-SHELL
         - pg_isready -U test_user -d test_db
-      interval: 5s
+      interval: 3s
       timeout: 3s
-      retries: 10
+      retries: 30
+      start_period: 5s
 
   mysql:
     image: mysql:8.0.44
-    container_name: verify-test-mysql
+    container_name: superloom-test-verify-mysql
     command:
       - --default-authentication-plugin=caching_sha2_password
       - --character-set-server=utf8mb4
@@ -51,13 +52,14 @@ services:
         - -u
         - root
         - -ptest_root_pw
-      interval: 5s
+      interval: 3s
       timeout: 3s
-      retries: 15
+      retries: 40
+      start_period: 10s
 
   mongodb:
     image: mongo:8.2
-    container_name: verify-test-mongodb
+    container_name: superloom-test-verify-mongodb
     ports:
       - "127.0.0.1:27017:27017"
     healthcheck:
@@ -67,13 +69,21 @@ services:
         - --quiet
         - --eval
         - "db.adminCommand('ping').ok"
-      interval: 5s
+      interval: 3s
       timeout: 3s
-      retries: 10
+      retries: 30
+      start_period: 5s
 
   dynamodb:
-    image: amazon/dynamodb-local:latest
-    container_name: verify-test-dynamodb
+    # DynamoDB Local is a slim Java image without curl/wget/nc, so we cannot
+    # run a container-internal healthcheck. The startup is fast (< 2s) and
+    # the test setup includes its own readiness retry via createTable.
+    container_name: superloom-test-verify-dynamodb
+    image: amazon/dynamodb-local:2.5.3
+    command:
+      - "-jar"
+      - "DynamoDBLocal.jar"
+      - "-sharedDb"
+      - "-inMemory"
     ports:
       - "127.0.0.1:8000:8000"
-    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]

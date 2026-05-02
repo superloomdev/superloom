@@ -1,15 +1,18 @@
 // Info: One-time verification code lifecycle: generate, store, validate, consume.
-// Storage-agnostic adapter pattern. Three create interfaces (pin, code, token)
-// share one core flow; one verify interface consumes any of them. Three
-// independent defenses against abuse: cooldown on creation, expiry (TTL),
-// and per-record fail counter. On a successful verify, the record is deleted
-// in the background so the same value cannot be reused.
+// Three create interfaces (pin, code, token) share one core flow; one verify
+// interface consumes any of them. Three independent defenses against abuse:
+// cooldown on creation, expiry (TTL), and per-record fail counter. On a
+// successful verify, the record is deleted in the background so the same
+// value cannot be reused.
+//
+// Storage backends: memory (tests), sqlite, postgres, mysql, mongodb, dynamodb.
+// One backend per loader call - selected via `CONFIG.STORE` (string name) +
+// `CONFIG.STORE_CONFIG` (per-store options). Other backends never load.
 //
 // Compatibility: Node.js 20.19+.
 //
 // Factory pattern: each loader call returns an independent Verify interface
-// with its own Lib and CONFIG. Stateless - the storage adapter is held in
-// CONFIG and supplied by the project's loader.
+// with its own Lib and CONFIG.
 'use strict';
 
 
@@ -18,7 +21,7 @@
 
 /********************************************************************
 Factory loader. One call = one independent instance with its own
-Lib and CONFIG. Validates the storage adapter at construction so
+Lib, CONFIG, and store. Validates CONFIG at construction so
 misconfiguration fails fast at startup, not on first request.
 
 @param {Object} shared_libs - Lib container with Utils, Debug, Crypto, Instance
@@ -43,25 +46,51 @@ module.exports = function loader (shared_libs, config) {
     config || {}
   );
 
-  // Fast-fail if the storage adapter is missing
-  if (Lib.Utils.isNullOrUndefined(CONFIG.STORE)) {
-    throw new Error('[js-server-helper-verify] CONFIG.STORE is required (object with getRecord, setRecord, incrementFailCount, deleteRecord)');
-  }
+  // Validate the config shape
+  validateConfig(Lib, CONFIG);
 
-  // Each adapter method must be a function
-  const required_methods = ['getRecord', 'setRecord', 'incrementFailCount', 'deleteRecord'];
-  for (const method of required_methods) {
-    if (!Lib.Utils.isFunction(CONFIG.STORE[method])) {
-      throw new Error('[js-server-helper-verify] CONFIG.STORE.' + method + ' must be an async function');
-    }
-  }
+  // Resolve the requested store via the lazy registry. Only the chosen
+  // store file is loaded; other backends stay on disk.
+  const loadStoreFactory = require('./stores');
+  const StoreFactory = loadStoreFactory(CONFIG.STORE);
+  const store = StoreFactory(Lib, CONFIG.STORE_CONFIG || {});
 
-  // Optional adapter method - only validated if present
+  // Create and return the public interface
+  return createInterface(Lib, CONFIG, store);
+
+};///////////////////////////// Module-Loader END ///////////////////////////////
+
+
+
+//////////////////////////// Config Validation START ///////////////////////////
+
+/********************************************************************
+Validate the merged CONFIG. Throws on every missing-required violation
+so the loader fails before serving a single request.
+
+@param {Object} Lib - Dependency container
+@param {Object} CONFIG - Merged configuration
+
+@return {void}
+*********************************************************************/
+const validateConfig = function (Lib, CONFIG) {
+
+  // STORE name is required and must be a non-empty string
   if (
-    !Lib.Utils.isNullOrUndefined(CONFIG.STORE.cleanupExpiredRecords) &&
-    !Lib.Utils.isFunction(CONFIG.STORE.cleanupExpiredRecords)
+    Lib.Utils.isNullOrUndefined(CONFIG.STORE) ||
+    !Lib.Utils.isString(CONFIG.STORE) ||
+    Lib.Utils.isEmptyString(CONFIG.STORE)
   ) {
-    throw new Error('[js-server-helper-verify] CONFIG.STORE.cleanupExpiredRecords must be an async function when provided');
+    throw new Error('[js-server-helper-verify] CONFIG.STORE is required (one of the supported store names)');
+  }
+
+  // STORE_CONFIG is required (may be empty object for the memory store)
+  if (Lib.Utils.isNullOrUndefined(CONFIG.STORE_CONFIG)) {
+    throw new Error('[js-server-helper-verify] CONFIG.STORE_CONFIG is required (object)');
+  }
+
+  if (!Lib.Utils.isObject(CONFIG.STORE_CONFIG)) {
+    throw new Error('[js-server-helper-verify] CONFIG.STORE_CONFIG must be a plain object');
   }
 
   // Fast-fail if the application has not supplied a domain-error catalog.
@@ -90,10 +119,9 @@ module.exports = function loader (shared_libs, config) {
     }
   }
 
-  // Create and return the public interface
-  return createInterface(Lib, CONFIG);
+};
 
-};///////////////////////////// Module-Loader END ///////////////////////////////
+//////////////////////////// Config Validation END /////////////////////////////
 
 
 
@@ -101,14 +129,15 @@ module.exports = function loader (shared_libs, config) {
 
 /********************************************************************
 Builds the public interface for one instance. Public and private
-functions close over the provided Lib and CONFIG.
+functions close over the provided Lib, CONFIG, and store.
 
 @param {Object} Lib - Dependency container (Utils, Debug, Crypto, Instance)
 @param {Object} CONFIG - Merged configuration for this instance
+@param {Object} store - Resolved storage backend interface
 
 @return {Object} - Public interface for this module
 *********************************************************************/
-const createInterface = function (Lib, CONFIG) {
+const createInterface = function (Lib, CONFIG, store) {
 
   ///////////////////////////Public Functions START//////////////////////////////
   const Verify = {
@@ -198,7 +227,7 @@ const createInterface = function (Lib, CONFIG) {
     when the adapter provides a `cleanupExpiredRecords` method. SQL-based
     backends (Postgres, MySQL, SQLite) need this because they have no
     native TTL. NoSQL backends (DynamoDB, MongoDB) handle expiry natively
-    and do not need to implement this method.
+    but still expose this method for explicit lifecycle control.
 
     Intended to be called from a scheduled job (cron, setInterval,
     CloudWatch Events -> Lambda), not on every request.
@@ -210,6 +239,28 @@ const createInterface = function (Lib, CONFIG) {
     cleanupExpiredRecords: async function (instance) {
 
       return _Verify.cleanupExpired(instance);
+
+    },
+
+
+    /********************************************************************
+    Idempotent backend setup. Memory store: no-op. SQL: CREATE TABLE
+    IF NOT EXISTS + index on expires_at. MongoDB: createIndex with
+    `expireAfterSeconds: 0` for native TTL. DynamoDB: CreateTable
+    with composite key (TTL on `expires_at` is opt-in at the table
+    level - enable via AWS console or IaC, not by this module).
+
+    @param {Object} instance - Request instance
+
+    @return {Promise<Object>} - { success, error }
+    *********************************************************************/
+    initializeStore: async function (instance) {
+
+      if (!Lib.Utils.isFunction(store.initialize)) {
+        return { success: true, error: null };
+      }
+
+      return await store.initialize(instance);
 
     }
 
@@ -237,7 +288,7 @@ const createInterface = function (Lib, CONFIG) {
       _Verify.validateCreateOptions(options);
 
       // Look up any existing record so we can apply the cooldown rule
-      const existing = await CONFIG.STORE.getRecord(instance, options.scope, options.key);
+      const existing = await store.getRecord(instance, options.scope, options.key);
       if (existing.success === false) {
         Lib.Debug.debug('Verify cooldown lookup failed', { scope: options.scope, key: options.key, error: existing.error });
         return {
@@ -273,7 +324,7 @@ const createInterface = function (Lib, CONFIG) {
       };
 
       // Write the record (overwrites any prior record now outside cooldown)
-      const write_result = await CONFIG.STORE.setRecord(instance, options.scope, options.key, record);
+      const write_result = await store.setRecord(instance, options.scope, options.key, record);
       if (write_result.success === false) {
         Lib.Debug.debug('Verify store write failed', { scope: options.scope, key: options.key, error: write_result.error });
         return {
@@ -313,7 +364,7 @@ const createInterface = function (Lib, CONFIG) {
       _Verify.validateVerifyOptions(options);
 
       // Pull the stored record for this scope+key
-      const lookup = await CONFIG.STORE.getRecord(instance, options.scope, options.key);
+      const lookup = await store.getRecord(instance, options.scope, options.key);
       if (lookup.success === false) {
         Lib.Debug.debug('Verify consume lookup failed', { scope: options.scope, key: options.key, error: lookup.error });
         return {
@@ -348,7 +399,7 @@ const createInterface = function (Lib, CONFIG) {
 
       // Wrong value: bump the fail counter (best-effort) and reject
       if (lookup.record.code !== options.value) {
-        const inc_result = await CONFIG.STORE.incrementFailCount(instance, options.scope, options.key);
+        const inc_result = await store.incrementFailCount(instance, options.scope, options.key);
         if (inc_result.success === false) {
           Lib.Debug.debug('Verify increment fail count failed (ignored)', { scope: options.scope, key: options.key, error: inc_result.error });
         }
@@ -380,7 +431,7 @@ const createInterface = function (Lib, CONFIG) {
     *********************************************************************/
     cleanupExpired: async function (instance) {
 
-      if (!Lib.Utils.isFunction(CONFIG.STORE.cleanupExpiredRecords)) {
+      if (!Lib.Utils.isFunction(store.cleanupExpiredRecords)) {
         return {
           success: false,
           deleted_count: 0,
@@ -389,7 +440,7 @@ const createInterface = function (Lib, CONFIG) {
       }
 
       try {
-        return await CONFIG.STORE.cleanupExpiredRecords(instance);
+        return await store.cleanupExpiredRecords(instance);
       } catch (err) {
         Lib.Debug.debug('Verify cleanup threw', { error: err.message });
         return {
@@ -420,7 +471,7 @@ const createInterface = function (Lib, CONFIG) {
       const completeBackgroundRoutine = Lib.Instance.backgroundRoutine(instance);
 
       // Run the delete in the background; signal completion in finally
-      CONFIG.STORE.deleteRecord(instance, scope, key)
+      store.deleteRecord(instance, scope, key)
         .then(function (delete_result) {
           if (delete_result.success === false) {
             Lib.Debug.debug('Verify background delete failed (ignored)', { scope: scope, key: key, error: delete_result.error });
