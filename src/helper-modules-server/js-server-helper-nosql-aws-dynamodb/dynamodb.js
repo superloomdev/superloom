@@ -904,6 +904,131 @@ const createInterface = function (Lib, CONFIG, state) {
     },
 
 
+    // ~~~~~~~~~~~~~~~~~~~~ Table management ~~~~~~~~~~~~~~~~~~~~
+
+    /********************************************************************
+    Create a DynamoDB table. Idempotent - if the table already exists
+    with any schema, returns success without modification. Intended for
+    app-managed single-table designs and emulated-testing setups; in
+    production, prefer infrastructure-as-code (CloudFormation / Terraform)
+    for table provisioning.
+
+    @param {Object} instance - Request instance object reference
+    @param {String} table - Table name
+    @param {Object} params - Table definition
+    @param {Object[]} params.attribute_definitions - [{ name, type: 'S'|'N'|'B' }]
+    @param {Object[]} params.key_schema - [{ name, type: 'HASH'|'RANGE' }]
+    @param {String} [params.billing_mode] - 'PAY_PER_REQUEST' (default) or 'PROVISIONED'
+    @param {Object[]} [params.global_secondary_indexes] - Optional GSI list (same shape)
+
+    @return {Promise<Object>} - { success, already_exists, error }
+    *********************************************************************/
+    createTable: async function (instance, table, params) {
+
+      _DynamoDB.initIfNot();
+
+      void instance;
+
+      const attribute_definitions = params.attribute_definitions.map(function (a) {
+        return { AttributeName: a.name, AttributeType: a.type };
+      });
+      const key_schema = params.key_schema.map(function (k) {
+        return { AttributeName: k.name, KeyType: k.type };
+      });
+
+      const service_params = {
+        TableName: table,
+        AttributeDefinitions: attribute_definitions,
+        KeySchema: key_schema,
+        BillingMode: params.billing_mode || 'PAY_PER_REQUEST'
+      };
+
+      if (!Lib.Utils.isEmpty(params.global_secondary_indexes)) {
+        service_params.GlobalSecondaryIndexes = params.global_secondary_indexes.map(function (gsi) {
+          return {
+            IndexName: gsi.name,
+            KeySchema: gsi.key_schema.map(function (k) {
+              return { AttributeName: k.name, KeyType: k.type };
+            }),
+            Projection: { ProjectionType: gsi.projection_type || 'ALL' }
+          };
+        });
+      }
+
+      try {
+
+        // DocumentClient passes through control-plane commands to the
+        // underlying DynamoDBClient, so CreateTable works directly.
+        const { CreateTableCommand } = require('@aws-sdk/client-dynamodb');
+
+        const command = new CreateTableCommand(service_params);
+        await state.client.send(command);
+
+        return { success: true, already_exists: false, error: null };
+
+      } catch (error) {
+
+        // DynamoDB returns ResourceInUseException when the table already exists.
+        if (error.name === 'ResourceInUseException') {
+          return { success: true, already_exists: true, error: null };
+        }
+
+        Lib.Debug.debug('DynamoDB createTable failed', { table: table, error: error.message });
+
+        return {
+          success: false,
+          already_exists: false,
+          error: { type: 'CREATE_TABLE_ERROR', message: error.message }
+        };
+
+      }
+
+    },
+
+
+    /********************************************************************
+    Delete a DynamoDB table. Primarily for test teardown; production
+    table lifecycle should be managed by IaC. Idempotent - returns
+    success when the table is already absent.
+
+    @param {Object} instance - Request instance object reference
+    @param {String} table - Table name
+
+    @return {Promise<Object>} - { success, already_absent, error }
+    *********************************************************************/
+    deleteTable: async function (instance, table) {
+
+      _DynamoDB.initIfNot();
+      void instance;
+
+      try {
+
+        const { DeleteTableCommand } = require('@aws-sdk/client-dynamodb');
+
+        const command = new DeleteTableCommand({ TableName: table });
+        await state.client.send(command);
+
+        return { success: true, already_absent: false, error: null };
+
+      } catch (error) {
+
+        if (error.name === 'ResourceNotFoundException') {
+          return { success: true, already_absent: true, error: null };
+        }
+
+        Lib.Debug.debug('DynamoDB deleteTable failed', { table: table, error: error.message });
+
+        return {
+          success: false,
+          already_absent: false,
+          error: { type: 'DELETE_TABLE_ERROR', message: error.message }
+        };
+
+      }
+
+    },
+
+
     // ~~~~~~~~~~~~~~~~~~~~ Transactions ~~~~~~~~~~~~~~~~~~~~
 
     /********************************************************************

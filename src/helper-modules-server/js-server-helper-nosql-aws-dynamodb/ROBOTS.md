@@ -32,7 +32,7 @@ Each loader call returns an independent DynamoDB interface with its own `Lib`, `
 | MAX_RETRIES | Number | 3 | no |
 | REMOVE_UNDEFINED_VALUES | Boolean | true | no |
 
-## Exported Functions (17 total)
+## Exported Functions (19 total)
 
 All functions with `instance` param use instance.time_ms for request-level performance timeline.
 
@@ -94,6 +94,18 @@ batchWriteRecords(instance, itemsByTable) → { success, error } | async:yes
 
 batchDeleteRecords(instance, keysByTable) → { success, error } | async:yes
   Batch delete with auto 25-item chunking. keysByTable = { tableName: [key1, key2, ...] }
+
+### Table Management
+
+createTable(instance, table, params) → { success, already_exists, error } | async:yes
+  Create a table idempotently. params: { attribute_definitions, key_schema, billing_mode?, global_secondary_indexes? }
+  attribute_definitions: [{ name, type: 'S'|'N'|'B' }]
+  key_schema: [{ name, type: 'HASH'|'RANGE' }]
+  billing_mode: 'PAY_PER_REQUEST' (default) or 'PROVISIONED'
+  Use for app-managed single-table designs; production prefers IaC.
+
+deleteTable(instance, table) → { success, already_absent, error } | async:yes
+  Delete a table idempotently. Primarily for test teardown.
 
 ### Transactions
 
