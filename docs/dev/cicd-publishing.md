@@ -248,6 +248,57 @@ run: |
 
 This applies anywhere YAML uses block scalars: GitHub Actions `run:`, Docker Compose `command:`, Helm chart values, CI configs, etc.
 
+### 11. `publish-*` jobs silently skip when an upstream `publish-*` is also skipped, breaking the test→publish chain
+
+**Symptom.** A `test-*` job runs and succeeds. The next `publish-*` job in the chain is reported as `skipped` (zero steps, zero seconds). Multiple downstream `test-*` jobs then run against a stale registry version and fail with cryptic runtime errors like `TypeError: mongo.createIndex is not a function` — because the bumped helper version that supplied the new API was never actually published.
+
+**Cause.** GitHub Actions evaluates an **implicit `success()`** check on every job that does not start its `if:` with a status-check function (`always()`, `failure()`, `cancelled()`, `!cancelled()`). And `success()` is **transitive** — it returns `false` if **any** job in the upstream `needs` graph (not just the direct needs) has the result `skipped`, `failure`, or `cancelled`. Quote from GitHub's docs: *"If a job fails or is skipped, all jobs that need it are skipped unless they use a conditional expression that causes the job to continue."*
+
+A strictly-sequential test→publish pipeline like `ci-helper-modules.yml` mixes:
+
+- `test-*` jobs that use `if: always() && !cancelled() && ...` → run regardless of upstream skips
+- `publish-*` jobs that previously used `if: >- needs.detect.outputs.publish_modules != '[]' && contains(...)` → no override, so the implicit `success()` applied
+
+In **fresh-state recovery** runs (every module needs publishing), nothing in the chain is skipped, so this never fires. In **steady-state** runs where some modules are already on the registry, those modules' `publish-*` jobs legitimately skip — and that skip silently propagates downstream, disabling every subsequent `publish-*` even though their direct `needs` (`detect` + the matching `test-*`) all succeeded.
+
+**Concrete failure that surfaced this.** A run with `publish_modules = [auth, logger, nosql-aws-dynamodb, nosql-mongodb, verify]`:
+
+- `publish-storage-aws-s3` correctly skipped (s3 already on registry, not in `publish_modules`)
+- `test-nosql-aws-dynamodb` ran and succeeded (uses `always()`)
+- `publish-nosql-aws-dynamodb` SKIPPED — even though it was in `publish_modules` and its direct `needs` succeeded — because `success()` walked the transitive chain back to `publish-storage-aws-s3` and saw `skipped`
+- All downstream `publish-*` skipped for the same reason
+- `mongodb@1.1.0` and `dynamodb@1.1.0` never reached the registry
+- Then `test-verify`, `test-logger`, `test-auth` ran with `npm install` resolving `^1.0.0` to the stale registry `1.0.0`, which lacked the `createIndex` / `createTable` / `deleteRecordsByFilter` APIs the `1.1.0` source code calls — `TypeError` at first use
+
+**Lesson.** Every `publish-*` job in a chained pipeline must override the implicit `success()` check and assert its own dependencies explicitly:
+
+```yaml
+publish-foo:
+  needs: [detect, test-foo]
+  if: |
+    !cancelled() &&
+    needs.detect.result == 'success' &&
+    needs['test-foo'].result == 'success' &&
+    needs.detect.outputs.publish_modules != '[]' &&
+    needs.detect.outputs.publish_modules != '' &&
+    contains(needs.detect.outputs.publish_modules, 'js-server-helper-foo')
+```
+
+Two parts that both matter:
+
+1. `!cancelled() &&` — disables the implicit transitive `success()` check (GitHub's recommended alternative to `always()` for normal jobs, per the official docs).
+2. `needs.detect.result == 'success' && needs['test-foo'].result == 'success'` — restores the safety the implicit check used to give us, but scoped to the **direct** needs only. Hyphenated job IDs require bracket notation (`needs['test-foo']`, not `needs.test-foo` — the latter is parsed as subtraction).
+
+**Defence in depth: pin `_test/package.json` to the version your code actually requires.** When a helper bumps its own version (e.g. `mongodb@1.1.0` adds `createIndex`) and downstream modules start calling the new API, every consuming `_test/package.json` must pin **that same `^1.1.0`**, not the older `^1.0.0`. Two reasons:
+
+- If the upstream publish ever fails, `^1.1.0` causes `npm install` to fail with a clean `E404 No matching version` instead of installing the stale `1.0.0` and surfacing as a `TypeError` deep inside a test.
+- The version pin documents the hard floor required by the source — anyone reading the test deps sees exactly what the module needs.
+
+Quick rules:
+
+- `_test/package.json` registry pins must match the **API surface the source code uses**, not the lowest published version.
+- Every `publish-*` job in a chained workflow must start its `if:` with `!cancelled()` (or `always()`, `failure()`, `cancelled()`) and re-assert its direct `needs.<job>.result == 'success'` — otherwise a single skipped sibling silently disables the rest of the publish chain.
+
 ---
 
 ## Troubleshooting

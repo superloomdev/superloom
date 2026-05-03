@@ -182,7 +182,10 @@ jobs:
 
   publish-utils:
     needs: [detect, test-utils]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-utils'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-helper-utils')
@@ -243,7 +246,10 @@ jobs:
 
   publish-debug:
     needs: [detect, test-debug]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-debug'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-helper-debug')
@@ -304,7 +310,10 @@ jobs:
 
   publish-time:
     needs: [detect, test-time]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-time'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-helper-time')
@@ -365,7 +374,10 @@ jobs:
 
   publish-client-crypto:
     needs: [detect, test-client-crypto]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-client-crypto'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-client-helper-crypto')
@@ -426,7 +438,10 @@ jobs:
 
   publish-server-crypto:
     needs: [detect, test-server-crypto]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-server-crypto'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-crypto')
@@ -487,7 +502,10 @@ jobs:
 
   publish-instance:
     needs: [detect, test-instance]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-instance'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-instance')
@@ -548,7 +566,10 @@ jobs:
 
   publish-http:
     needs: [detect, test-http]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-http'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-http')
@@ -609,7 +630,10 @@ jobs:
 
   publish-storage-aws-s3-url-signer:
     needs: [detect, test-storage-aws-s3-url-signer]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-storage-aws-s3-url-signer'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-storage-aws-s3-url-signer')
@@ -670,7 +694,10 @@ jobs:
 
   publish-sql-sqlite:
     needs: [detect, test-sql-sqlite]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-sql-sqlite'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-sql-sqlite')
@@ -736,7 +763,10 @@ jobs:
 
   publish-storage-aws-s3:
     needs: [detect, test-storage-aws-s3]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-storage-aws-s3'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-storage-aws-s3')
@@ -801,7 +831,10 @@ jobs:
 
   publish-nosql-aws-dynamodb:
     needs: [detect, test-nosql-aws-dynamodb]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-nosql-aws-dynamodb'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-nosql-aws-dynamodb')
@@ -864,7 +897,10 @@ jobs:
 
   publish-nosql-mongodb:
     needs: [detect, test-nosql-mongodb]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-nosql-mongodb'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-nosql-mongodb')
@@ -929,7 +965,10 @@ jobs:
 
   publish-queue-aws-sqs:
     needs: [detect, test-queue-aws-sqs]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-queue-aws-sqs'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-queue-aws-sqs')
@@ -996,7 +1035,10 @@ jobs:
 
   publish-sql-mysql:
     needs: [detect, test-sql-mysql]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-sql-mysql'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-sql-mysql')
@@ -1062,7 +1104,10 @@ jobs:
 
   publish-sql-postgres:
     needs: [detect, test-sql-postgres]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-sql-postgres'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-sql-postgres')
@@ -1123,7 +1168,10 @@ jobs:
 
   publish-verify:
     needs: [detect, test-verify]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-verify'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-verify')
@@ -1185,7 +1233,10 @@ jobs:
 
   publish-logger:
     needs: [detect, test-logger]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-logger'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-logger')
@@ -1247,7 +1298,10 @@ jobs:
 
   publish-auth:
     needs: [detect, test-auth]
-    if: >-
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-auth'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
       contains(needs.detect.outputs.publish_modules, 'js-server-helper-auth')

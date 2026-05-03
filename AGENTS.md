@@ -79,6 +79,23 @@ git commit -m "feat(module): summary" -m "Body paragraph one." -m "Body paragrap
 
 **`file:` in `_test/package.json` causes `MODULE_NOT_FOUND` in CI.** `file:` path deps copy source but do not install the linked package's own `node_modules`. Works locally (helper already installed), breaks in CI (fresh checkout, no `node_modules` inside the linked dir). Rule: `file:../` is allowed **only** for the module under test itself. All shared helpers (storage, DB, cloud) must use registry semver ranges (`"^1.0.0"`). See journal entry 8 in `docs/dev/cicd-publishing.md`.
 
+**Pin `_test/package.json` to the version your code actually calls, not just `^1.0.0`.** When the source bumps to `1.1.0` to add a new API (e.g. `mongo.createIndex`), every consuming `_test/package.json` must bump its registry pin to `^1.1.0`. Otherwise `npm install` happily resolves the older `1.0.0` from the registry and the new API surfaces as a runtime `TypeError`. The pin documents the hard API floor and converts a confusing test-time crash into a clean `E404 No matching version` at install time. See journal entry 11 in `docs/dev/cicd-publishing.md`.
+
+**Every chained `publish-*` CI job must override the implicit `success()` check.** GitHub Actions evaluates `success()` transitively across the **whole** upstream `needs` graph. In a strictly-sequential test→publish pipeline, a single legitimately-skipped `publish-*` (its module already on the registry) silently disables every downstream `publish-*` — even when the direct needs all succeeded. Required shape for every `publish-*` job:
+
+```yaml
+publish-foo:
+  needs: [detect, test-foo]
+  if: |
+    !cancelled() &&
+    needs.detect.result == 'success' &&
+    needs['test-foo'].result == 'success' &&
+    needs.detect.outputs.publish_modules != '[]' &&
+    contains(needs.detect.outputs.publish_modules, 'js-server-helper-foo')
+```
+
+`!cancelled() &&` disables the implicit transitive `success()`; the explicit `needs.<job>.result == 'success'` checks restore the safety scoped to direct needs only. Hyphenated job ids require bracket notation (`needs['test-foo']`). See journal entry 11 in `docs/dev/cicd-publishing.md`.
+
 **AWS SDK calls need dummy credentials in tests.** No env credentials = SDK walks the EC2 metadata chain = 1-2 s timeout per call. Set `AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local AWS_REGION=us-east-1` in the `_test/package.json` `test` script even when no real AWS call happens (URL signing, command construction, etc.).
 
 **Auto-run is for read-only or idempotent operations only.** Never set `SafeToAutoRun: true` for `rm -rf`, `git push --force`, `docker volume rm`, `npm publish`, or any other state mutation, even if the user previously approved a similar command. The user's `Boundaries` section spells this out explicitly.
