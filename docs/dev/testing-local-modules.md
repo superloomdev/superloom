@@ -216,6 +216,33 @@ The canonical pattern is to set them in the `test` script of `_test/package.json
 
 For service-specific env vars (`S3_ACCESS_KEY`, `DYNAMODB_ENDPOINT`, etc.), use the names the module's loader reads. The same env vars must also exist in `__dev__/.env.dev` and `docs/dev/.env.dev.example` per the four-file rule.
 
+### 11. MongoDB replica-set healthcheck reports healthy before the node is PRIMARY
+
+**Symptom.** Tests pass on a developer's macOS machine and fail in CI with the first few `writeRecord` / `getRecord` (after writing) calls returning `success: false` or `result.document === null`. Later writes in the same suite succeed. The mongodb helper's own `_test` and any downstream consumer's `_test:mongodb` are both vulnerable.
+
+**Cause.** A naive replica-set healthcheck:
+
+```yaml
+test: ["CMD", "mongosh", "--eval", "try { rs.status().ok } catch(e) { rs.initiate({...}).ok }"]
+```
+
+returns truthy as soon as `rs.initiate()` returns. But on a single-node replica set the node still spends another **1-2 s in `SECONDARY` → `STARTUP2` → `PRIMARY`** before it accepts writes. `docker compose up --wait` returns "healthy" mid-election; the test process opens its driver and fires writes immediately. On Docker Desktop / macOS the local stack happens to be fast enough that the test loop hits PRIMARY by chance; on the slower hosted GitHub Actions runner the first writes land mid-election and fail with `not master`-style errors that the helper catches and surfaces as `success: false`.
+
+**Lesson.** The healthcheck must verify the same readiness the tests require — *write-ready primary*, not just *replica-set initialized*. Use `db.hello().isWritablePrimary` and `quit(1)` so docker keeps retrying until the node is actually primary:
+
+```yaml
+test:
+  - CMD
+  - mongosh
+  - --quiet
+  - --eval
+  - "try { rs.status() } catch(e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] }) }; if (!db.hello().isWritablePrimary) quit(1)"
+```
+
+This is the same *probe-the-application-protocol* principle as MySQL's two-phase init (entry 6) — `rs.status().ok` is the equivalent of `mysqladmin ping -u root` (server alive but not yet ready for the test workload).
+
+The general rule for any service that has an init phase distinct from "process up": the healthcheck must succeed only after the test-relevant phase has completed (PRIMARY for replica sets, `test_user` reachable for MySQL, `test_db` schema applied for Postgres, etc.).
+
 ---
 
 ## When something does not match this guide
