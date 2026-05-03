@@ -209,11 +209,25 @@ Each entry below maps a CI symptom to its root cause and the durable fix. Update
 
 **Lesson.** In CI, set `working-directory:` to the module root and use `cd _test && npm install && npm test` for the test step. The same rule applies locally -- always pass `Cwd` to `_test/` for AI agents and scripts.
 
-### 8. Tests Fail in CI
+### 8. CI test fails with `MODULE_NOT_FOUND` for a helper that exists in the repo
+
+**Symptom.** A `test-*` CI job fails with a Node.js `MODULE_NOT_FOUND` stack trace pointing to a file inside another helper module (e.g. `js-server-helper-nosql-mongodb/mongodb.js`), despite that module being present in `src/`. The error occurs even though `file:../../js-server-helper-nosql-mongodb` is listed in the `_test/package.json` dependencies.
+
+**Cause.** `file:` path dependencies copy the directory contents at `npm install` time but **do not run `npm install` inside the linked package**. In CI, the runner checks out a fresh clone — the linked helper's own `node_modules/` are absent, so any `require()` inside it that needs its own npm deps (e.g. the `mongodb` driver) fails immediately with `MODULE_NOT_FOUND`.
+
+This works locally only because the helper was previously installed in its own directory during development. CI never does that.
+
+**Affected files (as of discovery).** `js-server-helper-verify/_test/package.json`, `js-server-helper-logger/_test/package.json`, `js-server-helper-auth/_test/package.json` — all used `file:` for `js-server-helper-nosql-mongodb` and `js-server-helper-nosql-aws-dynamodb`.
+
+**Lesson.** Never use `file:` paths in `_test/package.json` for helper modules that have their own npm dependencies. Use registry version ranges (`"^1.0.0"`) instead. The `file:../` self-reference (pointing to the module under test) is the one legitimate exception — npm installs it as a directory link and the module itself has no transitive runtime deps outside what the test loader provides. For every other shared helper (storage, database, cloud), always pin to the published registry version.
+
+Quick rule: `file:` is allowed **only** for `"[module-under-test]": "file:../"`. Everything else must be a registry semver range.
+
+### 9. Tests Fail in CI
 
 The publish job has `needs: [detect, test-*]`, so it never runs if tests fail. Fix the tests and push again. The detect job will pick the same set of unpublished modules and try again.
 
-### 9. `Invalid workflow file: ... You have an error in your yaml syntax on line N`
+### 10. `Invalid workflow file: ... You have an error in your yaml syntax on line N`
 
 **Cause.** A bash assignment inside a `run: |` block scalar contained an embedded literal newline:
 

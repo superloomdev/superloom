@@ -77,6 +77,8 @@ git commit -m "feat(module): summary" -m "Body paragraph one." -m "Body paragrap
 
 **Module testing contract - `npm test` is self-contained.** For modules with `pretest`/`posttest` scripts, `npm test` manages the full Docker container lifecycle. Never start containers manually before `npm test` - `pretest` runs `docker compose down -v` first and will conflict. Always run `npm install && npm test` from the module's `_test/` directory. See `docs/dev/testing-local-modules.md` for the full healthcheck-and-lifecycle guide.
 
+**`file:` in `_test/package.json` causes `MODULE_NOT_FOUND` in CI.** `file:` path deps copy source but do not install the linked package's own `node_modules`. Works locally (helper already installed), breaks in CI (fresh checkout, no `node_modules` inside the linked dir). Rule: `file:../` is allowed **only** for the module under test itself. All shared helpers (storage, DB, cloud) must use registry semver ranges (`"^1.0.0"`). See journal entry 8 in `docs/dev/cicd-publishing.md`.
+
 **AWS SDK calls need dummy credentials in tests.** No env credentials = SDK walks the EC2 metadata chain = 1-2 s timeout per call. Set `AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local AWS_REGION=us-east-1` in the `_test/package.json` `test` script even when no real AWS call happens (URL signing, command construction, etc.).
 
 **Auto-run is for read-only or idempotent operations only.** Never set `SafeToAutoRun: true` for `rm -rf`, `git push --force`, `docker volume rm`, `npm publish`, or any other state mutation, even if the user previously approved a similar command. The user's `Boundaries` section spells this out explicitly.
@@ -132,6 +134,7 @@ superloom/
       js-server-helper-storage-aws-s3-url-signer/  #   S3 presigned URLs
       js-server-helper-queue-aws-sqs/#   SQS message queue wrapper
       js-server-helper-verify/    #   One-time verification codes (pin/code/token), storage-agnostic adapter
+      js-server-helper-logger/    #   Compliance-friendly action log: per-row retention (persistent | TTL) + optional IP encryption, multi-backend
     helper-modules-client/        # Client-specific helpers (browser, mobile)
       js-client-helper-crypto/    #   UUID, random strings, base64 (Web Crypto API). Delegates to core crypto when available.
   demo-project/                   # Seed project - copy this to start
