@@ -299,8 +299,15 @@ const createInterface = function (Lib, CONFIG, store) {
         };
       }
 
-      // Block creation if a previous code is still inside its cooldown window
+      // Block creation if a previous code is still inside its cooldown window.
+      // cooldown_seconds: 0 means "no cooldown" - skip the check entirely. We
+      // cannot fall through to the inequality below because under concurrent
+      // creates with non-monotonic instance.time the existing record may have
+      // a created_at greater than the current instance.time; that makes
+      // `time - created_at` negative, and `negative < 0` would wrongly trigger
+      // COOLDOWN_ACTIVE for a caller that explicitly opted out of cooldown.
       if (
+        options.cooldown_seconds > 0 &&
         !Lib.Utils.isNullOrUndefined(existing.record) &&
         (instance['time'] - existing.record.created_at) < options.cooldown_seconds
       ) {
