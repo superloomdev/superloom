@@ -135,6 +135,8 @@ Interface (transport adapter)
 | `@your-org/js-server-helper-storage-aws-s3-url-signer` | S3 presigned URL generation |
 | `@your-org/js-server-helper-queue-aws-sqs` | SQS message queue (send, receive, delete) |
 | `@your-org/js-server-helper-verify` | One-time verification codes (pin, code, token) with storage-agnostic adapter |
+| `@your-org/js-server-helper-logger` | Compliance-friendly action log: per-row retention (persistent or TTL) + optional IP encryption, multi-backend |
+| `@your-org/js-server-helper-auth` | Session lifecycle and authentication: create, verify, list, remove. Multi-instance per actor_type, JWT mode with refresh-token rotation |
 
 ### Client (browser)
 

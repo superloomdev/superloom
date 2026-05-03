@@ -194,6 +194,8 @@ These run with just Node.js installed. No credentials, no Docker, no network.
 | `js-server-helper-instance` | In-memory lifecycle | `test-offline-modules` |
 | `js-server-helper-http` | Real HTTP to `httpbin.org` (no credentials, no Docker) | `test-offline-modules` |
 | `js-server-helper-verify` | In-memory adapter (storage injected per-call) | `test-verify` |
+| `js-server-helper-logger` | In-memory store (multi-backend integration tests run via the module's `_test/docker-compose.yml`) | `test-logger` |
+| `js-server-helper-auth` | In-memory adapter + JWT mode (multi-backend integration tests run via the module's `_test/docker-compose.yml`) | `test-auth` |
 
 ### Service-Dependent Modules (need Docker or cloud credentials)
 

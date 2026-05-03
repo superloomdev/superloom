@@ -1,0 +1,89 @@
+# Local services for the logger module integration test suite.
+# Brings up the four backends that need a service (Postgres, MySQL, MongoDB,
+# DynamoDB Local). SQLite needs nothing - it runs in-memory inside Node.
+# Lifecycle managed by npm scripts: npm test starts -> tests -> stops & removes.
+#
+# Ports may collide with the per-helper docker-compose files. Stop those first
+# if they are running. All data is ephemeral (no named volumes).
+
+name: superloom-test-logger
+
+services:
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: superloom-test-logger-postgres
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U test_user -d test_db
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  mysql:
+    image: mysql:8.0.44
+    container_name: superloom-test-logger-mysql
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: test_root_pw
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+        - -u
+        - root
+        - -ptest_root_pw
+      interval: 3s
+      timeout: 3s
+      retries: 40
+      start_period: 10s
+
+  mongodb:
+    image: mongo:8.2
+    container_name: superloom-test-logger-mongodb
+    ports:
+      - "127.0.0.1:27017:27017"
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "db.adminCommand('ping').ok"
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  dynamodb:
+    # DynamoDB Local is a slim Java image without curl/wget/nc, so we cannot
+    # run a container-internal healthcheck. The startup is fast (< 2s) and
+    # the test setup includes its own readiness retry via createTable.
+    container_name: superloom-test-logger-dynamodb
+    image: amazon/dynamodb-local:2.5.3
+    command:
+      - "-jar"
+      - "DynamoDBLocal.jar"
+      - "-sharedDb"
+      - "-inMemory"
+    ports:
+      - "127.0.0.1:8000:8000"

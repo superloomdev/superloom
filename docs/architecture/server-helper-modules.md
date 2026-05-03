@@ -72,6 +72,8 @@ Same structure as [core helper modules](core-helper-modules.md#typical-files):
 | `js-server-helper-http` | Outgoing HTTP client (native `fetch` wrapper, multipart support) |
 | `js-server-helper-instance` | Per-request instance lifecycle, cleanup hooks, background tasks |
 | `js-server-helper-verify` | One-time verification codes (pin, code, token) with a storage-agnostic adapter |
+| `js-server-helper-logger` | Compliance-friendly action log with per-row retention (persistent or TTL) and optional IP encryption |
+| `js-server-helper-auth` | Session lifecycle and authentication: create, verify, list, remove. Multi-instance per actor_type, built-in stores for Postgres / MySQL / SQLite / DynamoDB / MongoDB. Optional JWT mode with refresh-token rotation |
 
 ---
 
