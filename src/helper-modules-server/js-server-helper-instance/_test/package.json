@@ -1,0 +1,19 @@
+{
+  "name": "js-server-helper-instance-test",
+  "description": "Test Cases for js-server-helper-instance",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
+    "@superloomdev/js-server-helper-instance": "file:../"
+  },
+  "scripts": {
+    "test": "node --test test.js"
+  }
+}

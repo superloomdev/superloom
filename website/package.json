@@ -1,0 +1,15 @@
+{
+  "name": "superloom-website",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "sync-docs": "rsync -a --delete ../docs/ ./docs/",
+    "dev": "npm run sync-docs && vitepress dev .",
+    "build": "npm run sync-docs && vitepress build .",
+    "preview": "vitepress preview ."
+  },
+  "devDependencies": {
+    "vitepress": "^1.3.0",
+    "vue": "^3.4.0"
+  }
+}

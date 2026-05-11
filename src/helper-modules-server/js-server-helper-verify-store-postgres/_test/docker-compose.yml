@@ -1,0 +1,25 @@
+# Postgres 17 for verify-store-postgres module testing
+# Lifecycle managed by npm scripts: npm test starts -> tests -> stops and removes
+# Ephemeral - data lost on container stop
+# Port 5434 to avoid conflict with js-server-helper-auth-store-postgres test on 5433
+
+name: superloom-test-verify-store-postgres
+
+services:
+
+  postgres:
+    container_name: superloom-test-verify-store-postgres
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:5434:5432"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U test_user -d test_db
+      interval: 5s
+      timeout: 3s
+      retries: 10

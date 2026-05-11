@@ -1,0 +1,15 @@
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+jspm_packages
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Mac OS Files
+*.DS_Store
+.AppleDouble
+.LSOverride
+._*

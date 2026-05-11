@@ -1,0 +1,23 @@
+# MinIO (S3-compatible) for module testing
+# Lifecycle managed by npm scripts: npm test starts → tests → stops and removes
+# Ephemeral — data lost on container stop
+
+name: superloom-test-s3
+
+services:
+
+  minio:
+    container_name: superloom-test-s3
+    image: minio/minio:latest
+    ports:
+      - "127.0.0.1:9000:9000"     # S3 API (localhost only to prevent CI conflicts)
+      - "127.0.0.1:9001:9001"     # Web console (localhost only)
+    environment:
+      MINIO_ROOT_USER: dev_access_key
+      MINIO_ROOT_PASSWORD: dev_secret_key
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

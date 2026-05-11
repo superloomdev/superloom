@@ -1,0 +1,40 @@
+{
+  "name": "@superloomdev/js-server-helper-verify",
+  "description": "One-time verification code lifecycle: generate, store, validate, consume. Built-in stores for sqlite / postgres / mysql / mongodb / dynamodb. Supports numeric pins, alphanumeric codes, and URL-safe magic-link tokens.",
+  "version": "1.0.0",
+  "main": "verify.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0",
+    "@superloomdev/js-server-helper-crypto": ">=1.0.0",
+    "@superloomdev/js-server-helper-instance": ">=1.0.0"
+  },
+  "optionalPeerDependencies": {
+    "@superloomdev/js-server-helper-verify-store-sqlite": "^1.0.0",
+    "@superloomdev/js-server-helper-verify-store-postgres": "^1.0.0",
+    "@superloomdev/js-server-helper-verify-store-mysql": "^1.0.0",
+    "@superloomdev/js-server-helper-verify-store-mongodb": "^1.0.0",
+    "@superloomdev/js-server-helper-verify-store-dynamodb": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

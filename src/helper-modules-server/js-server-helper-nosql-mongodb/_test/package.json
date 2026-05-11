@@ -1,0 +1,16 @@
+{
+  "name": "test-js-server-helper-nosql-mongodb",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
+    "@superloomdev/js-server-helper-instance": "^1.0.0",
+    "@superloomdev/js-server-helper-nosql-mongodb": "file:../"
+  },
+  "scripts": {
+    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait",
+    "test": "MONGODB_CONNECTION_STRING=mongodb://127.0.0.1:27017/?directConnection=true MONGODB_DATABASE=test_db node --test --test-timeout 120000 test.js",
+    "posttest": "docker compose down -v --remove-orphans"
+  }
+}

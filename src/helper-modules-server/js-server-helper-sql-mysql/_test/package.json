@@ -1,0 +1,23 @@
+{
+  "name": "js-server-helper-mysql-test",
+  "description": "Test suite for js-server-helper-mysql",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
+    "@superloomdev/js-server-helper-instance": "^1.0.0",
+    "@superloomdev/js-server-helper-sql-mysql": "file:../",
+    "mysql2": "^3.22.0"
+  },
+  "scripts": {
+    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait",
+    "test": "MYSQL_HOST=localhost MYSQL_PORT=3306 MYSQL_DATABASE=test_db MYSQL_USER=test_user MYSQL_PASSWORD=test_pw MYSQL_ROOT_PASSWORD=test_root_pw node --test --test-timeout 120000 test.js",
+    "posttest": "docker compose down -v --remove-orphans"
+  }
+}

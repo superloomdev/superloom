@@ -1,0 +1,36 @@
+{
+  "name": "@superloomdev/js-server-helper-storage-aws-s3-url-signer",
+  "description": "S3 presigned URL signer for direct browser uploads and downloads. AWS SDK v3.",
+  "version": "1.0.0",
+  "main": "s3-url-signer.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "bundleDependencies": false,
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.450.0",
+    "@aws-sdk/s3-request-presigner": "^3.450.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

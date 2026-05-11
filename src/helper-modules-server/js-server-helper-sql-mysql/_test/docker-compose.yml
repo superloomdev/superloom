@@ -1,0 +1,42 @@
+# MySQL 8.0.44 for module testing
+# Matches AWS Aurora MySQL 3.x compatibility version
+# Lifecycle managed by npm scripts: npm test starts → tests → stops and removes
+# Ephemeral — data lost on container stop
+
+name: superloom-test-mysql
+
+services:
+
+  mysql:
+    container_name: superloom-test-mysql
+    image: mysql:8.0.44
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: test_root_pw
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      # Using test_user (not root) ensures the MySQL init phase has completed.
+      # During init, MySQL starts in temp mode (root works), creates users, then
+      # restarts. A root-based ping passes during temp mode, returning before
+      # MySQL is fully ready, causing PROTOCOL_CONNECTION_LOST in tests.
+      # 127.0.0.1 forces TCP (matches how tests connect), not Unix socket.
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - 127.0.0.1
+        - -u
+        - test_user
+        - -ptest_pw
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 10s

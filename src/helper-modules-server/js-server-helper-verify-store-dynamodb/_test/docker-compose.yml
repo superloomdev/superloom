@@ -1,0 +1,21 @@
+# DynamoDB Local for verify-store-dynamodb module testing
+# Lifecycle managed by npm scripts: npm test starts -> tests -> stops and removes
+# Ephemeral - data lost on container stop
+# Port 8002 to avoid conflict with js-server-helper-auth-store-dynamodb test on 8001
+
+name: superloom-test-verify-store-dynamodb
+
+services:
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: superloom-test-verify-store-dynamodb
+    ports:
+      - "127.0.0.1:8002:8000"
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:8000 2>/dev/null; [ $? -ne 7 ]"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s

@@ -1,0 +1,36 @@
+{
+  "name": "@superloomdev/js-server-helper-nosql-mongodb",
+  "description": "MongoDB CRUD, batch, query, scan, transactions. Lazy-loaded native driver. Connection pooling.",
+  "version": "1.0.0",
+  "main": "mongodb.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
+  "bundleDependencies": false,
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0",
+    "@superloomdev/js-server-helper-instance": ">=1.0.0"
+  },
+  "dependencies": {
+    "mongodb": "^6.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

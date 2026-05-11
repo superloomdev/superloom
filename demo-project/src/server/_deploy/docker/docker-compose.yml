@@ -1,0 +1,26 @@
+# Superloom — Docker Compose
+# Development and production compose configuration
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ../../../..
+      dockerfile: src/server/deploy/docker/Dockerfile
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3000
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - LOG_FORMAT=${LOG_FORMAT:-text}
+      # Database (uncomment and configure)
+      # - DB_HOST=${DB_HOST:-localhost}
+      # - DB_PORT=${DB_PORT:-5432}
+      # - DB_NAME=${DB_NAME:-app_db}
+      # - DB_USER=${DB_USER:-app_user}
+      # - DB_PASSWORD=${DB_PASSWORD}
+    # volumes:
+    #   - ./config:/app/config:ro
+    restart: unless-stopped

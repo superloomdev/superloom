@@ -1,0 +1,33 @@
+{
+  "name": "@superloomdev/demo-project-model",
+  "description": "Shared domain models for demo-project. Pure, IO-free. Safe to share between server and client.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test contact/_test/test.js user/_test/test.js survey/_test/test.js",
+    "test:contact": "node --test contact/_test/test.js",
+    "test:user": "node --test user/_test/test.js",
+    "test:survey": "node --test survey/_test/test.js"
+  }
+}

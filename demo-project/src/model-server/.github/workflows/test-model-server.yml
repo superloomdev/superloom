@@ -1,0 +1,37 @@
+# CI/CD Pipeline: Test Model-Server Package
+# Runs all server model extension tests on push to main or PR
+# Model-server is a standalone publishable package under @superloomdev scope
+
+name: Test Model-Server Package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'demo-project/src/model-server/**'
+  pull_request:
+    paths:
+      - 'demo-project/src/model-server/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install model-server dependencies
+        working-directory: demo-project/src/model-server
+        run: npm install
+
+      - name: Run model-server tests
+        working-directory: demo-project/src/model-server
+        run: npm test
+
+      - name: Run survey server model tests
+        working-directory: demo-project/src/model-server
+        run: npm run test:survey

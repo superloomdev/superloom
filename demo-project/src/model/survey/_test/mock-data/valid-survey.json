@@ -1,0 +1,70 @@
+{
+  "title": "Customer Feedback Survey",
+  "description": "Help us improve our service by answering a few questions.",
+  "questions": [
+    {
+      "question_id": "q1",
+      "text": "How satisfied are you with our service?",
+      "type": "single_choice",
+      "order": 1,
+      "is_required": true,
+      "options": [
+        {
+          "option_id": "q1_o1",
+          "label": "Very Satisfied",
+          "order": 1,
+          "value": "very_satisfied"
+        },
+        {
+          "option_id": "q1_o2",
+          "label": "Satisfied",
+          "order": 2,
+          "value": "satisfied"
+        },
+        {
+          "option_id": "q1_o3",
+          "label": "Neutral",
+          "order": 3,
+          "value": "neutral"
+        },
+        {
+          "option_id": "q1_o4",
+          "label": "Dissatisfied",
+          "order": 4,
+          "value": "dissatisfied"
+        }
+      ],
+      "constraints": null
+    },
+    {
+      "question_id": "q2",
+      "text": "What could we improve?",
+      "type": "text",
+      "order": 2,
+      "is_required": false,
+      "options": [],
+      "constraints": null
+    },
+    {
+      "question_id": "q3",
+      "text": "Rate your experience from 1 to 10",
+      "type": "scale",
+      "order": 3,
+      "is_required": true,
+      "options": [],
+      "constraints": {
+        "min": 1,
+        "max": 10
+      }
+    }
+  ],
+  "rules": [
+    {
+      "source_question_id": "q1",
+      "operator": "equals",
+      "value": "dissatisfied",
+      "action": "require",
+      "target_question_id": "q2"
+    }
+  ]
+}

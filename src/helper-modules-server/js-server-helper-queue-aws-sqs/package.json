@@ -1,0 +1,35 @@
+{
+  "name": "@superloomdev/js-server-helper-queue-aws-sqs",
+  "description": "AWS SQS message queue wrapper. Send, receive, delete, and schedule messages. AWS SDK v3.",
+  "version": "1.0.0",
+  "main": "sqs.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
+  "bundleDependencies": false,
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.1033.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

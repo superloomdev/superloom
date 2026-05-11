@@ -1,0 +1,32 @@
+{
+  "name": "@superloomdev/js-server-helper-crypto",
+  "description": "Server-side cryptography utilities for Node.js. Hashing, encryption, UUID, random strings, base conversion.",
+  "version": "1.0.0",
+  "main": "crypto.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "bundleDependencies": false,
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

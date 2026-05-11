@@ -1,0 +1,32 @@
+{
+  "name": "@superloomdev/demo-project-model-server",
+  "description": "Server-side model extensions for demo-project. Extends base models with server-only fields, policies, and admin DTOs. Includes base model as dependency.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "@superloomdev/demo-project-model": "file:../model",
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test survey/_test/test.js",
+    "test:survey": "node --test survey/_test/test.js"
+  }
+}

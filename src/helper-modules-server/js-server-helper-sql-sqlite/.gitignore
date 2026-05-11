@@ -1,0 +1,26 @@
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+jspm_packages
+
+# Test registry/config
+_test/.npmrc
+
+# SQLite artefacts
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Mac OS Files
+*.DS_Store
+.AppleDouble
+.LSOverride
+._*

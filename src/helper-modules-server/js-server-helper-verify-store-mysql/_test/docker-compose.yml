@@ -1,0 +1,37 @@
+# MySQL 8.0.44 for verify-store-mysql module testing
+# Lifecycle managed by npm scripts: npm test starts -> tests -> stops and removes
+# Ephemeral - data lost on container stop
+# Port 3308 to avoid conflict with js-server-helper-auth-store-mysql test on 3307
+
+name: superloom-test-verify-store-mysql
+
+services:
+
+  mysql:
+    container_name: superloom-test-verify-store-mysql
+    image: mysql:8.0.44
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: test_root_pw
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_pw
+    ports:
+      - "127.0.0.1:3308:3306"
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - 127.0.0.1
+        - -u
+        - test_user
+        - -ptest_pw
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 10s

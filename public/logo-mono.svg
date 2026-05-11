@@ -1,0 +1,22 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Vertical threads -->
+  <path d="M20 8 L20 28" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.15"/>
+  <path d="M20 32 L20 48" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  <path d="M20 52 L20 72" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.15"/>
+  <path d="M40 8 L40 28" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  <path d="M40 32 L40 48" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.15"/>
+  <path d="M40 52 L40 72" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  <path d="M60 8 L60 28" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.15"/>
+  <path d="M60 32 L60 48" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  <path d="M60 52 L60 72" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.15"/>
+  <!-- Horizontal threads -->
+  <path d="M8 20 L28 20" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  <path d="M32 20 L48 20" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.15"/>
+  <path d="M52 20 L72 20" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  <path d="M8 40 L28 40" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.15"/>
+  <path d="M32 40 L48 40" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  <path d="M52 40 L72 40" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.15"/>
+  <path d="M8 60 L28 60" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  <path d="M32 60 L48 60" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.15"/>
+  <path d="M52 60 L72 60" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+</svg>

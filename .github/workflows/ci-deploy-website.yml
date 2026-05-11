@@ -1,0 +1,55 @@
+# CI/CD Pipeline: Build and Deploy Website
+#
+# Triggered on push to main (website/ or docs/ changes) or manually.
+# Builds VitePress, syncs to S3, invalidates CloudFront cache.
+
+name: Deploy Website
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'website/**'
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: website
+
+      - name: Build
+        run: npm run build
+        working-directory: website
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.WEBSITE_DEPLOY_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.WEBSITE_DEPLOY_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.WEBSITE_DEPLOY_AWS_REGION }}
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync website/DIST/ s3://${{ secrets.WEBSITE_DEPLOY_S3_BUCKET }} --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.WEBSITE_DEPLOY_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"

@@ -1,0 +1,14 @@
+{
+  "name": "js-server-helper-aws-s3-url-signer-test",
+  "version": "1.0.0",
+  "description": "Test suite for js-server-helper-aws-s3-url-signer",
+  "private": true,
+  "dependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
+    "@superloomdev/js-server-helper-storage-aws-s3-url-signer": "file:../"
+  },
+  "scripts": {
+    "test": "S3_REGION=us-east-1 S3_ACCESS_KEY=dev_access_key S3_SECRET_KEY=dev_secret_key node --test --test-timeout 30000 test.js"
+  }
+}

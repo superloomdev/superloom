@@ -1,0 +1,37 @@
+{
+  "name": "@superloomdev/js-server-helper-nosql-aws-dynamodb",
+  "description": "AWS DynamoDB CRUD, batch, query, scan. Lazy-loaded SDK v3. Explicit credentials.",
+  "version": "1.0.0",
+  "main": "dynamodb.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
+  "bundleDependencies": false,
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0",
+    "@superloomdev/js-server-helper-instance": ">=1.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1032.0",
+    "@aws-sdk/lib-dynamodb": "^3.1032.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

@@ -1,0 +1,21 @@
+# MongoDB for verify-store-mongodb module testing (single-node replica set)
+# Lifecycle managed by npm scripts: npm test starts -> tests -> stops and removes
+# Ephemeral - data lost on container stop
+# Port 27019 to avoid conflict with js-server-helper-auth-store-mongodb test on 27018
+
+name: superloom-test-verify-store-mongodb
+
+services:
+
+  mongodb:
+    image: mongo:8
+    container_name: superloom-test-verify-store-mongodb
+    command: ["--replSet", "rs0"]
+    ports:
+      - "127.0.0.1:27019:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { rs.status() } catch(e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] }) }; if (!db.hello().isWritablePrimary) quit(1)"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 5s

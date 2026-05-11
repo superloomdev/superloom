@@ -1,0 +1,89 @@
+/**
+ * Superloom brand theme for VitePress
+ * Primary color extracted from logomark-color.svg (#4F6BFF, #6C8AFF, #7B9FFF)
+ */
+
+:root {
+  --vp-c-brand-1: #4F6BFF;
+  --vp-c-brand-2: #6C8AFF;
+  --vp-c-brand-3: #7B9FFF;
+  --vp-c-brand-soft: rgba(79, 107, 255, 0.14);
+
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-bg: var(--vp-c-brand-1);
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-active-text: #ffffff;
+  --vp-button-brand-active-bg: var(--vp-c-brand-3);
+}
+
+.dark {
+  --vp-c-brand-1: #7B9FFF;
+  --vp-c-brand-2: #6C8AFF;
+  --vp-c-brand-3: #4F6BFF;
+  --vp-c-brand-soft: rgba(123, 159, 255, 0.16);
+}
+
+/* Logo sizing in navbar */
+.VPNavBarTitle .logo {
+  height: 24px;
+  width: 24px;
+}
+
+/* Home hero logo */
+.VPHero .image-src {
+  max-width: 160px;
+}
+
+/* Subtle gradient on home hero name */
+.VPHero .name .clip {
+  background: linear-gradient(120deg, #4F6BFF 30%, #7B9FFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Code block line numbers match brand */
+.vp-code-group .tabs label:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.vp-code-group .tabs label.active {
+  color: var(--vp-c-brand-1);
+  border-bottom-color: var(--vp-c-brand-1);
+}
+
+/* Home page origin section */
+.home-origin {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2rem;
+  text-align: center;
+  color: var(--vp-c-text-2);
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+.home-origin-text {
+  font-size: 1.05rem;
+  color: var(--vp-c-text-1);
+  opacity: 0.85;
+}
+
+.home-origin-credit {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.home-origin-credit a {
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+}
+
+.home-origin-credit a:hover {
+  text-decoration: underline;
+}

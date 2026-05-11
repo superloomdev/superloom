@@ -1,0 +1,40 @@
+{
+  "name": "@superloomdev/js-server-helper-auth",
+  "description": "Session lifecycle and authentication: create, verify, list, remove. Multi-instance per actor_type. Store adapters are separate packages.",
+  "version": "1.0.0",
+  "main": "auth.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0",
+    "@superloomdev/js-server-helper-crypto": ">=1.0.0",
+    "@superloomdev/js-server-helper-instance": ">=1.0.0"
+  },
+  "optionalPeerDependencies": {
+    "@superloomdev/js-server-helper-auth-store-sqlite": "^1.0.0",
+    "@superloomdev/js-server-helper-auth-store-postgres": "^1.0.0",
+    "@superloomdev/js-server-helper-auth-store-mysql": "^1.0.0",
+    "@superloomdev/js-server-helper-auth-store-mongodb": "^1.0.0",
+    "@superloomdev/js-server-helper-auth-store-dynamodb": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}

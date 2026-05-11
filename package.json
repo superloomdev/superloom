@@ -1,0 +1,10 @@
+{
+  "name": "superloom",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Superloom - A modular Node.js framework for backend applications",
+  "workspaces": [
+    "src/*/*",
+    "src/*/*/*"
+  ]
+}

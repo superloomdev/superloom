@@ -1,0 +1,25 @@
+{
+  "name": "js-server-helper-verify-store-postgres-test",
+  "description": "Test suite for js-server-helper-verify-store-postgres",
+  "version": "1.0.0",
+  "main": "test.js",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "dependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
+    "@superloomdev/js-server-helper-crypto": "^1.0.0",
+    "@superloomdev/js-server-helper-instance": "^1.0.0",
+    "@superloomdev/js-server-helper-sql-postgres": "^1.0.0",
+    "@superloomdev/js-server-helper-verify": "^1.0.0",
+    "@superloomdev/js-server-helper-verify-store-postgres": "file:../"
+  },
+  "scripts": {
+    "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait",
+    "test": "POSTGRES_HOST=127.0.0.1 POSTGRES_PORT=5434 POSTGRES_DATABASE=test_db POSTGRES_USER=test_user POSTGRES_PASSWORD=test_pw node --test --test-timeout 120000 test.js",
+    "posttest": "docker compose down -v --remove-orphans"
+  }
+}

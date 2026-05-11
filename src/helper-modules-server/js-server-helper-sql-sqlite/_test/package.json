@@ -1,0 +1,14 @@
+{
+  "name": "test-js-server-helper-sql-sqlite",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0",
+    "@superloomdev/js-server-helper-instance": "^1.0.0",
+    "@superloomdev/js-server-helper-sql-sqlite": "file:../"
+  },
+  "scripts": {
+    "test": "node --test test.js"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@superloomdev/js-server-helper-verify-store-mongodb",
+  "description": "MongoDB store adapter for js-server-helper-verify. Implements the 6-method store contract backed by js-server-helper-nosql-mongodb.",
+  "version": "1.0.0",
+  "main": "store.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0",
+    "@superloomdev/js-server-helper-nosql-mongodb": ">=1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  }
+}

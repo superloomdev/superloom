@@ -1,0 +1,33 @@
+{
+  "name": "@superloomdev/js-server-helper-logger",
+  "description": "Compliance-friendly action log: who did what to which entity, with structured per-action data and optional IP/user-agent capture. Built-in stores for sqlite / postgres / mysql / mongodb / dynamodb. Per-entry retention: persistent, or TTL-auto-cleared.",
+  "version": "1.0.0",
+  "main": "logger.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0",
+    "@superloomdev/js-server-helper-crypto": ">=1.0.0",
+    "@superloomdev/js-server-helper-instance": ">=1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}
