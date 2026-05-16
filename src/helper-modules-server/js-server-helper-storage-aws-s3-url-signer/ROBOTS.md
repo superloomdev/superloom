@@ -1,4 +1,4 @@
-# js-server-helper-aws-s3-url-signer
+# js-server-helper-storage-aws-s3-url-signer
 
 S3 presigned URL signer for direct browser uploads and downloads. Lazy-loaded SDK v3. Explicit credentials.
 
@@ -16,7 +16,7 @@ Server helper. Service-dependent (needs Docker/MinIO for emulated, AWS for integ
 ## Loader Pattern (Singleton)
 
 ```javascript
-Lib.S3UrlSigner = require('@superloomdev/js-server-helper-aws-s3-url-signer')(Lib, { /* config overrides */ });
+Lib.S3UrlSigner = require('@superloomdev/js-server-helper-storage-aws-s3-url-signer')(Lib, { /* config overrides */ });
 ```
 
 Returns a singleton interface with shared Lib, CONFIG, and S3 client.

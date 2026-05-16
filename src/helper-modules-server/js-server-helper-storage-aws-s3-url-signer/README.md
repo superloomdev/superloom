@@ -1,142 +1,63 @@
 # @superloomdev/js-server-helper-storage-aws-s3-url-signer
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
+[![Node.js 20.19+](https://img.shields.io/badge/Node.js-20.19%2B-brightgreen.svg)](https://nodejs.org)
 
-S3 presigned URL signer for direct browser uploads and downloads. Generate secure, time-limited URLs for client-side file operations without exposing credentials. Lazy-loaded AWS SDK v3. Part of the [Superloom](https://github.com/superloomdev/superloom).
+A presigned-URL helper for Node.js that lets your browser, mobile app, or partner system upload to and download from your object store directly, without ever sending the file through your own server. Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent module** - requires Docker for emulated testing (MinIO) and real cloud credentials for integration testing. See testing tiers below.
+## What This Is
 
-## API
+A thin, opinionated layer over the [AWS SDK v3 S3 Request Presigner](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/Package/-aws-sdk-s3-request-presigner/) that produces short-lived URLs the client side can use to talk to S3 directly. It generates three URL shapes: a PUT upload URL (the simple case), a POST upload URL (for HTML form uploads with extra fields), and a GET download URL (for direct browser downloads with optional content disposition).
 
-| Function | Description |
-|---|---|
-| `generateUploadUrlPut(bucket, key, contentType, options?)` | Generate presigned PUT URL for upload (default 15 min expiry) |
-| `generateUploadUrlPost(bucket, key, contentType, options?)` | Generate presigned POST URL for upload with form fields (default 15 min expiry) |
-| `generateDownloadUrlGet(bucket, key, options?)` | Generate presigned GET URL for download (default 1 hour expiry) |
+Every call returns the same envelope:
 
-## Usage
-
-```javascript
-// In loader
-Lib.S3UrlSigner = require('@superloomdev/js-server-helper-aws-s3-url-signer')(Lib, {
-  REGION: 'us-east-1',
-  KEY: process.env.AWS_ACCESS_KEY_ID,
-  SECRET: process.env.AWS_SECRET_ACCESS_KEY
-});
-
-// In application code
-const uploadPut = await Lib.S3UrlSigner.generateUploadUrlPut(
-  'my-bucket', 
-  'uploads/document.pdf', 
-  'application/pdf'
-);
-
-if (uploadPut.success) {
-  // Send uploadPut.url to browser for direct PUT upload to S3
-  console.log('PUT Upload URL:', uploadPut.url);
-}
-
-const uploadPost = await Lib.S3UrlSigner.generateUploadUrlPost(
-  'my-bucket', 
-  'uploads/document.pdf', 
-  'application/pdf'
-);
-
-if (uploadPost.success) {
-  // Send uploadPost.url and uploadPost.fields to browser for POST upload
-  console.log('POST Upload URL:', uploadPost.url);
-  console.log('Form fields:', uploadPost.fields);
-}
-
-const download = await Lib.S3UrlSigner.generateDownloadUrlGet(
-  'my-bucket', 
-  'uploads/document.pdf',
-  { responseContentDisposition: 'attachment; filename="document.pdf"' }
-);
-
-if (download.success) {
-  // Send download.url to browser for direct download from S3
-  console.log('Download URL:', download.url);
-}
+```
+success / url / fields / error
 ```
 
-## Configuration (Loader)
+Error handling, return-value reading, and exception expectations are the same in every place you generate a URL. Operational failures never throw; they come back as `{ success: false, error }` with a typed error name your code can branch on.
 
-| Config Key | Environment Variable | Default | Description |
-|---|---|---|---|
-| `REGION` | `AWS_REGION` / `S3_REGION` | `'us-east-1'` | AWS region |
-| `KEY` | `AWS_ACCESS_KEY_ID` / `S3_ACCESS_KEY` | `undefined` | AWS access key (explicit, not implicit) |
-| `SECRET` | `AWS_SECRET_ACCESS_KEY` / `S3_SECRET_KEY` | `undefined` | AWS secret key (explicit, not implicit) |
-| `ENDPOINT` | `S3_ENDPOINT` | `undefined` | Custom endpoint (MinIO, LocalStack). Leave unset for real AWS. |
-| `FORCE_PATH_STYLE` | `S3_FORCE_PATH_STYLE` | `false` | Required `true` for MinIO, `false` for AWS |
-| `UPLOAD_URL_EXPIRY` | - | `900` | Upload URL expiry in seconds (15 minutes) |
-| `DOWNLOAD_URL_EXPIRY` | - | `3600` | Download URL expiry in seconds (1 hour) |
+## Why Use This Module
 
-When `ENDPOINT` is `undefined`, the SDK uses real AWS S3.
+- **Library updates won't break your code.** When the underlying AWS SDK ships a breaking change, only this module needs updating. Your application code stays exactly as it is.
 
-## Environment Variables
+- **Pre-tested at every release.** A full test suite runs against MinIO (an S3-compatible store) in CI on every push. Your project trusts the wrapper instead of re-verifying SDK plumbing on each release.
 
-This module depends on the following environment variables. They must be set before loading.
+- **Designed for human review.** The code is laid out as clearly-marked visual sections (section banners, short functions, scoped comments) so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `s3-url-signer.js` to see the structure.
 
-| Variable | Emulated (Dev) | Integration (Real) | Description |
-|---|---|---|---|
-| `S3_ACCESS_KEY` | `dev_access_key` | Real access key | Credentials |
-| `S3_SECRET_KEY` | `dev_secret_key` | Real secret key | Credentials |
-| `S3_REGION` | `us-east-1` | Your region | Region |
-| `S3_ENDPOINT` | `http://localhost:9000` | *(not set)* | Endpoint override for emulator |
-| `S3_FORCE_PATH_STYLE` | `true` | `false` | Required for MinIO; disable for real S3 |
+- **Direct-to-storage uploads and downloads, no server bandwidth.** Your server never has to receive the file before passing it on. The client uploads straight into your bucket using a URL the server signed in milliseconds. Big files do not occupy your application's memory, network, or compute. You stay billable only for the signing call itself.
 
-**Where to set these:**
-- **Dev (local):** `__dev__/.env.dev` → loaded via `source init-env.sh` (select `dev`)
-- **Integration:** `__dev__/.env.integration` → loaded via `source init-env.sh` (select `integration`)
-- **CI/CD:** `env:` block in `.github/workflows/ci-helper-modules.yml` (under the `test-aws-s3-url-signer` and `publish-aws-s3-url-signer` jobs)
+- **Explicit credentials, not implicit ones.** Credentials are passed through the loader, not picked up from an ambient SDK environment chain. This makes it impossible to accidentally generate a URL signed by the wrong AWS account from a developer machine, a CI runner, or a multi-tenant deployment. Local emulator runs the same way as real S3. Only the `ENDPOINT` config changes.
 
-## Peer Dependencies (Injected via Loader)
+## Aligned with Superloom Philosophy
 
-These are `@superloomdev` framework modules. They are not bundled - they are injected through the `shared_libs` parameter in the loader.
+If your project is built on Superloom conventions (the same loader pattern, the same response envelope, the same testing model), this module slots in without you needing to learn anything new. It is written using the same opinionated principles, so adopting it does not introduce inconsistency into your codebase.
 
-| Package | Purpose |
-|---|---|
-| `@superloomdev/js-helper-utils` | Type checks, validation, data manipulation |
-| `@superloomdev/js-helper-debug` | Structured logging |
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-## Direct Dependencies (Bundled)
+## Learn More
 
-These are third-party packages listed in `package.json` `dependencies`. They are installed and bundled with the module.
+Extended documentation lives alongside the source on GitHub:
 
-| Package | Purpose |
-|---|---|
-| `@aws-sdk/client-s3` | AWS S3 client (lazy-loaded) |
-| `@aws-sdk/s3-request-presigner` | Presigned URL generation (lazy-loaded) |
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer/docs/api.md) - every exported function with its signature, parameters, return shape, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer/docs/configuration.md) - all config keys, environment variables, IAM permissions, S3-compatible store setup, multi-region setup
+- [`@superloomdev/js-server-helper-storage-aws-s3`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-storage-aws-s3) - the companion S3 file-operations module (list, upload, get, delete, copy)
+- [Superloom](https://superloom.dev) - the framework
 
-## Testing
+## Adding to Your Project
+
+Install this module as a peer dependency in your project's `package.json` and inject its peer modules through the standard Superloom loader. Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
+
+The peer-dependency / loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
+
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Emulated Tests** | MinIO (Docker) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
-| **Integration Tests** | Real S3 (sandbox) | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
+| Emulated | MinIO in Docker (S3-compatible) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Integration | Real AWS S3 (sandbox bucket) | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
 
-### Emulated (Docker)
-
-```bash
-source init-env.sh   # select 'dev'
-cd _test && npm install && npm test
-```
-
-Full guide: `_test/ops/00-local-testing/minio-setup.md`
-
-### Integration (Real Service)
-
-```bash
-source init-env.sh   # select 'integration'
-cd _test && npm install && npm test
-```
-
-Full guide: `_test/ops/01-integration-testing/aws-s3-integration-setup.md`
-
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
+Test runtime details (Docker lifecycle, environment variables, integration setup) live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer/docs/configuration.md#testing-tiers).
 
 ## License
 

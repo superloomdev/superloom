@@ -1,7 +1,7 @@
 {
-  "name": "js-server-helper-aws-s3-url-signer-test",
+  "name": "js-server-helper-storage-aws-s3-url-signer-test",
   "version": "1.0.0",
-  "description": "Test suite for js-server-helper-aws-s3-url-signer",
+  "description": "Test suite for js-server-helper-storage-aws-s3-url-signer",
   "private": true,
   "dependencies": {
     "@superloomdev/js-helper-utils": "^1.0.0",

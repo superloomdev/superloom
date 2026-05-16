@@ -1,4 +1,4 @@
-// ESLint config for js-server-helper-aws-s3-url-signer
+// ESLint config for js-server-helper-storage-aws-s3-url-signer
 'use strict';
 
 module.exports = [

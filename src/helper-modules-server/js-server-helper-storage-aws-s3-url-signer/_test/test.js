@@ -1,4 +1,4 @@
-// Test suite for js-server-helper-aws-s3-url-signer
+// Test suite for js-server-helper-storage-aws-s3-url-signer
 'use strict';
 
 const { describe, it } = require('node:test');

@@ -1,126 +1,64 @@
 # @superloomdev/js-server-helper-queue-aws-sqs
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
+[![Node.js 20.19+](https://img.shields.io/badge/Node.js-20.19%2B-brightgreen.svg)](https://nodejs.org)
 
-AWS SQS message queue wrapper. Send, receive, delete, and schedule messages. Lazy-loaded AWS SDK v3. Part of the [Superloom](https://github.com/superloomdev/superloom).
+An AWS SQS helper for Node.js that insulates your application from SDK changes and ships pre-tested, so your project never has to re-verify queue connectivity. Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent module** - requires Docker for emulated testing (ElasticMQ) and real cloud credentials for integration testing. See testing tiers below.
+## What This Is
 
-## API
+A thin, opinionated layer over [AWS SDK v3 SQS](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/sqs/) with a friendly four-function surface (send, receive, delete, sendDelayed), automatic queue-URL resolution and caching, request-level performance timing, and a single consistent response shape across every operation.
 
-All functions accept `instance` as first parameter (from `Lib.Instance.initialize`).
+Every read and every write returns the same envelope:
 
-| Function | Description |
-|---|---|
-| `send(instance, queue_name, message, options?)` | Send a message to a named queue |
-| `receive(instance, queue_name, options?)` | Receive messages from a queue (polling) |
-| `delete(instance, queue_name, receipt_handle)` | Delete a message after processing |
-| `sendDelayed(instance, queue_name, message, delay_seconds)` | Send a message with delivery delay (0-900s) |
-
-## Usage
-
-```javascript
-// In loader
-Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
-Lib.SQS = require('@superloomdev/js-server-helper-queue-aws-sqs')(Lib, {
-  REGION: 'us-east-1',
-  KEY: process.env.AWS_ACCESS_KEY_ID,
-  SECRET: process.env.AWS_SECRET_ACCESS_KEY
-});
-
-// In application code
-const instance = Lib.Instance.initialize();
-
-// Send a message
-const result = await Lib.SQS.send(instance, 'order_processing', { order_id: 'ORD_001', action: 'process' });
-
-// Receive messages
-const recv = await Lib.SQS.receive(instance, 'order_processing', { max_messages: 5, wait_time_seconds: 10 });
-
-// Process and delete
-for (const msg of recv.messages) {
-  // ... process msg.body
-  await Lib.SQS.delete(instance, 'order_processing', msg.receipt_handle);
-}
+```
+success / data / error
 ```
 
-## Configuration (Loader)
+Error handling, result reading, and exception expectations are the same in every place you touch the queue. There are no surprises between functions, and operational failures never throw. Each call comes back as `{ success: false, error }` with a typed error name your code can branch on.
 
-| Config Key | Environment Variable | Default | Description |
-|---|---|---|---|
-| `REGION` | `AWS_REGION` | `'us-east-1'` | AWS region |
-| `KEY` | `AWS_ACCESS_KEY_ID` | `undefined` | AWS access key (explicit, not implicit) |
-| `SECRET` | `AWS_SECRET_ACCESS_KEY` | `undefined` | AWS secret key (explicit, not implicit) |
-| `ENDPOINT` | `SQS_ENDPOINT` | `undefined` | Custom endpoint (ElasticMQ). Leave unset for real AWS. |
-| `QUEUE_URL_PREFIX` | - | `undefined` | Optional URL prefix. If set, queue names are appended to this instead of calling GetQueueUrl API. |
-| `DEFAULT_VISIBILITY_TIMEOUT` | - | `30` | Default visibility timeout in seconds |
-| `MAX_RETRIES` | - | `3` | Maximum retry attempts for failed requests |
+## Why Use This Module
 
-When `ENDPOINT` is `undefined`, the SDK uses real AWS SQS.
+- **Library updates won't break your code.** When the underlying AWS SDK ships a breaking change, only this module needs updating. Your application code stays exactly as it is.
 
-## Environment Variables
+- **Pre-tested at every release.** A full test suite runs against ElasticMQ (an SQS-compatible emulator) in CI on every push. Your project trusts the wrapper instead of re-verifying SDK plumbing on each release.
 
-This module depends on the following environment variables. They must be set before loading.
+- **Designed for human review.** The code is laid out as clearly-marked visual sections (section banners, short functions, scoped comments) so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `sqs.js` to see the structure.
 
-| Variable | Emulated (Dev) | Integration (Real) | Description |
-|---|---|---|---|
-| `AWS_ACCESS_KEY_ID` | `local` | Real access key | Credentials |
-| `AWS_SECRET_ACCESS_KEY` | `local` | Real secret key | Credentials |
-| `AWS_REGION` | `us-east-1` | Your region | Region |
-| `SQS_ENDPOINT` | `http://localhost:9324` | *(not set)* | Endpoint override for emulator |
+- **Built-in observability.** Every operation can be timed against the active request and routed into your structured logs automatically. Slow-call review, request profiling, and the toggle to enable it during local development or silence it in production are all built in. No instrumentation code to write.
 
-**Where to set these:**
-- **Dev (local):** `__dev__/.env.dev` -> loaded via `source init-env.sh` (select `dev`)
-- **Integration:** `__dev__/.env.integration` -> loaded via `source init-env.sh` (select `integration`)
-- **CI/CD:** `env:` block in `.github/workflows/ci-helper-modules.yml` (under the `test-queue-aws-sqs` and `publish-queue-aws-sqs` jobs)
+- **Explicit credentials, not implicit ones.** Credentials are passed through the loader, not picked up from an ambient SDK environment chain. This makes it impossible to accidentally talk to the wrong AWS account from a developer machine, a CI runner, or a multi-tenant deployment. Local emulator runs the same way as real SQS. Only the `ENDPOINT` config changes.
 
-## Peer Dependencies (Injected via Loader)
+- **Queue-by-name, not by URL.** Your application code says `send(instance, 'order_processing', message)`, not `send(instance, 'https://sqs.us-east-1.amazonaws.com/123456789012/order_processing', message)`. The module resolves names to URLs once and caches the result. Moving a queue to a different account or region only changes loader config; your code stays the same.
 
-These are `@superloomdev` framework modules. They are not bundled - they are injected through the `shared_libs` parameter in the loader.
+## Aligned with Superloom Philosophy
 
-| Package | Purpose |
-|---|---|
-| `@superloomdev/js-helper-utils` | Type checks, validation, data manipulation |
-| `@superloomdev/js-helper-debug` | Structured logging, `performanceAuditLog` for timing |
-| `@superloomdev/js-server-helper-instance` | Request lifecycle - `instance.time_ms` for performance timeline |
+If your project is built on Superloom conventions (the same loader pattern, the same response envelope, the same testing model), this module slots in without you needing to learn anything new. It is written using the same opinionated principles, so adopting it does not introduce inconsistency into your codebase.
 
-## Direct Dependencies (Bundled)
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-These are third-party packages listed in `package.json` `dependencies`. They are installed and bundled with the module.
+## Learn More
 
-| Package | Purpose |
-|---|---|
-| `@aws-sdk/client-sqs` | AWS SQS client and commands (lazy-loaded) |
+Extended documentation lives alongside the source on GitHub:
 
-## Testing
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-queue-aws-sqs/docs/api.md) - every exported function with its signature, parameters, return shape, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-queue-aws-sqs/docs/configuration.md) - all config keys, environment variables, IAM permissions, ElasticMQ emulator setup, FIFO queue notes, multi-region setup
+- [Superloom](https://superloom.dev) - the framework
+
+## Adding to Your Project
+
+Install this module as a peer dependency in your project's `package.json` and inject its peer modules through the standard Superloom loader. Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
+
+The peer-dependency / loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
+
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Emulated Tests** | ElasticMQ (Docker) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
-| **Integration Tests** | Real SQS (sandbox) | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
+| Emulated | ElasticMQ in Docker (SQS-compatible) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Integration | Real AWS SQS (sandbox queue) | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
 
-### Emulated (Docker)
-
-```bash
-cd _test && npm install && npm test
-```
-
-Docker lifecycle is automatic: `pretest` starts the ElasticMQ container, `posttest` stops and removes it (containers and volumes only — images are cached). No manual `docker compose up` needed.
-
-Full guide: `_test/ops/00-local-testing/elasticmq-local-setup.md`
-
-### Integration (Real Service)
-
-```bash
-source init-env.sh   # select 'integration'
-cd _test && npm install && npm test
-```
-
-Full guide: `_test/ops/01-integration-testing/aws-sqs-integration-setup.md`
-
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
+Test runtime details (Docker lifecycle, environment variables, integration setup) live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-queue-aws-sqs/docs/configuration.md#testing-tiers).
 
 ## License
 

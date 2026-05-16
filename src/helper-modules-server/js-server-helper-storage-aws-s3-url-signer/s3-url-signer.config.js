@@ -1,4 +1,4 @@
-// Info: Configuration file for js-server-helper-aws-s3-url-signer
+// Info: Configuration file for js-server-helper-storage-aws-s3-url-signer
 'use strict';
 
 

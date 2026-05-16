@@ -1,4 +1,4 @@
-// Test loader for js-server-helper-aws-s3-url-signer
+// Test loader for js-server-helper-storage-aws-s3-url-signer
 'use strict';
 
 // Mock Utils and Debug for testing
