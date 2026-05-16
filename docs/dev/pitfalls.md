@@ -498,6 +498,32 @@ Both must be green before the version bump commit. If lint fails, fix it first �
 
 **Quick rule.** Treat `npm run lint` (module root) + `npm test` (`_test/`) as a single inseparable gate. Never bump a version without both passing locally.
 
+### 15. VitePress / Vue compiler crashes on bare angle-bracket placeholders in markdown
+
+**Symptom.** The `Deploy Website` workflow fails during `vitepress build` with an error like:
+
+```
+[vite:vue] [plugin vite:vue] docs/architecture/<file>.md (NNN:1):
+  Element is missing end tag.
+SyntaxError: [plugin vite:vue] ...
+```
+
+The reported line number is often **far below** the line that actually caused the problem — the parser walks until it gives up, then reports the position at which it abandoned the parse.
+
+**Cause.** VitePress feeds rendered markdown through Vue's compiler so that authors can use Vue components inside markdown. The compiler does **not** unconditionally trust markdown's HTML-escaping: any `<lowercase-or-PascalCase-name>` inside the rendered output is treated as a Vue/HTML element open tag and triggers the close-tag search. Three concrete failure modes seen on this codebase:
+
+1. **Bare placeholders outside any code formatting.** A bullet like `- <Domain Operations> *(convenience layer)*` parses as opening element `<Domain` with attribute `Operations`, then waits forever for `</Domain>`.
+2. **Placeholders inside a fenced code block tagged ` ```markdown `.** Vue still scans the block's content for tags because the `markdown` language hint enables an additional templating pass. Placeholders such as `<sibling-1>` and `<one-line description>` inside a `markdown`-tagged fence will trip the same error.
+3. **Placeholders inside backticks** are usually safe (they render as HTML-escaped `<code>` content), but a few corner cases (extremely long backtick spans, nested code formatting, generic-looking names like `<T>`) have produced the same failure.
+
+**Lesson.** Treat angle-bracket placeholders in markdown as a build-breaking smell. Three durable rules:
+
+1. **Never use `<...>` placeholders outside backticks in prose.** Use square brackets (`[name]`), curly braces (`{name}`), or plain capitalized phrases ("Domain operations") instead.
+2. **For verbatim copy-paste templates inside fenced code blocks, prefer the `text` language hint.** Switching ` ```markdown ` to ` ```text ` disables the secondary Vue scan and lets the placeholders survive untouched. If the syntax-highlighting loss is unacceptable for a particular block, replace the angle-bracket placeholders with square-bracket ones at template-author time and keep the `markdown` hint.
+3. **Verify documentation changes locally before pushing** when the change touches `docs/architecture/` or any other file that VitePress will render. Run `npm run build` from `website/` — the same pipeline CI runs (`vitepress build .` after `sync-docs`) — and watch for the `Element is missing end tag` family of errors. Local build is fast (single-digit seconds) and catches the failure before it occupies a CI runner.
+
+This pitfall is distinct from the helper-modules CI chain (entries 1–14): it lives in `ci-deploy-website.yml`, not `ci-helper-modules.yml`, and a website-deploy failure does not block module publishing. The two pipelines are independent. But the same commit that triggers helper-module publishing will also trigger website deploy if it touches any `docs/` file, so a documentation-side bug is a hidden cost on every push that updates rules.
+
 ---
 
 ## Local Module Testing
