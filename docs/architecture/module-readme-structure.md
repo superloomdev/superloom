@@ -208,7 +208,7 @@ Four of the five value bullets transfer near-verbatim across Class B + Class C. 
 
 **Bullet 3 — Designed for human review:**
 
-> **Designed for human review.** The code is laid out as clearly-marked visual sections — section banners, short functions, scoped comments — so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `<source>.js` to see the structure.
+> **Designed for human review.** The code is laid out as clearly-marked visual sections — section banners, short functions, scoped comments — so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open the module's source file (e.g. `postgres.js`, `mysql.js`, `s3.js`) to see the structure.
 
 **Bullet 4 — Built-in observability:**
 
@@ -237,15 +237,15 @@ These four bullets do not apply unchanged to Class A foundation modules (which o
 | **NoSQL driver — managed** | Either the universal serverless-or-persistent framing, **or** a domain-specific safety-net bullet ("Built-in safety nets against accidental full-collection writes. `query()`, `count()`, and `deleteRecordsByFilter()` reject empty filters at runtime — there is no path by which an empty or `null` filter can accidentally read or wipe an entire collection."). Pick whichever is the stronger pitch for the module. |
 | **NoSQL driver — cloud-managed** (DynamoDB) | The Class C "Explicit credentials" bullet — see Class C below. Cloud-managed NoSQL drivers inherit the Class C credentials treatment. |
 
-**Hot-Swappable section template:**
+**Hot-Swappable section template** (replace the placeholders in `[...]` with concrete values):
 
-```markdown
+```text
 ## Hot-Swappable with Other Backends
 
-This module is part of a [SQL | NoSQL] family of database helpers that share the same calling shape. Switch by changing the loader line — the rest of your code keeps working.
+This module is part of a [SQL or NoSQL] family of database helpers that share the same calling shape. Switch by changing the loader line — the rest of your code keeps working.
 
-- [`@superloomdev/<sibling-1>`](full URL) — <one-line description>
-- [`@superloomdev/<sibling-2>`](full URL) — <one-line description>
+- [`@superloomdev/[sibling-1-package-name]`]([full GitHub URL]) — [one-line description]
+- [`@superloomdev/[sibling-2-package-name]`]([full GitHub URL]) — [one-line description]
 ```
 
 **Do NOT add a closing paragraph pointing to "the other family" (NoSQL→SQL or SQL→NoSQL).** The cross-family pointer was tried in the first wave of v2 migrations and dropped after review — it added noise without serving any persona, and the Learn More section + the Superloom site already give cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
@@ -323,7 +323,7 @@ Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g
 - Three-Layer Pattern *(Builder → Executor → Convenience)*
 - Command Builders *(pure, no I/O)*
 - Command Executors *(async I/O)*
-- <Domain Operations> *(convenience layer: single-record CRUD, file ops, etc.)*
+- Domain operations *(convenience layer: single-record CRUD, file ops, etc.)*
 - Lifecycle *(if applicable — many SDK-managed clients don't need `close()`)*
 
 **`docs/configuration.md` structure — AWS-flavour cloud wrapper:**
@@ -422,7 +422,7 @@ All AWS-service wrappers share:
 - **`docs/configuration.md` "Local Emulator vs Real Service" section** — only if an emulator exists (DynamoDB Local, MinIO, LocalStack, ElasticMQ).
 - **`docs/configuration.md` "Multi-Region / Multi-Account Setup" section** — same boilerplate; only the config keys differ.
 - **Configuration keys** — `REGION`, `KEY`, `SECRET`, `ENDPOINT`, `MAX_RETRIES` are universal across AWS modules; add service-specific extras (e.g. `FORCE_PATH_STYLE` for S3-compatible stores).
-- **Environment variable convention** — `AWS_*` for cross-service shared values (`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`), `<SERVICE>_*` for service-specific overrides (`DYNAMODB_ENDPOINT`, `S3_ENDPOINT`, etc.).
+- **Environment variable convention** — `AWS_*` for cross-service shared values (`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`), service-specific prefixes for overrides (`DYNAMODB_ENDPOINT`, `S3_ENDPOINT`, etc.).
 - **Cross-link in Learn More** — every AWS module should reference at least one sibling AWS module in its Learn More section when there's a logical companion (S3 ↔ S3 URL signer, etc.).
 
 When adding a new AWS-service wrapper, copy the closest existing AWS module's `docs/configuration.md` and edit the service-specific bits; the structural sections transfer near-verbatim.
