@@ -1,6 +1,6 @@
 # IDE Setup
 
-Recommended IDE configuration for working comfortably in a Superloom codebase. Everything below is a suggestion - you are free to use your own preferences. The only hard requirement is that ESLint runs cleanly on every file you commit.
+Recommended IDE configuration for working comfortably in a Superloom codebase. Everything below is a suggestion - you are free to use your own preferences. The only hard requirement is that the language's linter runs cleanly on every file you commit (ESLint for JavaScript modules).
 
 ## Windsurf / VS Code / Cursor
 
@@ -35,7 +35,7 @@ For GitHub MCP integration (so the assistant can manage repos, Actions, and PRs)
 The principles transfer:
 
 - **Indentation:** 2 spaces, not tabs
-- **Linter:** ESLint, configured to use the flat config (`eslint.config.js`) at the module root
+- **Linter:** ESLint for JavaScript modules, configured to use the flat config (`eslint.config.js`) at the module root
 - **Auto-fix on save:** strongly recommended
 - **Quote style:** single quotes for JavaScript strings
 - **Trailing commas:** off

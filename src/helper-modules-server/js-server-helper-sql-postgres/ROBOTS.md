@@ -1,4 +1,4 @@
-# js-server-helper-postgres
+# js-server-helper-sql-postgres
 
 PostgreSQL 15+ client with connection pooling.
 Async/await. Multi-DB capable. **API-compatible with `js-server-helper-mysql`** -
@@ -18,8 +18,8 @@ Server helper. Service-dependent (needs Docker for emulated, real PostgreSQL-com
 ## Loader Pattern (Multi-DB Capable)
 
 ```javascript
-Lib.PrimaryDB = require('@superloomdev/js-server-helper-postgres')(Lib, { HOST: ..., DATABASE: ... });
-Lib.ReaderDB  = require('@superloomdev/js-server-helper-postgres')(Lib, { HOST: ..., DATABASE: ... });
+Lib.PrimaryDB = require('@superloomdev/js-server-helper-sql-postgres')(Lib, { HOST: ..., DATABASE: ... });
+Lib.ReaderDB  = require('@superloomdev/js-server-helper-sql-postgres')(Lib, { HOST: ..., DATABASE: ... });
 ```
 
 Each loader call returns an independent public interface with its own pool - no singleton state.

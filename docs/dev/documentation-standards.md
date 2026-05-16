@@ -1,5 +1,7 @@
 # Documentation Writing Guide
 
+> **Language:** JavaScript
+
 This guide defines how to write human-readable, consistent documentation for Superloom modules. Every module in the framework follows these patterns so that a person can pick up any module and immediately understand its purpose and usage.
 
 ## Core Philosophy

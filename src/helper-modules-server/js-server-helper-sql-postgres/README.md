@@ -1,196 +1,71 @@
 # @superloomdev/js-server-helper-sql-postgres
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 20.19+](https://img.shields.io/badge/Node.js-20.19%2B-brightgreen.svg)](https://nodejs.org)
 
-PostgreSQL client with connection pooling for Node.js. Compatible with Postgres 15+. Async/await API built on `pg` (node-postgres). Part of the [Superloom](https://github.com/superloomdev/superloom).
+A PostgreSQL helper for Node.js that insulates your application from driver changes and ships pre-tested, so your project never has to re-verify SQL connectivity. Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent module** - tests require either Docker (emulated) or a real PostgreSQL-compatible database (integration).
+## What This Is
 
-> **Usage-agnostic with MySQL.** The public API is identical to `@superloomdev/js-server-helper-mysql` - same placeholders (`?` / `??`), same function signatures, same return shapes. Swap `Lib.SqlDB = require('...mysql')` for `require('...postgres')` and your application code keeps running.
+A thin, opinionated layer over [`pg` (node-postgres)](https://node-postgres.com/) with built-in connection pooling, automatic placeholder translation, request-level timing, and a single consistent response shape across every operation.
 
-## API
+Every read and every write returns the same envelope:
 
-All I/O functions accept `instance` (from `Lib.Instance.initialize`) as their first argument - enabling request-level performance tracing via `instance.time_ms`.
-
-| Function | Purpose |
-|---|---|
-| `getRow(instance, sql, params)` | First row (or null) |
-| `getRows(instance, sql, params)` | All rows |
-| `getValue(instance, sql, params)` | First column of first row (scalar) |
-| `get(instance, sql, params)` | Auto-shape result (scalar / row / rows / null) when the caller doesn't know the shape |
-| `write(instance, sql, params?)` | INSERT / UPDATE / DELETE. String = single statement. Array = atomic transaction. Returns `affected_rows` + `insert_id` (use `RETURNING id`) |
-| `getClient(instance)` / `releaseClient(client)` | Manual transaction management for complex commit/rollback flows |
-| `buildQuery(sql, params)` | Compile to a fully-escaped Postgres SQL string (`?`/`??` syntax) |
-| `buildRawText(str)` | Wrap a raw fragment so it bypasses escaping |
-| `buildMultiCondition(data, operator?)` | Join equality conditions with AND/OR |
-| `close()` | Close pool gracefully on SIGTERM (timeout controlled by `CLOSE_TIMEOUT_MS`) |
-
-**Placeholders:** `?` for values, `??` for identifiers - identical to the MySQL helper. Internally translated to Postgres-native `$1, $2, …` with identifiers inlined as `"name"`.
-
-**`insert_id`:** Postgres does not have `LAST_INSERT_ID()`. Add a `RETURNING id` clause to your INSERT - the module surfaces it as `insert_id`.
-
-## Multi-DB Support
-
-Each loader call returns an **independent instance** with its own pool. Load the module twice to connect to two databases - or a writer and a reader - from the same process:
-
-```javascript
-Lib.PrimaryDB = require('@superloomdev/js-server-helper-postgres')(Lib, {
-  HOST: 'primary-db.example.com',
-  DATABASE: 'app_db',
-  USER: 'app_user',
-  PASSWORD: process.env.PRIMARY_DB_PASSWORD,
-  POOL_MAX: 20
-});
-
-Lib.ReaderDB = require('@superloomdev/js-server-helper-postgres')(Lib, {
-  HOST: 'reader-db.example.com',
-  DATABASE: 'app_db',
-  USER: 'readonly_user',
-  PASSWORD: process.env.READER_DB_PASSWORD,
-  POOL_MAX: 10
-});
+```
+success / data / error
 ```
 
-Each instance maintains its own pool and lifecycle - call `close()` on each at process exit.
+— so error handling, result reading, and exception expectations are the same in every place you touch the database. There are no surprises between functions, and operational failures never throw.
 
-## Usage
+## Why Use This Module
 
-```javascript
-const Lib = {};
-Lib.Utils = require('@superloomdev/js-helper-utils')();
-Lib.Debug = require('@superloomdev/js-helper-debug')(Lib, { LOG_LEVEL: 'info' });
-Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
-Lib.SqlDB = require('@superloomdev/js-server-helper-postgres')(Lib, {
-  HOST: process.env.DB_HOST,
-  DATABASE: process.env.DB_NAME,
-  USER: process.env.DB_USER,
-  PASSWORD: process.env.DB_PASSWORD,
-  SSL: true,
-  POOL_MAX: 20
-});
+- **Library updates won't break your code.** When the underlying driver ships a breaking change, only this module needs updating. Your application code stays exactly as it is.
 
-const instance = Lib.Instance.initialize();
+- **Pre-tested at every release.** A full test suite runs against a real PostgreSQL instance in CI on every push. Your project trusts the wrapper instead of re-verifying SQL plumbing on each release.
 
-// Modern
-const users = await Lib.SqlDB.getRows(
-  instance,
-  'SELECT id, name FROM ?? WHERE status = ?',
-  ['users', 'active']
-);
+- **Designed for human review.** The code is laid out as clearly-marked visual sections — section banners, short functions, scoped comments — so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `postgres.js` to see the structure.
 
-// INSERT with RETURNING for insert_id
-const res = await Lib.SqlDB.write(
-  instance,
-  'INSERT INTO ?? (name, email) VALUES (?, ?) RETURNING id',
-  ['users', 'Alice', 'alice@example.com']
-);
-console.log(res.insert_id);   // new primary key
+- **Built-in observability.** Every operation can be timed against the active request and routed into your structured logs automatically. Slow-query review, request profiling, and the toggle to enable it in production or silence it during local development are all built in. No instrumentation code to write.
 
-// Build once, run atomically
-const sql = [
-  Lib.SqlDB.buildQuery('INSERT INTO ?? (name) VALUES (?)', ['users', 'Bob']),
-  Lib.SqlDB.buildQuery('UPDATE ?? SET count = count + ? WHERE id = ?',
-    ['stats', 1, 42])
-];
-await Lib.SqlDB.write(instance, sql);   // atomic transaction
-```
+- **Works on both serverless and persistent infrastructure.** The same module configures cleanly for serverless deployments (cloud functions, on-demand workers) and persistent ones (containers, virtual machines, orchestrated platforms). Switch deployment shape by changing one config value, not by changing the driver or the calling code.
 
-## Spatial Data (PostGIS)
+## Hot-Swappable with Other Backends
 
-Spatial SQL is supported via `buildRawText()` - no dedicated helpers needed:
+This module is part of a family of database helpers that share the same calling shape. Switch by changing the loader line — the rest of your code keeps working.
 
-```javascript
-const point = Lib.SqlDB.buildRawText(
-  "ST_GeomFromText('POINT(28.6139 77.2090)', 4326)"
-);
+- [`@superloomdev/js-server-helper-sql-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-mysql) — MySQL
+- [`@superloomdev/js-server-helper-sql-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-sqlite) — SQLite (offline / embedded)
 
-await Lib.SqlDB.write(
-  instance,
-  Lib.SqlDB.buildQuery('INSERT INTO address (line1, point, latitude, longitude) VALUES (?, ?, ?, ?)',
-    ['221B', point, 28.6139, 77.2090])
-);
-```
+NoSQL helpers with similarly-shaped APIs (MongoDB, DynamoDB) live as their own family — see the [Superloom helper modules index](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server).
 
-## Configuration (Loader)
+## Aligned with Superloom Philosophy
 
-| Config Key | Default | Description |
-|---|---|---|
-| `HOST` | `'localhost'` | Postgres host |
-| `PORT` | `5432` | Postgres port |
-| `DATABASE` | `''` | Database name |
-| `USER` | `'postgres'` | Postgres user |
-| `PASSWORD` | `''` | Postgres password |
-| `SSL` | `false` | `false`, `true` (defaults), or explicit `{ ca, rejectUnauthorized }` for TLS-enforced managed databases |
-| `POOL_MAX` | `10` | Max clients in pool. Lambda: `1`. Docker/EC2: `10-20` |
-| `POOL_MIN` | `0` | Min idle clients |
-| `POOL_IDLE_TIMEOUT_MS` | `60000` | Close idle clients after this many ms |
-| `KEEP_ALIVE_INITIAL_DELAY_MS` | `10000` | TCP keep-alive probe delay |
-| `CONNECT_TIMEOUT_MS` | `10000` | Connection establishment timeout |
-| `STATEMENT_TIMEOUT_MS` | `0` | Postgres statement timeout (`0` = disabled) |
-| `APPLICATION_NAME` | `'superloom'` | Surfaces in `pg_stat_activity.application_name` |
-| `CLOSE_TIMEOUT_MS` | `5000` | Max ms `close()` waits for active queries before force-destroying the pool |
+If your project is built on Superloom conventions — the same loader pattern, the same response envelope, the same testing model — this module slots in without you needing to learn anything new. It is written using the same opinionated principles, so adopting it does not introduce inconsistency into your codebase.
 
-## Environment Variables
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-Consumed by `_test/loader.js` - never read anywhere else.
+## Learn More
 
-| Variable | Emulated (Dev) | Integration (Real DB) |
-|---|---|---|
-| `POSTGRES_HOST` | `localhost` | `<cluster-endpoint>` |
-| `POSTGRES_PORT` | `5432` | `5432` |
-| `POSTGRES_DATABASE` | `test_db` | `test_db` |
-| `POSTGRES_USER` | `test_user` | `unit_tester` |
-| `POSTGRES_PASSWORD` | `test_pw` | `__dev__/secrets/sandbox.md` |
+Extended documentation lives alongside the source on GitHub:
 
-## Peer Dependencies (Injected via Loader)
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-postgres/docs/api.md) — every exported function with its signature, parameters, return shape, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-postgres/docs/configuration.md) — all config keys, environment variables, multi-database setup, SSL, connection-pool tuning
+- [Superloom](https://superloom.dev) — the framework
 
-| Package | Purpose |
-|---|---|
-| `@superloomdev/js-helper-utils` | Type checks, data manipulation |
-| `@superloomdev/js-helper-debug` | Structured logging, `performanceAuditLog` |
-| `@superloomdev/js-server-helper-instance` | Request lifecycle - `instance.time_ms` |
+## Adding to Your Project
 
-## Direct Dependencies (Bundled)
+Install this module as a peer dependency in your project's `package.json` and inject its peer modules through the standard Superloom loader. Do not vendor the source or use it as a local file dependency — the published package is the supported integration path.
 
-| Package | Purpose |
-|---|---|
-| `pg` | node-postgres driver (lazy-loaded) |
+The peer-dependency / loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
 
-## Testing
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Emulated Tests** | Postgres 17 (Docker) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
-| **Integration Tests** | Real PostgreSQL 15+ database | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
+| Emulated | Postgres 17 in Docker | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Integration | Real PostgreSQL 15+ instance | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
 
-### Emulated (Docker)
-
-```bash
-cd _test && npm install && npm test
-```
-
-Docker lifecycle is automatic: `pretest` starts the Postgres container, `posttest` stops and removes it (containers and volumes only — images are cached). No manual `docker compose up` needed.
-
-Full guide: `_test/ops/00-local-testing/postgres-local-setup.md`
-
-### Integration (Real Database)
-
-```bash
-source init-env.sh   # select 'integration'
-cd _test && npm install && npm test
-```
-
-Full guide: `_test/ops/01-integration-testing/postgres-integration-setup.md`
-
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
-
-## Notes
-
-- Placeholders are `?` / `??` (not `$1`) to keep application code identical across MySQL and Postgres backends. Internally translated to Postgres-native `$1, $2, ...` before execution.
-- Append `RETURNING id` to your INSERT statements to populate `insert_id` in the response - Postgres does not have MySQL's `LAST_INSERT_ID()`.
-- `write()` is polymorphic: pass a single SQL string for one statement, or an array of statements (strings or `{sql, params}` objects) for an atomic transaction.
+Test runtime details — Docker lifecycle, environment variables, integration setup — live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-postgres/docs/configuration.md#testing-tiers).
 
 ## License
 

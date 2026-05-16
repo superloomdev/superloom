@@ -1,212 +1,191 @@
-# Module Categorization Analysis
+# Module Categorization
 
-This document maps every Superloom module to its category for documentation purposes. Use this to determine which README template to apply.
+Every Superloom helper module belongs to one of six classes. The class determines the README structure, which `docs/` files (if any) accompany it, and which template to start from. For the full documentation rubric — universal sections, class-specific sections, personas, and ordering — see [`module-readme-structure.md`](module-readme-structure.md).
 
----
+This page is the enumeration: which module belongs to which class, and the current documentation status of each.
 
-## Category 1: Core Foundation Modules
+## On This Page
 
-**Characteristics:** Zero runtime dependencies, pure utility functions, platform-agnostic.
-
-**Template:** `README-foundation-module.md`
-
-| Module | Package | Purpose | Template Applied |
-|--------|---------|---------|------------------|
-| js-helper-utils | `@superloomdev/js-helper-utils` | Type checks, validation, sanitization | Yes |
-| js-helper-debug | `@superloomdev/js-helper-debug` | Structured logging with levels | Yes |
-| js-helper-time | `@superloomdev/js-helper-time` | Date/time math, timezone handling | Needs review |
-| js-client-helper-crypto | `@superloomdev/js-client-helper-crypto` | UUID, random strings, base64 (browser) | Needs creation |
-
-**Documentation Style:**
-- Simple function-focused
-- List what it does, show examples
-- Minimal configuration
-- Badge: "Foundation module"
+- [The Six Classes](#the-six-classes)
+- [Class A — Foundation Utility](#class-a--foundation-utility)
+- [Class B — Driver Wrapper](#class-b--driver-wrapper)
+- [Class C — Cloud Service Wrapper](#class-c--cloud-service-wrapper)
+- [Class D — Lifecycle Helper](#class-d--lifecycle-helper)
+- [Class E — Feature Module with Adapters](#class-e--feature-module-with-adapters)
+- [Class F — Storage Adapter](#class-f--storage-adapter)
+- [Documentation Status Matrix](#documentation-status-matrix)
+- [Migration Priority](#migration-priority)
 
 ---
 
-## Category 2: Service/Helper Modules
+## The Six Classes
 
-**Characteristics:** Single service purpose, factory pattern, depends on foundation modules.
-
-**Template:** `README-master-template.md` (standard)
-
-| Module | Package | Purpose | Template Applied |
-|--------|---------|---------|------------------|
-| js-server-helper-crypto | `@superloomdev/js-server-helper-crypto` | Hashing, encryption, UUID | Yes |
-| js-server-helper-instance | `@superloomdev/js-server-helper-instance` | Request lifecycle, cleanup | Yes |
-| js-server-helper-http | `@superloomdev/js-server-helper-http` | HTTP client wrapper | Needs review |
-
-**Documentation Style:**
-- Clear purpose statement
-- Factory pattern explanation
-- API table with returns column
-- Badge: Service-specific tag
+| Class | Distinguishing trait | Template | `docs/` folder |
+|---|---|---|---|
+| **A. Foundation utility** | Zero runtime deps; pure functions; platform-agnostic | `README-foundation-module.md` | Usually none |
+| **B. Driver wrapper** | Wraps a third-party DB driver; presents a unified API | `README-master-template.md` (driver variant) | `api.md`, `configuration.md` |
+| **C. Cloud service wrapper** | Wraps a cloud / network SDK | `README-master-template.md` (cloud variant) | `api.md`, `configuration.md`, optional `iam.md` |
+| **D. Lifecycle helper** | Server-side utility / per-request plumbing | `README-master-template.md` | Usually none; small `api.md` if non-trivial |
+| **E. Feature module with adapters** | Business logic + pluggable storage backends | `README-feature-module.md` | `data-model.md`, `storage-adapters.md`, integrations |
+| **F. Storage adapter** | Implements a parent module's store contract; thin | `README-storage-adapter.md` | None (schema sits inside the README) |
 
 ---
 
-## Category 3: Database Driver Modules
+## Class A — Foundation Utility
 
-**Characteristics:** Database driver wrapper, connection management, query building.
+**Characteristics:** Zero runtime dependencies, pure utility functions, platform-agnostic. Live under `src/helper-modules-core/` and `src/helper-modules-client/`.
 
-**Template:** `README-master-template.md` (driver-specific variant)
+**README extras** (on top of the universal set): "API Categories" — a grouped overview of available functions, one line each.
 
-| Module | Package | Purpose | Notes |
-|--------|---------|---------|-------|
-| js-server-helper-sql-sqlite | `@superloomdev/js-server-helper-sql-sqlite` | SQLite via node:sqlite | Needs badge update |
-| js-server-helper-sql-postgres | `@superloomdev/js-server-helper-sql-postgres` | PostgreSQL driver | Needs consistency pass |
-| js-server-helper-sql-mysql | `@superloomdev/js-server-helper-sql-mysql` | MySQL driver | Needs consistency pass |
-| js-server-helper-nosql-mongodb | `@superloomdev/js-server-helper-nosql-mongodb` | MongoDB native driver | Needs consistency pass |
-| js-server-helper-nosql-aws-dynamodb | `@superloomdev/js-server-helper-nosql-aws-dynamodb` | DynamoDB wrapper | Needs consistency pass |
-
-**Documentation Style:**
-- Connection setup prominently
-- Placeholder syntax (`?` / `??`)
-- Query examples with all helper types (getRow, getRows, write)
-- Badge: "Offline module" (SQLite) or "Service-dependent" (others)
+| Module | Package | Purpose |
+|---|---|---|
+| `js-helper-utils` | `@superloomdev/js-helper-utils` | Type checks, validation, sanitization, data manipulation |
+| `js-helper-debug` | `@superloomdev/js-helper-debug` | Structured logging with levels (debug, info, warn, error) |
+| `js-helper-time` | `@superloomdev/js-helper-time` | Date/time math, timezone handling, formatting |
+| `js-client-helper-crypto` | `@superloomdev/js-client-helper-crypto` | UUID, random strings, base64 (browser; Web Crypto API) |
 
 ---
 
-## Category 4: Feature Modules with Storage Adapters
+## Class B — Driver Wrapper
 
-**Characteristics:** Complex business logic, multiple storage options, multi-tenancy, deep data model.
+**Characteristics:** Wraps a third-party database driver. Presents a unified API (`getRow`, `getRows`, `getValue`, `write`, etc.) so calling code is identical across backends. Insulates the application from upstream driver churn.
 
-**Template:** `README-feature-module.md` + `docs/` folder
+**README extras:** "Common Patterns" — 2-3 progressive examples (read, write, transaction); brief callout about cross-backend API compatibility.
 
-| Module | Package | Purpose | docs/ Needed |
-|--------|---------|---------|--------------|
-| js-server-helper-auth | `@superloomdev/js-server-helper-auth` | Session lifecycle | Yes - exists |
-| js-server-helper-verify | `@superloomdev/js-server-helper-verify` | Verification codes | Yes - exists |
-| js-server-helper-logger | `@superloomdev/js-server-helper-logger` | Action logging | Yes - needs creation |
+**`docs/`:** `api.md`, `configuration.md`.
 
-**Documentation Style:**
-- Architecture overview first
-- Storage adapter comparison table
-- Data model deep dive in docs/
-- Framework integration guides
-- Badge: Complex module tag
-
-### docs/ Folder Contents
-
-**auth module:**
-- `docs/integration-express.md` — Express middleware patterns
-- `docs/integration-lambda.md` — Lambda + JWT authorizer
-- `docs/push-notifications.md` — Push token contract
-
-**verify module:**
-- (Currently has no docs/ folder — evaluate if needed)
-
-**logger module:**
-- `docs/data-model.md` — Record fields, retention policies
-- `docs/integration-express.md` — IP capture setup
-- `docs/storage-adapters.md` — Backend selection guide
+| Module | Package | Underlying driver |
+|---|---|---|
+| `js-server-helper-sql-sqlite` | `@superloomdev/js-server-helper-sql-sqlite` | Node.js built-in `node:sqlite` |
+| `js-server-helper-sql-postgres` | `@superloomdev/js-server-helper-sql-postgres` | `pg` (node-postgres) |
+| `js-server-helper-sql-mysql` | `@superloomdev/js-server-helper-sql-mysql` | `mysql2` |
+| `js-server-helper-nosql-mongodb` | `@superloomdev/js-server-helper-nosql-mongodb` | `mongodb` (native driver) |
+| `js-server-helper-nosql-aws-dynamodb` | `@superloomdev/js-server-helper-nosql-aws-dynamodb` | `@aws-sdk/client-dynamodb` |
 
 ---
 
-## Category 5: Storage Adapter Modules
+## Class C — Cloud Service Wrapper
 
-**Characteristics:** Implements store contract, thin wrapper, used with parent feature module.
+**Characteristics:** Wraps a cloud SDK or network library. Similar README shape to Class B, but the surface is service-domain (storage, queue, HTTP) rather than data.
 
-**Template:** `README-storage-adapter.md`
+**README extras:** "Credentials & IAM" — short section on credentials, IAM permissions, regional config.
+
+**`docs/`:** `api.md`, `configuration.md`, optionally `iam.md`.
+
+| Module | Package | Service |
+|---|---|---|
+| `js-server-helper-http` | `@superloomdev/js-server-helper-http` | Native `fetch` wrapper (outgoing HTTP, multipart) |
+| `js-server-helper-storage-aws-s3` | `@superloomdev/js-server-helper-storage-aws-s3` | S3 file operations |
+| `js-server-helper-storage-aws-s3-url-signer` | `@superloomdev/js-server-helper-storage-aws-s3-url-signer` | S3 presigned URLs |
+| `js-server-helper-queue-aws-sqs` | `@superloomdev/js-server-helper-queue-aws-sqs` | SQS message queue |
+
+---
+
+## Class D — Lifecycle Helper
+
+**Characteristics:** Provides server-side utility plumbing rather than data I/O. Either manages per-request lifecycle (`instance`) or exposes operational utilities used during requests (`crypto`).
+
+**README extras:** "Behavior" — explains the lifecycle semantics (cleanup ordering, background tasks) or the categorized utility surface.
+
+**`docs/`:** Usually none. Small `api.md` only if the surface is non-trivial.
+
+| Module | Package | Purpose |
+|---|---|---|
+| `js-server-helper-instance` | `@superloomdev/js-server-helper-instance` | Per-request instance lifecycle, cleanup hooks, background tasks |
+| `js-server-helper-crypto` | `@superloomdev/js-server-helper-crypto` | Hashing, encryption, UUID, random strings, base conversion |
+
+---
+
+## Class E — Feature Module with Adapters
+
+**Characteristics:** Self-contained business-logic module. Pluggable storage backends via the adapter pattern. Deep data model. Needs a `docs/` folder.
+
+**README extras:** "Architecture overview" — high-level diagram or tree; "Storage adapter selection" — short callout linking to `docs/storage-adapters.md`.
+
+**`docs/`:** `data-model.md`, `configuration.md`, `storage-adapters.md`, optionally `integration-express.md`, `integration-lambda.md`. See [`complex-module-docs-guide.md`](complex-module-docs-guide.md) for the deep guide.
+
+| Module | Package | Purpose |
+|---|---|---|
+| `js-server-helper-auth` | `@superloomdev/js-server-helper-auth` | Session lifecycle and authentication; optional JWT mode with refresh-token rotation |
+| `js-server-helper-verify` | `@superloomdev/js-server-helper-verify` | One-time verification codes (pin, code, token) |
+| `js-server-helper-logger` | `@superloomdev/js-server-helper-logger` | Compliance-friendly action log with per-row retention and optional IP encryption |
+
+---
+
+## Class F — Storage Adapter
+
+**Characteristics:** Implements a parent module's store contract. Thin wrapper around a Class B or Class C module. One adapter per backend per parent feature.
+
+**README extras:** "How this fits into the parent module" — explains the adapter factory protocol; links to the parent module's docs.
+
+**`docs/`:** None — the README plus the schema section it contains is enough.
 
 ### Auth Store Adapters
 
 | Module | Package | Backend | Parent |
-|--------|---------|---------|--------|
-| js-server-helper-auth-store-sqlite | `@superloomdev/...auth-store-sqlite` | SQLite | auth |
-| js-server-helper-auth-store-postgres | `@superloomdev/...auth-store-postgres` | PostgreSQL | auth |
-| js-server-helper-auth-store-mysql | `@superloomdev/...auth-store-mysql` | MySQL | auth |
-| js-server-helper-auth-store-mongodb | `@superloomdev/...auth-store-mongodb` | MongoDB | auth |
-| js-server-helper-auth-store-dynamodb | `@superloomdev/...auth-store-dynamodb` | DynamoDB | auth |
+|---|---|---|---|
+| `js-server-helper-auth-store-sqlite` | `@superloomdev/...auth-store-sqlite` | SQLite | `auth` |
+| `js-server-helper-auth-store-postgres` | `@superloomdev/...auth-store-postgres` | PostgreSQL | `auth` |
+| `js-server-helper-auth-store-mysql` | `@superloomdev/...auth-store-mysql` | MySQL | `auth` |
+| `js-server-helper-auth-store-mongodb` | `@superloomdev/...auth-store-mongodb` | MongoDB | `auth` |
+| `js-server-helper-auth-store-dynamodb` | `@superloomdev/...auth-store-dynamodb` | DynamoDB | `auth` |
 
 ### Verify Store Adapters
 
 | Module | Package | Backend | Parent |
-|--------|---------|---------|--------|
-| js-server-helper-verify-store-sqlite | `@superloomdev/...verify-store-sqlite` | SQLite | verify |
-| js-server-helper-verify-store-postgres | `@superloomdev/...verify-store-postgres` | PostgreSQL | verify |
-| js-server-helper-verify-store-mysql | `@superloomdev/...verify-store-mysql` | MySQL | verify |
-| js-server-helper-verify-store-mongodb | `@superloomdev/...verify-store-mongodb` | MongoDB | verify |
-| js-server-helper-verify-store-dynamodb | `@superloomdev/...verify-store-dynamodb` | DynamoDB | verify |
+|---|---|---|---|
+| `js-server-helper-verify-store-sqlite` | `@superloomdev/...verify-store-sqlite` | SQLite | `verify` |
+| `js-server-helper-verify-store-postgres` | `@superloomdev/...verify-store-postgres` | PostgreSQL | `verify` |
+| `js-server-helper-verify-store-mysql` | `@superloomdev/...verify-store-mysql` | MySQL | `verify` |
+| `js-server-helper-verify-store-mongodb` | `@superloomdev/...verify-store-mongodb` | MongoDB | `verify` |
+| `js-server-helper-verify-store-dynamodb` | `@superloomdev/...verify-store-dynamodb` | DynamoDB | `verify` |
 
-### Logger Store Adapters (New)
+### Logger Store Adapters
 
 | Module | Package | Backend | Parent |
-|--------|---------|---------|--------|
-| js-server-helper-logger-store-sqlite | `@superloomdev/...logger-store-sqlite` | SQLite | logger |
-| js-server-helper-logger-store-postgres | `@superloomdev/...logger-store-postgres` | PostgreSQL | logger |
-| js-server-helper-logger-store-mysql | `@superloomdev/...logger-store-mysql` | MySQL | logger |
-| js-server-helper-logger-store-mongodb | `@superloomdev/...logger-store-mongodb` | MongoDB | logger |
-| js-server-helper-logger-store-dynamodb | `@superloomdev/...logger-store-dynamodb` | DynamoDB | logger |
-
-**Documentation Style:**
-- "How This Fits In" section first
-- Link to parent module prominently
-- Store contract table (8 methods for auth, 5 for logger, etc.)
-- Schema DDL
-- Badge: "Service-dependent" (except SQLite = "Offline")
-
----
-
-## Category 6: AWS Service Modules
-
-**Characteristics:** AWS SDK wrapper, credential management, regional config.
-
-**Template:** `README-master-template.md` (AWS-specific)
-
-| Module | Package | AWS Service | Notes |
-|--------|---------|-------------|-------|
-| js-server-helper-storage-aws-s3 | `@superloomdev/...storage-aws-s3` | S3 operations | Needs review |
-| js-server-helper-storage-aws-s3-url-signer | `@superloomdev/...storage-aws-s3-url-signer` | S3 presigned URLs | Needs review |
-| js-server-helper-queue-aws-sqs | `@superloomdev/...queue-aws-sqs` | SQS messaging | Needs review |
-
-**Documentation Style:**
-- Credentials section early
-- IAM permissions table
-- Regional configuration note
-- AWS SDK version compatibility
+|---|---|---|---|
+| `js-server-helper-logger-store-sqlite` | `@superloomdev/...logger-store-sqlite` | SQLite | `logger` |
+| `js-server-helper-logger-store-postgres` | `@superloomdev/...logger-store-postgres` | PostgreSQL | `logger` |
+| `js-server-helper-logger-store-mysql` | `@superloomdev/...logger-store-mysql` | MySQL | `logger` |
+| `js-server-helper-logger-store-mongodb` | `@superloomdev/...logger-store-mongodb` | MongoDB | `logger` |
+| `js-server-helper-logger-store-dynamodb` | `@superloomdev/...logger-store-dynamodb` | DynamoDB | `logger` |
 
 ---
 
 ## Documentation Status Matrix
 
-| Module | Category | README Status | Human-Written | Has Template | Needs Work |
-|--------|----------|---------------|---------------|--------------|------------|
-| js-helper-utils | 1 - Foundation | Complete | Yes | Yes | No |
-| js-helper-debug | 1 - Foundation | Complete | Yes | Yes | No |
-| js-helper-time | 1 - Foundation | Needs review | Unknown | Yes | Review |
-| js-client-helper-crypto | 1 - Foundation | Needs creation | N/A | Yes | Create |
-| js-server-helper-crypto | 2 - Service | Complete | Yes | Yes | No |
-| js-server-helper-instance | 2 - Service | Complete | Yes | Yes | No |
-| js-server-helper-http | 2 - Service | Needs review | Unknown | Yes | Review |
-| js-server-helper-sql-sqlite | 3 - Driver | Needs review | Partial | Yes | Consistency pass |
-| js-server-helper-sql-postgres | 3 - Driver | Needs review | Unknown | Yes | Consistency pass |
-| js-server-helper-sql-mysql | 3 - Driver | Needs review | Unknown | Yes | Consistency pass |
-| js-server-helper-nosql-mongodb | 3 - Driver | Needs review | Unknown | Yes | Consistency pass |
-| js-server-helper-nosql-aws-dynamodb | 3 - Driver | Needs review | Unknown | Yes | Consistency pass |
-| js-server-helper-auth | 4 - Feature | Complete | Yes | Yes | docs/ exists |
-| js-server-helper-verify | 4 - Feature | Complete | Yes | Yes | Evaluate docs/ need |
-| js-server-helper-logger | 4 - Feature | Complete | Yes | Yes | Create docs/ folder |
-| js-server-helper-auth-store-* | 5 - Adapter | Partial | Mixed | Yes | Apply template |
-| js-server-helper-verify-store-* | 5 - Adapter | Needs review | Mixed | Yes | Apply template |
-| js-server-helper-logger-store-* | 5 - Adapter | New | N/A | Yes | Use template |
-| js-server-helper-storage-aws-* | 6 - AWS | Needs review | Unknown | Yes | Review |
-| js-server-helper-queue-aws-sqs | 6 - AWS | Needs review | Unknown | Yes | Review |
+Tracks which modules have been restructured per [`module-readme-structure.md`](module-readme-structure.md) (value-first README + `docs/` separation).
+
+| Module | Class | README restructured | `docs/` present | Notes |
+|---|---|---|---|---|
+| js-helper-utils | A | No | n/a | Pre-rubric README; review during Class A migration |
+| js-helper-debug | A | No | n/a | Pre-rubric README; review during Class A migration |
+| js-helper-time | A | No | n/a | Pre-rubric README; review during Class A migration |
+| js-client-helper-crypto | A | No | n/a | Pre-rubric README; review during Class A migration |
+| js-server-helper-sql-postgres | B | **Yes (pilot)** | **Yes** (`api.md`, `configuration.md`) | First module migrated under the new rubric |
+| js-server-helper-sql-mysql | B | No | No | Highest-priority follow-up — mirror the Postgres pilot |
+| js-server-helper-sql-sqlite | B | No | No | Mirror the Postgres pilot |
+| js-server-helper-nosql-mongodb | B | No | No | Mirror the Postgres pilot |
+| js-server-helper-nosql-aws-dynamodb | B | No | No | Mirror the Postgres pilot |
+| js-server-helper-http | C | No | No | |
+| js-server-helper-storage-aws-s3 | C | No | No | |
+| js-server-helper-storage-aws-s3-url-signer | C | No | No | |
+| js-server-helper-queue-aws-sqs | C | No | No | |
+| js-server-helper-instance | D | No | No | |
+| js-server-helper-crypto | D | No | No | |
+| js-server-helper-auth | E | No | Yes | README currently 546 lines — strong restructure candidate |
+| js-server-helper-verify | E | No | Yes | README currently 372 lines — strong restructure candidate |
+| js-server-helper-logger | E | No | Yes | README currently 440 lines — strong restructure candidate |
+| js-server-helper-*-store-* (15) | F | No | n/a | Migrate after Class B/E land |
 
 ---
 
-## Recommended Documentation Priority
+## Migration Priority
 
-1. **High Priority (Apply templates immediately):**
-   - All logger store adapters (new modules being created)
-   - js-server-helper-logger docs/ folder
-   - js-client-helper-crypto (missing)
+1. **Done — Pilot:** `js-server-helper-sql-postgres` (Class B). Establishes the canonical pattern.
+2. **Next — Class B remainder:** mirror the Postgres pilot to `sql-mysql`, `sql-sqlite`, `nosql-mongodb`, `nosql-aws-dynamodb`. Mechanical follow-up — same structure, swap technical details.
+3. **Then — Class E feature modules:** `auth`, `verify`, `logger`. Highest user-visible impact (current READMEs are 370-550 lines). The existing `docs/` folders mean less new content; mostly pruning the README and reframing the value bullets.
+4. **Then — Class C, D, A:** cloud, lifecycle, foundation. Smaller surface per module.
+5. **Last — Class F adapters:** 15 modules, all mechanical once the parent feature modules land.
 
-2. **Medium Priority (Consistency pass):**
-   - All SQL/NoSQL driver modules
-   - All AWS service modules
-   - Verify module docs/ evaluation
-
-3. **Low Priority (Review when touched):**
-   - js-helper-time (minimal usage)
-   - js-server-helper-http (stable)
+The first three waves are captured in `__dev__/plans/0008-module-readme-pilot.md` as the follow-up backlog.

@@ -1,5 +1,7 @@
 # Developer Setup
 
+> **Language:** JavaScript (Node.js). These setup instructions cover the JavaScript modules, which are the current reference implementation.
+
 Everything a developer needs to start working on Superloom helper modules and the demo project. Read this once, in order; you should be running tests within 15 minutes.
 
 ## On This Page

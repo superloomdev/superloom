@@ -41,7 +41,7 @@ source init-env.sh   # select 'integration'
 ## 3. Run Tests
 
 ```bash
-cd src/helper-modules-server/js-server-helper-postgres/_test
+cd src/helper-modules-server/js-server-helper-sql-postgres/_test
 npm install
 npm test
 ```

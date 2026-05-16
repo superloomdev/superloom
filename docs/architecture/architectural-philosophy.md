@@ -1,6 +1,6 @@
 # Architectural Philosophy
 
-The high-level rules that shape every project. This document explains the ideas behind the directory layout, the conventions that hold the codebase together, and the contract between framework code and application code. Specific patterns and templates live in the other `architecture/` documents - see [Further Reading](#further-reading).
+The high-level rules that shape every project. Covers the reasoning behind the directory layout, the conventions that hold the codebase together, and the contract between framework code and application code. Specific patterns and templates are in the other `architecture/` documents — see [Further Reading](#further-reading).
 
 ## On This Page
 
@@ -29,6 +29,7 @@ The architecture serves four non-negotiable goals. Every other rule in `architec
 | **Feature-independent architecture** | Adding or removing a feature touches a known set of files in a known order. No special cases |
 | **Self-hostable on Docker AND Serverless** | The same business code runs unchanged behind Express (Docker) or AWS Lambda (Serverless). Only the transport adapter differs |
 | **JSON as the universal transport** | All internal and external data shapes are JSON. No proprietary serialization formats |
+| **Language-independent architecture** | The interface/controller/service/model layer separation is a pattern, not a language feature. The same structure applies regardless of which language implements it |
 
 ### Supported Deployment Targets
 
@@ -36,7 +37,7 @@ The architecture serves four non-negotiable goals. Every other rule in `architec
 |---|---|
 | **Docker (self-hosted)** | Single container with the full Express server |
 | **AWS Lambda (Serverless)** | Per-entity Lambda functions behind API Gateway, with DynamoDB / Aurora / S3 |
-| **Future** | The transport-agnostic architecture is designed so that adding a new target (e.g., Cloud Run, Azure Functions) requires only a new interface adapter |
+| **Future** | The architecture is designed so that adding a new deployment target (e.g., Cloud Run, Azure Functions) requires only a new interface adapter — no changes to business logic |
 
 ---
 
@@ -154,7 +155,7 @@ src/client/
   and/                # Native Android (Kotlin/Java)
 ```
 
-The client side is largely a future expansion. The framework's foundations (helper modules, model layer, transport-agnostic controllers) are already in place to support it.
+The client side is largely a future expansion. The framework's foundations — helper modules, shared model layer, and interface-separated server — are already structured to support it.
 
 ---
 
@@ -205,7 +206,7 @@ The repository remote always uses the canonical `github.com` URL. Developers wit
 
 | Topic | Document |
 |---|---|
-| **Coding standards** (formatting, naming, JSDoc) | [`code-formatting-js.md`](code-formatting-js.md) |
+| **Coding standards** (formatting, naming, JSDoc) | [`code-formatting-js.md`](code-formatting-js.md) _(JavaScript)_ |
 | **Module structure** (loader pattern, factory pattern) | [`module-structure-js.mdx`](module-structure-js.mdx) |
 | **Model layer** (base, server, client) | [`model-modules.md`](model-modules.md) |
 | **Server layers** (controller, service, common, interfaces) | [`server-controller-modules.md`](server-controller-modules.md), [`server-service-modules.md`](server-service-modules.md), [`server-common.md`](server-common.md), [`server-interfaces.mdx`](server-interfaces.mdx) |

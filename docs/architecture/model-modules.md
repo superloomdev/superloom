@@ -1,5 +1,7 @@
 # Model Modules
 
+> **Language:** JavaScript
+
 The model layer is where every entity defines its **shape, validation rules, errors, and business processes**. It is split into three peer packages - `base-model`, `server-model`, `client-model` - that compose into a single namespace at runtime via key-by-key merge in the loader. This document covers all three.
 
 ## On This Page

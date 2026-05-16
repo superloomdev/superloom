@@ -1,5 +1,7 @@
 # Publishing Helper Modules
 
+> **Language:** JavaScript
+
 How to prepare and publish helper modules to GitHub Packages under the `@your-org` scope. Publishing is **CI/CD only** - bumping the `version` field in a module's `package.json` and pushing to `main` triggers the publish automatically. There is no manual `npm publish`.
 
 ## On This Page

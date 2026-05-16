@@ -30,11 +30,11 @@ MAJOR.MINOR.PATCH
 
 | Level | Example | Tracks |
 |-------|---------|--------|
-| **Module** | `js-helper-utils@1.2.3` | Individual package API changes |
+| **Module** | `[lang]-helper-utils@1.2.3` (e.g. `js-helper-utils@1.2.3`) | Individual package API changes |
 | **Project** | `demo-project@2.5.0` | Composition and integration features |
 | **Frontend** | `frontend@3.1.0` | UI/UX features and components |
 
-Module versions are independent. A project can use `js-helper-utils@1.3.2` while being at `v2.5.0` itself.
+Module versions are independent. A project can use `js-helper-utils@1.3.2` (or its equivalent in another language) while being at `v2.5.0` itself.
 
 ## Automatic Updates
 

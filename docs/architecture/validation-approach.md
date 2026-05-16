@@ -1,5 +1,7 @@
 # Validation Approach
 
+> **Language:** JavaScript
+
 Validation is the rule that keeps bad data out of the system. In this framework, every entity validates its own input in its own `[entity].validation.js` module - no third-party library, no decorators, no schema definitions in YAML. This document explains why, how the validation function is shaped, and where it sits in the request flow.
 
 Every validation function follows the same shape:

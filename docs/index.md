@@ -2,7 +2,7 @@
 
 > Build once. Deploy anywhere. Modular, opinionated, AI-native.
 
-A modular Node.js framework for backend applications that run unchanged on **Docker (Express)** or **AWS Lambda (Serverless)**. One codebase, zero duplication. Designed from the ground up for AI-assisted development.
+A modular framework for backend and frontend applications that run unchanged on **Docker (Express)** or **AWS Lambda (Serverless)**. One codebase, zero duplication. Currently implemented in JavaScript. Designed from the ground up for AI-assisted development.
 
 ## On This Page
 
@@ -56,7 +56,7 @@ Superloom is opinionated. There is one way to structure a DTO. One way to inject
 
 ### Document the Why, Not Just the What
 
-We document not just API references, but the reasoning behind every architectural decision. [Why MVC](philosophy/why-mvc). [Why one DTO shape](philosophy/dto-philosophy-js). Why factory pattern over singletons. Why explicit parameters over object passthrough. The architecture documents exist so that anyone, human or AI, can understand the intent, not just the code.
+We document not just API references, but the reasoning behind every architectural decision. [Why the server uses MVC](philosophy/why-server-mvc). [Why one DTO shape](philosophy/dto-philosophy-js). Why factory pattern over singletons. Why explicit parameters over object passthrough. The architecture documents exist so that anyone, human or AI, can understand the intent, not just the code.
 
 ### AI-Native by Design
 
@@ -117,7 +117,9 @@ Interface (transport adapter)
 | `@superloom/debug` | Structured logging with levels (debug, info, warn, error) |
 | `@superloom/time` | Date/time math, timezone handling, formatting |
 
-### Server (Node.js)
+### Server
+
+> Currently implemented in JavaScript.
 
 | Module | Purpose |
 |---|---|
@@ -177,7 +179,7 @@ Every module includes tests. Service-dependent modules use Docker-based emulator
 | Set up a new project | [Getting Started](guide/getting-started) |
 | Add your first domain entity | [Creating Entities](guide/creating-entities-js) |
 | Configure your IDE | [IDE Setup](guide/ide-setup) |
-| Understand why MVC | [Why MVC](philosophy/why-mvc) |
+| Understand the server architecture pattern | [Why the Server Uses MVC](philosophy/why-server-mvc) |
 | Understand the one-shape rule | [DTO Philosophy](philosophy/dto-philosophy-js) |
 | Read every technical rule | [Architectural Philosophy](architecture/architectural-philosophy) |
 | Set up your dev machine | [Developer Setup](dev/README) |

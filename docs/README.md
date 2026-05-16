@@ -12,7 +12,7 @@ For contributors: edit files in this directory directly. Changes are picked up b
 
 | Reader | Start with | Then read |
 |---|---|---|
-| **First-time visitor** | [superloom.dev/docs/intro](https://superloom.dev/docs/intro) | [`philosophy/why-mvc.md`](philosophy/why-mvc.md) |
+| **First-time visitor** | [superloom.dev/docs/intro](https://superloom.dev/docs/intro) | [`philosophy/why-server-mvc.md`](philosophy/why-server-mvc.md) |
 | **New contributor** | [`guide/getting-started.md`](guide/getting-started.md) | [`dev/README.md`](dev/README.md) |
 | **Adding a domain entity** | [`guide/creating-entities-js.md`](guide/creating-entities-js.md) | [`architecture/entity-creation-guide-js.mdx`](architecture/entity-creation-guide-js.mdx) |
 | **Architect evaluating the framework** | [`philosophy/`](philosophy/) | [`architecture/architectural-philosophy.md`](architecture/architectural-philosophy.md) |
@@ -39,7 +39,7 @@ docs/
   README.md                           # This file - the index
 
   philosophy/                         # Why we do things the way we do
-    why-mvc.md                        # Why MVC, plus the Service layer adaptation
+    why-server-mvc.md                 # Why the server uses MVC, plus the Service layer adaptation
     dto-philosophy-js.md                 # The one-shape rule for data transfer objects
 
   guide/                              # Task-driven walkthroughs

@@ -5,7 +5,7 @@ Run the module tests against a local Postgres 17 container.
 ## 1. Start Docker
 
 ```bash
-cd src/helper-modules-server/js-server-helper-postgres/_test
+cd src/helper-modules-server/js-server-helper-sql-postgres/_test
 docker compose up -d
 ```
 

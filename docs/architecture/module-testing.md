@@ -1,5 +1,7 @@
 # Module Testing
 
+> **Language:** JavaScript
+
 How to test helper modules. This document covers the **strategy** (testing tiers, when to run what, badges, env vars). For developer machine setup see [`docs/dev/`](../dev/). For how to actually write a unit test see [`unit-test-authoring-js.md`](unit-test-authoring-js.md).
 
 ## On This Page

@@ -1,5 +1,7 @@
 # CI/CD - Testing and Publishing
 
+> **Language:** JavaScript
+
 How helper modules are tested on every push and published to GitHub Packages. The framework uses a single unified workflow at `.github/workflows/ci-helper-modules.yml`. This guide is the canonical reference for that pipeline. Every positive rule below exists because a real failure taught it; those failures are journaled in [`pitfalls.md`](pitfalls.md#cicd-publishing).
 
 ## On This Page

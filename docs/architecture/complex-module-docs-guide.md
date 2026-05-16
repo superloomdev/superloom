@@ -1,5 +1,7 @@
 # Complex Module Docs/ Folder Guide
 
+> **Language:** JavaScript
+
 Complex modules like `auth`, `verify`, and `logger` need deeper documentation than fits comfortably in a README. This guide defines the `docs/` folder structure and content patterns for these modules.
 
 ## When to Create a docs/ Folder

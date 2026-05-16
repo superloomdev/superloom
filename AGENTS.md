@@ -21,11 +21,11 @@
 
 ## Persona
 
-Assist developers working on **Superloom**, a modular, transport-agnostic application framework. Backend runs on Docker (Express) and AWS Lambda; frontend planned.
+Assist developers working on **Superloom**, a modular application framework built to run anywhere. Currently implemented in JavaScript. Backend runs on Docker (Express) and AWS Lambda; frontend planned.
 
 ## Tech Stack
 
-- **Language:** JavaScript (Node.js 24+)
+- **Primary Language:** JavaScript (Node.js 24+)
 - **Frameworks:** Express.js (Docker), AWS Lambda (Serverless)
 - **Testing:** Node.js built-in test runner (`node --test`), `require('node:assert/strict')`
 - **Linting:** ESLint 9+ (flat config required)
@@ -473,6 +473,53 @@ Applies to every section closer: `Public Functions END`, `Private Functions END`
 
 ## Module Patterns
 
+### Module Documentation Layers (README / docs/ / ROBOTS.md)
+
+Every module documents itself across three files, each with one audience. Full rubric: `docs/architecture/module-readme-structure.md`. Module-to-class enumeration: `docs/architecture/module-categorization.md`.
+
+| File | Audience | Tone | Length |
+|---|---|---|---|
+| `README.md` | Non-technical evaluator, dev evaluating, dev integrating (first read) | Plain language, value-first | ~70-120 lines (pilot landed at 72) |
+| `docs/*.md` | Dev integrating (deep), maintainer, code reviewer | Reference-grade, exhaustive | No fixed limit |
+| `ROBOTS.md` | AI assistant (Cascade, Cursor, Copilot) | Compact, dense, machine-friendly | ~100-150 lines |
+
+**Universal README section order** (every class):
+
+1. Title + identity badges (license, runtime version only — test status badges go to the testing block at the bottom, not here)
+2. Tagline (one sentence; no sibling-backend mentions; ends "Part of [Superloom](https://superloom.dev)")
+3. What this is (plain language; may show response-shape illustration; never a full code example)
+4. Why use this module (5-7 value bullets — jargon-free, vendor-neutral)
+5. Hot-Swappable with Other Backends *(class-conditional — modules with siblings)*
+6. Class-specific section *(class-conditional — see class table below)*
+7. Aligned with Superloom Philosophy (separate section, NOT a Why bullet)
+8. Learn More (`docs/*.md` + Superloom; NEVER link `ROBOTS.md` here)
+9. Adding to Your Project (peer-dependency via loader pattern; NO `npm install` snippet)
+10. Testing Status (which tiers passed; test runtime details live in `docs/configuration.md`)
+11. License
+
+**Critical README rules:**
+
+- **All README links use full `https://github.com/superloomdev/superloom/blob/main/...` URLs** — npm renders the README without resolving relative paths, so `docs/api.md` and `../foo` silently break.
+- **No jargon** (no *metaprogramming*, *idempotent*, *cargo cult*) — frame reviewability around what a reviewer can SEE in the code.
+- **No vendor product names as headline categories** (Lambda, EC2, RDS, Aurora at category column headings reads as AWS-only) — use industry-neutral terms (*serverless*, *persistent infrastructure*, *auto-scaling managed databases*) with vendor names only as illustrative examples in parentheses.
+- **No function names in marketing prose** — `getRow / getRows / write` belong in `docs/api.md` and `ROBOTS.md`, not in Why bullets.
+- **No Quick Start, "What this module is NOT", or `npm install` snippet sections** — the pilot proved they don't serve any persona. Examples live in `docs/api.md`; integration goes through the loader pattern.
+
+**`docs/configuration.md` internal ordering:** Reference block (Loader Pattern → Configuration Keys → Environment Variables → Peer Deps → Direct Deps) precedes Patterns block (Multi-instance Setup → SSL → Pool Tuning → Testing Tiers). An example needs the reader to have absorbed the keys first.
+
+**Six module classes** (determines class-specific extras + which `docs/` files to ship):
+
+| Class | Trait | `docs/` |
+|---|---|---|
+| A. Foundation utility | Zero deps, pure functions, platform-agnostic | None |
+| B. Driver wrapper | Wraps third-party DB driver | `api.md`, `configuration.md` |
+| C. Cloud service wrapper | Wraps cloud/network SDK | `api.md`, `configuration.md`, optional `iam.md` |
+| D. Lifecycle helper | Per-request plumbing or server utilities | None usually |
+| E. Feature module with adapters | Business logic + pluggable storage | `data-model.md`, `configuration.md`, `storage-adapters.md` |
+| F. Storage adapter | Implements parent's store contract | None |
+
+**Pilot:** `js-server-helper-sql-postgres` (Class B) — rewritten through v2 iteration. README at ~72 lines (down from 198) with anti-pattern fixes captured back into the rubric. Follow-up backlog: `__dev__/plans/0008-module-readme-pilot.md`.
+
 ### ROBOTS.md - AI Agent Reference (Every Module)
 
 Every module has a `ROBOTS.md` alongside `README.md`. It is the compact AI reference:
@@ -481,7 +528,7 @@ Every module has a `ROBOTS.md` alongside `README.md`. It is the compact AI refer
 - **Format:** Module name → type → peer deps → direct deps → config keys → exported functions → patterns
 - **Function format:** `functionName(params) → ReturnType | async:yes/no` + one-line description
 - **Rule:** Read `ROBOTS.md` before using any module's functions. If a helper function exists, use it.
-- `README.md` = human documentation (badges, usage examples, testing guides)
+- `README.md` = human-facing identity + value + quick start; full reference lives in `docs/*.md`
 - `ROBOTS.md` = AI agent documentation (compact, token-efficient, machine-readable)
 
 ### Module Consistency Rules (MUST have, every module)

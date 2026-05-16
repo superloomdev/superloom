@@ -1,5 +1,7 @@
 # Testing Strategy
 
+> **Language:** JavaScript
+
 How tests are organized across modules. This document covers the **layout** (where tests live, how they're loaded, what runs them). For the rules of writing a single unit test see [`unit-test-authoring-js.md`](unit-test-authoring-js.md). For the testing tiers and CI/CD setup see [`module-testing.md`](module-testing.md).
 
 ## On This Page
@@ -22,7 +24,7 @@ How tests are organized across modules. This document covers the **layout** (whe
 - Every module must be **independently testable**
 - Tests live inside each module in a `_test/` directory
 - Tests must be runnable with `npm test` from the module root
-- We use the Node.js built-in test runner (`node --test`) - no external test framework required
+- JavaScript modules use the Node.js built-in test runner (`node --test`) - no external test framework required
 - Each test file is self-contained: load dependencies, set up data, run tests, report results
 
 ---

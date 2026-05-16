@@ -1,5 +1,7 @@
 # Server Loader
 
+> **Language:** JavaScript
+
 The `loader.js` at `src/server/common/loader.js` is the **bootstrap and dependency-injection root** of the server. It loads configuration, builds the `Lib` container, registers every entity, and wires controllers and services together. Nothing else in the server runtime reads `process.env` or instantiates helper modules - that all happens here.
 
 ## On This Page

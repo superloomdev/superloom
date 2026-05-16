@@ -1,6 +1,6 @@
 # Getting Started
 
-A 10-minute walkthrough that gets you from a clean machine to a running Superloom project. By the end, you will have a copy of the demo project running locally and the test suite passing.
+A walkthrough that gets you from a clean machine to a running Superloom project. The framework is structured the same way regardless of language — models, services, controllers, interfaces — and each language has its own implementation guide. This guide covers the **JavaScript (Node.js)** implementation, which is the current reference implementation.
 
 ## On This Page
 
@@ -154,7 +154,7 @@ cd src/model-server && npm test   # Server model extension tests
 cd src/server && npm run test:all # Controller and service tests
 ```
 
-All tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict` - no external test framework. See [`architecture/testing-strategy.md`](../architecture/testing-strategy.md) and [`architecture/unit-test-authoring-js.md`](../architecture/unit-test-authoring-js.md) for the conventions.
+All JavaScript tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict` — no external test framework. See [`architecture/testing-strategy.md`](../architecture/testing-strategy.md) and [`architecture/unit-test-authoring-js.md`](../architecture/unit-test-authoring-js.md) for the conventions.
 
 ---
 
@@ -208,6 +208,6 @@ All personal secrets, environment files, and AI session notes live in `__dev__/`
 | Add your first domain entity | [Creating Entities](./creating-entities-js.md) |
 | Configure your IDE | [IDE Setup](./ide-setup.md) |
 | Set up your dev machine end-to-end | [Developer Setup](../dev/README.md) |
-| Understand why MVC | [Why MVC](../philosophy/why-mvc.md) |
+| Understand the server architecture pattern | [Why the Server Uses MVC](../philosophy/why-server-mvc.md) |
 | Understand the one-shape DTO rule | [DTO Philosophy (JavaScript)](../philosophy/dto-philosophy-js.md) |
 | Read the full entity walkthrough | [Entity Creation Guide](../architecture/entity-creation-guide-js.mdx) |

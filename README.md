@@ -6,7 +6,7 @@
     </picture>
   </a>
   <h1>Superloom</h1>
-  <p>A modular Node.js framework for backend applications. Build once. Deploy anywhere. AI-native.</p>
+  <p>A modular application framework built to run anywhere. Build once. Deploy anywhere. AI-native.</p>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
   [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
@@ -14,9 +14,9 @@
 
 </div>
 
-Superloom is an opinionated, modular Node.js framework where the same business logic runs unchanged on **Docker (Express)** and **AWS Lambda** — one codebase, zero duplication. Designed from the ground up for AI-assisted development.
+Superloom is an opinionated, modular framework where the same business logic runs unchanged on **Docker (Express)** and **AWS Lambda** — one codebase, zero duplication. Currently implemented in JavaScript. Designed from the ground up for AI-assisted development.
 
-- **Transport-agnostic** — Express and Lambda share every layer except the interface adapter
+- **Deploy anywhere** — Express and Lambda share every layer except the thin adapter at the edge
 - **AI-native** — ships with `AGENTS.md` + per-module `ROBOTS.md` so AI assistants onboard in seconds
 - **Opinionated** — one DTO shape, one injection pattern, one testing strategy, documented reasoning for every decision
 - **20+ helper modules** — databases, auth, storage, queues, crypto, and more — all returning the same `{ success, data, error }` envelope

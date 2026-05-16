@@ -1,10 +1,10 @@
-# Why MVC Architecture
+# Why the Server Uses MVC
 
-Superloom uses a **Model-View-Controller (MVC)** structure adapted for server applications. We add a dedicated **Service** layer for business logic so controllers can stay genuinely thin. This document explains why MVC over the alternatives, what each layer does, and how a request flows from the wire to the response.
+The server side of Superloom uses a **Model-View-Controller (MVC)** structure adapted for server applications, with a dedicated **Service** layer for business logic so controllers stay genuinely thin. Covers the reasoning behind this choice, what each layer does, and how a request flows from the wire to the response.
 
 ## On This Page
 
-- [Why MVC](#why-mvc)
+- [Why MVC for the Server](#why-mvc)
 - [Layer Responsibilities](#layer-responsibilities)
 - [Why a Separate Service Layer](#why-a-separate-service-layer)
 - [Request Flow](#request-flow)
