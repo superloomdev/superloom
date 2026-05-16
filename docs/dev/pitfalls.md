@@ -508,7 +508,7 @@ Both must be green before the version bump commit. If lint fails, fix it first �
 SyntaxError: [plugin vite:vue] ...
 ```
 
-The reported line number is often **far below** the line that actually caused the problem — the parser walks until it gives up, then reports the position at which it abandoned the parse.
+The reported line number is often **far below** the line that actually caused the problem. The parser walks until it gives up, then reports the position at which it abandoned the parse.
 
 **Cause.** VitePress feeds rendered markdown through Vue's compiler so that authors can use Vue components inside markdown. The compiler does **not** unconditionally trust markdown's HTML-escaping: any `<lowercase-or-PascalCase-name>` inside the rendered output is treated as a Vue/HTML element open tag and triggers the close-tag search. Three concrete failure modes seen on this codebase:
 
@@ -520,7 +520,7 @@ The reported line number is often **far below** the line that actually caused th
 
 1. **Never use `<...>` placeholders outside backticks in prose.** Use square brackets (`[name]`), curly braces (`{name}`), or plain capitalized phrases ("Domain operations") instead.
 2. **For verbatim copy-paste templates inside fenced code blocks, prefer the `text` language hint.** Switching ` ```markdown ` to ` ```text ` disables the secondary Vue scan and lets the placeholders survive untouched. If the syntax-highlighting loss is unacceptable for a particular block, replace the angle-bracket placeholders with square-bracket ones at template-author time and keep the `markdown` hint.
-3. **Verify documentation changes locally before pushing** when the change touches `docs/architecture/` or any other file that VitePress will render. Run `npm run build` from `website/` — the same pipeline CI runs (`vitepress build .` after `sync-docs`) — and watch for the `Element is missing end tag` family of errors. Local build is fast (single-digit seconds) and catches the failure before it occupies a CI runner.
+3. **Verify documentation changes locally before pushing** when the change touches `docs/architecture/` or any other file that VitePress will render. Run `npm run build` from `website/`. That is the same pipeline CI runs (`vitepress build .` after `sync-docs`). Watch for the `Element is missing end tag` family of errors. Local build is fast (single-digit seconds) and catches the failure before it occupies a CI runner.
 
 This pitfall is distinct from the helper-modules CI chain (entries 1–14): it lives in `ci-deploy-website.yml`, not `ci-helper-modules.yml`, and a website-deploy failure does not block module publishing. The two pipelines are independent. But the same commit that triggers helper-module publishing will also trigger website deploy if it touches any `docs/` file, so a documentation-side bug is a hidden cost on every push that updates rules.
 

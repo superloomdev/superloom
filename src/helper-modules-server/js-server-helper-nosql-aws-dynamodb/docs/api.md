@@ -1,4 +1,4 @@
-# API Reference — `js-server-helper-nosql-aws-dynamodb`
+# API Reference. `js-server-helper-nosql-aws-dynamodb`
 
 Every exported function with its signature, parameters, return shape, semantics, and examples. For configuration keys, credentials, IAM permissions, and runtime patterns see [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/docs/configuration.md).
 
@@ -47,7 +47,7 @@ Every function returns a consistent response envelope:
 { success: false, /* zeroed fields */, error: { type, message } }
 ```
 
-Operational failures (throttling, conditional-check failure, validation error) never throw — they come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers) still throw.
+Operational failures (throttling, conditional-check failure, validation error) never throw. They come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers) still throw.
 
 ---
 
@@ -67,7 +67,7 @@ Most application code uses the **Convenience** layer. The **Builder + Executor**
 
 ## Command Builders
 
-Builders are **pure functions** that produce DynamoDB service-parameter objects. They do not call AWS — they prepare arguments that an executor or transaction will send.
+Builders are **pure functions** that produce DynamoDB service-parameter objects. They do not call AWS. They prepare arguments that an executor or transaction will send.
 
 ### `commandBuilderForAddRecord`
 
@@ -90,7 +90,7 @@ const add_cmd = Lib.DynamoDB.commandBuilderForAddRecord(
 commandBuilderForUpdateRecord(table, key, update_data, remove_keys, increment, decrement, return_state) → Object
 ```
 
-Build an `Update` service-params object with `SET` / `REMOVE` / `INCREMENT` / `DECREMENT` operations. All operations after `table` and `key` are optional — pass `null` or `undefined` to skip.
+Build an `Update` service-params object with `SET` / `REMOVE` / `INCREMENT` / `DECREMENT` operations. All operations after `table` and `key` are optional. Pass `null` or `undefined` to skip.
 
 | Parameter | Purpose |
 |---|---|
@@ -165,7 +165,7 @@ Execute a pre-built `Delete` command.
 
 ## Single-Record CRUD
 
-The convenience layer — builds and executes in a single call. Use these for ordinary single-record operations.
+The convenience layer. Builds and executes in a single call. Use these for ordinary single-record operations.
 
 ### `getRecord`
 
@@ -186,7 +186,7 @@ if (res.item === null) { /* not found */ }
 async writeRecord(instance, table, item) → { success, error }
 ```
 
-Write (create or replace) a record. **Always upsert** — there is no separate insert vs update path at the API surface. Uses `commandBuilderForAddRecord` + `commandAddRecord` internally.
+Write (create or replace) a record. **Always upsert.** There is no separate insert vs update path at the API surface. Uses `commandBuilderForAddRecord` + `commandAddRecord` internally.
 
 ```javascript
 await Lib.DynamoDB.writeRecord(
@@ -243,7 +243,7 @@ Full-featured Query. `params` is an object:
 | `skValues` | `Array` *(optional)* | Values for the sort-key condition (one value, or two for `BETWEEN`) |
 | `limit` | `Number` *(optional)* | Maximum items to return |
 | `indexName` | `String` *(optional)* | Query a GSI / LSI instead of the base table |
-| `startKey` | `Object` *(optional)* | `last_key` from a previous page — for pagination |
+| `startKey` | `Object` *(optional)* | `last_key` from a previous page. For pagination |
 | `scanForward` | `Boolean` *(optional)* | `false` to reverse sort-key direction |
 | `fields` | `Array<String>` *(optional)* | Limit returned attributes (`ProjectionExpression`) |
 | `select` | `String` *(optional)* | `'ALL_ATTRIBUTES'` / `'COUNT'` / `'SPECIFIC_ATTRIBUTES'` |
@@ -274,7 +274,7 @@ Scan the entire table. `filter` is optional and uses a structured shape:
 }
 ```
 
-Pass `null` / `undefined` to read every item without filtering. Use sparingly — scans are expensive on large tables.
+Pass `null` / `undefined` to read every item without filtering. Use sparingly. Scans are expensive on large tables.
 
 ---
 
@@ -333,7 +333,7 @@ await Lib.DynamoDB.batchWriteAndDeleteRecords(instance, {
 });
 ```
 
-`unprocessed` lists any items that AWS returned as unprocessed (typically due to provisioned-throughput throttling). The helper does **not** auto-retry these — callers may decide whether to retry or fail.
+`unprocessed` lists any items that AWS returned as unprocessed (typically due to provisioned-throughput throttling). The helper does **not** auto-retry these. Callers may decide whether to retry or fail.
 
 ---
 
@@ -345,7 +345,7 @@ await Lib.DynamoDB.batchWriteAndDeleteRecords(instance, {
 async transactWriteRecords(instance, add_records, update_records, delete_records) → { success, error }
 ```
 
-Atomic multi-table write. Up to 100 actions per call (AWS limit). All three arrays are optional — pass `null` or `[]` to skip an action type.
+Atomic multi-table write. Up to 100 actions per call (AWS limit). All three arrays are optional. Pass `null` or `[]` to skip an action type.
 
 Each entry is a pre-built command object from one of the builders:
 
@@ -376,12 +376,12 @@ These functions exist primarily for **application-managed single-table designs**
 async createTable(instance, table, params) → { success, already_exists, error }
 ```
 
-Create a table **idempotently** — `already_exists: true` is returned (with `success: true`) when the table is already there.
+Create a table **idempotently.** `already_exists: true` is returned (with `success: true`) when the table is already there.
 
 | `params` field | Purpose |
 |---|---|
-| `attribute_definitions` | `[{ name, type: 'S' \| 'N' \| 'B' }]` — declare key attributes |
-| `key_schema` | `[{ name, type: 'HASH' \| 'RANGE' }]` — primary key shape |
+| `attribute_definitions` | `[{ name, type: 'S' \| 'N' \| 'B' }]`. Declare key attributes |
+| `key_schema` | `[{ name, type: 'HASH' \| 'RANGE' }]`. Primary key shape |
 | `billing_mode` *(optional)* | `'PAY_PER_REQUEST'` (default) or `'PROVISIONED'` |
 | `global_secondary_indexes` *(optional)* | GSI definitions |
 
@@ -391,4 +391,4 @@ Create a table **idempotently** — `already_exists: true` is returned (with `su
 async deleteTable(instance, table) → { success, already_absent, error }
 ```
 
-Delete a table **idempotently** — `already_absent: true` is returned when the table does not exist. Primarily for test teardown.
+Delete a table **idempotently.** `already_absent: true` is returned when the table does not exist. Primarily for test teardown.

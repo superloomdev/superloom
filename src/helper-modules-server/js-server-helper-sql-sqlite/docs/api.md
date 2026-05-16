@@ -1,4 +1,4 @@
-# API Reference — `js-server-helper-sql-sqlite`
+# API Reference. `js-server-helper-sql-sqlite`
 
 Every exported function with its signature, parameters, return shape, semantics, and examples. For configuration keys and runtime patterns see [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-sqlite/docs/configuration.md).
 
@@ -30,7 +30,7 @@ Every exported function with its signature, parameters, return shape, semantics,
 
 ## Conventions
 
-All I/O functions are **async** (even though SQLite is synchronous under the hood) and accept `instance` as their first argument. Keeping the I/O surface async preserves API parity with the MySQL and Postgres helpers — the same application code works against any of the three.
+All I/O functions are **async** (even though SQLite is synchronous under the hood) and accept `instance` as their first argument. Keeping the I/O surface async preserves API parity with the MySQL and Postgres helpers. The same application code works against any of the three.
 
 Every function returns a consistent response envelope:
 
@@ -39,7 +39,7 @@ Every function returns a consistent response envelope:
 { success: false, /* zeroed fields */, error: { type, message } }
 ```
 
-Operational failures (locked database, busy-handler timeout, constraint violation) never throw — they come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers) still throw, because those are bugs.
+Operational failures (locked database, busy-handler timeout, constraint violation) never throw. They come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers) still throw, because those are bugs.
 
 ---
 
@@ -75,13 +75,13 @@ const { rows } = await Lib.SqlDB.getRows(
 | `Date` | ISO 8601 string (`toISOString()`) |
 | Everything else | passed through to `node:sqlite` |
 
-Booleans are stored as integers, dates as ISO text — same as the convention in many SQLite applications. There are no native boolean or date types in SQLite.
+Booleans are stored as integers, dates as ISO text. Same as the convention in many SQLite applications. There are no native boolean or date types in SQLite.
 
 ---
 
 ## `insert_id` Semantics
 
-SQLite provides `sqlite3_last_insert_rowid()` out of the box — no `RETURNING` clause needed (unlike Postgres). For tables with `INTEGER PRIMARY KEY`, `insert_id` equals the row's primary key. For tables without an integer primary key, `insert_id` is the SQLite-assigned rowid.
+SQLite provides `sqlite3_last_insert_rowid()` out of the box. No `RETURNING` clause needed (unlike Postgres). For tables with `INTEGER PRIMARY KEY`, `insert_id` equals the row's primary key. For tables without an integer primary key, `insert_id` is the SQLite-assigned rowid.
 
 `INSERT ... RETURNING *` is also supported. When `RETURNING` is present the row data is returned through the read path; `insert_id` is extracted from the returned row's `id` column when present.
 
@@ -97,7 +97,7 @@ The internal `query()` function inspects the first SQL keyword to decide whether
 | Any DML/DDL containing `RETURNING` | `all()` | Rows + affected_rows + insert_id |
 | Other DML / DDL (`INSERT`, `UPDATE`, `DELETE`, `CREATE`, `DROP`, etc.) | `run()` | `{ changes, lastInsertRowid }` |
 
-You do not need to think about this when calling the helpers — they pick the right path automatically.
+You do not need to think about this when calling the helpers. They pick the right path automatically.
 
 ---
 
@@ -195,7 +195,7 @@ async write(instance, sql, params) → { success, affected_rows, insert_id, erro
 
 Polymorphic INSERT / UPDATE / DELETE runner. Two calling shapes:
 
-**Single statement** — pass a SQL string with optional params:
+**Single statement.** Pass a SQL string with optional params:
 
 ```javascript
 const res = await Lib.SqlDB.write(
@@ -206,7 +206,7 @@ const res = await Lib.SqlDB.write(
 console.log(res.insert_id);   // primary key, via sqlite3_last_insert_rowid()
 ```
 
-**Atomic transaction** — pass an array of SQL strings (built with `buildQuery`) or `{ sql, params }` objects. The whole array runs inside `BEGIN` / `COMMIT` / `ROLLBACK`:
+**Atomic transaction.** Pass an array of SQL strings (built with `buildQuery`) or `{ sql, params }` objects. The whole array runs inside `BEGIN` / `COMMIT` / `ROLLBACK`:
 
 ```javascript
 const sql = [
@@ -223,14 +223,14 @@ console.log(res.insert_id);       // last lastInsertRowid seen
 
 - `affected_rows` is summed across statements (count of rows inserted, updated, or deleted).
 - `insert_id` is the last `lastInsertRowid` seen. `null` for transactions that did not insert.
-- Empty array (`[]`) or `null` / `undefined` SQL is a no-op — returns `{ success: true, affected_rows: 0, insert_id: null }`.
+- Empty array (`[]`) or `null` / `undefined` SQL is a no-op. Returns `{ success: true, affected_rows: 0, insert_id: null }`.
 - On transaction failure the entire batch rolls back; `error` describes the failure.
 
 ---
 
 ## Manual Transactions
 
-SQLite has a single handle per loader instance (no pool). `getClient` / `releaseClient` are kept for API parity with MySQL and Postgres — `getClient` returns the same handle every call, and `releaseClient` is a no-op. Use them when application logic needs to interleave with SQL statements; for straightforward all-or-nothing transactions, prefer the array form of `write()`.
+SQLite has a single handle per loader instance (no pool). `getClient` / `releaseClient` are kept for API parity with MySQL and Postgres. `getClient` returns the same handle every call, and `releaseClient` is a no-op. Use them when application logic needs to interleave with SQL statements; for straightforward all-or-nothing transactions, prefer the array form of `write()`.
 
 ### `getClient`
 
@@ -269,13 +269,13 @@ try {
 releaseClient(client) → void
 ```
 
-No-op for SQLite — there is no pool to return the handle to. Kept for API parity with MySQL / Postgres. Safe to call with `null` or `undefined`.
+No-op for SQLite. There is no pool to return the handle to. Kept for API parity with MySQL / Postgres. Safe to call with `null` or `undefined`.
 
 ---
 
 ## Query Builders
 
-Pure functions — no I/O, no `instance` argument. Used to compose SQL strings before they are handed to read or write helpers.
+Pure functions. No I/O, no `instance` argument. Used to compose SQL strings before they are handed to read or write helpers.
 
 ### `buildQuery`
 
@@ -345,7 +345,7 @@ const where = Lib.SqlDB.buildMultiCondition(
 async close() → Promise<void>
 ```
 
-Close the database handle. SQLite's underlying `close` is synchronous — the async signature is kept for API parity with MySQL / Postgres. `CLOSE_TIMEOUT_MS` is unused for SQLite but kept as a config key for parity.
+Close the database handle. SQLite's underlying `close` is synchronous. The async signature is kept for API parity with MySQL / Postgres. `CLOSE_TIMEOUT_MS` is unused for SQLite but kept as a config key for parity.
 
 Call once on `SIGTERM` (or in your container shutdown hook):
 
@@ -356,4 +356,4 @@ process.on('SIGTERM', async () => {
 });
 ```
 
-For multi-database setups, call `close()` on **each loader instance** separately — handles are not shared.
+For multi-database setups, call `close()` on **each loader instance** separately. Handles are not shared.

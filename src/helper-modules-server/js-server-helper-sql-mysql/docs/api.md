@@ -1,4 +1,4 @@
-# API Reference — `js-server-helper-sql-mysql`
+# API Reference. `js-server-helper-sql-mysql`
 
 Every exported function with its signature, parameters, return shape, semantics, and examples. For configuration keys and environment variables see [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-mysql/docs/configuration.md).
 
@@ -37,7 +37,7 @@ Every function returns a consistent response envelope:
 { success: false, /* zeroed fields */, error: { type, message } }
 ```
 
-Operational failures (connection lost, statement timeout, constraint violation) never throw — they come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers) still throw, because those are bugs.
+Operational failures (connection lost, statement timeout, constraint violation) never throw. They come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers) still throw, because those are bugs.
 
 ---
 
@@ -64,7 +64,7 @@ const { rows } = await Lib.SqlDB.getRows(
 
 ## `insert_id` Semantics
 
-MySQL populates `insert_id` automatically from the driver's `lastInsertId` value — no `RETURNING` clause needed (unlike Postgres). For tables with `AUTO_INCREMENT` primary keys, `insert_id` equals the new primary key. For tables without an auto-increment column, `insert_id` is `0`.
+MySQL populates `insert_id` automatically from the driver's `lastInsertId` value. No `RETURNING` clause needed (unlike Postgres). For tables with `AUTO_INCREMENT` primary keys, `insert_id` equals the new primary key. For tables without an auto-increment column, `insert_id` is `0`.
 
 When `write()` runs a transaction (array form), `insert_id` is the **last seen** auto-increment ID across the statements.
 
@@ -80,7 +80,7 @@ Typed wrappers over the internal `query()` for common SELECT shapes. Prefer the 
 async getRow(instance, sql, params) → { success, row, error }
 ```
 
-Run a `SELECT` and return the **first row**, or `null` if there are no rows. The result is always a single row object (or `null`) — never an array, never a scalar.
+Run a `SELECT` and return the **first row**, or `null` if there are no rows. The result is always a single row object (or `null`) - never an array, never a scalar.
 
 | Parameter | Type | Description |
 |---|---|---|
@@ -170,7 +170,7 @@ async get(instance, sql, params) → { success, result, has_multiple_rows, error
 | 1 row × many columns | the row object | `false` |
 | many rows | the array of rows | `true` |
 
-Use `get` when the caller does not know the expected shape up-front (for example, an admin tool that runs arbitrary SQL). For production code prefer `getRow` / `getRows` / `getValue` — they are explicit about what they expect.
+Use `get` when the caller does not know the expected shape up-front (for example, an admin tool that runs arbitrary SQL). For production code prefer `getRow` / `getRows` / `getValue`. They are explicit about what they expect.
 
 ---
 
@@ -184,7 +184,7 @@ async write(instance, sql, params) → { success, affected_rows, insert_id, erro
 
 Polymorphic INSERT / UPDATE / DELETE runner. Two calling shapes:
 
-**Single statement** — pass a SQL string with optional params:
+**Single statement.** Pass a SQL string with optional params:
 
 ```javascript
 const res = await Lib.SqlDB.write(
@@ -195,7 +195,7 @@ const res = await Lib.SqlDB.write(
 console.log(res.insert_id);   // new primary key
 ```
 
-**Atomic transaction** — pass an array. Each entry is either a SQL string (built with `buildQuery`) or a `{ sql, params }` object. The whole array runs inside `BEGIN` / `COMMIT` / `ROLLBACK`.
+**Atomic transaction.** Pass an array. Each entry is either a SQL string (built with `buildQuery`) or a `{ sql, params }` object. The whole array runs inside `BEGIN` / `COMMIT` / `ROLLBACK`.
 
 ```javascript
 const sql = [
@@ -212,7 +212,7 @@ console.log(res.insert_id);       // last auto-increment seen
 
 - `affected_rows` is the count of rows inserted, updated, or deleted. For SELECT statements (if any are passed) it is `0`.
 - `insert_id` is the last `AUTO_INCREMENT` value generated. `null` for UPDATE / DELETE only.
-- Empty array (`[]`) or `null` / `undefined` SQL is a no-op — returns `{ success: true, affected_rows: 0, insert_id: null }`.
+- Empty array (`[]`) or `null` / `undefined` SQL is a no-op. Returns `{ success: true, affected_rows: 0, insert_id: null }`.
 - On transaction failure the entire batch rolls back; `error` describes the failure.
 
 ---
@@ -262,7 +262,7 @@ Return the client to the pool. Safe to call with `null` or `undefined`. Synchron
 
 ## Query Builders
 
-Pure functions — no I/O, no `instance` argument. Used to compose SQL strings before they are handed to read or write helpers.
+Pure functions. No I/O, no `instance` argument. Used to compose SQL strings before they are handed to read or write helpers.
 
 ### `buildQuery`
 
@@ -345,7 +345,7 @@ async close() → Promise<void>
 
 Close the pool gracefully. Waits up to `CONFIG.CLOSE_TIMEOUT_MS` (default `5000` ms) for in-flight queries to finish, then force-destroys remaining connections.
 
-Call once on `SIGTERM` (or in your container shutdown hook). After `close()` returns, new query calls will create a fresh pool on demand — `close` does not invalidate the public interface.
+Call once on `SIGTERM` (or in your container shutdown hook). After `close()` returns, new query calls will create a fresh pool on demand. `close` does not invalidate the public interface.
 
 ```javascript
 process.on('SIGTERM', async () => {
@@ -354,4 +354,4 @@ process.on('SIGTERM', async () => {
 });
 ```
 
-For multi-database setups, call `close()` on **each loader instance** separately — pools are not shared.
+For multi-database setups, call `close()` on **each loader instance** separately. Pools are not shared.

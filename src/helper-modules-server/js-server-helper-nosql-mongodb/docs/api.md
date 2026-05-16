@@ -1,4 +1,4 @@
-# API Reference — `js-server-helper-nosql-mongodb`
+# API Reference. `js-server-helper-nosql-mongodb`
 
 Every exported function with its signature, parameters, return shape, semantics, and examples. For configuration keys and runtime patterns see [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-mongodb/docs/configuration.md).
 
@@ -41,7 +41,7 @@ Every function returns a consistent response envelope:
 { success: false, /* zeroed fields */, error: { type, message } }
 ```
 
-Operational failures (connection lost, duplicate key, validation failure) never throw — they come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers, empty filters where forbidden) still throw, because those are bugs.
+Operational failures (connection lost, duplicate key, validation failure) never throw. They come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers, empty filters where forbidden) still throw, because those are bugs.
 
 ---
 
@@ -55,7 +55,7 @@ Three functions reject empty filters at runtime to prevent accidental full-colle
 | `count` | Throws `TypeError` |
 | `deleteRecordsByFilter` | Throws `TypeError` |
 
-If you genuinely want to read every document in a collection, call `scan()` — its name makes the intent explicit at the call site.
+If you genuinely want to read every document in a collection, call `scan()`. Its name makes the intent explicit at the call site.
 
 ---
 
@@ -74,7 +74,7 @@ Get a single record by filter (typically `{ _id: ... }`). Returns the document, 
 | `instance` | `Object` | Request instance from `Lib.Instance.initialize()` |
 | `collection` | `String` | Collection name |
 | `filter` | `Object` | MongoDB filter document |
-| `options` | `Object` *(optional)* | `projection`, `sort`, etc. — passed through to the driver's `findOne` |
+| `options` | `Object` *(optional)* | `projection`, `sort`, etc.. Passed through to the driver's `findOne` |
 
 **Returns:** `{ success: true, document: Object|null, error: null }` or `{ success: false, document: null, error: {...} }`.
 
@@ -89,9 +89,9 @@ if (res.document === null) { /* not found */ }
 async writeRecord(instance, collection, filter, document) → { success, matchedCount, modifiedCount, upsertedId, error }
 ```
 
-Write (create or replace) a single record. **Always upsert** — if the filter matches, the document is replaced; if not, it is inserted.
+Write (create or replace) a single record. **Always upsert.** If the filter matches, the document is replaced; if not, it is inserted.
 
-`filter` identifies the record (typically `{ _id: ... }`). `document` is a full replacement document — do **not** use `$` operators here (use `updateRecord` for that).
+`filter` identifies the record (typically `{ _id: ... }`). `document` is a full replacement document. Do **not** use `$` operators here (use `updateRecord` for that).
 
 ```javascript
 await Lib.MongoDB.writeRecord(
@@ -139,7 +139,7 @@ async query(instance, collection, filter, options) → { success, documents, err
 
 Query multiple records. **Throws `TypeError` on empty / null / undefined filter** ([safety net](#safety-nets)). Use `scan()` for intentional full-collection reads.
 
-`options` is passed through to the driver's `find` — `projection`, `sort`, `limit`, `skip`, etc.
+`options` is passed through to the driver's `find`. `projection`, `sort`, `limit`, `skip`, etc.
 
 ```javascript
 const res = await Lib.MongoDB.query(
@@ -164,7 +164,7 @@ Count documents matching `filter`. **Throws `TypeError` on empty filter** ([safe
 async scan(instance, collection, filter, options) → { success, documents, count, error }
 ```
 
-Full-collection read. **Permits empty / null filter** — use this when you intend to read everything. Optional `filter` narrows results. Use sparingly on large collections.
+Full-collection read. **Permits empty / null filter.** Use this when you intend to read everything. Optional `filter` narrows results. Use sparingly on large collections.
 
 ```javascript
 const all = await Lib.MongoDB.scan(instance, 'users');
@@ -177,7 +177,7 @@ const sorted = await Lib.MongoDB.scan(instance, 'users', { status: 'active' }, {
 async deleteRecordsByFilter(instance, collection, filter) → { success, deletedCount, error }
 ```
 
-Filter-based bulk delete (wraps `deleteMany`). **MongoDB-unique** — there is no DynamoDB equivalent. **Throws `TypeError` on empty filter** ([safety net](#safety-nets)).
+Filter-based bulk delete (wraps `deleteMany`). **MongoDB-unique.** There is no DynamoDB equivalent. **Throws `TypeError` on empty filter** ([safety net](#safety-nets)).
 
 ```javascript
 const res = await Lib.MongoDB.deleteRecordsByFilter(
@@ -192,7 +192,7 @@ console.log(`Deleted ${res.deletedCount} expired sessions`);
 
 ## Batch Operations
 
-All batch functions accept a map of `{ collectionName: [...] }`. MongoDB does not natively support cross-collection batch operations, so these functions loop through each collection internally and merge the results — the calling shape stays consistent with the DynamoDB sibling.
+All batch functions accept a map of `{ collectionName: [...] }`. MongoDB does not natively support cross-collection batch operations, so these functions loop through each collection internally and merge the results. The calling shape stays consistent with the DynamoDB sibling.
 
 ### `batchGetRecords`
 
@@ -269,7 +269,7 @@ await Lib.MongoDB.batchWriteAndDeleteRecords(instance, {
 async transactWriteRecords(instance, callback) → { success, result, error }
 ```
 
-Atomic multi-collection write using MongoDB's Convenient Transaction API (`withSession` + `withTransaction`). The `callback` runs inside a transactional session — all writes inside must pass `{ session }` as an option.
+Atomic multi-collection write using MongoDB's Convenient Transaction API (`withSession` + `withTransaction`). The `callback` runs inside a transactional session. All writes inside must pass `{ session }` as an option.
 
 ```javascript
 const res = await Lib.MongoDB.transactWriteRecords(
@@ -301,7 +301,7 @@ If any operation inside the callback throws, the entire transaction rolls back; 
 async createIndex(instance, collection, spec, options) → { success, index_name, error }
 ```
 
-Create or verify an index. **Idempotent** when the same name + spec is used — calling it repeatedly on application startup is safe.
+Create or verify an index. **Idempotent** when the same name + spec is used. Calling it repeatedly on application startup is safe.
 
 | Parameter | Type | Description |
 |---|---|---|
@@ -338,4 +338,4 @@ process.on('SIGTERM', async () => {
 });
 ```
 
-For multi-database setups, call `close()` on **each loader instance** separately — connections are not shared.
+For multi-database setups, call `close()` on **each loader instance** separately. Connections are not shared.

@@ -1,6 +1,6 @@
 # js-server-helper-sql-mysql
 
-MySQL 8.0.44+ client with connection pooling. Async/await. Multi-DB capable. **API-compatible with `js-server-helper-sql-postgres` and `js-server-helper-sql-sqlite`** — same placeholders, same function signatures, same return shapes.
+MySQL 8.0.44+ client with connection pooling. Async/await. Multi-DB capable. **API-compatible with `js-server-helper-sql-postgres` and `js-server-helper-sql-sqlite`.** Same placeholders, same function signatures, same return shapes.
 
 ## Type
 Server helper. Service-dependent (needs Docker for emulated, real MySQL-compatible database for integration).

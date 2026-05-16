@@ -1,4 +1,4 @@
-# Configuration — `js-server-helper-nosql-aws-dynamodb`
+# Configuration. `js-server-helper-nosql-aws-dynamodb`
 
 Every loader option, every environment variable, credentials and IAM expectations, and the runtime patterns that combine them. For the function reference see [API Reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/docs/api.md).
 
@@ -25,7 +25,7 @@ The page is split into two halves: a **reference** block (what you can set) at t
 
 ## Loader Pattern
 
-The module is a factory. Each loader call returns an independent public interface with its own AWS SDK client, config, and lifecycle. The SDK clients (`@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`) are cached at the module scope and shared across instances because they are stateless — only the configured `DynamoDBClient` instance holds region/credential state.
+The module is a factory. Each loader call returns an independent public interface with its own AWS SDK client, config, and lifecycle. The SDK clients (`@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`) are cached at the module scope and shared across instances because they are stateless. Only the configured `DynamoDBClient` instance holds region/credential state.
 
 ```javascript
 Lib.DynamoDB = require('@superloomdev/js-server-helper-nosql-aws-dynamodb')(Lib, {
@@ -37,7 +37,7 @@ Lib.DynamoDB = require('@superloomdev/js-server-helper-nosql-aws-dynamodb')(Lib,
 
 Loader call semantics:
 
-- The first argument is the `Lib` container — the module reads `Lib.Utils`, `Lib.Debug`, and `Lib.Instance` from it (see [Peer Dependencies](#peer-dependencies-injected)).
+- The first argument is the `Lib` container. The module reads `Lib.Utils`, `Lib.Debug`, and `Lib.Instance` from it (see [Peer Dependencies](#peer-dependencies-injected)).
 - The second argument is the config override. Whatever you pass is merged on top of the module's defaults (see [dynamodb.config.js](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/dynamodb.config.js)).
 - The SDK client is **not** created at loader time. It is created lazily on the first call. This keeps cold-start fast in serverless deployments.
 
@@ -47,7 +47,7 @@ Loader call semantics:
 
 | Key | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `REGION` | `String` | Yes (override) | `'us-east-1'` | AWS region. Override per deployment — `us-east-1` is rarely correct for production |
+| `REGION` | `String` | Yes (override) | `'us-east-1'` | AWS region. Override per deployment. `us-east-1` is rarely correct for production |
 | `KEY` | `String` | Yes (override) | `undefined` | AWS access key. **Explicit**, not picked up from an ambient SDK credential chain |
 | `SECRET` | `String` | Yes (override) | `undefined` | AWS secret key. **Explicit**, not picked up from an ambient SDK credential chain |
 | `ENDPOINT` | `String` | No | `undefined` | Custom endpoint URL (for DynamoDB Local or a private VPC endpoint). Leave unset for real AWS DynamoDB |
@@ -56,13 +56,13 @@ Loader call semantics:
 
 "Required (override)" means the key has a default but every production deployment must override it. `REGION`'s default (`us-east-1`) is a placeholder; `KEY` and `SECRET` are `undefined` by default and the SDK call will fail loudly if they aren't set.
 
-> **Implementation note:** the module is deliberately strict about credentials — it does **not** fall back to the SDK's default provider chain (instance profile, `~/.aws/credentials`, environment variables read by the SDK). If you want to read credentials from any of those sources, do it in your project's loader and pass them explicitly. This makes it impossible to accidentally talk to the wrong AWS account.
+> **Implementation note:** the module is deliberately strict about credentials. It does **not** fall back to the SDK's default provider chain (instance profile, `~/.aws/credentials`, environment variables read by the SDK). If you want to read credentials from any of those sources, do it in your project's loader and pass them explicitly. This makes it impossible to accidentally talk to the wrong AWS account.
 
 ---
 
 ## Environment Variables
 
-Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly — all configuration flows through the loader.
+Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly. All configuration flows through the loader.
 
 | Variable | Emulated (Dev) | Integration (Real AWS) | Purpose |
 |---|---|---|---|
@@ -71,7 +71,7 @@ Environment variables are consumed only by `_test/loader.js`. The module itself 
 | `AWS_SECRET_ACCESS_KEY` | `local` | Real secret key | Credential |
 | `DYNAMODB_ENDPOINT` | `http://localhost:8000` | *(not set)* | Endpoint override for emulator. Leave unset for real AWS |
 
-In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names — `REGION`, `KEY`, etc. accept any source.
+In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names. `REGION`, `KEY`, etc. accept any source.
 
 **Where to set these:**
 
@@ -89,7 +89,7 @@ These come from your project's `Lib` container, not from this module's `package.
 |---|---|
 | `@superloomdev/js-helper-utils` | Type checks, validation, data manipulation |
 | `@superloomdev/js-helper-debug` | Structured logging plus `performanceAuditLog` for per-operation timing |
-| `@superloomdev/js-server-helper-instance` | Request lifecycle — provides `instance.time_ms` used by performance logging |
+| `@superloomdev/js-server-helper-instance` | Request lifecycle. Provides `instance.time_ms` used by performance logging |
 
 ---
 
@@ -100,13 +100,13 @@ These come from your project's `Lib` container, not from this module's `package.
 | `@aws-sdk/client-dynamodb` | `^3.x` | Base DynamoDB client. Lazy-loaded on first call, cached at module scope. |
 | `@aws-sdk/lib-dynamodb` | `^3.x` | Document Client and `*Command` classes. Lazy-loaded, cached. |
 
-You should never `require('@aws-sdk/*')` in your application code — the module exists to wrap them.
+You should never `require('@aws-sdk/*')` in your application code. The module exists to wrap them.
 
 ---
 
 ## Credentials and IAM Permissions
 
-The module accepts an explicit `KEY` + `SECRET` pair and (optionally) a region. It does **not** fall back to the SDK's ambient credential chain. Your project loader decides where credentials come from — environment variables, secret manager, IAM role assumption, whatever your deployment shape requires.
+The module accepts an explicit `KEY` + `SECRET` pair and (optionally) a region. It does **not** fall back to the SDK's ambient credential chain. Your project loader decides where credentials come from. Environment variables, secret manager, IAM role assumption, whatever your deployment shape requires.
 
 ### Minimum IAM permissions
 
@@ -132,7 +132,7 @@ arn:aws:dynamodb:<region>:<account>:table/<table-name>/index/*
 
 ### Credential rotation
 
-Because credentials are explicit per loader call, rotating credentials means restarting the process (or re-invoking the loader). The module does not refresh credentials in-flight; there is no built-in support for temporary STS credentials with auto-refresh — pass refreshed values on a fresh loader call instead.
+Because credentials are explicit per loader call, rotating credentials means restarting the process (or re-invoking the loader). The module does not refresh credentials in-flight; there is no built-in support for temporary STS credentials with auto-refresh. Pass refreshed values on a fresh loader call instead.
 
 ---
 
@@ -145,7 +145,7 @@ The same module works against both real AWS DynamoDB and [DynamoDB Local](https:
 | **Real AWS DynamoDB** | unset (or omitted) | Real IAM credentials |
 | **DynamoDB Local** (Docker) | `http://localhost:8000` (or your container address) | Any non-empty string (the emulator accepts anything; the SDK requires non-empty values) |
 
-The test loader uses `KEY: 'local'` and `SECRET: 'local'` for the emulated tier. Use any pair you like in your own dev environment — the emulator does not validate them.
+The test loader uses `KEY: 'local'` and `SECRET: 'local'` for the emulated tier. Use any pair you like in your own dev environment. The emulator does not validate them.
 
 ---
 
@@ -167,7 +167,7 @@ Lib.DRDB = require('@superloomdev/js-server-helper-nosql-aws-dynamodb')(Lib, {
 });
 ```
 
-Each instance has its own SDK client, retry budget, and timeout state. Tables are not shared between instances at the API level — pass the table name on every call.
+Each instance has its own SDK client, retry budget, and timeout state. Tables are not shared between instances at the API level. Pass the table name on every call.
 
 ---
 

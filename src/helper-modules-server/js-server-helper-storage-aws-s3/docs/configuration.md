@@ -1,4 +1,4 @@
-# Configuration — `js-server-helper-storage-aws-s3`
+# Configuration. `js-server-helper-storage-aws-s3`
 
 Every loader option, every environment variable, credentials and IAM expectations, and the runtime patterns that combine them. For the function reference see [API Reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3/docs/api.md).
 
@@ -25,7 +25,7 @@ The page is split into two halves: a **reference** block (what you can set) at t
 
 ## Loader Pattern
 
-The module is a factory. Each loader call returns an independent public interface with its own AWS SDK client, config, and lifecycle. The SDK (`@aws-sdk/client-s3`) is cached at the module scope and shared across instances because it is stateless — only the configured `S3Client` instance holds region/credential state.
+The module is a factory. Each loader call returns an independent public interface with its own AWS SDK client, config, and lifecycle. The SDK (`@aws-sdk/client-s3`) is cached at the module scope and shared across instances because it is stateless. Only the configured `S3Client` instance holds region/credential state.
 
 ```javascript
 Lib.S3 = require('@superloomdev/js-server-helper-storage-aws-s3')(Lib, {
@@ -37,7 +37,7 @@ Lib.S3 = require('@superloomdev/js-server-helper-storage-aws-s3')(Lib, {
 
 Loader call semantics:
 
-- The first argument is the `Lib` container — the module reads `Lib.Utils` and `Lib.Debug` from it (see [Peer Dependencies](#peer-dependencies-injected)).
+- The first argument is the `Lib` container. The module reads `Lib.Utils` and `Lib.Debug` from it (see [Peer Dependencies](#peer-dependencies-injected)).
 - The second argument is the config override. Whatever you pass is merged on top of the module's defaults (see [s3.config.js](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3/s3.config.js)).
 - The SDK client is **not** created at loader time. It is created lazily on the first call. This keeps cold-start fast in serverless deployments.
 
@@ -47,22 +47,22 @@ Loader call semantics:
 
 | Key | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `REGION` | `String` | Yes (override) | `'us-east-1'` | AWS region. Override per deployment — `us-east-1` is rarely correct for production |
+| `REGION` | `String` | Yes (override) | `'us-east-1'` | AWS region. Override per deployment. `us-east-1` is rarely correct for production |
 | `KEY` | `String` | Yes (override) | `undefined` | AWS access key. **Explicit**, not picked up from an ambient SDK credential chain |
 | `SECRET` | `String` | Yes (override) | `undefined` | AWS secret key. **Explicit**, not picked up from an ambient SDK credential chain |
 | `ENDPOINT` | `String` | No | `undefined` | Custom endpoint URL (for S3-compatible services like MinIO, LocalStack, Cloudflare R2). Leave unset for real AWS S3 |
-| `FORCE_PATH_STYLE` | `Boolean` | No | `false` | Use path-style addressing (`http://host/bucket/key`). Required by MinIO and most self-hosted S3-compatible servers. AWS S3 uses virtual-hosted style — leave `false` for real AWS |
+| `FORCE_PATH_STYLE` | `Boolean` | No | `false` | Use path-style addressing (`http://host/bucket/key`). Required by MinIO and most self-hosted S3-compatible servers. AWS S3 uses virtual-hosted style. Leave `false` for real AWS |
 | `MAX_RETRIES` | `Number` | No | `3` | Maximum retry attempts for failed requests (passed to the SDK client) |
 
 "Required (override)" means the key has a default but every production deployment must override it. `REGION`'s default (`us-east-1`) is a placeholder; `KEY` and `SECRET` are `undefined` by default and the SDK call will fail loudly if they aren't set.
 
-> **Implementation note:** the module is deliberately strict about credentials — it does **not** fall back to the SDK's default provider chain (instance profile, `~/.aws/credentials`, environment variables read by the SDK). If you want to read credentials from any of those sources, do it in your project's loader and pass them explicitly. This makes it impossible to accidentally talk to the wrong AWS account.
+> **Implementation note:** the module is deliberately strict about credentials. It does **not** fall back to the SDK's default provider chain (instance profile, `~/.aws/credentials`, environment variables read by the SDK). If you want to read credentials from any of those sources, do it in your project's loader and pass them explicitly. This makes it impossible to accidentally talk to the wrong AWS account.
 
 ---
 
 ## Environment Variables
 
-Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly — all configuration flows through the loader.
+Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly. All configuration flows through the loader.
 
 | Variable | Emulated (Dev) | Integration (Real AWS) | Purpose |
 |---|---|---|---|
@@ -72,7 +72,7 @@ Environment variables are consumed only by `_test/loader.js`. The module itself 
 | `S3_ENDPOINT` | `http://localhost:9000` | *(not set)* | Endpoint override for emulator. Leave unset for real AWS |
 | `S3_FORCE_PATH_STYLE` | `true` | `false` | Path-style addressing. Required for MinIO; disabled for real S3 |
 
-In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names — `REGION`, `KEY`, etc. accept any source.
+In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names. `REGION`, `KEY`, etc. accept any source.
 
 **Where to set these:**
 
@@ -91,7 +91,7 @@ These come from your project's `Lib` container, not from this module's `package.
 | `@superloomdev/js-helper-utils` | Type checks, validation, data manipulation |
 | `@superloomdev/js-helper-debug` | Structured logging plus `performanceAuditLog` for per-operation timing |
 
-The module also expects an **`instance` object** to be passed as the first argument to every I/O function. The conventional source is [`@superloomdev/js-server-helper-instance`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-instance), which provides per-request `instance.time_ms` for the performance log line. The instance helper does not need to be in this module's `Lib` container — the caller passes the `instance` value directly.
+The module also expects an **`instance` object** to be passed as the first argument to every I/O function. The conventional source is [`@superloomdev/js-server-helper-instance`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-instance), which provides per-request `instance.time_ms` for the performance log line. The instance helper does not need to be in this module's `Lib` container. The caller passes the `instance` value directly.
 
 ---
 
@@ -101,13 +101,13 @@ The module also expects an **`instance` object** to be passed as the first argum
 |---|---|---|
 | `@aws-sdk/client-s3` | `^3.x` | AWS S3 client and command constructors. Lazy-loaded on first call, cached at module scope. |
 
-You should never `require('@aws-sdk/client-s3')` in your application code — the module exists to wrap it.
+You should never `require('@aws-sdk/client-s3')` in your application code. The module exists to wrap it.
 
 ---
 
 ## Credentials and IAM Permissions
 
-The module accepts an explicit `KEY` + `SECRET` pair and a region. It does **not** fall back to the SDK's ambient credential chain. Your project loader decides where credentials come from — environment variables, secret manager, IAM role assumption, whatever your deployment shape requires.
+The module accepts an explicit `KEY` + `SECRET` pair and a region. It does **not** fall back to the SDK's ambient credential chain. Your project loader decides where credentials come from. Environment variables, secret manager, IAM role assumption, whatever your deployment shape requires.
 
 ### Minimum IAM permissions
 
@@ -151,7 +151,7 @@ Example minimal policy for an "uploads bucket" worker:
 
 ### Credential rotation
 
-Because credentials are explicit per loader call, rotating credentials means restarting the process (or re-invoking the loader). The module does not refresh credentials in-flight; there is no built-in support for temporary STS credentials with auto-refresh — pass refreshed values on a fresh loader call instead.
+Because credentials are explicit per loader call, rotating credentials means restarting the process (or re-invoking the loader). The module does not refresh credentials in-flight; there is no built-in support for temporary STS credentials with auto-refresh. Pass refreshed values on a fresh loader call instead.
 
 ---
 
@@ -189,7 +189,7 @@ Lib.BackupS3 = require('@superloomdev/js-server-helper-storage-aws-s3')(Lib, {
 });
 ```
 
-Each instance has its own SDK client, retry budget, and timeout state. Buckets are not shared between instances at the API level — pass the bucket name on every call.
+Each instance has its own SDK client, retry budget, and timeout state. Buckets are not shared between instances at the API level. Pass the bucket name on every call.
 
 ---
 

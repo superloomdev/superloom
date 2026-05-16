@@ -1,4 +1,4 @@
-# Configuration — `js-server-helper-nosql-mongodb`
+# Configuration. `js-server-helper-nosql-mongodb`
 
 Every loader option, every environment variable, dependency expectations, and the runtime patterns that combine them. For the function reference see [API Reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-mongodb/docs/api.md).
 
@@ -24,7 +24,7 @@ The page is split into two halves: a **reference** block (what you can set) at t
 
 ## Loader Pattern
 
-The module is a factory. Each loader call returns an independent public interface with its own `MongoClient`, config, and lifecycle. The driver (`mongodb`) is cached at the module scope and shared across instances because it is stateless — only the client and database references hold state.
+The module is a factory. Each loader call returns an independent public interface with its own `MongoClient`, config, and lifecycle. The driver (`mongodb`) is cached at the module scope and shared across instances because it is stateless. Only the client and database references hold state.
 
 ```javascript
 Lib.MongoDB = require('@superloomdev/js-server-helper-nosql-mongodb')(Lib, {
@@ -35,7 +35,7 @@ Lib.MongoDB = require('@superloomdev/js-server-helper-nosql-mongodb')(Lib, {
 
 Loader call semantics:
 
-- The first argument is the `Lib` container — the module reads `Lib.Utils`, `Lib.Debug`, and `Lib.Instance` from it (see [Peer Dependencies](#peer-dependencies-injected)).
+- The first argument is the `Lib` container. The module reads `Lib.Utils`, `Lib.Debug`, and `Lib.Instance` from it (see [Peer Dependencies](#peer-dependencies-injected)).
 - The second argument is the config override. Missing keys fall back to defaults.
 - The `MongoClient` is **not** created at loader time. It is created lazily on the first call. This keeps cold-start fast in serverless deployments.
 
@@ -50,22 +50,22 @@ Loader call semantics:
 | `MAX_POOL_SIZE` | `Number` | No | `10` | Maximum connections in the pool. See [Multi-Database Setup](#multi-database-setup) for tuning across deployment categories |
 | `SERVER_SELECTION_TIMEOUT` | `Number` | No | `5000` | Maximum milliseconds the driver will wait for a server to be selected before failing |
 
-`CONNECTION_STRING` and `DATABASE_NAME` have no useful defaults — every project must override them. The other keys have reasonable defaults for most workloads.
+`CONNECTION_STRING` and `DATABASE_NAME` have no useful defaults. Every project must override them. The other keys have reasonable defaults for most workloads.
 
-> **Implementation note:** the `mongodb.config.js` defaults file currently lists keys (`URI`, `HOST`, `POOL_MAX`, etc.) that the source code does not read — only the four keys above flow through to the `MongoClient`. The defaults file will be reconciled in a follow-up; pass the four keys above explicitly to be sure.
+> **Implementation note:** the `mongodb.config.js` defaults file currently lists keys (`URI`, `HOST`, `POOL_MAX`, etc.) that the source code does not read. Only the four keys above flow through to the `MongoClient`. The defaults file will be reconciled in a follow-up; pass the four keys above explicitly to be sure.
 
 ---
 
 ## Environment Variables
 
-Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly — all configuration flows through the loader.
+Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly. All configuration flows through the loader.
 
 | Variable | Emulated (Dev) | Integration (Real DB) |
 |---|---|---|
 | `MONGODB_CONNECTION_STRING` | `mongodb://localhost:27017/?replicaSet=rs0` | `<atlas-or-cluster-connection-string>` |
 | `MONGODB_DATABASE` | `test_db` | `test_db` |
 
-In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names — `CONNECTION_STRING` and `DATABASE_NAME` accept any source.
+In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names. `CONNECTION_STRING` and `DATABASE_NAME` accept any source.
 
 ---
 
@@ -77,7 +77,7 @@ These come from your project's `Lib` container, not from this module's `package.
 |---|---|
 | `@superloomdev/js-helper-utils` | Type checks, validation, data manipulation |
 | `@superloomdev/js-helper-debug` | Structured logging plus `performanceAuditLog` for per-operation timing |
-| `@superloomdev/js-server-helper-instance` | Request lifecycle — provides `instance.time_ms` used by performance logging |
+| `@superloomdev/js-server-helper-instance` | Request lifecycle. Provides `instance.time_ms` used by performance logging |
 
 ---
 
@@ -87,13 +87,13 @@ These come from your project's `Lib` container, not from this module's `package.
 |---|---|---|
 | `mongodb` | `^6.x` | Official MongoDB Node.js driver. Lazy-loaded on first call, cached at module scope. |
 
-The driver is the only direct dependency. It is bundled because it is the implementation detail this module exists to wrap — you should never `require('mongodb')` in your application code.
+The driver is the only direct dependency. It is bundled because it is the implementation detail this module exists to wrap. You should never `require('mongodb')` in your application code.
 
 ---
 
 ## Multi-Database Setup
 
-Each loader call returns an independent instance with its own `MongoClient`. Load the module twice (or more) to bind to multiple databases — or a primary database plus a read replica — from the same process:
+Each loader call returns an independent instance with its own `MongoClient`. Load the module twice (or more) to bind to multiple databases (or a primary database plus a read replica) from the same process:
 
 ```javascript
 Lib.PrimaryDB = require('@superloomdev/js-server-helper-nosql-mongodb')(Lib, {
@@ -109,7 +109,7 @@ Lib.AnalyticsDB = require('@superloomdev/js-server-helper-nosql-mongodb')(Lib, {
 });
 ```
 
-Each instance maintains its own pool and lifecycle — call `close(instance)` on each at process exit. Multiple loader calls **do not** share connections or transactions.
+Each instance maintains its own pool and lifecycle. Call `close(instance)` on each at process exit. Multiple loader calls **do not** share connections or transactions.
 
 **Pool sizing by deployment shape:**
 
@@ -123,7 +123,7 @@ Each instance maintains its own pool and lifecycle — call `close(instance)` on
 
 ## Replica-Set Requirement for Transactions
 
-`transactWriteRecords` uses MongoDB's session-based transaction API, which **requires a replica set** at the server side. This is not a distributed multi-node concern — a single-node replica set works fine.
+`transactWriteRecords` uses MongoDB's session-based transaction API, which **requires a replica set** at the server side. This is not a distributed multi-node concern. A single-node replica set works fine.
 
 | Deployment | Replica set status |
 |---|---|

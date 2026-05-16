@@ -1,4 +1,4 @@
-# Configuration — `js-server-helper-sql-sqlite`
+# Configuration. `js-server-helper-sql-sqlite`
 
 Every loader option, every environment variable, dependency expectations, and the runtime patterns that combine them. For the function reference see [API Reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-sqlite/docs/api.md).
 
@@ -25,7 +25,7 @@ The page is split into two halves: a **reference** block (what you can set) at t
 
 ## Loader Pattern
 
-The module is a factory. Each loader call returns an independent public interface with its own database handle, config, and lifecycle. The driver (`node:sqlite`) is cached at the module scope and shared across instances because it is stateless — only the handle holds state.
+The module is a factory. Each loader call returns an independent public interface with its own database handle, config, and lifecycle. The driver (`node:sqlite`) is cached at the module scope and shared across instances because it is stateless. Only the handle holds state.
 
 ```javascript
 Lib.SqlDB = require('@superloomdev/js-server-helper-sql-sqlite')(Lib, {
@@ -37,7 +37,7 @@ Lib.SqlDB = require('@superloomdev/js-server-helper-sql-sqlite')(Lib, {
 
 Loader call semantics:
 
-- The first argument is the `Lib` container — the module reads `Lib.Utils` and `Lib.Debug` from it (see [Peer Dependencies](#peer-dependencies-injected)).
+- The first argument is the `Lib` container. The module reads `Lib.Utils` and `Lib.Debug` from it (see [Peer Dependencies](#peer-dependencies-injected)).
 - The second argument is the config override. Whatever you pass is merged on top of the module's defaults (see [sqlite.config.js](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-sqlite/sqlite.config.js)). Missing keys fall back to defaults.
 - The database handle is **not** opened at loader time. It is opened lazily on the first query. This keeps cold-start fast in serverless and edge runtimes.
 
@@ -49,7 +49,7 @@ Loader call semantics:
 |---|---|---|---|---|
 | `FILE` | `String` | No | `':memory:'` | Path to the SQLite file, or `':memory:'` for an in-memory database. See [In-Memory vs On-Disk](#in-memory-vs-on-disk) |
 | `READONLY` | `Boolean` | No | `false` | When `true`, the handle is opened read-only. Writes will fail |
-| `ENABLE_FOREIGN_KEYS` | `Boolean` | No | `true` | Enforce foreign-key constraints. SQLite defaults to disabled at the driver level — this module enables them at open by default |
+| `ENABLE_FOREIGN_KEYS` | `Boolean` | No | `true` | Enforce foreign-key constraints. SQLite defaults to disabled at the driver level. This module enables them at open by default |
 | `TIMEOUT_MS` | `Number` | No | `5000` | Busy-handler timeout in milliseconds. How long SQLite will wait when a lock cannot be acquired before returning `SQLITE_BUSY`. `0` disables the busy handler |
 | `JOURNAL_MODE` | `String` | No | `'WAL'` | `'DELETE'` (default in raw SQLite) / `'TRUNCATE'` / `'PERSIST'` / `'MEMORY'` / `'WAL'` / `'OFF'`. Ignored when `FILE` is `:memory:` (in-memory databases force `MEMORY`). See [Journal Mode and Concurrency](#journal-mode-and-concurrency) |
 | `SYNCHRONOUS` | `String` | No | `'NORMAL'` | `'OFF'` / `'NORMAL'` / `'FULL'` / `'EXTRA'`. `'NORMAL'` is a good default for WAL. Use `'FULL'` for extra durability at the cost of throughput |
@@ -61,7 +61,7 @@ Every key has a usable default. The most common override is `FILE` (point at a r
 
 ## Environment Variables
 
-Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly — all configuration flows through the loader.
+Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly. All configuration flows through the loader.
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -69,7 +69,7 @@ Environment variables are consumed only by `_test/loader.js`. The module itself 
 
 When `SQLITE_FILE` points at a real file, the test loader switches `JOURNAL_MODE` to `WAL`; for `:memory:` it uses `MEMORY` automatically.
 
-In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names — `FILE`, `JOURNAL_MODE`, etc. accept any source.
+In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names. `FILE`, `JOURNAL_MODE`, etc. accept any source.
 
 ---
 
@@ -81,9 +81,9 @@ These come from your project's `Lib` container, not from this module's `package.
 |---|---|
 | `@superloomdev/js-helper-utils` | Type checks, validation, data manipulation |
 | `@superloomdev/js-helper-debug` | Structured logging plus `performanceAuditLog` for per-query timing |
-| `@superloomdev/js-server-helper-instance` | Request lifecycle — provides `instance.time_ms` used by performance logging |
+| `@superloomdev/js-server-helper-instance` | Request lifecycle. Provides `instance.time_ms` used by performance logging |
 
-The `Lib.Instance` peer is technically optional — the module reads `instance.time_ms` defensively — but every production deployment should pass a real instance. Otherwise performance logging is degraded.
+The `Lib.Instance` peer is technically optional. The module reads `instance.time_ms` defensively. But every production deployment should pass a real instance. Otherwise performance logging is degraded.
 
 ---
 
@@ -99,7 +99,7 @@ There are **no** direct npm dependencies. The driver ships with Node itself.
 
 ## Multi-Database Setup
 
-Each loader call returns an independent instance with its own database handle. Load the module twice (or more) to use several databases — for example a cache database plus an analytics database — from the same process:
+Each loader call returns an independent instance with its own database handle. Load the module twice (or more) to use several databases (for example a cache database plus an analytics database) from the same process:
 
 ```javascript
 Lib.CacheDB = require('@superloomdev/js-server-helper-sql-sqlite')(Lib, {
@@ -114,7 +114,7 @@ Lib.AnalyticsDB = require('@superloomdev/js-server-helper-sql-sqlite')(Lib, {
 });
 ```
 
-Each instance maintains its own handle and lifecycle — call `close()` on each at process exit. Multiple loader calls **do not** share handles, transactions, or busy-handler state.
+Each instance maintains its own handle and lifecycle. Call `close()` on each at process exit. Multiple loader calls **do not** share handles, transactions, or busy-handler state.
 
 ---
 
@@ -127,7 +127,7 @@ SQLite supports both modes through the same `FILE` key.
 | `':memory:'` | In-memory, lives for the lifetime of the loader instance | Tests, ephemeral computation, scratch databases. Forced `JOURNAL_MODE: 'MEMORY'` regardless of the configured value. |
 | File path (e.g. `'/var/data/app.db'`) | On-disk, persists across restarts | Application data, caches, analytics, embedded config. Honors `JOURNAL_MODE` (typically `'WAL'`). |
 
-In-memory databases are completely isolated per loader instance — two `:memory:` loaders **do not** share data. If you need a shared in-memory database between threads or processes, you need an external SQLite server (which defeats the purpose of using SQLite).
+In-memory databases are completely isolated per loader instance. Two `:memory:` loaders **do not** share data. If you need a shared in-memory database between threads or processes, you need an external SQLite server (which defeats the purpose of using SQLite).
 
 ---
 
@@ -158,7 +158,7 @@ SQLite's journal mode determines how transactions are persisted to disk and whic
 
 ## Testing Tiers
 
-SQLite has a single test tier — there is no managed service to integrate against. The offline `node:sqlite` runtime is also the production runtime.
+SQLite has a single test tier. There is no managed service to integrate against. The offline `node:sqlite` runtime is also the production runtime.
 
 | Tier | Runtime | When to run | CI Status |
 |---|---|---|---|
@@ -170,7 +170,7 @@ SQLite has a single test tier — there is no managed service to integrate again
 cd _test && npm install && npm test
 ```
 
-By default the tests open an in-memory database. Nothing is persisted. The `node:sqlite` driver is built into Node — no separate install step is required.
+By default the tests open an in-memory database. Nothing is persisted. The `node:sqlite` driver is built into Node. No separate install step is required.
 
 ### Optional: Test Against a File
 

@@ -1,4 +1,4 @@
-# API Reference — `js-server-helper-storage-aws-s3`
+# API Reference. `js-server-helper-storage-aws-s3`
 
 Every exported function with its signature, parameters, return shape, semantics, and examples. For configuration keys, credentials, IAM permissions, and runtime patterns see [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3/docs/configuration.md).
 
@@ -39,7 +39,7 @@ Every function returns a consistent response envelope:
 { success: false, /* zeroed fields */, error: { type, message } }
 ```
 
-Operational failures (network error, access denied, missing object) never throw — they come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers) still throw.
+Operational failures (network error, access denied, missing object) never throw. They come back through `error` so the caller can branch without a try/catch. Programming errors (bad arguments, missing peers) still throw.
 
 **`NoSuchKey` is normalised.** When an object does not exist, the response is `{ success: false, error: { type: 'NOT_FOUND', message: ... } }` regardless of the AWS-specific error code. The error log entry is suppressed for `NOT_FOUND` to avoid noise on cache-miss-style code paths.
 
@@ -61,7 +61,7 @@ Most application code uses the **Convenience** layer. The **Builder + Executor**
 
 ## Command Builders
 
-Builders are **pure functions** that produce S3 service-parameter objects. They do not call AWS — they prepare arguments that an executor will send.
+Builders are **pure functions** that produce S3 service-parameter objects. They do not call AWS. They prepare arguments that an executor will send.
 
 ### `commandBuilderForUploadObject`
 
@@ -124,7 +124,7 @@ Execute a pre-built `PutObject` command. `etag` is the S3-assigned entity tag (u
 async commandGetObject(instance, service_params, output_as_string) → { success, body, content_type, metadata, error }
 ```
 
-Execute a pre-built `GetObject` command. The streamed response body is drained automatically via the SDK's `transformToByteArray()` / `transformToString()` — no manual chunking needed.
+Execute a pre-built `GetObject` command. The streamed response body is drained automatically via the SDK's `transformToByteArray()` / `transformToString()`. No manual chunking needed.
 
 | `output_as_string` | `body` shape |
 |---|---|
@@ -139,7 +139,7 @@ On a missing key, returns `{ success: false, body: null, content_type: null, met
 async commandDeleteObject(instance, service_params) → { success, error }
 ```
 
-Execute a pre-built `DeleteObject` command. S3's `DeleteObject` is idempotent — deleting a non-existent key still returns `success: true`.
+Execute a pre-built `DeleteObject` command. S3's `DeleteObject` is idempotent. Deleting a non-existent key still returns `success: true`.
 
 ### `commandCopyObject`
 
@@ -153,7 +153,7 @@ Execute a pre-built `CopyObject` command. `NoSuchKey` (missing source) returns `
 
 ## File Operations
 
-The convenience layer — builds and executes in a single call. Use these for ordinary application code.
+The convenience layer. Builds and executes in a single call. Use these for ordinary application code.
 
 ### `listObjects`
 
@@ -161,7 +161,7 @@ The convenience layer — builds and executes in a single call. Use these for or
 async listObjects(instance, bucket, prefix) → { success, keys, error }
 ```
 
-List up to 1000 keys in a bucket using `ListObjectsV2`. `prefix` is optional. `keys` is always an array of strings (the key names — `Contents.Key` from the SDK response).
+List up to 1000 keys in a bucket using `ListObjectsV2`. `prefix` is optional. `keys` is always an array of strings (the key names. `Contents.Key` from the SDK response).
 
 ```javascript
 const res = await Lib.S3.listObjects(instance, 'uploads', 'users/42/');
@@ -198,7 +198,7 @@ async uploadFiles(instance, files) → { success, results, error }
 
 Upload multiple files in **parallel** via `Promise.all`. `files` is an array of `{ bucket, key, body, content_type?, metadata?, is_public? }`.
 
-`success` is `true` only when **every** upload succeeded. `results` is the per-file response array — inspect it to find the specific failures when `success === false`.
+`success` is `true` only when **every** upload succeeded. `results` is the per-file response array. Inspect it to find the specific failures when `success === false`.
 
 ```javascript
 const res = await Lib.S3.uploadFiles(instance, [
@@ -227,7 +227,7 @@ console.log(res.body);   // 'Hello world'
 async deleteFile(instance, bucket, key) → { success, error }
 ```
 
-Delete a single object. Idempotent — deleting a key that does not exist still returns `success: true`.
+Delete a single object. Idempotent. Deleting a key that does not exist still returns `success: true`.
 
 ### `deleteFiles`
 
@@ -235,7 +235,7 @@ Delete a single object. Idempotent — deleting a key that does not exist still 
 async deleteFiles(instance, bucket, keys) → { success, deleted, error }
 ```
 
-Delete multiple objects from a single bucket. **Handles the AWS 1000-key `DeleteObjects` limit automatically** — pass any number of keys and the helper recurses through 1000-key chunks until everything is deleted.
+Delete multiple objects from a single bucket. **Handles the AWS 1000-key `DeleteObjects` limit automatically.** Pass any number of keys and the helper recurses through 1000-key chunks until everything is deleted.
 
 `deleted` is the total count of successfully deleted keys across all chunks.
 
@@ -257,7 +257,7 @@ Copy an object within or across buckets. `is_public` sets `ACL: 'public-read'` o
 async moveFile(instance, source_bucket, source_key, dest_bucket, dest_key, is_public) → { success, error }
 ```
 
-Copy then delete the source. **Source is preserved if the copy fails** — the move only continues to the delete step on a successful copy. If the delete subsequently fails, the delete error becomes the returned `error`.
+Copy then delete the source. **Source is preserved if the copy fails.** The move only continues to the delete step on a successful copy. If the delete subsequently fails, the delete error becomes the returned `error`.
 
 ```javascript
 await Lib.S3.moveFile(

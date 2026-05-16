@@ -1,6 +1,6 @@
 # js-server-helper-nosql-aws-dynamodb
 
-AWS DynamoDB CRUD, batch, query, scan. Lazy-loaded SDK v3. Explicit credentials. **API-compatible with `js-server-helper-nosql-mongodb`** — same calling shape for single-record CRUD, batch, query / scan, and transactions.
+AWS DynamoDB CRUD, batch, query, scan. Lazy-loaded SDK v3. Explicit credentials. **API-compatible with `js-server-helper-nosql-mongodb`.** Same calling shape for single-record CRUD, batch, query / scan, and transactions.
 
 ## Type
 Server helper. Service-dependent (needs Docker for emulated, AWS for integration).

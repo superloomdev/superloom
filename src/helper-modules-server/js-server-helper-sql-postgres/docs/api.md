@@ -1,4 +1,4 @@
-# API Reference — `js-server-helper-sql-postgres`
+# API Reference. `js-server-helper-sql-postgres`
 
 Every exported function with its signature, parameters, return shape, semantics, and examples. For configuration keys and environment variables see [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-postgres/docs/configuration.md).
 
@@ -30,7 +30,7 @@ Every exported function with its signature, parameters, return shape, semantics,
 ## Conventions
 
 - Every I/O function accepts an `instance` (from `Lib.Instance.initialize()`) as its first argument. This lets each query be timed against the active request via `instance.time_ms` and routed through `Lib.Debug.performanceAuditLog`.
-- Every return value follows the `{ success, ...data, error }` envelope. `success` is always a boolean; `error` is `null` on success or a `{ type, message }` object on failure. Functions never `throw` for operational errors — programmer errors (wrong argument types) still throw.
+- Every return value follows the `{ success, ...data, error }` envelope. `success` is always a boolean; `error` is `null` on success or a `{ type, message }` object on failure. Functions never `throw` for operational errors. Programmer errors (wrong argument types) still throw.
 - The factory returns an independent instance per loader call. Two loader calls = two pools = two independent lifecycles. See [Multi-Database Setup](configuration.md#multi-database-setup) for usage.
 
 ## Placeholders
@@ -42,7 +42,7 @@ Two placeholder symbols, identical to `@superloomdev/js-server-helper-sql-mysql`
 | `?`  | Value (bound parameter) | `'WHERE id = ?'` with params `[42]` |
 | `??` | Identifier (table/column name) | `'SELECT * FROM ??'` with params `['users']` |
 
-At query time the wrapper translates `?` to Postgres-native `$1, $2, …` and inlines `??` as a double-quoted identifier (`"users"`). The translator is quote-aware — it skips placeholders inside string literals (`'?'`), double-quoted identifiers (`"col?"`), and `--` line comments.
+At query time the wrapper translates `?` to Postgres-native `$1, $2, …` and inlines `??` as a double-quoted identifier (`"users"`). The translator is quote-aware. It skips placeholders inside string literals (`'?'`), double-quoted identifiers (`"col?"`), and `--` line comments.
 
 ## `insert_id` Semantics
 
@@ -222,7 +222,7 @@ write(instance, sql, params?) -> Promise<{ success, affected_rows, insert_id, er
 - `insert_id` is the last seen `RETURNING id` value across statements.
 - Any statement failure rolls back the whole transaction.
 
-**Examples — single statement:**
+**Examples. Single statement:**
 
 ```javascript
 const res = await Lib.SqlDB.write(
@@ -233,7 +233,7 @@ const res = await Lib.SqlDB.write(
 console.log(res.insert_id);   // new primary key
 ```
 
-**Examples — atomic transaction:**
+**Examples. Atomic transaction:**
 
 ```javascript
 const sql = [
@@ -261,7 +261,7 @@ getClient(instance) -> Promise<{ success, client, error }>
 **Success return:** `{ success: true, client: <pg.PoolClient>, error: null }`
 **Failure return:** `{ success: false, client: null, error: { type, message } }`
 
-The `client` is a raw `pg.PoolClient` — you can call `client.query(...)` directly.
+The `client` is a raw `pg.PoolClient`. You can call `client.query(...)` directly.
 
 ### `releaseClient`
 
@@ -296,7 +296,7 @@ try {
 
 ## Query Builders (pure, no I/O)
 
-Builders compile placeholder SQL into fully-escaped Postgres strings. They are synchronous and do not touch the pool — useful for pre-building transaction arrays or composing nested fragments.
+Builders compile placeholder SQL into fully-escaped Postgres strings. They are synchronous and do not touch the pool. Useful for pre-building transaction arrays or composing nested fragments.
 
 ### `buildQuery`
 
@@ -309,8 +309,8 @@ buildQuery(sql, params) -> String
 | `params[i]` value | Inlining |
 |---|---|
 | scalar (string / number / boolean / Date / null) | escaped literal |
-| `Array` (e.g. `[1, 2, 3]`) | `(1, 2, 3)` — useful for `WHERE x IN ?` |
-| `Object` (e.g. `{ a: 1, b: 'x' }`) | `"a" = 1, "b" = 'x'` — useful for `SET ?` |
+| `Array` (e.g. `[1, 2, 3]`) | `(1, 2, 3)`. Useful for `WHERE x IN ?` |
+| `Object` (e.g. `{ a: 1, b: 'x' }`) | `"a" = 1, "b" = 'x'`. Useful for `SET ?` |
 | return value of `buildRawText(...)` | inlined unescaped |
 
 **Example:**
@@ -357,7 +357,7 @@ buildMultiCondition(data, operator?) -> String
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `data` | `Object` | — | `{ status: 'active', role: 'admin' }` |
+| `data` | `Object` | - | `{ status: 'active', role: 'admin' }` |
 | `operator` | `String` | `'AND'` | `'AND'` or `'OR'` |
 
 **Example:**
@@ -398,7 +398,7 @@ process.on('SIGTERM', async () => {
 
 ## Spatial Data (PostGIS)
 
-Spatial SQL works through `buildRawText()` — no dedicated helpers needed. Wrap any `ST_*` expression in `buildRawText` and pass it as a placeholder value:
+Spatial SQL works through `buildRawText()`. No dedicated helpers needed. Wrap any `ST_*` expression in `buildRawText` and pass it as a placeholder value:
 
 ```javascript
 const point = Lib.SqlDB.buildRawText(

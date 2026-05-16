@@ -1,4 +1,4 @@
-# Configuration — `js-server-helper-sql-postgres`
+# Configuration. `js-server-helper-sql-postgres`
 
 Every loader option, every environment variable, dependency expectations, and the runtime patterns that combine them. For the function reference see [API Reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-postgres/docs/api.md).
 
@@ -38,7 +38,7 @@ Lib.SqlDB = require('@superloomdev/js-server-helper-sql-postgres')(Lib, {
 
 Loader call semantics:
 
-- The first argument is the `Lib` container — the module reads `Lib.Utils` and `Lib.Debug` from it (see [Peer Dependencies](#peer-dependencies-injected)).
+- The first argument is the `Lib` container. The module reads `Lib.Utils` and `Lib.Debug` from it (see [Peer Dependencies](#peer-dependencies-injected)).
 - The second argument is the config override. Whatever you pass is merged on top of the module's defaults (see [postgres.config.js](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-postgres/postgres.config.js)). Missing keys fall back to defaults.
 - The pool is **not** created at loader time. It is created lazily on the first query. This keeps cold-start fast in serverless deployments.
 
@@ -63,13 +63,13 @@ Loader call semantics:
 | `APPLICATION_NAME` | `String` | No | `'superloom'` | Surfaces in `pg_stat_activity.application_name`. Override to identify multiple services in the same DB |
 | `CLOSE_TIMEOUT_MS` | `Number` | No | `5000` | Max ms `close()` waits for active queries before force-destroying the pool |
 
-"Required (override)" means the default exists but is unlikely to match a real deployment — practically every project must override it. Every other key has a usable default for most cases.
+"Required (override)" means the default exists but is unlikely to match a real deployment. Practically every project must override it. Every other key has a usable default for most cases.
 
 ---
 
 ## Environment Variables
 
-Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly — all configuration flows through the loader.
+Environment variables are consumed only by `_test/loader.js`. The module itself never reads `process.env` directly. All configuration flows through the loader.
 
 | Variable | Emulated (Dev) | Integration (Real DB) |
 |---|---|---|
@@ -79,7 +79,7 @@ Environment variables are consumed only by `_test/loader.js`. The module itself 
 | `POSTGRES_USER` | `test_user` | `unit_tester` |
 | `POSTGRES_PASSWORD` | `test_pw` | From `__dev__/secrets/sandbox.md` |
 
-In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names — `HOST`, `DATABASE`, etc. accept any source.
+In your application code, set the variables you need and forward them to the loader explicitly. The module does not assume any specific variable names. `HOST`, `DATABASE`, etc. accept any source.
 
 ---
 
@@ -91,9 +91,9 @@ These come from your project's `Lib` container, not from this module's `package.
 |---|---|
 | `@superloomdev/js-helper-utils` | Type checks, validation, data manipulation |
 | `@superloomdev/js-helper-debug` | Structured logging plus `performanceAuditLog` for per-query timing |
-| `@superloomdev/js-server-helper-instance` | Request lifecycle — provides `instance.time_ms` used by performance logging |
+| `@superloomdev/js-server-helper-instance` | Request lifecycle. Provides `instance.time_ms` used by performance logging |
 
-The `Lib.Instance` peer is technically optional — the module reads `instance.time_ms` defensively — but every production deployment should pass a real instance. Otherwise performance logging is degraded.
+The `Lib.Instance` peer is technically optional. The module reads `instance.time_ms` defensively. But every production deployment should pass a real instance. Otherwise performance logging is degraded.
 
 ---
 
@@ -103,13 +103,13 @@ The `Lib.Instance` peer is technically optional — the module reads `instance.t
 |---|---|---|
 | `pg` | `^8.x` | node-postgres driver. Lazy-loaded on first query, cached at module scope. |
 
-The driver is the only direct dependency. It is bundled because it is the implementation detail this module exists to wrap — you should never `require('pg')` in your application code.
+The driver is the only direct dependency. It is bundled because it is the implementation detail this module exists to wrap. You should never `require('pg')` in your application code.
 
 ---
 
 ## Multi-Database Setup
 
-Each loader call returns an independent instance with its own pool. Load the module twice (or more) to connect to several databases — or a writer plus a reader — from the same process:
+Each loader call returns an independent instance with its own pool. Load the module twice (or more) to connect to several databases (or a writer plus a reader) from the same process:
 
 ```javascript
 Lib.PrimaryDB = require('@superloomdev/js-server-helper-sql-postgres')(Lib, {
@@ -129,7 +129,7 @@ Lib.ReaderDB = require('@superloomdev/js-server-helper-sql-postgres')(Lib, {
 });
 ```
 
-Each instance maintains its own pool and lifecycle — call `close()` on each at process exit. Multiple loader calls **do not** share connections, transactions, or statement timeouts.
+Each instance maintains its own pool and lifecycle. Call `close()` on each at process exit. Multiple loader calls **do not** share connections, transactions, or statement timeouts.
 
 ---
 
@@ -164,8 +164,8 @@ The right `POOL_MAX` depends on your deployment shape and the database's `max_co
 
 | Category | Recommended `POOL_MAX` | Reasoning |
 |---|---|---|
-| **Serverless** (cloud functions, on-demand workers — e.g. Lambda, Cloud Functions, Cloud Run) | `1` | Each invocation holds one connection. Larger pools waste warm-pool capacity and exhaust `max_connections` under concurrency. |
-| **Persistent** (containers, virtual machines, orchestrated platforms — e.g. Docker, Kubernetes, EC2) | `10–20` | Tune per instance: `POOL_MAX × instance_count ≤ db_max_connections × 0.8`. |
+| **Serverless** (cloud functions, on-demand workers. E.g. Lambda, Cloud Functions, Cloud Run) | `1` | Each invocation holds one connection. Larger pools waste warm-pool capacity and exhaust `max_connections` under concurrency. |
+| **Persistent** (containers, virtual machines, orchestrated platforms. E.g. Docker, Kubernetes, EC2) | `10–20` | Tune per instance: `POOL_MAX × instance_count ≤ db_max_connections × 0.8`. |
 | **Auto-scaling managed databases** (e.g. Aurora Serverless v2, scale-to-zero clusters) | `5–10` | Scale-down behaviour means very large pools can hold connections through scale events. |
 
 **General formula** for persistent deployments:
