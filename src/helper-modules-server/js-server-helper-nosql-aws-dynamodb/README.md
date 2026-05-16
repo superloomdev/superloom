@@ -1,147 +1,70 @@
 # @superloomdev/js-server-helper-nosql-aws-dynamodb
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
+[![Node.js 20.19+](https://img.shields.io/badge/Node.js-20.19%2B-brightgreen.svg)](https://nodejs.org)
 
-AWS DynamoDB wrapper with CRUD, batch, and query operations. Lazy-loaded AWS SDK v3. Part of the [Superloom](https://github.com/superloomdev/superloom).
+A DynamoDB helper for Node.js that insulates your application from SDK changes and ships pre-tested, so your project never has to re-verify NoSQL connectivity. Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent module** - requires Docker for emulated testing (DynamoDB Local) and real cloud credentials for integration testing. See testing tiers below.
+## What This Is
 
-## API
+A thin, opinionated layer over the [AWS SDK v3 Document Client](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/Package/-aws-sdk-lib-dynamodb/) with request-level timing, explicit credentials, a structured update builder, transaction support up to the AWS 100-action limit, and a single consistent response shape across every operation.
 
-All functions accept `instance` as first parameter (from `Lib.Instance.initialize`).
+Every read and every write returns the same envelope:
 
-| Function | Description |
-|---|---|
-| `getRecord(instance, table, key)` | Get a single record by primary key |
-| `writeRecord(instance, table, item)` | Write (create or replace) a record. Always upsert |
-| `updateRecord(instance, table, key, ...)` | Update a record with structured builder (SET/REMOVE/INCREMENT/DECREMENT) |
-| `deleteRecord(instance, table, key)` | Delete a single record |
-| `query(instance, table, params)` | Query by partition key with optional sort key conditions |
-| `scan(instance, table, filter)` | Scan entire table with optional filter |
-| `batchGetRecords(instance, keysByTable)` | Batch get from one or more tables |
-| `batchWriteAndDeleteRecords(instance, requestsByTable)` | Batch put/delete across tables |
-| `batchWriteRecords(instance, itemsByTable)` | Batch put with auto 25-item chunking |
-| `batchDeleteRecords(instance, keysByTable)` | Batch delete with auto 25-item chunking |
-| `transactWriteRecords(instance, adds, updates, deletes)` | Atomic write transaction (up to 100 actions) |
-
-## Usage
-
-```javascript
-// In loader
-Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
-Lib.DynamoDB = require('@superloomdev/js-server-helper-nosql-aws-dynamodb')(Lib, {
-  REGION: 'us-east-1',
-  KEY: process.env.AWS_ACCESS_KEY_ID,
-  SECRET: process.env.AWS_SECRET_ACCESS_KEY
-});
-
-// In application code
-const instance = Lib.Instance.initialize();
-const result = await Lib.DynamoDB.writeRecord(instance, 'my_table', { pk: 'user_001', name: 'Alice' });
-const item = await Lib.DynamoDB.getRecord(instance, 'my_table', { pk: 'user_001' });
+```
+success / data / error
 ```
 
-## Command Builders
+— so error handling, result reading, and exception expectations are the same in every place you touch the database. There are no surprises between functions, and operational failures never throw.
 
-Command builders are pure functions that produce DynamoDB service-param objects. They are used in two ways:
+## Why Use This Module
 
-**Standalone** — convenience functions like `writeRecord`, `updateRecord`, and `deleteRecord` call builders internally. Use these for simple single-record operations.
+- **Library updates won't break your code.** When the underlying SDK ships a breaking change, only this module needs updating. Your application code stays exactly as it is.
 
-```javascript
-await Lib.DynamoDB.updateRecord(instance, 'orders', { pk: 'ord_1' }, { status: 'shipped' });
-```
+- **Pre-tested at every release.** A full test suite runs against [DynamoDB Local](https://hub.docker.com/r/amazon/dynamodb-local) in CI on every push. Your project trusts the wrapper instead of re-verifying NoSQL plumbing on each release.
 
-**Transactions** — build commands individually, then pass them as arrays to `transactWriteRecords` for atomic multi-record writes. This is the dominant real-world pattern for builders.
+- **Designed for human review.** The code is laid out as clearly-marked visual sections — section banners, short functions, scoped comments — so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `dynamodb.js` to see the structure.
 
-```javascript
-const add_cmd = Lib.DynamoDB.commandBuilderForAddRecord('audit_log', { pk: 'log_1', action: 'ship' });
-const upd_cmd = Lib.DynamoDB.commandBuilderForUpdateRecord('orders', { pk: 'ord_1' }, { status: 'shipped' });
-const del_cmd = Lib.DynamoDB.commandBuilderForDeleteRecord('pending', { pk: 'ord_1' });
+- **Built-in observability.** Every operation can be timed against the active request and routed into your structured logs automatically. Slow-query review, request profiling, and the toggle to enable it during local development or silence it in production are all built in. No instrumentation code to write.
 
-await Lib.DynamoDB.transactWriteRecords(instance, [add_cmd], [upd_cmd], [del_cmd]);
-```
+- **Explicit credentials, not implicit ones.** Credentials are passed through the loader, not picked up from an ambient environment chain. This makes it impossible to accidentally talk to the wrong AWS account from a developer machine, a CI runner, or a multi-tenant deployment. Local emulator runs the same way as real DynamoDB — only the `ENDPOINT` config changes.
 
-All three builders are available: `commandBuilderForAddRecord`, `commandBuilderForUpdateRecord`, `commandBuilderForDeleteRecord`.
+## Hot-Swappable with Other Backends
 
-The update builder supports SET, REMOVE, INCREMENT, and DECREMENT. Additional operations (list_append, if_not_exists, set operations, condition expressions) will be added to the builder as needed.
+This module is part of a NoSQL family of database helpers that share the same calling shape — single-record CRUD, batch, query / scan, atomic transactions. The overlap is API-shape, not feature-parity (DynamoDB has table management and command builders; MongoDB has filter-based bulk deletes and explicit indexes). Switch by changing the loader line where the calling shape overlaps.
 
-## Configuration (Loader)
+- [`@superloomdev/js-server-helper-nosql-mongodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-nosql-mongodb) — MongoDB
 
-| Config Key | Environment Variable | Default | Description |
-|---|---|---|---|
-| `REGION` | `AWS_REGION` | `'us-east-1'` | AWS region |
-| `KEY` | `AWS_ACCESS_KEY_ID` | `undefined` | AWS access key (explicit, not implicit) |
-| `SECRET` | `AWS_SECRET_ACCESS_KEY` | `undefined` | AWS secret key (explicit, not implicit) |
-| `ENDPOINT` | `DYNAMODB_ENDPOINT` | `undefined` | Custom endpoint (DynamoDB Local). Leave unset for real AWS. |
-| `MAX_RETRIES` | - | `3` | Maximum retry attempts for failed requests |
-| `REMOVE_UNDEFINED_VALUES` | - | `true` | Strip undefined values before sending to DynamoDB |
+SQL helpers with a similarly-shaped API (Postgres, MySQL, SQLite) live as their own family — see the [Superloom helper modules index](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server).
 
-When `ENDPOINT` is `undefined`, the SDK uses real AWS DynamoDB.
+## Aligned with Superloom Philosophy
 
-## Environment Variables
+If your project is built on Superloom conventions — the same loader pattern, the same response envelope, the same testing model — this module slots in without you needing to learn anything new. It is written using the same opinionated principles, so adopting it does not introduce inconsistency into your codebase.
 
-This module depends on the following environment variables. They must be set before loading.
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-| Variable | Emulated (Dev) | Integration (Real) | Description |
-|---|---|---|---|
-| `AWS_ACCESS_KEY_ID` | `local` | Real access key | Credentials |
-| `AWS_SECRET_ACCESS_KEY` | `local` | Real secret key | Credentials |
-| `AWS_REGION` | `us-east-1` | Your region | Region |
-| `DYNAMODB_ENDPOINT` | `http://localhost:8000` | *(not set)* | Endpoint override for emulator |
+## Learn More
 
-**Where to set these:**
-- **Dev (local):** `__dev__/.env.dev` → loaded via `source init-env.sh` (select `dev`)
-- **Integration:** `__dev__/.env.integration` → loaded via `source init-env.sh` (select `integration`)
-- **CI/CD:** `env:` block in `.github/workflows/ci-helper-modules.yml` (under the `test-dynamodb` and `publish-dynamodb` jobs)
+Extended documentation lives alongside the source on GitHub:
 
-## Peer Dependencies (Injected via Loader)
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/docs/api.md) — every exported function (CRUD, command builders, executors, batch, transactions, table management) with signature, parameters, return shape, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/docs/configuration.md) — all config keys, environment variables, credentials and IAM permissions, table-design notes
+- [Superloom](https://superloom.dev) — the framework
 
-These are `@superloomdev` framework modules. They are not bundled - they are injected through the `shared_libs` parameter in the loader.
+## Adding to Your Project
 
-| Package | Purpose |
-|---|---|
-| `@superloomdev/js-helper-utils` | Type checks, validation, data manipulation |
-| `@superloomdev/js-helper-debug` | Structured logging, `performanceAuditLog` for timing |
-| `@superloomdev/js-server-helper-instance` | Request lifecycle - `instance.time_ms` for performance timeline |
+Install this module as a peer dependency in your project's `package.json` and inject its peer modules through the standard Superloom loader. Do not vendor the source or use it as a local file dependency — the published package is the supported integration path.
 
-## Direct Dependencies (Bundled)
+The peer-dependency / loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
 
-These are third-party packages listed in `package.json` `dependencies`. They are installed and bundled with the module.
-
-| Package | Purpose |
-|---|---|
-| `@aws-sdk/client-dynamodb` | AWS DynamoDB client (lazy-loaded) |
-| `@aws-sdk/lib-dynamodb` | DynamoDB Document Client (lazy-loaded) |
-
-## Testing
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Emulated Tests** | DynamoDB Local (Docker) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
-| **Integration Tests** | Real DynamoDB (sandbox) | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
+| Emulated | DynamoDB Local in Docker | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Integration | Real AWS DynamoDB (sandbox) | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
 
-### Emulated (Docker)
-
-```bash
-cd _test && npm install && npm test
-```
-
-Docker lifecycle is automatic: `pretest` starts the DynamoDB Local container, `posttest` stops and removes it (containers and volumes only — images are cached). No manual `docker compose up` needed.
-
-Full guide: `_test/ops/00-local-testing/dynamodb-local-setup.md`
-
-### Integration (Real Service)
-
-```bash
-source init-env.sh   # select 'integration'
-cd _test && npm install && npm test
-```
-
-Full guide: `_test/ops/01-integration-testing/aws-dynamodb-integration-setup.md`
-
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
+Test runtime details — Docker lifecycle, environment variables, integration setup, IAM permissions — live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/docs/configuration.md#testing-tiers).
 
 ## License
 

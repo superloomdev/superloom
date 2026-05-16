@@ -1,6 +1,6 @@
-# js-server-helper-aws-dynamodb
+# js-server-helper-nosql-aws-dynamodb
 
-AWS DynamoDB CRUD, batch, query, scan. Lazy-loaded SDK v3. Explicit credentials.
+AWS DynamoDB CRUD, batch, query, scan. Lazy-loaded SDK v3. Explicit credentials. **API-compatible with `js-server-helper-nosql-mongodb`** — same calling shape for single-record CRUD, batch, query / scan, and transactions.
 
 ## Type
 Server helper. Service-dependent (needs Docker for emulated, AWS for integration).
@@ -17,7 +17,7 @@ Server helper. Service-dependent (needs Docker for emulated, AWS for integration
 ## Loader Pattern (Factory)
 
 ```javascript
-Lib.DynamoDB = require('@superloomdev/js-server-helper-aws-dynamodb')(Lib, { /* config overrides */ });
+Lib.DynamoDB = require('@superloomdev/js-server-helper-nosql-aws-dynamodb')(Lib, { /* config overrides */ });
 ```
 
 Each loader call returns an independent DynamoDB interface with its own `Lib`, `CONFIG`, and DynamoDB client instance.
