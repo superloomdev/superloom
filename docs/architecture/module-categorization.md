@@ -1,6 +1,6 @@
 # Module Categorization
 
-Every Superloom helper module belongs to one of six classes. The class determines the README structure, which `docs/` files (if any) accompany it, and which template to start from. For the full documentation rubric — universal sections, class-specific sections, personas, and ordering — see [`module-readme-structure.md`](module-readme-structure.md).
+Every Superloom helper module belongs to one of six classes. The class determines the README structure, which `docs/` files (if any) accompany it, and which template to start from. For the full documentation rubric (universal sections, class-specific sections, personas, ordering, prose style), see [`module-readme-structure.md`](module-readme-structure.md).
 
 This page is the enumeration: which module belongs to which class, and the current documentation status of each.
 
@@ -154,38 +154,42 @@ This page is the enumeration: which module belongs to which class, and the curre
 
 ## Documentation Status Matrix
 
-Tracks which modules have been restructured per [`module-readme-structure.md`](module-readme-structure.md) (value-first README + `docs/` separation).
+Tracks which modules have been restructured per [`module-readme-structure.md`](module-readme-structure.md) (value-first README + `docs/` separation, full writing-guide compliance).
 
-| Module | Class | README restructured | `docs/` present | Notes |
-|---|---|---|---|---|
-| js-helper-utils | A | No | n/a | Pre-rubric README; review during Class A migration |
-| js-helper-debug | A | No | n/a | Pre-rubric README; review during Class A migration |
-| js-helper-time | A | No | n/a | Pre-rubric README; review during Class A migration |
-| js-client-helper-crypto | A | No | n/a | Pre-rubric README; review during Class A migration |
-| js-server-helper-sql-postgres | B | **Yes (pilot)** | **Yes** (`api.md`, `configuration.md`) | First module migrated under the new rubric |
-| js-server-helper-sql-mysql | B | No | No | Highest-priority follow-up — mirror the Postgres pilot |
-| js-server-helper-sql-sqlite | B | No | No | Mirror the Postgres pilot |
-| js-server-helper-nosql-mongodb | B | No | No | Mirror the Postgres pilot |
-| js-server-helper-nosql-aws-dynamodb | B | No | No | Mirror the Postgres pilot |
-| js-server-helper-http | C | No | No | |
-| js-server-helper-storage-aws-s3 | C | No | No | |
-| js-server-helper-storage-aws-s3-url-signer | C | No | No | |
-| js-server-helper-queue-aws-sqs | C | No | No | |
-| js-server-helper-instance | D | No | No | |
-| js-server-helper-crypto | D | No | No | |
-| js-server-helper-auth | E | No | Yes | README currently 546 lines — strong restructure candidate |
-| js-server-helper-verify | E | No | Yes | README currently 372 lines — strong restructure candidate |
-| js-server-helper-logger | E | No | Yes | README currently 440 lines — strong restructure candidate |
-| js-server-helper-*-store-* (15) | F | No | n/a | Migrate after Class B/E land |
+| Module | Class | README v2 | `docs/` present | Writing-guide pass | Notes |
+|---|---|---|---|---|---|
+| js-helper-utils | A | No | n/a | No | Pre-rubric README. Review during Class A migration |
+| js-helper-debug | A | No | n/a | No | Pre-rubric README. Review during Class A migration |
+| js-helper-time | A | No | n/a | No | Pre-rubric README. Review during Class A migration |
+| js-client-helper-crypto | A | No | n/a | No | Pre-rubric README. Review during Class A migration |
+| js-server-helper-sql-postgres | B | **Yes (pilot)** | **Yes** (`api.md`, `configuration.md`) | **Yes** | First module migrated under the new rubric. Em-dash sweep applied |
+| js-server-helper-sql-mysql | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 1. Mirrors the Postgres pilot |
+| js-server-helper-sql-sqlite | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 1. Embedded SQL variant (offline, in-process) |
+| js-server-helper-nosql-mongodb | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 2. NoSQL family pilot |
+| js-server-helper-nosql-aws-dynamodb | B/C | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 2. Cloud-managed NoSQL. Inherits Class C credentials pattern |
+| js-server-helper-http | C | No | No | No | Pending Class C wave |
+| js-server-helper-storage-aws-s3 | C | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 3. First Class C reference. AWS family pattern |
+| js-server-helper-storage-aws-s3-url-signer | C | No | No | No | Pending Class C wave |
+| js-server-helper-queue-aws-sqs | C | No | No | No | Pending Class C wave |
+| js-server-helper-instance | D | No | No | No | Pending Class D wave |
+| js-server-helper-crypto | D | No | No | No | Pending Class D wave |
+| js-server-helper-auth | E | No | Yes | No | README currently 546 lines. Strong restructure candidate |
+| js-server-helper-verify | E | No | Yes | No | README currently 372 lines. Strong restructure candidate |
+| js-server-helper-logger | E | No | Yes | No | README currently 440 lines. Strong restructure candidate |
+| js-server-helper-*-store-* (15) | F | No | n/a | No | Migrate after Class B/E land |
 
 ---
 
 ## Migration Priority
 
-1. **Done — Pilot:** `js-server-helper-sql-postgres` (Class B). Establishes the canonical pattern.
-2. **Next — Class B remainder:** mirror the Postgres pilot to `sql-mysql`, `sql-sqlite`, `nosql-mongodb`, `nosql-aws-dynamodb`. Mechanical follow-up — same structure, swap technical details.
-3. **Then — Class E feature modules:** `auth`, `verify`, `logger`. Highest user-visible impact (current READMEs are 370-550 lines). The existing `docs/` folders mean less new content; mostly pruning the README and reframing the value bullets.
-4. **Then — Class C, D, A:** cloud, lifecycle, foundation. Smaller surface per module.
-5. **Last — Class F adapters:** 15 modules, all mechanical once the parent feature modules land.
+1. **Done. Pilot (Class B SQL):** `js-server-helper-sql-postgres`. Establishes the canonical pattern.
+2. **Done. Wave 1 (Class B SQL remainder):** `sql-mysql`, `sql-sqlite`. Server-required and embedded variants.
+3. **Done. Wave 2 (Class B NoSQL):** `nosql-mongodb`, `nosql-aws-dynamodb`. NoSQL family + the first Class C credentials pattern.
+4. **Done. Wave 3 (Class C cloud storage pilot):** `storage-aws-s3`. First Class C reference, AWS family pattern.
+5. **Done. Wave 4 (writing-guide pass):** Full em-dash sweep across all six migrated modules + the rubric, with the writing-guide rules now codified in the rubric so future migrations inherit them by example.
+6. **Next. Class E feature modules:** `auth`, `verify`, `logger`. Highest user-visible impact (current READMEs are 370-550 lines). The existing `docs/` folders mean less new content. Mostly pruning the README and reframing the value bullets.
+7. **Then. Class C remainder:** `http`, `storage-aws-s3-url-signer`, `queue-aws-sqs`. Smaller surface per module than Class E.
+8. **Then. Class D and Class A:** lifecycle (`instance`, `crypto`) and foundation (`utils`, `debug`, `time`, `client-crypto`). Smallest surface; sets the reference for non-driver modules.
+9. **Last. Class F adapters:** 15 modules, all mechanical once the parent feature modules land.
 
-The first three waves are captured in `__dev__/plans/0008-module-readme-pilot.md` as the follow-up backlog.
+The full backlog (with priority order, scope notes, and any per-module pitfalls already discovered) lives in [`__dev__/plans/0008-module-readme-pilot.md`](../../__dev__/plans/0008-module-readme-pilot.md).
