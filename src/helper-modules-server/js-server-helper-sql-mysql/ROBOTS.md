@@ -1,6 +1,6 @@
-# js-server-helper-mysql
+# js-server-helper-sql-mysql
 
-MySQL 8.0.44+ client with connection pooling. Async/await. Multi-DB capable.
+MySQL 8.0.44+ client with connection pooling. Async/await. Multi-DB capable. **API-compatible with `js-server-helper-sql-postgres` and `js-server-helper-sql-sqlite`** — same placeholders, same function signatures, same return shapes.
 
 ## Type
 Server helper. Service-dependent (needs Docker for emulated, real MySQL-compatible database for integration).
@@ -16,8 +16,8 @@ Server helper. Service-dependent (needs Docker for emulated, real MySQL-compatib
 ## Loader Pattern (Multi-DB Capable)
 
 ```javascript
-Lib.PrimaryDB = require('@superloomdev/js-server-helper-mysql')(Lib, { HOST: ..., DATABASE: ... });
-Lib.ReaderDB  = require('@superloomdev/js-server-helper-mysql')(Lib, { HOST: ..., DATABASE: ... });
+Lib.PrimaryDB = require('@superloomdev/js-server-helper-sql-mysql')(Lib, { HOST: ..., DATABASE: ... });
+Lib.ReaderDB  = require('@superloomdev/js-server-helper-sql-mysql')(Lib, { HOST: ..., DATABASE: ... });
 ```
 
 Each loader call returns an independent public interface with its own pool - no shared singleton state.

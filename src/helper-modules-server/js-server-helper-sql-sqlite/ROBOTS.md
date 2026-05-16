@@ -1,4 +1,4 @@
-# js-server-helper-sqlite
+# js-server-helper-sql-sqlite
 
 SQLite client built on Node.js built-in `node:sqlite` module.
 Async/await. Multi-DB capable. **API-compatible with `js-server-helper-sql-mysql`
@@ -19,8 +19,8 @@ Server helper. Offline (no Docker, no network - uses `:memory:` or a local file)
 ## Loader Pattern (Multi-DB Capable)
 
 ```javascript
-Lib.CacheDB     = require('@superloomdev/js-server-helper-sqlite')(Lib, { FILE: '/var/data/cache.db' });
-Lib.AnalyticsDB = require('@superloomdev/js-server-helper-sqlite')(Lib, { FILE: '/var/data/analytics.db' });
+Lib.CacheDB     = require('@superloomdev/js-server-helper-sql-sqlite')(Lib, { FILE: '/var/data/cache.db' });
+Lib.AnalyticsDB = require('@superloomdev/js-server-helper-sql-sqlite')(Lib, { FILE: '/var/data/analytics.db' });
 ```
 
 Each loader call returns an independent public interface with its own database handle - no singleton state.

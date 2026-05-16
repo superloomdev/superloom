@@ -40,7 +40,7 @@ source init-env.sh   # select 'integration'
 ## 3. Run Tests
 
 ```bash
-cd src/helper-modules-server/js-server-helper-mysql/_test
+cd src/helper-modules-server/js-server-helper-sql-mysql/_test
 npm install
 npm test
 ```

@@ -11,7 +11,7 @@ Node.js itself.
 ## 1. Install and Run
 
 ```bash
-cd src/helper-modules-server/js-server-helper-sqlite/_test
+cd src/helper-modules-server/js-server-helper-sql-sqlite/_test
 npm install
 npm test
 ```

@@ -5,7 +5,7 @@ Run the module tests against a local MySQL 8 container.
 ## 1. Start Docker
 
 ```bash
-cd src/helper-modules-server/js-server-helper-mysql/_test
+cd src/helper-modules-server/js-server-helper-sql-mysql/_test
 docker compose up -d
 ```
 

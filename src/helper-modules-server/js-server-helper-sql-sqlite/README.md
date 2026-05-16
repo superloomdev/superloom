@@ -1,139 +1,70 @@
 # @superloomdev/js-server-helper-sql-sqlite
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 22.13+](https://img.shields.io/badge/Node.js-22.13%2B-brightgreen.svg)](https://nodejs.org)
 
-SQLite client for Node.js built on the **built-in `node:sqlite` module** (stable since Node.js 22.13 / 23.4). Zero external dependencies - the driver ships with Node. Part of the [Superloom](https://github.com/superloomdev/superloom).
+A SQLite helper for Node.js that runs in-process with zero external infrastructure and ships pre-tested, so your project never has to re-verify SQL connectivity. Part of [Superloom](https://superloom.dev).
 
-> **Offline module** - tests run against an in-memory SQLite database. No Docker, no credentials, no network.
+## What This Is
 
-> **Usage-agnostic with MySQL and Postgres.** The public API is identical to `@superloomdev/js-server-helper-sql-mysql` and `@superloomdev/js-server-helper-sql-postgres` - same placeholders (`?` / `??`), same function signatures, same return shapes. Swap `Lib.SqlDB = require('...mysql')` for `require('...sqlite')` and your application code keeps running.
+A thin, opinionated layer over the **built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) module** (stable since Node.js 22.13). The driver ships with Node itself — there is no external dependency to install, manage, or upgrade. The wrapper adds request-level timing, a single consistent response shape, and the same calling pattern as the other Superloom SQL helpers.
 
-## API
+Every read and every write returns the same envelope:
 
-All I/O functions accept `instance` (from `Lib.Instance.initialize`) as their first argument - enabling request-level performance tracing via `instance.time_ms`.
-
-| Function | Purpose |
-|---|---|
-| `getRow(instance, sql, params)` | First row (or null) |
-| `getRows(instance, sql, params)` | All rows |
-| `getValue(instance, sql, params)` | First column of first row (scalar) |
-| `get(instance, sql, params)` | Auto-shape result (scalar / row / rows / null) when the caller doesn't know the shape |
-| `write(instance, sql, params?)` | INSERT / UPDATE / DELETE. String = single statement. Array = atomic transaction. Returns `affected_rows` + `insert_id` (from `sqlite3_last_insert_rowid()`) |
-| `getClient(instance)` / `releaseClient(client)` | Return the underlying `DatabaseSync` handle. `releaseClient` is a no-op (SQLite has no pool) |
-| `buildQuery(sql, params)` | Compile to a fully-escaped SQLite SQL string (`?`/`??` syntax) |
-| `buildRawText(str)` | Wrap a raw fragment so it bypasses escaping |
-| `buildMultiCondition(data, operator?)` | Join equality conditions with AND/OR |
-| `close()` | Close the database handle. SQLite's close is synchronous; returns a resolved promise for API parity |
-
-**Placeholders:** `?` for values, `??` for identifiers - identical to the MySQL / Postgres helpers. `??` is inlined as `"name"` before execution; `?` is bound natively by `node:sqlite`.
-
-**`insert_id`:** SQLite populates `insert_id` automatically from `sqlite3_last_insert_rowid()` - no `RETURNING id` needed (unlike Postgres). For tables with `INTEGER PRIMARY KEY`, this IS the primary key. `INSERT ... RETURNING *` is also supported (row data is returned on read helpers).
-
-## Multi-DB Support
-
-Each loader call returns an **independent instance** with its own database handle. Load the module twice to use a cache DB plus an analytics DB from the same process:
-
-```javascript
-Lib.CacheDB = require('@superloomdev/js-server-helper-sqlite')(Lib, {
-  FILE: '/var/data/cache.db',
-  JOURNAL_MODE: 'WAL'
-});
-
-Lib.AnalyticsDB = require('@superloomdev/js-server-helper-sqlite')(Lib, {
-  FILE: '/var/data/analytics.db',
-  JOURNAL_MODE: 'WAL',
-  SYNCHRONOUS: 'NORMAL'
-});
+```
+success / data / error
 ```
 
-Each instance maintains its own handle - call `close()` on each at process exit.
+— so error handling, result reading, and exception expectations are the same in every place you touch the database. There are no surprises between functions, and operational failures never throw.
 
-## Usage
+## Why Use This Module
 
-```javascript
-const Lib = {};
-Lib.Utils = require('@superloomdev/js-helper-utils')();
-Lib.Debug = require('@superloomdev/js-helper-debug')(Lib, { LOG_LEVEL: 'info' });
-Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
-Lib.SqlDB = require('@superloomdev/js-server-helper-sqlite')(Lib, {
-  FILE: '/var/data/app.db',
-  JOURNAL_MODE: 'WAL',
-  ENABLE_FOREIGN_KEYS: true
-});
+- **Library updates won't break your code.** When `node:sqlite` evolves (or when this module switches to a different SQLite driver entirely), only this module updates. Your application code stays exactly as it is.
 
-const instance = Lib.Instance.initialize();
+- **Pre-tested at every release.** A full test suite runs against `node:sqlite` in CI on every push. Your project trusts the wrapper instead of re-verifying SQL plumbing on each release.
 
-// Read many rows
-const users = await Lib.SqlDB.getRows(
-  instance,
-  'SELECT id, name FROM ?? WHERE status = ?',
-  ['users', 'active']
-);
+- **Designed for human review.** The code is laid out as clearly-marked visual sections — section banners, short functions, scoped comments — so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `sqlite.js` to see the structure.
 
-// INSERT - insert_id comes free via sqlite3_last_insert_rowid()
-const res = await Lib.SqlDB.write(
-  instance,
-  'INSERT INTO ?? (name, email) VALUES (?, ?)',
-  ['users', 'Alice', 'alice@example.com']
-);
-console.log(res.insert_id);   // new primary key
+- **Built-in observability.** Every operation can be timed against the active request and routed into your structured logs automatically. Slow-query review, request profiling, and the toggle to enable it during local development or silence it in production are all built in. No instrumentation code to write.
 
-// Build once, run atomically
-const sql = [
-  Lib.SqlDB.buildQuery('INSERT INTO ?? (name) VALUES (?)', ['users', 'Bob']),
-  Lib.SqlDB.buildQuery('UPDATE ?? SET count = count + ? WHERE id = ?',
-    ['stats', 1, 42])
-];
-await Lib.SqlDB.write(instance, sql);   // atomic transaction
-```
+- **Runs in-process, with zero infrastructure.** SQLite is embedded — there is no server to provision, no credentials to manage, no network to debug. The same module powers an in-memory test database, a local file-backed cache, an offline-first desktop or edge app, or a per-process analytics store. Switch between in-memory and on-disk by changing one config value.
 
-## Configuration (Loader)
+## Hot-Swappable with Other Backends
 
-| Config Key | Default | Description |
-|---|---|---|
-| `FILE` | `':memory:'` | Path to the SQLite file, or `':memory:'` for an in-memory DB |
-| `READONLY` | `false` | Open in read-only mode |
-| `ENABLE_FOREIGN_KEYS` | `true` | Enforce foreign key constraints |
-| `TIMEOUT_MS` | `5000` | Busy-handler timeout in milliseconds (how long to wait when the DB is locked) |
-| `JOURNAL_MODE` | `'WAL'` | `'DELETE'`, `'TRUNCATE'`, `'PERSIST'`, `'MEMORY'`, `'WAL'`, or `'OFF'`. Ignored for `:memory:` |
-| `SYNCHRONOUS` | `'NORMAL'` | `'OFF'`, `'NORMAL'`, `'FULL'`, or `'EXTRA'` |
-| `CLOSE_TIMEOUT_MS` | `5000` | Present for API parity with MySQL / Postgres. `close()` is synchronous in SQLite |
+This module is part of a family of database helpers that share the same calling shape. Switch by changing the loader line — the rest of your code keeps working.
 
-## Peer Dependencies (Injected via Loader)
+- [`@superloomdev/js-server-helper-sql-postgres`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-postgres) — PostgreSQL
+- [`@superloomdev/js-server-helper-sql-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-mysql) — MySQL
 
-| Package | Purpose |
-|---|---|
-| `@superloomdev/js-helper-utils` | Type checks, data manipulation |
-| `@superloomdev/js-helper-debug` | Structured logging, `performanceAuditLog` |
-| `@superloomdev/js-server-helper-instance` | Request lifecycle - `instance.time_ms` |
+NoSQL helpers with similarly-shaped APIs (MongoDB, DynamoDB) live as their own family — see the [Superloom helper modules index](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server).
 
-## Direct Dependencies
+## Aligned with Superloom Philosophy
 
-None. The SQLite driver is the built-in `node:sqlite` module (lazy-loaded on first query).
+If your project is built on Superloom conventions — the same loader pattern, the same response envelope, the same testing model — this module slots in without you needing to learn anything new. It is written using the same opinionated principles, so adopting it does not introduce inconsistency into your codebase.
 
-## Testing
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
+
+## Learn More
+
+Extended documentation lives alongside the source on GitHub:
+
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-sqlite/docs/api.md) — every exported function with its signature, parameters, return shape, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-sqlite/docs/configuration.md) — all config keys, environment variables, multi-database setup, journal modes, file-vs-memory patterns
+- [Superloom](https://superloom.dev) — the framework
+
+## Adding to Your Project
+
+Install this module as a peer dependency in your project's `package.json` and inject its peer modules through the standard Superloom loader. Do not vendor the source or use it as a local file dependency — the published package is the supported integration path.
+
+The peer-dependency / loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
+
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Offline Tests** | In-memory SQLite via `node:sqlite` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Offline | In-memory SQLite via `node:sqlite` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-```bash
-cd _test
-npm install
-npm test
-```
-
-Full guide: `_test/ops/00-local-testing/sqlite-local-setup.md`
-
-## Notes
-
-- Placeholders are `?` / `??` (not `:name`) to keep application code identical across MySQL, Postgres, and SQLite. `??` is inlined at query time; `?` is bound natively.
-- `insert_id` is auto-populated by SQLite's `lastInsertRowid`. `RETURNING id` works too (for `INSERT ... RETURNING *`) and is routed through the read path.
-- `write()` is polymorphic: pass a single SQL string for one statement, or an array of statements (strings or `{sql, params}` objects) for an atomic transaction.
-- Booleans are stored as `1` / `0` (SQLite has no native boolean type). Dates are stored as ISO 8601 text.
-- For on-disk databases, `WAL` journal mode is applied at open for better concurrent-read performance.
+SQLite has no separate integration tier — the offline `node:sqlite` runtime is the production runtime. There is no managed service to integrate against. Test runtime details (in-memory vs file-backed, journal mode) live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-sqlite/docs/configuration.md#testing-tiers).
 
 ## License
 
