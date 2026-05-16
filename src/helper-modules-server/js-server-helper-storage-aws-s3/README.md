@@ -1,123 +1,63 @@
 # @superloomdev/js-server-helper-storage-aws-s3
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
+[![Node.js 20.19+](https://img.shields.io/badge/Node.js-20.19%2B-brightgreen.svg)](https://nodejs.org)
 
-AWS S3 wrapper for cloud file storage. List, upload, download, delete, copy, move. Lazy-loaded AWS SDK v3. Part of the [Superloom](https://github.com/superloomdev/superloom).
+An S3 file-storage helper for Node.js that insulates your application from SDK changes and ships pre-tested, so your project never has to re-verify object-storage connectivity. Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent module** - requires Docker for emulated testing (MinIO) and real cloud credentials for integration testing. See testing tiers below.
+## What This Is
 
-## API
+A thin, opinionated layer over the [AWS SDK v3 S3 client](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/Package/-aws-sdk-client-s3/) for object storage. List, upload, download, delete, copy, and move objects with built-in request-level timing, explicit credentials, auto-chunked bulk delete (handling the AWS 1000-key limit), parallel uploads, and a single consistent response shape across every operation.
 
-All functions accept `instance` as first parameter (from `Lib.Instance.initialize`).
+Every operation returns the same envelope:
 
-| Function | Description |
-|---|---|
-| `listObjects(instance, bucket, prefix?)` | List up to 1000 keys in a bucket, optionally filtered by prefix |
-| `uploadFile(instance, bucket, key, body, content_type?, metadata?, is_public?)` | Upload a single file |
-| `uploadFiles(instance, files)` | Upload multiple files in parallel |
-| `getFile(instance, bucket, key, output_as_string?)` | Download a file as Buffer or string |
-| `deleteFile(instance, bucket, key)` | Delete a single file |
-| `deleteFiles(instance, bucket, keys)` | Delete multiple files (auto-chunks to 1000-key AWS limit) |
-| `copyFile(instance, source_bucket, source_key, dest_bucket, dest_key, is_public?)` | Copy a file within or across buckets |
-| `moveFile(instance, source_bucket, source_key, dest_bucket, dest_key, is_public?)` | Copy then delete source |
-
-Low-level builders and executors (`commandBuilderForUploadObject`, `commandUploadObject`, etc.) are also exported for advanced use cases - see `ROBOTS.md`.
-
-## Usage
-
-```javascript
-// In loader
-Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
-Lib.S3 = require('@superloomdev/js-server-helper-aws-s3')(Lib, {
-  REGION: 'us-east-1',
-  KEY: process.env.AWS_ACCESS_KEY_ID,
-  SECRET: process.env.AWS_SECRET_ACCESS_KEY
-});
-
-// In application code
-const instance = Lib.Instance.initialize();
-const upload = await Lib.S3.uploadFile(instance, 'my-bucket', 'docs/readme.txt', 'Hello world', 'text/plain');
-const file = await Lib.S3.getFile(instance, 'my-bucket', 'docs/readme.txt', true);
-console.log(file.body); // 'Hello world'
+```
+success / data / error
 ```
 
-## Configuration (Loader)
+— so error handling, result reading, and exception expectations are the same in every place you touch the storage layer. There are no surprises between functions, and operational failures never throw. `NoSuchKey` is normalised to `error.type: 'NOT_FOUND'` so callers can branch on missing objects without parsing AWS-specific error codes.
 
-| Config Key | Environment Variable | Default | Description |
-|---|---|---|---|
-| `REGION` | `AWS_REGION` / `S3_REGION` | `'us-east-1'` | AWS region |
-| `KEY` | `AWS_ACCESS_KEY_ID` / `S3_ACCESS_KEY` | `undefined` | AWS access key (explicit, not implicit) |
-| `SECRET` | `AWS_SECRET_ACCESS_KEY` / `S3_SECRET_KEY` | `undefined` | AWS secret key (explicit, not implicit) |
-| `ENDPOINT` | `S3_ENDPOINT` | `undefined` | Custom endpoint (MinIO, LocalStack). Leave unset for real AWS. |
-| `FORCE_PATH_STYLE` | `S3_FORCE_PATH_STYLE` | `false` | Required `true` for MinIO, `false` for AWS |
-| `MAX_RETRIES` | - | `3` | Maximum retry attempts for failed requests |
+## Why Use This Module
 
-When `ENDPOINT` is `undefined`, the SDK uses real AWS S3.
+- **Library updates won't break your code.** When the underlying SDK ships a breaking change, only this module needs updating. Your application code stays exactly as it is.
 
-## Environment Variables
+- **Pre-tested at every release.** A full test suite runs against [MinIO](https://min.io/) (an S3-compatible emulator) in CI on every push. Your project trusts the wrapper instead of re-verifying object-storage plumbing on each release.
 
-This module depends on the following environment variables. They must be set before loading.
+- **Designed for human review.** The code is laid out as clearly-marked visual sections — section banners, short functions, scoped comments — so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `s3.js` to see the structure.
 
-| Variable | Emulated (Dev) | Integration (Real) | Description |
-|---|---|---|---|
-| `S3_ACCESS_KEY` | `dev_access_key` | Real access key | Credentials |
-| `S3_SECRET_KEY` | `dev_secret_key` | Real secret key | Credentials |
-| `S3_REGION` | `us-east-1` | Your region | Region |
-| `S3_ENDPOINT` | `http://localhost:9000` | *(not set)* | Endpoint override for emulator |
-| `S3_FORCE_PATH_STYLE` | `true` | `false` | Required for MinIO; disable for real S3 |
+- **Built-in observability.** Every operation can be timed against the active request and routed into your structured logs automatically. Slow-upload review, request profiling, and the toggle to enable it during local development or silence it in production are all built in. No instrumentation code to write.
 
-**Where to set these:**
-- **Dev (local):** `__dev__/.env.dev` → loaded via `source init-env.sh` (select `dev`)
-- **Integration:** `__dev__/.env.integration` → loaded via `source init-env.sh` (select `integration`)
-- **CI/CD:** `env:` block in `.github/workflows/ci-helper-modules.yml` (under the `test-s3` and `publish-s3` jobs)
+- **Explicit credentials, works against any S3-compatible store.** Credentials are passed through the loader, not picked up from an ambient SDK environment chain — making it impossible to talk to the wrong account from a developer machine or CI runner. The same module works against real AWS S3 and against any S3-compatible service (MinIO, LocalStack, Cloudflare R2, Backblaze B2, etc.) by setting `ENDPOINT` and `FORCE_PATH_STYLE`.
 
-## Peer Dependencies (Injected via Loader)
+## Aligned with Superloom Philosophy
 
-These are `@superloomdev` framework modules. They are not bundled - they are injected through the `shared_libs` parameter in the loader.
+If your project is built on Superloom conventions — the same loader pattern, the same response envelope, the same testing model — this module slots in without you needing to learn anything new. It is written using the same opinionated principles, so adopting it does not introduce inconsistency into your codebase.
 
-| Package | Purpose |
-|---|---|
-| `@superloomdev/js-helper-utils` | Type checks, validation, data manipulation |
-| `@superloomdev/js-helper-debug` | Structured logging, `performanceAuditLog` for timing |
-| `@superloomdev/js-server-helper-instance` | Request lifecycle - `instance.time_ms` for performance timeline |
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-## Direct Dependencies (Bundled)
+## Learn More
 
-These are third-party packages listed in `package.json` `dependencies`. They are installed and bundled with the module.
+Extended documentation lives alongside the source on GitHub:
 
-| Package | Purpose |
-|---|---|
-| `@aws-sdk/client-s3` | AWS S3 client (lazy-loaded) |
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3/docs/api.md) — every exported function (file operations, command builders, executors) with signature, parameters, return shape, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3/docs/configuration.md) — all config keys, environment variables, credentials and IAM permissions, S3-compatible emulator setup
+- [`@superloomdev/js-server-helper-storage-aws-s3-url-signer`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer) — companion module for generating S3 presigned URLs (different concern, same family)
+- [Superloom](https://superloom.dev) — the framework
 
-## Testing
+## Adding to Your Project
+
+Install this module as a peer dependency in your project's `package.json` and inject its peer modules through the standard Superloom loader. Do not vendor the source or use it as a local file dependency — the published package is the supported integration path.
+
+The peer-dependency / loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
+
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Emulated Tests** | MinIO (Docker) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
-| **Integration Tests** | Real S3 (sandbox) | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
+| Emulated | MinIO in Docker (S3-compatible) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Integration | Real AWS S3 (sandbox bucket) | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
 
-### Emulated (Docker)
-
-```bash
-cd _test && npm install && npm test
-```
-
-Docker lifecycle is automatic: `pretest` starts the MinIO container, `posttest` stops and removes it (containers and volumes only — images are cached). No manual `docker compose up` needed.
-
-Full guide: `_test/ops/00-local-testing/minio-setup.md`
-
-### Integration (Real Service)
-
-```bash
-source init-env.sh   # select 'integration'
-cd _test && npm install && npm test
-```
-
-Full guide: `_test/ops/01-integration-testing/aws-s3-integration-setup.md`
-
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
+Test runtime details — Docker lifecycle, environment variables, integration setup, IAM permissions — live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3/docs/configuration.md#testing-tiers).
 
 ## License
 

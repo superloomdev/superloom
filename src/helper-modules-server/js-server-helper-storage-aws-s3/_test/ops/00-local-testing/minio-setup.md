@@ -16,7 +16,7 @@ MinIO is a Docker-based S3-compatible object storage server that implements the 
 Using the module's Docker Compose:
 
 ```bash
-cd src/helper-modules-server/js-server-helper-aws-s3/_test
+cd src/helper-modules-server/js-server-helper-storage-aws-s3/_test
 docker compose up -d
 ```
 
