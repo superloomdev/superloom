@@ -518,7 +518,11 @@ Every module documents itself across three files, each with one audience. Full r
 | E. Feature module with adapters | Business logic + pluggable storage | `data-model.md`, `configuration.md`, `storage-adapters.md` |
 | F. Storage adapter | Implements parent's store contract | None |
 
-**Pilot:** `js-server-helper-sql-postgres` (Class B) — rewritten through v2 iteration. README at ~72 lines (down from 198) with anti-pattern fixes captured back into the rubric. Follow-up backlog: `__dev__/plans/0008-module-readme-pilot.md`.
+**Class-specific templates** for each module class (tagline, value bullet 5 variants, `docs/api.md` and `docs/configuration.md` structure variants, pilot-to-copy reference) live in `docs/architecture/module-readme-structure.md` under "Class-Specific Templates and Reusable Wording". **Cross-cutting patterns** (AWS-family Credentials+IAM section shared by DynamoDB / S3 / future SQS; Hot-Swap family chore — adding a sibling requires updating every existing sibling's README; "Required (override)" pattern in config tables; response envelope illustration; lazy-init convention) live under "Cross-Cutting Patterns" in the same doc.
+
+**Universal value bullets 1–4** are copy-pasteable across Class B + Class C. Only bullet 5 is class-specific. See [Universal "Why Use This Module" Bullets](docs/architecture/module-readme-structure.md#universal-why-use-this-module-bullets).
+
+**Status:** v2 rubric applied to 6 modules (`sql-postgres`, `sql-mysql`, `sql-sqlite`, `nosql-mongodb`, `nosql-aws-dynamodb`, `storage-aws-s3`) across 4 commit waves on 2026-05-16. 14 modules pending — prioritized backlog (simple foundation → complex feature) in `__dev__/plans/0008-module-readme-pilot.md`.
 
 ### ROBOTS.md - AI Agent Reference (Every Module)
 

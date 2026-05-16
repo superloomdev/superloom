@@ -9,8 +9,12 @@ How every helper module documents itself. The rule is that each module ships thr
 - [Universal README Sections](#universal-readme-sections)
 - [Class-Specific Sections](#class-specific-sections)
 - [`docs/` Folder Pattern by Class](#docs-folder-pattern-by-class)
+- [Class-Specific Templates and Reusable Wording](#class-specific-templates-and-reusable-wording)
+- [Cross-Cutting Patterns](#cross-cutting-patterns)
+- [Link Form](#link-form)
 - [Section Order and Why It Matters](#section-order-and-why-it-matters)
 - [Readability Test Passes](#readability-test-passes)
+- [Anti-Patterns to Avoid](#anti-patterns-to-avoid)
 - [Authoring Checklist](#authoring-checklist)
 - [Further Reading](#further-reading)
 
@@ -184,6 +188,298 @@ The `Configuration Keys` table includes a **Required** column. Use "Yes (overrid
 
 ---
 
+## Class-Specific Templates and Reusable Wording
+
+Concrete starting points per class so two modules in the same class look like near-twins. Validated across Class B (SQL + NoSQL drivers) and Class C (cloud DB + cloud storage). Class A / D / E / F sub-sections are placeholders until those migration waves run — fill them in as the first pilot for each class lands.
+
+**Principle:** *structural choices are universal, wording is class-specific, source-specific tweaks come last.* When migrating a new module, copy the closest pilot's README and adjust only the parts called out as class-specific in this section.
+
+### Universal "Why Use This Module" Bullets
+
+Four of the five value bullets transfer near-verbatim across Class B + Class C. Only **bullet 5** is class-specific. Use these four as a copy-paste starting point:
+
+**Bullet 1 — Insulation:**
+
+> **Library updates won't break your code.** When the underlying [driver | SDK] ships a breaking change, only this module needs updating. Your application code stays exactly as it is.
+
+**Bullet 2 — Pre-tested:**
+
+> **Pre-tested at every release.** A full test suite runs against [a real PostgreSQL instance | MongoDB single-node replica set | DynamoDB Local in Docker | MinIO | ...] in CI on every push. Your project trusts the wrapper instead of re-verifying [SQL | NoSQL | object-storage | ...] plumbing on each release.
+
+**Bullet 3 — Designed for human review:**
+
+> **Designed for human review.** The code is laid out as clearly-marked visual sections — section banners, short functions, scoped comments — so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `<source>.js` to see the structure.
+
+**Bullet 4 — Built-in observability:**
+
+> **Built-in observability.** Every operation can be timed against the active request and routed into your structured logs automatically. [Slow-query | slow-upload | slow-call] review, request profiling, and the toggle to enable it during local development or silence it in production are all built in. No instrumentation code to write.
+
+**Bullet 5 — class-specific.** See per-class subsections below.
+
+These four bullets do not apply unchanged to Class A foundation modules (which often have no wrapped third-party library to insulate against). Class D lifecycle modules also need different framing. See the relevant subsection.
+
+### Class B — Driver Wrapper
+
+**Tagline template — server-required driver** (Postgres, MySQL, MongoDB):
+
+> A [DB Name] helper for Node.js that insulates your application from driver changes and ships pre-tested, so your project never has to re-verify [SQL | NoSQL] connectivity. Part of [Superloom](https://superloom.dev).
+
+**Tagline template — embedded / in-process driver** (SQLite):
+
+> A [DB Name] helper for Node.js that runs in-process with zero external infrastructure and ships pre-tested, so your project never has to re-verify [SQL | NoSQL] connectivity. Part of [Superloom](https://superloom.dev).
+
+**Bullet 5 variants:**
+
+| Variant | Bullet 5 wording |
+|---|---|
+| **SQL driver — server-required** | "Works on both serverless and persistent infrastructure. The same module configures cleanly for serverless deployments (cloud functions, on-demand workers) and persistent ones (containers, virtual machines, orchestrated platforms). Switch deployment shape by changing one config value, not by changing the driver or the calling code." |
+| **SQL driver — embedded** | "Runs in-process, with zero infrastructure. [DB] is embedded — there is no server to provision, no credentials to manage, no network to debug. The same module powers an in-memory test database, a local file-backed cache, an offline-first desktop or edge app, or a per-process analytics store. Switch between in-memory and on-disk by changing one config value." |
+| **NoSQL driver — managed** | Either the universal serverless-or-persistent framing, **or** a domain-specific safety-net bullet ("Built-in safety nets against accidental full-collection writes. `query()`, `count()`, and `deleteRecordsByFilter()` reject empty filters at runtime — there is no path by which an empty or `null` filter can accidentally read or wipe an entire collection."). Pick whichever is the stronger pitch for the module. |
+| **NoSQL driver — cloud-managed** (DynamoDB) | The Class C "Explicit credentials" bullet — see Class C below. Cloud-managed NoSQL drivers inherit the Class C credentials treatment. |
+
+**Hot-Swappable section template:**
+
+```markdown
+## Hot-Swappable with Other Backends
+
+This module is part of a [SQL | NoSQL] family of database helpers that share the same calling shape. Switch by changing the loader line — the rest of your code keeps working.
+
+- [`@superloomdev/<sibling-1>`](full URL) — <one-line description>
+- [`@superloomdev/<sibling-2>`](full URL) — <one-line description>
+
+[NoSQL | SQL] helpers with similarly-shaped APIs live as their own family — see the [Superloom helper modules index](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server).
+```
+
+**`docs/api.md` structure — SQL driver variant:**
+
+- Conventions
+- Placeholders
+- `insert_id` Semantics
+- Read Helpers (`getRow`, `getRows`, `getValue`, `get`)
+- Write Helper (`write`)
+- Manual Transactions (`getClient`, `releaseClient`)
+- Query Builders (`buildQuery`, `buildRawText`, `buildMultiCondition`)
+- Lifecycle (`close`)
+
+**`docs/api.md` structure — NoSQL driver variant:**
+
+- Conventions
+- Safety Nets *(if the module rejects unsafe inputs)*
+- Single-Record CRUD (`getRecord`, `writeRecord`, `updateRecord`, `deleteRecord`)
+- Query / Count / Scan
+- Batch Operations
+- Transactions
+- Indexes *(if applicable)*
+- Lifecycle (`close`)
+
+**`docs/configuration.md` structure — SQL driver (server-required):**
+
+Reference block:
+- Loader Pattern
+- Configuration Keys (with `Required` column)
+- Environment Variables
+- Peer Dependencies (Injected)
+- Direct Dependencies (Bundled)
+
+Patterns block:
+- Multi-Database Setup
+- SSL Configuration
+- Connection Pool Tuning
+- Testing Tiers
+
+**`docs/configuration.md` structure — SQL driver (embedded, e.g. SQLite):**
+
+Reference block: same.
+
+Patterns block: drop SSL Configuration and Connection Pool Tuning. Add **In-Memory vs On-Disk** and **Journal Mode and Concurrency** before Testing Tiers.
+
+**`docs/configuration.md` structure — NoSQL driver (managed, e.g. MongoDB):**
+
+Reference block: same.
+
+Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g. **Replica-Set Requirement for Transactions** for MongoDB).
+
+**Pilot references** (copy from one of these when migrating a new Class B module):
+- SQL driver: `src/helper-modules-server/js-server-helper-sql-mysql/` (most generic SQL shape)
+- SQL driver — embedded: `src/helper-modules-server/js-server-helper-sql-sqlite/`
+- NoSQL driver: `src/helper-modules-server/js-server-helper-nosql-mongodb/`
+- NoSQL driver — cloud-managed: `src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/` (also follows Class C credentials pattern)
+
+### Class C — Cloud Service Wrapper
+
+**Tagline template:**
+
+> A [Service Name] helper for Node.js that insulates your application from SDK changes and ships pre-tested, so your project never has to re-verify [domain] connectivity. Part of [Superloom](https://superloom.dev).
+
+**Bullet 5 — Explicit credentials** *(reusable across every AWS-family or other-cloud wrapper):*
+
+> **Explicit credentials, not implicit ones.** Credentials are passed through the loader, not picked up from an ambient SDK environment chain. This makes it impossible to accidentally talk to the wrong account from a developer machine, a CI runner, or a multi-tenant deployment. *(Optional second sentence — add when an emulator exists:)* Local emulator runs the same way as real [service] — only the `ENDPOINT` config changes.
+
+**Hot-Swappable section** — only when there's a real same-API sibling. S3 ↔ URL-signer is NOT a Hot-Swap (different surfaces). DynamoDB ↔ MongoDB IS a Hot-Swap (NoSQL family). When in doubt, omit and surface the related module in Learn More instead.
+
+**`docs/api.md` structure — Three-Layer pattern** (recommended for SDK-wrapped CRUD; works whenever the SDK exposes Command objects, including AWS SDK v3):
+
+- Conventions
+- Three-Layer Pattern *(Builder → Executor → Convenience)*
+- Command Builders *(pure, no I/O)*
+- Command Executors *(async I/O)*
+- <Domain Operations> *(convenience layer: single-record CRUD, file ops, etc.)*
+- Lifecycle *(if applicable — many SDK-managed clients don't need `close()`)*
+
+**`docs/configuration.md` structure — AWS-flavour cloud wrapper:**
+
+Reference block: same as Class B.
+
+Patterns block:
+- **Credentials and IAM Permissions** *(required for any Class C wrapper around a cloud SDK)*
+- **Local Emulator vs Real Service** *(only if an emulator exists)*
+- **Multi-Region / Multi-Account Setup**
+- Testing Tiers
+
+**Required content of the "Credentials and IAM Permissions" section:**
+
+1. Statement of explicit-credentials policy (no fallback to the SDK's ambient provider chain)
+2. **Minimum IAM permissions table** — one row per exported function, listing the cloud-specific actions it uses
+3. Resource ARN format example
+4. **Worked example minimal IAM policy** (JSON)
+5. Brief note about credential rotation behaviour — the module does not refresh in-flight; pass refreshed values on a new loader call
+
+**Pilot references:**
+- AWS cloud DB: `src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/`
+- AWS cloud storage: `src/helper-modules-server/js-server-helper-storage-aws-s3/`
+
+### Class A — Foundation Utility
+
+Platform-agnostic utilities with no service dependencies and no `docs/` folder.
+
+**Tagline template:**
+
+> A [domain] helper for [Node.js | the browser | both] that ships pre-tested and has zero runtime dependencies. Part of [Superloom](https://superloom.dev).
+
+**Value bullets** — the four universal bullets transfer **with adjustments**:
+- **Bullet 1 (insulation):** keep if the module wraps a built-in (e.g. `node:crypto`); drop or rephrase as "Zero dependencies, drop in anywhere" if pure JavaScript
+- **Bullet 2 (pre-tested):** keep, with appropriate test target ("comprehensive unit suite in CI on every push")
+- **Bullets 3, 4:** keep verbatim
+- **Bullet 5:** "Zero dependencies, drop in anywhere" — pure JavaScript with no external packages, works in Node, browsers, edge runtimes — anywhere the right module system runs
+
+**Class-specific section — "API Categories":** a grouped one-line listing of available function categories. NOT a full signature table. Example shape:
+
+> - **Type checks:** `isString`, `isNumber`, `isArray`, `isObject`, …
+> - **Validation:** `isEmail`, `isPhoneNumber`, …
+> - **Data manipulation:** `pick`, `omit`, `merge`, …
+
+**No `docs/` folder needed.** No Hot-Swappable section (foundation modules typically don't have functional siblings — the `js-helper-crypto` server/client pair is the exception and should cross-link in Hot-Swappable form).
+
+**Pilot status:** *not yet migrated.* The first Class A migration sets the concrete reference. Planned in [plan 0008](../../__dev__/plans/0008-module-readme-pilot.md).
+
+### Class D — Lifecycle Helper
+
+Per-request or per-process plumbing rather than data I/O (e.g. `js-server-helper-instance`).
+
+**Class-specific section — "Behavior":** short, central. Explains the lifecycle semantics — cleanup ordering, background tasks, scope boundaries.
+
+**Value bullets** — Class D modules often need a substantially different bullet set because they don't wrap a third-party library and don't do I/O. Bullets 3 (human review) and 4 (observability) usually still transfer. The first migration of a Class D module sets the pattern.
+
+**Pilot status:** *not yet migrated.* `js-server-helper-instance` is the planned reference.
+
+### Class E — Feature Module with Adapters
+
+Business logic + pluggable storage. Each Class E module already has a `docs/` folder from the framework's earlier era; the migration audits and reorganises rather than rebuilds.
+
+**Class-specific section — "Architecture Overview":** high-level diagram or tree. Includes a callout pointing to `docs/storage-adapters.md` for storage adapter selection.
+
+**`docs/` folder shape** per [`complex-module-docs-guide.md`](complex-module-docs-guide.md):
+- `docs/data-model.md` — record fields and design rationale
+- `docs/configuration.md` — config keys, env vars, patterns
+- `docs/storage-adapters.md` — adapter selection guide
+- `docs/integration-express.md` — Express integration *(optional)*
+- `docs/integration-lambda.md` — Lambda integration *(optional)*
+
+**Pilot status:** *not yet migrated.* `verify`, `logger`, `auth` are the planned waves (smallest to largest).
+
+### Class F — Storage Adapter
+
+Implements a parent module's store contract. Thin.
+
+**Class-specific section — "How This Fits Into the Parent Module":** explains the adapter factory protocol. Links to the parent's `docs/storage-adapters.md`.
+
+**No `docs/` folder.** README should be small (60–80 lines), with the data schema inline if it's brief.
+
+**Pilot status:** *not yet migrated.* `auth-store-dynamodb` and `auth-store-mongodb` are the planned waves.
+
+---
+
+## Cross-Cutting Patterns
+
+These patterns span multiple classes and modules. When working on a new module, check whether any apply.
+
+### AWS Family Pattern (DynamoDB, S3, SQS, and any future AWS service wrapper)
+
+All AWS-service wrappers share:
+
+- **Value bullet 5** — the "Explicit credentials, not implicit ones" wording (no fallback to ambient SDK provider chain).
+- **`docs/configuration.md` "Credentials and IAM Permissions" section** — minimum-IAM-action table per function, resource ARN format, and a worked example IAM policy in JSON.
+- **`docs/configuration.md` "Local Emulator vs Real Service" section** — only if an emulator exists (DynamoDB Local, MinIO, LocalStack, ElasticMQ).
+- **`docs/configuration.md` "Multi-Region / Multi-Account Setup" section** — same boilerplate; only the config keys differ.
+- **Configuration keys** — `REGION`, `KEY`, `SECRET`, `ENDPOINT`, `MAX_RETRIES` are universal across AWS modules; add service-specific extras (e.g. `FORCE_PATH_STYLE` for S3-compatible stores).
+- **Environment variable convention** — `AWS_*` for cross-service shared values (`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`), `<SERVICE>_*` for service-specific overrides (`DYNAMODB_ENDPOINT`, `S3_ENDPOINT`, etc.).
+- **Cross-link in Learn More** — every AWS module should reference at least one sibling AWS module in its Learn More section when there's a logical companion (S3 ↔ S3 URL signer, etc.).
+
+When adding a new AWS-service wrapper, copy the closest existing AWS module's `docs/configuration.md` and edit the service-specific bits; the structural sections transfer near-verbatim.
+
+### Hot-Swap Families
+
+Modules that share an API shape should reference each other in their Hot-Swappable sections. Current and planned families:
+
+| Family | Members | Status |
+|---|---|---|
+| **SQL drivers** | `sql-postgres` ↔ `sql-mysql` ↔ `sql-sqlite` | All three migrated |
+| **NoSQL drivers** | `nosql-mongodb` ↔ `nosql-aws-dynamodb` | Both migrated. Disclaimer in each: overlap is API-shape, not feature-parity |
+| **Auth storage adapters** | `auth-store-dynamodb` ↔ `auth-store-mongodb` | Pending |
+| **Crypto** | `js-server-helper-crypto` ↔ `js-client-helper-crypto` | Pending. Different runtimes (Node vs Web Crypto), same conceptual surface |
+
+**Adding a new sibling to a family** triggers a small chore: every existing sibling's README must add a bullet to its Hot-Swappable section. This is an explicit checklist item.
+
+### "Required (override)" Pattern in Configuration Tables
+
+Configuration keys that have technically-valid defaults but practically must be overridden in every deployment should be marked `Yes (override)` in the `Required` column. Examples:
+- DB drivers: `HOST`, `DATABASE`, `USER`, `PASSWORD`
+- AWS wrappers: `REGION` (when default is `us-east-1`), `KEY`, `SECRET`
+
+A brief sentence after the Configuration Keys table explains the semantic:
+
+> "Required (override)" means the default exists but is unlikely to match a real deployment — practically every project must override it.
+
+### Response Envelope Illustration in "What This Is"
+
+Every module's "What This Is" section includes a small vertically-spaced illustration of the response shape:
+
+````markdown
+Every read and every write returns the same envelope:
+
+```
+success / data / error
+```
+
+— so error handling, result reading, and exception expectations are the same in every place you touch the [database | storage | service]. There are no surprises between functions, and operational failures never throw.
+````
+
+This sets the response-shape expectation before the reader hits the API details.
+
+### Lazy Initialization Note
+
+Most Class B and Class C modules lazy-initialize their underlying client (pool, SDK client, file handle) on the **first call**, not at loader time. This belongs in `docs/configuration.md` under "Loader Pattern" as a bullet:
+
+> The [pool | client | handle] is **not** created at loader time. It is created lazily on the first call. This keeps cold-start fast in serverless deployments.
+
+### `close()` / Lifecycle Convention
+
+Class B and Class C modules that hold connection state expose a `close()` function (or `close(instance)` for some MongoDB-style modules) documented under "Lifecycle" in `docs/api.md`. The README does not need to mention `close()` — that's a `docs/api.md` concern.
+
+For SDK-managed connections where there's no pool to close (e.g. AWS SDK clients), omit `close()` from the API entirely rather than implementing a no-op.
+
+---
+
 ## Link Form
 
 **README.md ships to npm and is rendered on the package page.** npm does not resolve relative paths. Therefore:
@@ -275,6 +571,13 @@ When writing or revising a module README:
 - [ ] No `ROBOTS.md` link in the README's Learn More — `ROBOTS.md` is for AI agents, not human readers
 - [ ] `ROBOTS.md` is current and matches the actual exported surface
 - [ ] `docs/configuration.md` reference block (Loader, Keys, Env Vars, Deps) precedes its patterns block (Multi-instance, SSL, Pool tuning, Testing)
+- [ ] Tagline ends with "Part of [Superloom](https://superloom.dev)" — no sibling backends or competitor modules mentioned in the tagline itself
+- [ ] **Universal value bullets 1–4** used near-verbatim from [Class-Specific Templates → Universal Bullets](#universal-why-use-this-module-bullets); only bullet 5 is class-specific
+- [ ] **License section** at bottom is present and names the license explicitly (typically `## License\n\nMIT`)
+- [ ] **Identity badges** use the standard `img.shields.io/badge/...` URL pattern; runtime version badge reflects the actual `engines.node` value from `package.json`
+- [ ] **Testing Status table** at bottom uses the standard `Tier \| Runtime \| Status` columns
+- [ ] **For Class C cloud wrappers:** `docs/configuration.md` includes a "Credentials and IAM Permissions" section with a minimum-IAM-action table per function and a worked example IAM policy (see [Cross-Cutting Patterns → AWS Family](#aws-family-pattern-dynamodb-s3-sqs-and-any-future-aws-service-wrapper))
+- [ ] **For modules in a Hot-Swap family:** every existing sibling's README has been updated to reference this module in its Hot-Swappable section (see [Cross-Cutting Patterns → Hot-Swap Families](#hot-swap-families))
 - [ ] Passes the Layman pass (Persona 1)
 - [ ] Passes the Integrator pass (Persona 3)
 
@@ -284,5 +587,5 @@ When writing or revising a module README:
 
 - [`module-categorization.md`](module-categorization.md) — the six module classes and which class each existing module belongs to
 - [`complex-module-docs-guide.md`](complex-module-docs-guide.md) — the deep guide for `docs/` folders in Class E feature modules
-- [`templates/`](templates/) — concrete README templates (`README-foundation-module.md`, `README-master-template.md`, `README-feature-module.md`, `README-storage-adapter.md`)
+- [`templates/`](templates/) — historical README skeletons from the v1 era (`README-foundation-module.md`, `README-master-template.md`, `README-feature-module.md`, `README-storage-adapter.md`). **Currently out of date** — these do NOT match the v2 patterns documented above. Until they are refreshed (or deleted), the authoritative templates are the migrated pilots in `src/helper-modules-server/`: `js-server-helper-sql-mysql/` for Class B SQL (server-required), `js-server-helper-sql-sqlite/` for Class B SQL (embedded), `js-server-helper-nosql-mongodb/` for Class B NoSQL, `js-server-helper-nosql-aws-dynamodb/` for Class B/C cloud-managed NoSQL, `js-server-helper-storage-aws-s3/` for Class C cloud storage. See [Class-Specific Templates and Reusable Wording](#class-specific-templates-and-reusable-wording) for which pilot to copy per class.
 - [`architectural-philosophy.md`](architectural-philosophy.md#coding-practices) — the "All external libraries wrapped" principle that the value bullets articulate
