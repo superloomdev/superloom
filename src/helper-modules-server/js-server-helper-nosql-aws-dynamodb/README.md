@@ -35,8 +35,6 @@ This module is part of a NoSQL family of database helpers that share the same ca
 
 - [`@superloomdev/js-server-helper-nosql-mongodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-nosql-mongodb) — MongoDB
 
-SQL helpers with a similarly-shaped API (Postgres, MySQL, SQLite) live as their own family — see the [Superloom helper modules index](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server).
-
 ## Aligned with Superloom Philosophy
 
 If your project is built on Superloom conventions — the same loader pattern, the same response envelope, the same testing model — this module slots in without you needing to learn anything new. It is written using the same opinionated principles, so adopting it does not introduce inconsistency into your codebase.

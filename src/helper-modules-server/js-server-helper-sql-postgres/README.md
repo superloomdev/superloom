@@ -25,7 +25,7 @@ success / data / error
 
 - **Designed for human review.** The code is laid out as clearly-marked visual sections — section banners, short functions, scoped comments — so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `postgres.js` to see the structure.
 
-- **Built-in observability.** Every operation can be timed against the active request and routed into your structured logs automatically. Slow-query review, request profiling, and the toggle to enable it in production or silence it during local development are all built in. No instrumentation code to write.
+- **Built-in observability.** Every operation can be timed against the active request and routed into your structured logs automatically. Slow-query review, request profiling, and the toggle to enable it during local development or silence it in production are all built in. No instrumentation code to write.
 
 - **Works on both serverless and persistent infrastructure.** The same module configures cleanly for serverless deployments (cloud functions, on-demand workers) and persistent ones (containers, virtual machines, orchestrated platforms). Switch deployment shape by changing one config value, not by changing the driver or the calling code.
 
@@ -35,8 +35,6 @@ This module is part of a family of database helpers that share the same calling 
 
 - [`@superloomdev/js-server-helper-sql-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-mysql) — MySQL
 - [`@superloomdev/js-server-helper-sql-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-sqlite) — SQLite (offline / embedded)
-
-NoSQL helpers with similarly-shaped APIs (MongoDB, DynamoDB) live as their own family — see the [Superloom helper modules index](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server).
 
 ## Aligned with Superloom Philosophy
 

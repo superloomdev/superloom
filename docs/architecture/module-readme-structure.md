@@ -246,9 +246,9 @@ This module is part of a [SQL | NoSQL] family of database helpers that share the
 
 - [`@superloomdev/<sibling-1>`](full URL) — <one-line description>
 - [`@superloomdev/<sibling-2>`](full URL) — <one-line description>
-
-[NoSQL | SQL] helpers with similarly-shaped APIs live as their own family — see the [Superloom helper modules index](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server).
 ```
+
+**Do NOT add a closing paragraph pointing to "the other family" (NoSQL→SQL or SQL→NoSQL).** The cross-family pointer was tried in the first wave of v2 migrations and dropped after review — it added noise without serving any persona, and the Learn More section + the Superloom site already give cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
 
 **`docs/api.md` structure — SQL driver variant:**
 
@@ -548,6 +548,7 @@ These were the failure modes surfaced when the rubric was first applied to the P
 - **Test instructions in the README.** Test runtime detail (Docker lifecycle, env vars) is reference material; it lives in `docs/configuration.md`. README has only the testing **status** at the bottom.
 - **Relative links in the README.** npm strips relative paths. Always use full `https://github.com/superloomdev/superloom/blob/main/...` URLs in `README.md`.
 - **CI / test status badges at the top of the README.** They distract from identity. Identity badges (license, runtime) at top; test status badges in the testing-status block at the bottom.
+- **Cross-family "see the other family" closing paragraph in Hot-Swappable.** Tried in the first v2 wave and dropped after review — it adds noise without serving any persona. The Learn More section and the Superloom site already provide cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
 
 ---
 

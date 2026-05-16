@@ -36,8 +36,6 @@ This module is part of a family of database helpers that share the same calling 
 - [`@superloomdev/js-server-helper-sql-postgres`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-postgres) — PostgreSQL
 - [`@superloomdev/js-server-helper-sql-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-mysql) — MySQL
 
-NoSQL helpers with similarly-shaped APIs (MongoDB, DynamoDB) live as their own family — see the [Superloom helper modules index](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server).
-
 ## Aligned with Superloom Philosophy
 
 If your project is built on Superloom conventions — the same loader pattern, the same response envelope, the same testing model — this module slots in without you needing to learn anything new. It is written using the same opinionated principles, so adopting it does not introduce inconsistency into your codebase.
