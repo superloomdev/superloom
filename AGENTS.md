@@ -8,11 +8,11 @@
 > 1. Update source-of-truth in `docs/` (architecture, dev, ops, philosophy, etc.)
 > 2. Run `/propagate-changes` to sync into AGENTS.md
 >
-> Bypassing this rule causes drift: AGENTS.md asserts things `docs/` no longer says (or vice versa), humans lose rationale, lessons get re-learned the hard way. **No exceptions** — even small fixes go through `docs/` first.
+> Bypassing this rule causes drift: AGENTS.md asserts things `docs/` no longer says (or vice versa), humans lose rationale, lessons get re-learned the hard way. **No exceptions.** Even small fixes go through `docs/` first.
 >
 > When discovering a new failure mode, document it in the correct pitfall file BEFORE fixing:
-> - `docs/dev/pitfalls.md` — terminal/CI/testing failures
-> - `docs/architecture/migration-pitfalls.md` — module migration failures
+> - `docs/dev/pitfalls.md`. Terminal/CI/testing failures
+> - `docs/architecture/migration-pitfalls.md`. Module migration failures
 
 ---
 
@@ -41,9 +41,9 @@ Assist developers working on **Superloom**, a modular application framework buil
 - When stuck, attempt creative workarounds before asking for help
 - Reuse existing terminals when possible
 - Read `README.md` before modifying any module
-- **Read `ROBOTS.md` before using any module's functions** — compact AI reference with signatures, types, patterns
+- **Read `ROBOTS.md` before using any module's functions.** Compact AI reference with signatures, types, patterns
 - Always run tests before returning: `npm test` from `_test/` directories
-- **Two-pass check after refactor** touching 3+ functions: Pass 1 (logic + lint), Pass 2 (re-read full file — step comments, 3/2/1 spacing, banner widths, return objects multi-line, `};` combined with END banners, lint again). See `docs/architecture/migration-pitfalls.md`
+- **Two-pass check after refactor** touching 3+ functions: Pass 1 (logic + lint), Pass 2 (re-read full file. Step comments, 3/2/1 spacing, banner widths, return objects multi-line, `};` combined with END banners, lint again). See `docs/architecture/migration-pitfalls.md`
 - Use workflows in `.windsurf/workflows/` for new modules
 - Use `/learn` to capture new knowledge (enforces GOD.md Directive 12)
 - When docs change, run `/propagate-changes`
@@ -74,11 +74,11 @@ git commit -m "feat(module): summary" -m "Body paragraph one." -m "Body paragrap
 
 **Foreground long-runners** (`node server.js`, `tail -f`, `docker compose logs -f`): launch with `Blocking: false` and small `WaitMsBeforeAsync`, poll via `command_status`. Stop process at end of task.
 
-**Always specify `Cwd` for module commands.** Every `run_command` targeting a module (`npm install`, `npm test`, `docker compose`) must pass `Cwd` set to the module's `_test/` directory. Omitting it runs from repo root, causing misleading `ETARGET` errors. The user's preference is to **never propose a `cd` command** — each `run_command` is a fresh shell.
+**Always specify `Cwd` for module commands.** Every `run_command` targeting a module (`npm install`, `npm test`, `docker compose`) must pass `Cwd` set to the module's `_test/` directory. Omitting it runs from repo root, causing misleading `ETARGET` errors. The user's preference is to **never propose a `cd` command.** Each `run_command` is a fresh shell.
 
-**Module testing contract — `npm test` is self-contained.** Modules with `pretest`/`posttest` manage full Docker lifecycle. Never start containers manually before `npm test` — `pretest` runs `docker compose down -v` first and will conflict. Always run `npm install && npm test` from the module's `_test/` directory. See `docs/dev/testing-local-modules.md` and `docs/dev/pitfalls.md`.
+**Module testing contract. `npm test` is self-contained.** Modules with `pretest`/`posttest` manage full Docker lifecycle. Never start containers manually before `npm test`. `pretest` runs `docker compose down -v` first and will conflict. Always run `npm install && npm test` from the module's `_test/` directory. See `docs/dev/testing-local-modules.md` and `docs/dev/pitfalls.md`.
 
-**Pre-publish gate — lint + test must pass locally before bumping version.** Before changing `version` and pushing to `main`: (1) `npm run lint` from module root — exit 0; (2) `npm install && npm test` from `_test/` — all pass. CI runs lint before tests; skipping locally means broken push and wasted pipeline time. See `docs/dev/testing-local-modules.md` and `docs/dev/pitfalls.md` entry 13.
+**Pre-publish gate. Lint + test must pass locally before bumping version.** Before changing `version` and pushing to `main`: (1) `npm run lint` from module root. Exit 0; (2) `npm install && npm test` from `_test/`. All pass. CI runs lint before tests; skipping locally means broken push and wasted pipeline time. See `docs/dev/testing-local-modules.md` and `docs/dev/pitfalls.md` entry 13.
 
 **`file:` in `_test/package.json` causes `MODULE_NOT_FOUND` in CI.** `file:` copies source but doesn't install the linked package's own `node_modules`. Works locally, breaks in CI. Rule: `file:../` allowed **only** for module under test. Shared helpers (storage, DB, cloud) must use registry semver ranges (`"^1.0.0"`). See `docs/dev/pitfalls.md` entry 8.
 
@@ -264,7 +264,7 @@ These rules apply to **every file the AI writes or edits** - `.js` comments/stri
 
 ### Uniform Factory Signatures
 
-When a `parts/` family uses a **uniform factory signature** `(Lib, CONFIG, ERRORS)` so the parent can call all parts identically, some parts will not consume every param. This is expected — do not narrow the signature. Suppress unused params with `// eslint-disable-line no-unused-vars` on the signature line. Never use `void CONFIG;` or `void ERRORS;` as a workaround. Full spec: `docs/architecture/code-formatting-js.md` -> "Uniform Factory Signatures".
+When a `parts/` family uses a **uniform factory signature** `(Lib, CONFIG, ERRORS)` so the parent can call all parts identically, some parts will not consume every param. This is expected. Do not narrow the signature. Suppress unused params with `// eslint-disable-line no-unused-vars` on the signature line. Never use `void CONFIG;` or `void ERRORS;` as a workaround. Full spec: `docs/architecture/code-formatting-js.md` -> "Uniform Factory Signatures".
 
 ### Function Parameter Conventions
 
@@ -487,12 +487,12 @@ Every module documents itself across three files, each with one audience. Full r
 
 **Universal README section order** (every class):
 
-1. Title + identity badges (license, runtime version only — test status badges go to the testing block at the bottom, not here)
+1. Title + identity badges (license, runtime version only. Test status badges go to the testing block at the bottom, not here)
 2. Tagline (one sentence; no sibling-backend mentions; ends "Part of [Superloom](https://superloom.dev)")
 3. What this is (plain language; may show response-shape illustration; never a full code example)
-4. Why use this module (5-7 value bullets — jargon-free, vendor-neutral)
-5. Hot-Swappable with Other Backends *(class-conditional — modules with siblings)*
-6. Class-specific section *(class-conditional — see class table below)*
+4. Why use this module (5-7 value bullets. Jargon-free, vendor-neutral)
+5. Hot-Swappable with Other Backends *(class-conditional. Modules with siblings)*
+6. Class-specific section *(class-conditional. See class table below)*
 7. Aligned with Superloom Philosophy (separate section, NOT a Why bullet)
 8. Learn More (`docs/*.md` + Superloom; NEVER link `ROBOTS.md` here)
 9. Adding to Your Project (peer-dependency via loader pattern; NO `npm install` snippet)
@@ -501,11 +501,11 @@ Every module documents itself across three files, each with one audience. Full r
 
 **Critical README rules:**
 
-- **All README links use full `https://github.com/superloomdev/superloom/blob/main/...` URLs** — npm renders the README without resolving relative paths, so `docs/api.md` and `../foo` silently break.
-- **No jargon** (no *metaprogramming*, *idempotent*, *cargo cult*) — frame reviewability around what a reviewer can SEE in the code.
-- **No vendor product names as headline categories** (Lambda, EC2, RDS, Aurora at category column headings reads as AWS-only) — use industry-neutral terms (*serverless*, *persistent infrastructure*, *auto-scaling managed databases*) with vendor names only as illustrative examples in parentheses.
-- **No function names in marketing prose** — `getRow / getRows / write` belong in `docs/api.md` and `ROBOTS.md`, not in Why bullets.
-- **No Quick Start, "What this module is NOT", or `npm install` snippet sections** — the pilot proved they don't serve any persona. Examples live in `docs/api.md`; integration goes through the loader pattern.
+- **All README links use full `https://github.com/superloomdev/superloom/blob/main/...` URLs.** Npm renders the README without resolving relative paths, so `docs/api.md` and `../foo` silently break.
+- **No jargon** (no *metaprogramming*, *idempotent*, *cargo cult*) - frame reviewability around what a reviewer can SEE in the code.
+- **No vendor product names as headline categories** (Lambda, EC2, RDS, Aurora at category column headings reads as AWS-only) - use industry-neutral terms (*serverless*, *persistent infrastructure*, *auto-scaling managed databases*) with vendor names only as illustrative examples in parentheses.
+- **No function names in marketing prose.** `getRow / getRows / write` belong in `docs/api.md` and `ROBOTS.md`, not in Why bullets.
+- **No Quick Start, "What this module is NOT", or `npm install` snippet sections.** The pilot proved they don't serve any persona. Examples live in `docs/api.md`; integration goes through the loader pattern.
 
 **`docs/configuration.md` internal ordering:** Reference block (Loader Pattern → Configuration Keys → Environment Variables → Peer Deps → Direct Deps) precedes Patterns block (Multi-instance Setup → SSL → Pool Tuning → Testing Tiers). An example needs the reader to have absorbed the keys first.
 
@@ -516,15 +516,15 @@ Every module documents itself across three files, each with one audience. Full r
 | A. Foundation utility | Zero deps, pure functions, platform-agnostic | None |
 | B. Driver wrapper | Wraps third-party DB driver | `api.md`, `configuration.md` |
 | C. Cloud service wrapper | Wraps cloud/network SDK | `api.md`, `configuration.md`, optional `iam.md` |
-| D. Lifecycle helper | Per-request plumbing or server utilities | None usually |
+| D. Extended utility | Per-request plumbing or server utilities | None usually |
 | E. Feature module with adapters | Business logic + pluggable storage | `data-model.md`, `configuration.md`, `storage-adapters.md` |
 | F. Storage adapter | Implements parent's store contract | None |
 
-**Class-specific templates** for each module class (tagline, value bullet 5 variants, `docs/api.md` and `docs/configuration.md` structure variants, pilot-to-copy reference) live in `docs/architecture/module-readme-structure.md` under "Class-Specific Templates and Reusable Wording". **Cross-cutting patterns** (AWS-family Credentials+IAM section shared by DynamoDB / S3 / future SQS; Hot-Swap family chore — adding a sibling requires updating every existing sibling's README; "Required (override)" pattern in config tables; response envelope illustration; lazy-init convention) live under "Cross-Cutting Patterns" in the same doc.
+**Class-specific templates** for each module class (tagline, value bullet 5 variants, `docs/api.md` and `docs/configuration.md` structure variants, pilot-to-copy reference) live in `docs/architecture/module-readme-structure.md` under "Class-Specific Templates and Reusable Wording". **Cross-cutting patterns** (AWS-family Credentials+IAM section shared by DynamoDB / S3 / future SQS; Hot-Swap family chore. Adding a sibling requires updating every existing sibling's README; "Required (override)" pattern in config tables; response envelope illustration; lazy-init convention) live under "Cross-Cutting Patterns" in the same doc.
 
-**Universal value bullets 1–4** are copy-pasteable across Class B + Class C. Only bullet 5 is class-specific. See [Universal "Why Use This Module" Bullets](docs/architecture/module-readme-structure.md#universal-why-use-this-module-bullets).
+**Universal value bullets 1–4** are copy-pasteable across Class C + Class D. Only bullet 5 is class-specific. See [Universal "Why Use This Module" Bullets](docs/architecture/module-readme-structure.md#universal-why-use-this-module-bullets).
 
-**Status:** v2 rubric applied to 6 modules (`sql-postgres`, `sql-mysql`, `sql-sqlite`, `nosql-mongodb`, `nosql-aws-dynamodb`, `storage-aws-s3`) across 4 commit waves on 2026-05-16. 14 modules pending — prioritized backlog (simple foundation → complex feature) in `__dev__/plans/0008-module-readme-pilot.md`.
+**Status:** v2 rubric applied to 6 modules (`sql-postgres`, `sql-mysql`, `sql-sqlite`, `nosql-mongodb`, `nosql-aws-dynamodb`, `storage-aws-s3`) across 4 commit waves on 2026-05-16. 14 modules pending. Prioritized backlog (simple foundation → complex feature) in `__dev__/plans/0008-module-readme-pilot.md`.
 
 ### ROBOTS.md - AI Agent Reference (Every Module)
 
@@ -588,7 +588,7 @@ All helper modules use **Pattern 2 (Multi-Instance / Factory)** - each loader ca
 | `createInterface(CONFIG)` | Foundation module, config but no peer deps | `js-helper-debug` |
 | `createInterface(Lib, CONFIG)` | Stateless helper - peer deps + config, no per-instance resource | `js-helper-time`, `js-server-helper-crypto`, `js-server-helper-http`, `js-server-helper-instance`, `js-client-helper-crypto` |
 | `createInterface(Lib, CONFIG, state)` | Stateful helper - holds a per-instance resource | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
-| `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern — Validators + store injected from loader | `js-server-helper-verify` |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern. Validators + store injected from loader | `js-server-helper-verify` |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, store, Parts)` | Domain helper with adapter pattern + decomposed parts | `js-server-helper-auth` |
 
 The loader body mirrors the signature: build only the parameters `createInterface` will receive. Stateless helpers never declare a `state` object.
@@ -748,7 +748,7 @@ When a helper module needs interchangeable backends (databases, transports, key/
 
 - **Naming:** `[parent]-store-[backend]` for database-backed adapters; `[parent]-adapter-[name]` for non-database adapters; the general concept is "adapter" - "store" is reserved for database backings
 - **Factory injection only:** parent accepts `CONFIG.STORE = require('@superloomdev/[parent]-store-[backend]')` - the factory function itself, not a string. No internal registry, no string dispatch
-- **Store instantiation in the loader, not in `createInterface`:** after `Validators.validateConfig(CONFIG)`, call `const store = CONFIG.STORE(Lib, CONFIG, ERRORS)` in the loader body, then pass `store` explicitly into `createInterface`. Instantiating inside `createInterface` is a structural error — it creates a hidden side effect and prevents passing a mock store in tests
+- **Store instantiation in the loader, not in `createInterface`:** after `Validators.validateConfig(CONFIG)`, call `const store = CONFIG.STORE(Lib, CONFIG, ERRORS)` in the loader body, then pass `store` explicitly into `createInterface`. Instantiating inside `createInterface` is a structural error. It creates a hidden side effect and prevents passing a mock store in tests
 - **Reference implementations:** `js-server-helper-auth` (8-method contract) and `js-server-helper-verify` (6-method contract)
 - **Loader-time validation:** parent's `validateConfig` enforces `typeof CONFIG.STORE === 'function'` - throws on misconfiguration before any per-call work
 - **Uniform `(Lib, CONFIG, ERRORS)`:** parent narrows `Lib` (typically `{ Utils, Debug, Crypto, Instance }`), forwards merged `CONFIG` whole, forwards its frozen `ERRORS` catalog. Adapters extract `CONFIG.STORE_CONFIG` internally
@@ -850,7 +850,7 @@ Modules using the [Adapter Pattern](#adapter-pattern-multi-backend-helper-module
 | **2 - Parent logic** | `[parent]/_test/test.js` | parent + in-memory fixture | none | Does the pure parent logic work? (loader validation, policy, JWT) |
 | **3 - Contract integration** | `[adapter]/_test/test.js` | parent + real adapter | yes | Does this adapter satisfy the contract end-to-end? |
 
-- **In-memory fixture (Tier 2 enabler):** `[parent]/_test/memory-store.js` exports a `createInMemory<Adapter>()` that implements the **full** adapter contract using Node-built-in structures. Same return shapes as a real adapter. Lives only in `_test/`, never published, never required from outside test code. Reference: `js-server-helper-auth/_test/memory-store.js` (canonical); `js-server-helper-verify/_test/memory-store.js` (second example — must be extracted from inline `test.js` before verify adapter `_test/` dirs are created)
+- **In-memory fixture (Tier 2 enabler):** `[parent]/_test/memory-store.js` exports a `createInMemory<Adapter>()` that implements the **full** adapter contract using Node-built-in structures. Same return shapes as a real adapter. Lives only in `_test/`, never published, never required from outside test code. Reference: `js-server-helper-auth/_test/memory-store.js` (canonical); `js-server-helper-verify/_test/memory-store.js` (second example. Must be extracted from inline `test.js` before verify adapter `_test/` dirs are created)
 - **Shared contract suite copy pattern (Tier 3 enabler):** the integration suite is written **once** in `[parent]/_test/store-contract-suite.js` and **copied** into each adapter's `_test/store-contract-suite.js`. Never exported through the parent's `package.json`, never deep-required across packages
 - **Why copy:** keeps test code out of runtime exports; each adapter has its own version-pinned snapshot; `npm install` graph in `_test/` stays clean (one `file:../` for the adapter under test, registry pins for siblings); auditing which contract version an adapter was built against is trivial
 

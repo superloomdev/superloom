@@ -65,7 +65,7 @@ Every module README follows this section order, regardless of class. Two section
 | 2 | **Tagline** | One sentence; plain English; ends with "Part of [Superloom](https://superloom.dev)". Do NOT mention sibling backends or competitor modules in the tagline. See [Anti-Patterns](#anti-patterns-to-avoid). |
 | 3 | **What this is** | 1-2 short paragraphs in plain English explaining the module's role. May include a tiny vertically-spaced illustration of the module's response shape. Never a full code example. |
 | 4 | **Why use this module** | Value bullets (5-7 points) - the core marketing pitch. Jargon-free, vendor-neutral. Each bullet is one sentence + at most one supporting sentence. |
-| 5 | **Hot-Swappable with Other Backends** *(class-conditional)* | Bullet list of sibling modules with the same API. Present for any module with at least one sibling (Class B drivers, some Class C cloud wrappers, some Class E feature modules). |
+| 5 | **Hot-Swappable with Other Backends** *(class-conditional)* | Bullet list of sibling modules with the same API. Present for any module with at least one sibling (Class C drivers, some Class D cloud wrappers, some Class E feature modules). |
 | 6 | **Class-Specific Section** *(class-conditional)* | One section per [Class-Specific Sections](#class-specific-sections) (e.g. "Architecture overview" for Class E feature modules). |
 | 7 | **Aligned with Superloom Philosophy** | One short paragraph explaining that the module follows Superloom conventions, so adopting it preserves consistency for projects already on Superloom. |
 | 8 | **Learn More** | Links to extended documentation in `docs/` and to Superloom. Does NOT link to `ROBOTS.md`. That file is for AI assistants, not human readers. |
@@ -135,9 +135,9 @@ Every module belongs to one of six classes (enumerated in [`module-categorizatio
 | Class | Section name | Contents |
 |---|---|---|
 | **A. Foundation utility** | "API Categories" | Grouped overview of available functions, one line each. No signatures. |
-| **B. Driver wrapper** | (none extra) | The Hot-Swappable section at position 5 already serves Class B's special case. |
-| **C. Cloud service wrapper** | "Credentials & Permissions" | Short section on credentials, regional config, IAM/permissions. Vendor-neutral wording. |
-| **D. Lifecycle helper** | "Behavior" | Explains lifecycle semantics (cleanup ordering, background tasks). |
+| **C. Driver wrapper** | (none extra) | The Hot-Swappable section at position 5 already serves Class C's special case. |
+| **D. Cloud service wrapper** | "Credentials & Permissions" | Short section on credentials, regional config, IAM/permissions. Vendor-neutral wording. |
+| **B. Extended utility** | "Behavior" | Explains lifecycle semantics (cleanup ordering, background tasks). |
 | **E. Feature module with adapters** | "Architecture Overview" | High-level diagram or tree. Storage-adapter selection callout linking to `docs/storage-adapters.md`. |
 | **F. Storage adapter** | "How This Fits Into the Parent Module" | Adapter factory protocol explanation. Link to parent module's docs. |
 
@@ -152,9 +152,9 @@ The `docs/` folder is where the dense technical material lives. Different classe
 | Class | Recommended `docs/` files |
 |---|---|
 | **A. Foundation** | None. The README is enough |
-| **B. Driver** | `docs/api.md`, `docs/configuration.md` |
-| **C. Cloud service** | `docs/api.md`, `docs/configuration.md`, optionally `docs/iam.md` |
-| **D. Lifecycle** | Usually none; `docs/api.md` only if the lifecycle is non-trivial |
+| **C. Driver** | `docs/api.md`, `docs/configuration.md` |
+| **D. Cloud service** | `docs/api.md`, `docs/configuration.md`, optionally `docs/iam.md` |
+| **B. Lifecycle** | Usually none; `docs/api.md` only if the lifecycle is non-trivial |
 | **E. Feature** | `docs/data-model.md`, `docs/configuration.md`, `docs/storage-adapters.md`, optionally `docs/integration-express.md`, `docs/integration-lambda.md` |
 | **F. Adapter** | None. The README and the schema section inside it are enough |
 
@@ -191,13 +191,13 @@ The `Configuration Keys` table includes a **Required** column. Use "Yes (overrid
 
 ## Class-Specific Templates and Reusable Wording
 
-Concrete starting points per class so two modules in the same class look like near-twins. Validated across Class B (SQL + NoSQL drivers) and Class C (cloud DB + cloud storage). Class A / D / E / F sub-sections are placeholders until those migration waves run. Fill them in as the first pilot for each class lands.
+Concrete starting points per class so two modules in the same class look like near-twins. Validated across Class C (SQL + NoSQL drivers) and Class D (cloud DB + cloud storage). Class A / D / E / F sub-sections are placeholders until those migration waves run. Fill them in as the first pilot for each class lands.
 
 **Principle:** *structural choices are universal, wording is class-specific, source-specific tweaks come last.* When migrating a new module, copy the closest pilot's README and adjust only the parts called out as class-specific in this section.
 
 ### Universal "Why Use This Module" Bullets
 
-Four of the five value bullets transfer near-verbatim across Class B + Class C. Only **bullet 5** is class-specific. Use these four as a copy-paste starting point:
+Four of the five value bullets transfer near-verbatim across Class C + Class D. Only **bullet 5** is class-specific. Use these four as a copy-paste starting point:
 
 **Bullet 1. Insulation:**
 
@@ -217,9 +217,43 @@ Four of the five value bullets transfer near-verbatim across Class B + Class C. 
 
 **Bullet 5. Class-specific.** See per-class subsections below.
 
-These four bullets do not apply unchanged to Class A foundation modules (which often have no wrapped third-party library to insulate against). Class D lifecycle modules also need different framing. See the relevant subsection.
+These four bullets do not apply unchanged to Class A foundation modules (which often have no wrapped third-party library to insulate against). Class B extended-utility modules also need different framing. See the relevant subsection.
 
-### Class B. Driver Wrapper
+### Class A. Foundation Utility
+
+Platform-agnostic utilities with no service dependencies and no `docs/` folder.
+
+**Tagline template:**
+
+> A [domain] helper for [Node.js | the browser | both] that ships pre-tested and has zero runtime dependencies. Part of [Superloom](https://superloom.dev).
+
+**Value bullets.** The four universal bullets transfer **with adjustments**:
+- **Bullet 1 (insulation):** keep if the module wraps a built-in (e.g. `node:crypto`); drop or rephrase as "Zero dependencies, drop in anywhere" if pure JavaScript
+- **Bullet 2 (pre-tested):** keep, with appropriate test target ("comprehensive unit suite in CI on every push")
+- **Bullets 3, 4:** keep verbatim
+- **Bullet 5:** "Zero dependencies, drop in anywhere" (pure JavaScript with no external packages, works in Node, browsers, edge runtimes) anywhere the right module system runs
+
+**Class-specific section. "API Categories":** a grouped one-line listing of available function categories. NOT a full signature table. Example shape:
+
+> - **Type checks:** `isString`, `isNumber`, `isArray`, `isObject`, …
+> - **Validation:** `isEmail`, `isPhoneNumber`, …
+> - **Data manipulation:** `pick`, `omit`, `merge`, …
+
+**No `docs/` folder needed.** No Hot-Swappable section (foundation modules typically don't have functional siblings. The `js-helper-crypto` server/client pair is the exception and should cross-link in Hot-Swappable form).
+
+**Pilot status:** *not yet migrated.* The first Class A migration sets the concrete reference. Planned in [plan 0008](../../__dev__/plans/0008-module-readme-pilot.md).
+
+### Class B. Extended Utility
+
+Per-request or per-process plumbing rather than data I/O (e.g. `js-server-helper-instance`).
+
+**Class-specific section. "Behavior":** short, central. Explains the lifecycle semantics. Cleanup ordering, background tasks, scope boundaries.
+
+**Value bullets.** Class B modules often need a substantially different bullet set because they don't wrap a third-party library and don't do I/O. Bullets 3 (human review) and 4 (observability) usually still transfer. The first migration of a Class B module sets the pattern.
+
+**Pilot status:** *not yet migrated.* `js-server-helper-instance` is the planned reference.
+
+### Class C. Driver Wrapper
 
 **Tagline template. Server-required driver** (Postgres, MySQL, MongoDB):
 
@@ -236,7 +270,7 @@ These four bullets do not apply unchanged to Class A foundation modules (which o
 | **SQL driver. Server-required** | "Works on both serverless and persistent infrastructure. The same module configures cleanly for serverless deployments (cloud functions, on-demand workers) and persistent ones (containers, virtual machines, orchestrated platforms). Switch deployment shape by changing one config value, not by changing the driver or the calling code." |
 | **SQL driver. Embedded** | "Runs in-process, with zero infrastructure. [DB] is embedded. There is no server to provision, no credentials to manage, no network to debug. The same module powers an in-memory test database, a local file-backed cache, an offline-first desktop or edge app, or a per-process analytics store. Switch between in-memory and on-disk by changing one config value." |
 | **NoSQL driver. Managed** | Either the universal serverless-or-persistent framing, **or** a domain-specific safety-net bullet ("Built-in safety nets against accidental full-collection writes. `query()`, `count()`, and `deleteRecordsByFilter()` reject empty filters at runtime. There is no path by which an empty or `null` filter can accidentally read or wipe an entire collection."). Pick whichever is the stronger pitch for the module. |
-| **NoSQL driver. Cloud-managed** (DynamoDB) | The Class C "Explicit credentials" bullet. See Class C below. Cloud-managed NoSQL drivers inherit the Class C credentials treatment. |
+| **NoSQL driver. Cloud-managed** (DynamoDB) | The Class D "Explicit credentials" bullet. See Class D below. Cloud-managed NoSQL drivers inherit the Class D credentials treatment. |
 
 **Hot-Swappable section template** (replace the placeholders in `[...]` with concrete values):
 
@@ -300,13 +334,13 @@ Reference block: same.
 
 Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g. **Replica-Set Requirement for Transactions** for MongoDB).
 
-**Pilot references** (copy from one of these when migrating a new Class B module):
+**Pilot references** (copy from one of these when migrating a new Class C module):
 - SQL driver: `src/helper-modules-server/js-server-helper-sql-mysql/` (most generic SQL shape)
 - SQL driver. Embedded: `src/helper-modules-server/js-server-helper-sql-sqlite/`
 - NoSQL driver: `src/helper-modules-server/js-server-helper-nosql-mongodb/`
-- NoSQL driver. Cloud-managed: `src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/` (also follows Class C credentials pattern)
+- NoSQL driver. Cloud-managed: `src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/` (also follows Class D credentials pattern)
 
-### Class C. Cloud Service Wrapper
+### Class D. Cloud Service Wrapper
 
 **Tagline template:**
 
@@ -329,10 +363,10 @@ Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g
 
 **`docs/configuration.md` structure. AWS-flavour cloud wrapper:**
 
-Reference block: same as Class B.
+Reference block: same as Class C.
 
 Patterns block:
-- **Credentials and IAM Permissions** *(required for any Class C wrapper around a cloud SDK)*
+- **Credentials and IAM Permissions** *(required for any Class D wrapper around a cloud SDK)*
 - **Local Emulator vs Real Service** *(only if an emulator exists)*
 - **Multi-Region / Multi-Account Setup**
 - Testing Tiers
@@ -348,40 +382,6 @@ Patterns block:
 **Pilot references:**
 - AWS cloud DB: `src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/`
 - AWS cloud storage: `src/helper-modules-server/js-server-helper-storage-aws-s3/`
-
-### Class A. Foundation Utility
-
-Platform-agnostic utilities with no service dependencies and no `docs/` folder.
-
-**Tagline template:**
-
-> A [domain] helper for [Node.js | the browser | both] that ships pre-tested and has zero runtime dependencies. Part of [Superloom](https://superloom.dev).
-
-**Value bullets.** The four universal bullets transfer **with adjustments**:
-- **Bullet 1 (insulation):** keep if the module wraps a built-in (e.g. `node:crypto`); drop or rephrase as "Zero dependencies, drop in anywhere" if pure JavaScript
-- **Bullet 2 (pre-tested):** keep, with appropriate test target ("comprehensive unit suite in CI on every push")
-- **Bullets 3, 4:** keep verbatim
-- **Bullet 5:** "Zero dependencies, drop in anywhere" (pure JavaScript with no external packages, works in Node, browsers, edge runtimes) anywhere the right module system runs
-
-**Class-specific section. "API Categories":** a grouped one-line listing of available function categories. NOT a full signature table. Example shape:
-
-> - **Type checks:** `isString`, `isNumber`, `isArray`, `isObject`, …
-> - **Validation:** `isEmail`, `isPhoneNumber`, …
-> - **Data manipulation:** `pick`, `omit`, `merge`, …
-
-**No `docs/` folder needed.** No Hot-Swappable section (foundation modules typically don't have functional siblings. The `js-helper-crypto` server/client pair is the exception and should cross-link in Hot-Swappable form).
-
-**Pilot status:** *not yet migrated.* The first Class A migration sets the concrete reference. Planned in [plan 0008](../../__dev__/plans/0008-module-readme-pilot.md).
-
-### Class D. Lifecycle Helper
-
-Per-request or per-process plumbing rather than data I/O (e.g. `js-server-helper-instance`).
-
-**Class-specific section. "Behavior":** short, central. Explains the lifecycle semantics. Cleanup ordering, background tasks, scope boundaries.
-
-**Value bullets.** Class D modules often need a substantially different bullet set because they don't wrap a third-party library and don't do I/O. Bullets 3 (human review) and 4 (observability) usually still transfer. The first migration of a Class D module sets the pattern.
-
-**Pilot status:** *not yet migrated.* `js-server-helper-instance` is the planned reference.
 
 ### Class E. Feature Module with Adapters
 
@@ -469,13 +469,13 @@ This sets the response-shape expectation before the reader hits the API details.
 
 ### Lazy Initialization Note
 
-Most Class B and Class C modules lazy-initialize their underlying client (pool, SDK client, file handle) on the **first call**, not at loader time. This belongs in `docs/configuration.md` under "Loader Pattern" as a bullet:
+Most Class C and Class D modules lazy-initialize their underlying client (pool, SDK client, file handle) on the **first call**, not at loader time. This belongs in `docs/configuration.md` under "Loader Pattern" as a bullet:
 
 > The [pool | client | handle] is **not** created at loader time. It is created lazily on the first call. This keeps cold-start fast in serverless deployments.
 
 ### `close()` / Lifecycle Convention
 
-Class B and Class C modules that hold connection state expose a `close()` function (or `close(instance)` for some MongoDB-style modules) documented under "Lifecycle" in `docs/api.md`. The README does not need to mention `close()`. That's a `docs/api.md` concern.
+Class C and Class D modules that hold connection state expose a `close()` function (or `close(instance)` for some MongoDB-style modules) documented under "Lifecycle" in `docs/api.md`. The README does not need to mention `close()`. That's a `docs/api.md` concern.
 
 For SDK-managed connections where there's no pool to close (e.g. AWS SDK clients), omit `close()` from the API entirely rather than implementing a no-op.
 
@@ -617,7 +617,7 @@ When writing or revising a module README:
 - [ ] **License section** at bottom is present and names the license explicitly (typically `## License\n\nMIT`)
 - [ ] **Identity badges** use the standard `img.shields.io/badge/...` URL pattern; runtime version badge reflects the actual `engines.node` value from `package.json`
 - [ ] **Testing Status table** at bottom uses the standard `Tier \| Runtime \| Status` columns
-- [ ] **For Class C cloud wrappers:** `docs/configuration.md` includes a "Credentials and IAM Permissions" section with a minimum-IAM-action table per function and a worked example IAM policy (see [Cross-Cutting Patterns → AWS Family](#aws-family-pattern-dynamodb-s3-sqs-and-any-future-aws-service-wrapper))
+- [ ] **For Class D cloud wrappers:** `docs/configuration.md` includes a "Credentials and IAM Permissions" section with a minimum-IAM-action table per function and a worked example IAM policy (see [Cross-Cutting Patterns → AWS Family](#aws-family-pattern-dynamodb-s3-sqs-and-any-future-aws-service-wrapper))
 - [ ] **For modules in a Hot-Swap family:** every existing sibling's README has been updated to reference this module in its Hot-Swappable section (see [Cross-Cutting Patterns → Hot-Swap Families](#hot-swap-families))
 - [ ] **No em dashes (`—`)** in `README.md`, `docs/*.md`, `ROBOTS.md`, or any commit message that ships with the migration (see [Writing Style and Prose Quality](#writing-style-and-prose-quality))
 - [ ] **No table cells end with a period** (cells are not sentences)
@@ -635,5 +635,5 @@ When writing or revising a module README:
 - [`code-formatting-js.md`](code-formatting-js.md#spelling-and-prose-quality) holds the spelling and prose-quality table that applies to every file the project ships, including `.js` comments, `.md` docs, `package.json`, `ROBOTS.md`, and commit messages.
 - [`module-categorization.md`](module-categorization.md) lists the six module classes and which class each existing module belongs to.
 - [`complex-module-docs-guide.md`](complex-module-docs-guide.md) is the deep guide for `docs/` folders in Class E feature modules.
-- [`templates/`](templates/) - historical README skeletons from the v1 era (`README-foundation-module.md`, `README-master-template.md`, `README-feature-module.md`, `README-storage-adapter.md`). **Currently out of date.** These do NOT match the v2 patterns documented above. Until they are refreshed (or deleted), the authoritative templates are the migrated pilots in `src/helper-modules-server/`: `js-server-helper-sql-mysql/` for Class B SQL (server-required), `js-server-helper-sql-sqlite/` for Class B SQL (embedded), `js-server-helper-nosql-mongodb/` for Class B NoSQL, `js-server-helper-nosql-aws-dynamodb/` for Class B/C cloud-managed NoSQL, `js-server-helper-storage-aws-s3/` for Class C cloud storage. See [Class-Specific Templates and Reusable Wording](#class-specific-templates-and-reusable-wording) for which pilot to copy per class.
+- [`templates/`](templates/) - historical README skeletons from the v1 era (`README-foundation-module.md`, `README-master-template.md`, `README-feature-module.md`, `README-storage-adapter.md`). **Currently out of date.** These do NOT match the v2 patterns documented above. Until they are refreshed (or deleted), the authoritative templates are the migrated pilots in `src/helper-modules-server/`: `js-server-helper-sql-mysql/` for Class C SQL (server-required), `js-server-helper-sql-sqlite/` for Class C SQL (embedded), `js-server-helper-nosql-mongodb/` for Class C NoSQL, `js-server-helper-nosql-aws-dynamodb/` for Class C/C cloud-managed NoSQL, `js-server-helper-storage-aws-s3/` for Class D cloud storage. See [Class-Specific Templates and Reusable Wording](#class-specific-templates-and-reusable-wording) for which pilot to copy per class.
 - [`architectural-philosophy.md`](architectural-philosophy.md#coding-practices) - the "All external libraries wrapped" principle that the value bullets articulate
