@@ -7,10 +7,11 @@ This page is the enumeration: which module belongs to which class, and the curre
 ## On This Page
 
 - [The Six Classes](#the-six-classes)
+- [Universal Documentation Footprint](#universal-documentation-footprint)
 - [Class A. Foundation Utility](#class-a-foundation-utility)
+- [Class B. Extended Utility](#class-b-extended-utility)
 - [Class C. Driver Wrapper](#class-c-driver-wrapper)
 - [Class D. Cloud Service Wrapper](#class-d-cloud-service-wrapper)
-- [Class B. Extended Utility](#class-b-extended-utility)
 - [Class E. Feature Module with Adapters](#class-e-feature-module-with-adapters)
 - [Class F. Storage Adapter](#class-f-storage-adapter)
 - [Documentation Status Matrix](#documentation-status-matrix)
@@ -20,22 +21,52 @@ This page is the enumeration: which module belongs to which class, and the curre
 
 ## The Six Classes
 
-| Class | Distinguishing trait | Template | `docs/` folder |
+The classes form a **dependency staircase**: each step adds one more thing the module is allowed to depend on. A module belongs to the lowest class whose dependency budget it fits. The class is decided by where the dependency boundary sits, not by what the module does.
+
+| Class | What it depends on (outside its own code) | Template | `docs/` folder |
 |---|---|---|---|
-| **A. Foundation utility** | Zero runtime deps; pure functions; platform-agnostic | `README-foundation-module.md` | Usually none |
-| **C. Driver wrapper** | Wraps a third-party DB driver; presents a unified API | `README-master-template.md` (driver variant) | `api.md`, `configuration.md` |
-| **D. Cloud service wrapper** | Wraps a cloud / network SDK | `README-master-template.md` (cloud variant) | `api.md`, `configuration.md`, optional `iam.md` |
-| **B. Extended utility** | Server-side utility / per-request plumbing | `README-master-template.md` | Usually none; small `api.md` if non-trivial |
-| **E. Feature module with adapters** | Business logic + pluggable storage backends | `README-feature-module.md` | `data-model.md`, `storage-adapters.md`, integrations |
-| **F. Storage adapter** | Implements a parent module's store contract; thin | `README-storage-adapter.md` | None (schema sits inside the README) |
+| **A. Foundation utility** | Nothing. Pure JavaScript that runs in any modern JS environment (Node, browser, edge, mobile, server-side runtimes) | `README-foundation-module.md` | `api.md`, `configuration.md` |
+| **B. Extended utility** | Only the Node.js runtime. Uses Node-built-in modules (`crypto`, `process`, `fetch`, `Buffer`, etc.). No third-party npm packages, no external services | `README-master-template.md` | `api.md`, `configuration.md` |
+| **C. Driver wrapper** | A third-party-implemented service that operators **can self-host** on commodity infrastructure (Postgres, MySQL, MongoDB, SQLite) | `README-master-template.md` (driver variant) | `api.md`, `configuration.md` |
+| **D. Cloud service wrapper** | A proprietary cloud service that operators **cannot self-host**. Runs only on the provider or a dedicated emulator (DynamoDB, S3, SQS) | `README-master-template.md` (cloud variant) | `api.md`, `configuration.md`, optional `iam.md` |
+| **E. Feature module with adapters** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class F adapters. Provides a complete business-logic feature, not a primitive | `README-feature-module.md` | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
+| **F. Storage adapter** | A Class E parent module. Cannot function on its own; implements the parent's store contract for a single backend | `README-storage-adapter.md` | `api.md`, `configuration.md`, `schema.md`, `cleanup.md` |
+
+*Reading this table:* a Class B module is allowed to use everything Class A is, plus Node built-ins. A Class C module is allowed to use everything Class B is, plus a self-hostable third-party service. And so on. F is the special case: it is the only class that cannot stand alone.
+
+---
+
+## Universal Documentation Footprint
+
+Every class A through F ships the same minimum set of files:
+
+| File | Audience | Purpose |
+|---|---|---|
+| `README.md` | Browsers, decision-makers ("do I want this module?") | Value-first overview, what the module is, why use it, how to find more |
+| `docs/api.md` | Implementers ("how do I call this function?") | Every exported function. Signature, parameters, return shape, examples, lifecycle |
+| `docs/configuration.md` | Operators ("how do I set this up?") | Loader pattern, config keys, environment variables, peer/direct dependencies, runtime patterns, testing tiers |
+| `ROBOTS.md` | AI agents ("how do I correctly use this in code I generate?") | Compact derived signature reference. Generated from / kept in sync with `docs/api.md` |
+
+**Why uniform.** Two reasons:
+
+1. **Token cost for AI tools.** A 1500-line `utils.js` file costs an order of magnitude more tokens to read than a 200-line `docs/api.md`. Every consumer (human or AI) benefits when the canonical reference is small and structured.
+2. **No per-module decisions.** If some Class A modules ship `docs/api.md` and some don't, every contributor and every reviewer has to re-evaluate the call. Making it universal removes the question entirely.
+
+Class-specific extras stack on top of the universal four. Class D adds `docs/iam.md`. Class E adds `docs/data-model.md` and an optional `docs/runtime.md`. Class F adds `docs/schema.md` and `docs/cleanup.md`, the two documents that capture what is operationally distinctive per backend. None of these *replace* the universal four; they add to them. Class E **does not** add a `docs/storage-adapters.md`: storage-adapter documentation lives in each Class F adapter package, not in the parent. The Class E README has a short "Storage Adapters" subsection that lists the available adapters and points to each adapter's own README.
+
+For Class F adapters specifically, `docs/api.md` documents the store contract this adapter implements (with backend-specific semantic notes); `docs/configuration.md` covers the `STORE_CONFIG` keys, peer dependencies, environment variables consumed by `_test/loader.js`, and the testing tier; `docs/schema.md` documents what `setupNewStore` creates and the backend-specific syntax notes; `docs/cleanup.md` documents the TTL behavior of this backend and the recommended cleanup mechanism. The README itself follows the **same Universal Section list as every other class**, condensed to ~70-90 lines (tagline, What This Is, Why-bullets including a backend-specific bullet 5, Hot-Swappable, Aligned with Superloom, Extended Documentation, Adding to Your Project pointing to the parent, Testing Status, License); it contains no `## Install` block and no `## Usage` / Quick Start. Each adapter documents only its own backend. There is no "Postgres has X, MongoDB has Y" comparison anywhere in a Class F package.
 
 ---
 
 ## Class A. Foundation Utility
 
-**Characteristics:** Zero runtime dependencies, pure utility functions, platform-agnostic. Live under `src/helper-modules-core/` and `src/helper-modules-client/`.
+**Characteristics:** **No external dependencies at all.** Pure JavaScript that uses only language built-ins (`Date`, `Intl`, `Math`, `Array`, etc.) and universal Web standards available across runtimes (Web Crypto API for randomness and hashing, `console`, etc.). Runs identically in Node.js, browsers, React Native, Cloudflare Workers, Deno, Bun, and any modern JavaScript environment.
 
-**README extras** (on top of the universal set): "API Categories". A grouped overview of available functions, one line each.
+Lives under `src/helper-modules-core/` (universal modules) or `src/helper-modules-client/` (modules whose tagline targets the browser-side use case but which still run anywhere). Directory placement is for discovery; the dependency boundary is what defines the class.
+
+**README extras** (on top of the universal set): none. The categorized function survey lives in `docs/api.md`.
+
+**`docs/`:** `api.md`, `configuration.md` (per the [universal footprint](#universal-documentation-footprint)). The configuration page is short for Class A (no config keys, no environment variables, no peer dependencies) but is still produced for shape consistency.
 
 | Module | Package | Purpose |
 |---|---|---|
@@ -48,22 +79,31 @@ This page is the enumeration: which module belongs to which class, and the curre
 
 ## Class B. Extended Utility
 
-**Characteristics:** Provides server-side utility plumbing rather than data I/O. Either manages per-request lifecycle (`instance`) or exposes operational utilities used during requests (`crypto`).
+**Characteristics:** Depends only on the **Node.js runtime**. May use any Node-built-in module (`crypto`, `process`, `fetch`, `Buffer`, `URL`, `URLSearchParams`, `AbortSignal`, etc.) but **no third-party npm packages and no external services**. The classification is about where the dependency boundary sits, not about what the module does or which surface it presents.
+
+Three very different-feeling utilities sit at this level: a per-request lifecycle manager (`instance`), a cryptography utility (`crypto`), and an outgoing HTTP client (`http`). What unites them is that none of them reach beyond Node itself. Each provides server-side plumbing built on the runtime's standard library.
+
+Lives under `src/helper-modules-server/`. The `server` prefix marks the runtime requirement: Class A modules run in any JS environment; Class B modules require Node-specific built-ins.
 
 **README extras:** "Behavior". Explains the lifecycle semantics (cleanup ordering, background tasks) or the categorized utility surface.
 
-**`docs/`:** Usually none. Small `api.md` only if the surface is non-trivial.
+**`docs/`:** `api.md`, `configuration.md` (per the [universal footprint](#universal-documentation-footprint)).
 
 | Module | Package | Purpose |
 |---|---|---|
 | `js-server-helper-instance` | `@superloomdev/js-server-helper-instance` | Per-request instance lifecycle, cleanup hooks, background tasks |
 | `js-server-helper-crypto` | `@superloomdev/js-server-helper-crypto` | Hashing, encryption, UUID, random strings, base conversion |
+| `js-server-helper-http` | `@superloomdev/js-server-helper-http` | Outgoing HTTP client. Native `fetch` wrapper with multipart support |
 
 ---
 
 ## Class C. Driver Wrapper
 
-**Characteristics:** Wraps a third-party database driver. Presents a unified API (`getRow`, `getRows`, `getValue`, `write`, etc.) so calling code is identical across backends. Insulates the application from upstream driver churn.
+**Characteristics:** Wraps a **third-party-implemented service** whose engine operators **can self-host** on commodity infrastructure. The "third party" is the team that wrote the engine (the SQLite Consortium, the PostgreSQL team, the MySQL team, MongoDB Inc., etc.); whether the wrapper reaches that engine through an npm package (`pg`, `mysql2`, `mongodb`) or a Node built-in driver (`node:sqlite`) is incidental. What matters is that the engine itself is third-party and free to self-host.
+
+The self-hostable criterion is what separates Class C from Class D. SQLite, Postgres, MySQL, and MongoDB all have free, downloadable engines an operator can run on their own machine, in a Docker container, on a virtual machine, or on a managed-but-portable platform. DynamoDB, S3, and SQS do not: the engine itself runs only on the provider's infrastructure (or a dedicated emulator), so they are Class D.
+
+Class C modules present a unified API (`getRow`, `getRows`, `getValue`, `write`, etc.) so calling code is identical across backends. They insulate the application from upstream driver churn.
 
 **README extras:** "Common Patterns". 2-3 progressive examples (read, write, transaction); brief callout about cross-backend API compatibility.
 
@@ -75,34 +115,37 @@ This page is the enumeration: which module belongs to which class, and the curre
 | `js-server-helper-sql-postgres` | `@superloomdev/js-server-helper-sql-postgres` | `pg` (node-postgres) |
 | `js-server-helper-sql-mysql` | `@superloomdev/js-server-helper-sql-mysql` | `mysql2` |
 | `js-server-helper-nosql-mongodb` | `@superloomdev/js-server-helper-nosql-mongodb` | `mongodb` (native driver) |
-| `js-server-helper-nosql-aws-dynamodb` | `@superloomdev/js-server-helper-nosql-aws-dynamodb` | `@aws-sdk/client-dynamodb` |
 
 ---
 
 ## Class D. Cloud Service Wrapper
 
-**Characteristics:** Wraps a cloud SDK or network library. Similar README shape to Class C, but the surface is service-domain (storage, queue, HTTP) rather than data.
+**Characteristics:** Wraps a **proprietary cloud service** whose engine **cannot be self-hosted** on commodity infrastructure. The service runs only on the provider (DynamoDB on AWS, S3 on AWS, SQS on AWS) or on a dedicated emulator that exists specifically to mimic the provider for development (DynamoDB Local, MinIO, LocalStack, ElasticMQ). The emulator is not a real self-hosted version of the service; it is a stand-in that lets developers run tests without paying provider bills.
 
-**README extras:** "Credentials & IAM". Short section on credentials, IAM permissions, regional config.
+The surface domain does not change the classification. DynamoDB looks like a database and presents the same `addRecord` / `queryRecords` calling shape as the Class C drivers, but it is Class D because operators cannot run real DynamoDB themselves. S3 looks like file storage; SQS looks like a queue; the deciding criterion is the operational dependency on the provider, not the API shape.
+
+**README extras:** "Credentials & IAM". Short section on credentials, IAM permissions, regional config. The shape of `docs/configuration.md` is the AWS-family template (see [Cross-Cutting Patterns → AWS Family](module-readme-structure.md#aws-family-pattern-dynamodb-s3-sqs-and-any-future-aws-service-wrapper)) regardless of whether the surface looks like a database (DynamoDB) or like object storage (S3).
 
 **`docs/`:** `api.md`, `configuration.md`, optionally `iam.md`.
 
-| Module | Package | Service |
-|---|---|---|
-| `js-server-helper-http` | `@superloomdev/js-server-helper-http` | Native `fetch` wrapper (outgoing HTTP, multipart) |
-| `js-server-helper-storage-aws-s3` | `@superloomdev/js-server-helper-storage-aws-s3` | S3 file operations |
-| `js-server-helper-storage-aws-s3-url-signer` | `@superloomdev/js-server-helper-storage-aws-s3-url-signer` | S3 presigned URLs |
-| `js-server-helper-queue-aws-sqs` | `@superloomdev/js-server-helper-queue-aws-sqs` | SQS message queue |
+| Module | Package | Service | Surface |
+|---|---|---|---|
+| `js-server-helper-nosql-aws-dynamodb` | `@superloomdev/js-server-helper-nosql-aws-dynamodb` | DynamoDB | Database (`addRecord`, `queryRecords`) |
+| `js-server-helper-storage-aws-s3` | `@superloomdev/js-server-helper-storage-aws-s3` | S3 | File storage |
+| `js-server-helper-storage-aws-s3-url-signer` | `@superloomdev/js-server-helper-storage-aws-s3-url-signer` | S3 | Presigned URL generation |
+| `js-server-helper-queue-aws-sqs` | `@superloomdev/js-server-helper-queue-aws-sqs` | SQS | Message queue |
 
 ---
 
 ## Class E. Feature Module with Adapters
 
-**Characteristics:** Self-contained business-logic module. Pluggable storage backends via the adapter pattern. Deep data model. Needs a `docs/` folder.
+**Characteristics:** A **full-featured business-logic module**. Provides a complete, opinionated solution to a problem domain (authentication, verification codes, action logging) rather than a utility primitive. Class E modules are the only modules permitted to **combine arbitrary other classes**: they typically depend on Class A utilities, Class B services like `instance` and `crypto`, and one of several Class F adapters chosen at runtime via the loader pattern. The choice of storage backend (Class C self-hosted database vs Class D cloud service) is deferred to the operator through the adapter.
 
-**README extras:** "Architecture overview". High-level diagram or tree; "Storage adapter selection". Short callout linking to `docs/storage-adapters.md`.
+The data model is deep enough to warrant a dedicated `docs/data-model.md`. The differences between the two runtime shapes the framework supports (persistent server, serverless function) live on a single optional `docs/runtime.md` page. The page documents **only** those differences (how the per-request `instance` is constructed in each shape; how scheduled cleanup is wired in each shape) and nothing else. It is deliberately not a framework cookbook: no Express middleware tutorial, no Lambda handler boilerplate, no login/refresh/logout endpoint code. Per-framework integration code is application code, not module documentation.
 
-**`docs/`:** `data-model.md`, `configuration.md`, `storage-adapters.md`, optionally `integration-express.md`, `integration-lambda.md`. See [`complex-module-docs-guide.md`](complex-module-docs-guide.md) for the deep guide.
+**README extras:** Two adjacent class-specific README subsections. **"Architecture Overview"** (high-level diagram or tree of the loader / `parts/` / adapter wiring) and **"Storage Adapters"** (short list of available adapters + selection rule + pointer to each adapter package's own README). No separate `docs/storage-adapters.md` file.
+
+**`docs/`:** `data-model.md`, `configuration.md`, optionally `runtime.md`. Storage-adapter detail is owned by each Class F adapter package, not the parent. See [`complex-module-docs-guide.md`](complex-module-docs-guide.md) for the deep guide.
 
 | Module | Package | Purpose |
 |---|---|---|
@@ -114,11 +157,13 @@ This page is the enumeration: which module belongs to which class, and the curre
 
 ## Class F. Storage Adapter
 
-**Characteristics:** Implements a parent module's store contract. Thin wrapper around a Class C or Class D module. One adapter per backend per parent feature.
+**Characteristics:** A storage adapter that **cannot function on its own**. Implements a Class E parent module's store contract for a single backend (one adapter per backend per parent feature). Always paired with the parent module via the adapter pattern: the parent passes the adapter factory at loader time and uses it to satisfy its persistence requirements.
 
-**README extras:** "How this fits into the parent module". Explains the adapter factory protocol; links to the parent module's docs.
+Class F is the only class with this "cannot stand alone" property. Every other class is independently usable: install, configure, use. Class F adapters need a parent that knows what to do with them. Internally a Class F adapter is a thin wrapper around a Class C or Class D module that handles the persistence work.
 
-**`docs/`:** None. The README plus the schema section it contains is enough.
+**README extras:** None beyond the standard sections. The README follows the same Universal Section list as every other class (see [`module-readme-structure.md` → Class F](module-readme-structure.md#class-f-storage-adapter)), condensed to ~70-90 lines. The "extension of the parent module" framing lives in the tagline (position 2) and the brief "What This Is" paragraph (position 3); there is no separate "How this fits into the parent module" subsection in the README itself, and no per-backend table comparing siblings. Section 9 ("Adding to Your Project") points to the parent module's install instructions and the loader-pattern doc; it contains no `npm install` snippet of its own. The factory-protocol explanation lives in `docs/api.md`.
+
+**`docs/`:** `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Each adapter is the authoritative source for its own backend's operational detail (DDL, indexes, TTL behavior, IaC notes, `STORE_CONFIG` shape). The parent's `docs/` does not duplicate any of this. See [`complex-module-docs-guide.md`](complex-module-docs-guide.md) for the deep guide.
 
 ### Auth Store Adapters
 
@@ -158,25 +203,31 @@ Tracks which modules have been restructured per [`module-readme-structure.md`](m
 
 | Module | Class | README v2 | `docs/` present | Writing-guide pass | Notes |
 |---|---|---|---|---|---|
-| js-helper-utils | A | No | n/a | No | Pre-rubric README. Review during Class A migration |
-| js-helper-debug | A | No | n/a | No | Pre-rubric README. Review during Class A migration |
-| js-helper-time | A | No | n/a | No | Pre-rubric README. Review during Class A migration |
-| js-client-helper-crypto | A | No | n/a | No | Pre-rubric README. Review during Class A migration |
-| js-server-helper-instance | B | No | No | No | Pending Class B wave |
-| js-server-helper-crypto | B | No | No | No | Pending Class B wave |
+| js-helper-utils | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Class A pilot. Established the four-bullet pattern (zero deps / runs everywhere / pre-tested / designed for review) |
+| js-helper-debug | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Configurable Class A (LOG_LEVEL / LOG_FORMAT / etc.). Documents the canonical `instance.time_ms` pattern |
+| js-helper-time | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. 24-function pure-utility surface. Documents the plural-vs-singular Date-Data-Set key convention |
+| js-client-helper-crypto | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Browser-side member of the crypto runtime pair. Hot-Swappable cross-link to `js-server-helper-crypto` |
+| js-server-helper-instance | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 6. Class B pilot. Established the lifecycle/'Behavior' section pattern. Per-request scope, background routines, FIFO cleanup |
+| js-server-helper-crypto | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 6. Server-side member of the crypto runtime pair. Reciprocal Hot-Swappable cross-link to `js-client-helper-crypto` |
 | js-server-helper-sql-postgres | C | **Yes (pilot)** | **Yes** (`api.md`, `configuration.md`) | **Yes** | First module migrated under the new rubric. Em-dash sweep applied |
 | js-server-helper-sql-mysql | C | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 1. Mirrors the Postgres pilot |
 | js-server-helper-sql-sqlite | C | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 1. Embedded SQL variant (offline, in-process) |
 | js-server-helper-nosql-mongodb | C | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 2. NoSQL family pilot |
-| js-server-helper-nosql-aws-dynamodb | C/D | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 2. Cloud-managed NoSQL. Inherits Class D credentials pattern |
-| js-server-helper-http | D | No | No | No | Pending Class D wave |
+| js-server-helper-nosql-aws-dynamodb | D | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 2. Class D cloud database. Calling shape mirrors Class C drivers (`addRecord`, `queryRecords`); classified D because DynamoDB cannot be self-hosted (only AWS or DynamoDB Local emulator) |
+| js-server-helper-http | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 7. Class B (Node built-in `fetch` wrapper). README v2 + docs/ added; corrected error-type names (`NETWORK_REQUEST_FAILED`/`NETWORK_TIMEOUT`/`NETWORK_SETUP_FAILED`) that the previous README misstated as `HTTP_ERROR`/`NETWORK_ERROR`/`REQUEST_ERROR` |
 | js-server-helper-storage-aws-s3 | D | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 3. First Class D pilot. AWS family pattern |
-| js-server-helper-storage-aws-s3-url-signer | D | No | No | No | Wave 5 target. Class D AWS family |
-| js-server-helper-queue-aws-sqs | D | No | No | No | Wave 5 target. Class D AWS family |
-| js-server-helper-auth | E | No | Yes | No | README currently 546 lines. Strong restructure candidate |
-| js-server-helper-verify | E | No | Yes | No | README currently 372 lines. Strong restructure candidate |
-| js-server-helper-logger | E | No | Yes | No | README currently 440 lines. Strong restructure candidate |
-| js-server-helper-*-store-* (15) | F | No | n/a | No | Migrate after Class C/E land |
+| js-server-helper-storage-aws-s3-url-signer | D | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Class D AWS family. Republished at 1.0.0 |
+| js-server-helper-queue-aws-sqs | D | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Class D AWS family. Republished at 1.0.0 |
+| js-server-helper-auth | E | **Yes** | **Yes** (`api.md`, `configuration.md`, `data-model.md`, `runtime.md`, `push-notifications.md`) | **Yes** | Wave 8. Class E pilot. README condensed from 546 lines to ~115. New `docs/api.md` + `docs/configuration.md` + `docs/runtime.md`. Existing `docs/` files swept of em-dashes. ROBOTS.md rebuilt. Fixed factual bug where `STORE` was documented as a string (`'postgres'`) instead of the required factory function. Added missing `NOT_IMPLEMENTED` error type; corrected `AUTH_*`-prefixed error type names. **Storage adapters moved out of `docs/`**: a short "Storage Adapters" subsection now lives in the README. Per-backend schema, indexes, TTL, and IaC notes belong in each Class F adapter's own README during Wave 9. **Runtime page rewritten lean**: `runtime.md` documents only the differences between persistent-server and serverless-function runtime shapes (how `instance` is constructed; how scheduled cleanup is wired). The previous `runtimes.md` (~590 lines, with bootstrap walk-through, Express middleware, login/refresh/logout endpoints, full Lambda handler, JWT authorizer, cold-start cost matrix, deployment checklist, and NoSQL schema provisioning) was rewritten because framework cookbook material does not belong in module docs |
+| js-server-helper-verify | E | **Yes** | **Yes** (`api.md`, `configuration.md`, `data-model.md`, `runtime.md`) | **Yes** | Wave 8. Class E. README condensed from 373 lines to ~100. New `docs/api.md` + `docs/configuration.md` + `docs/runtime.md`. Existing `docs/data-model.md` swept of em-dashes and re-anchored with cross-links to api/configuration/runtime. ROBOTS.md rebuilt to remove embedded backend-schema details and the stale `require('./stores/*')` paths (those packages live as separate Class F adapters at `js-server-helper-verify-store-*`). **`STORE` factory-function pattern reaffirmed** in README, ROBOTS, and `verify.config.js`: the previous config-defaults comment described the post-factory shape as if user-supplied (wrong); now correctly documents `STORE: require(...)` and adds `STORE_CONFIG: null` default for symmetry with logger and auth. **Obsolete docker-compose claims removed** from README (the verify module's `_test/` was already simplified to an in-process memory store; the README still claimed `_test/docker-compose.yml` and shared store suites). **v1.0 migration note removed** (the registry/object distinction is no longer relevant). **Storage adapters moved out of `docs/`**: short "Storage Adapters" subsection in the README replaces the dropped per-backend tables in `data-model.md`. **Runtime page kept lean**: `runtime.md` documents only the post-verify background-delete caveat in serverless and the scheduled cleanup mechanism. Per-backend schema, indexes, TTL, and IaC notes live in each Class F adapter's own README (already present; the `verify-store-*` packages were the first Class F migrations before the Class E migration even began) |
+| js-server-helper-logger | E | **Yes** | **Yes** (`api.md`, `configuration.md`, `data-model.md`, `runtime.md`) | **Yes** | Wave 8. Class E. README condensed from 441 lines to ~85. New `docs/api.md` + `docs/configuration.md` + `docs/runtime.md`. Existing `docs/data-model.md` swept of em-dashes and re-anchored with cross-links. ROBOTS.md rebuilt to remove embedded backend-schema details (those belong in adapter packages). **Same `STORE`-is-a-string bug as auth fixed** in README and ROBOTS (was documented as `STORE: 'postgres'`; the loader requires `STORE: require(...)` factory). **Error catalog corrected** in README (previously claimed `STORE_READ_FAILED` / `STORE_WRITE_FAILED`; the actual catalog has one type: `LOGGER_SERVICE_UNAVAILABLE`). **Storage adapters moved out of `docs/`**: short "Storage Adapters" subsection in the README replaces `docs/storage-adapters.md`. **Runtime page kept lean**: `runtime.md` documents only background-write lifecycle in serverless (freeze caveat) and the scheduled cleanup mechanism. Per-backend schema, indexes, TTL, and IaC notes belong in each Class F adapter's own README during Wave 9 |
+| js-server-helper-verify-store-* (5) | F | **Yes (v1)** | No (pending) | **Yes** | Wave 0 (predates the Class E parents). Sqlite, postgres, mysql, mongodb, dynamodb. Each ships its own README (~150 lines) with `How This Adapter Fits In`, `Install`, `Usage`, `STORE_CONFIG`, `Schema`, `Store Contract`, `Expired Record Cleanup`, `Environment Variables`, `Peer Dependencies`, `Testing` sections. **Predates the new Class F rubric (`docs/` folder with `api.md`/`configuration.md`/`schema.md`/`cleanup.md`).** Will be re-migrated during Wave 9 cleanup to the new shape established by `auth-store-postgres`. Self-contained `_test/store-contract-suite.js` copies (intentionally not fetched from the verify package at test time) |
+| js-server-helper-auth-store-postgres | F | **Yes (pilot)** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Wave 9. **Class F pilot under the new four-doc rubric.** README condensed from 192 lines to ~70, following the full Universal Section list (Title, Tagline, What This Is, Why Use This Module with 5 bullets including a backend-specific bullet 5 on PostgreSQL semantics, Hot-Swappable listing the 4 sibling adapters, Aligned with Superloom Philosophy, Extended Documentation, Adding to Your Project pointing to the parent's install section, Testing Status table, License); no `## Install` block, no `## Usage` / Quick Start. New `docs/api.md` (store contract, 8 methods with backend-specific semantic notes), `docs/configuration.md` (`STORE_CONFIG`, peer deps, env vars, testing tier), `docs/schema.md` (DDL verbatim + Postgres-specific notes: identifier quoting, BIGINT coercion, native BOOLEAN, JSON encoding of `custom_data`, UPSERT semantics, index strategy), `docs/cleanup.md` (no native TTL; scheduled cleanup mechanism for persistent vs serverless runtimes; `pg_cron` alternative; recommended cadence). ROBOTS.md added with factory protocol, contract table, and ten behaviors-not-to-violate. Rubric updated first (`module-categorization.md`, `module-readme-structure.md`, `complex-module-docs-guide.md`, `documentation-standards.md`) to remove the previous Class F exemption and codify the four-doc shape. **No comparison with sibling adapters anywhere in the package.** Establishes the structural template that the remaining four `auth-store-*`, five `verify-store-*`, and five `logger-store-*` adapters will follow |
+| js-server-helper-auth-store-mongodb | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Wave 9. NoSQL case under the new four-doc rubric. README condensed from 186 lines to ~70, following the full Universal Section list (bullet 5 calls out the composite `_id` design with token-secret hash baked in so reads are single-lookup with no hash compare path). New `docs/api.md` (store contract with MongoDB-specific semantics: `setupNewStore` returns `NOT_IMPLEMENTED`, composite `_id` lookup for `getSession`, `prefix` equality for `listSessionsByActor`, `replaceOne`+upsert for `setSession` (full-document replace, UPSERT-immutability is the Auth parent's responsibility here, not the adapter's), anchored prefix regex on `_id` for partial-update and delete paths, identity blocklist explicitly includes `_id` and `prefix`), `docs/configuration.md` (`STORE_CONFIG` keys `collection_name` and `lib_mongodb`, peer deps, **env vars corrected: `MONGO_URL`/`MONGO_DATABASE` not the old `MONGODB_URI`/`MONGODB_DATABASE` that the previous README claimed**, port 27018, `directConnection=true` rationale, testing tier), `docs/schema.md` (document shape with adapter-managed `_id` and `prefix` fields, `_id` composition rationale for timing-safe auth, `prefix` denormalization rationale for indexed actor scans, BSON type mapping including timestamps-as-Number choice, **why `setupNewStore` is NOT_IMPLEMENTED for this backend**, operator-provisioned index strategy: default `_id` always present, `prefix` required, `expires_at` recommended, TTL-on-Date-field optional), `docs/cleanup.md` (no native TTL on integer timestamps; default cron path is recommended; Date-field + TTL-index alternative documented with trade-off table). ROBOTS.md added with eleven behaviors-not-to-violate (one more than postgres, the extra being "MongoDB native TTL is not enabled by default"). **README's old false claim that UPSERT immutability is enforced by reading the existing document first was removed**; the new docs accurately describe the `replaceOne` + parent-side invariant pattern |
+| js-server-helper-auth-store-sqlite | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Wave 9. Embedded / in-process SQL case under the new four-doc rubric. README condensed from 175 lines to ~70, following the full Universal Section list (bullet 5 calls out the embedded-persistence value: in-process, no external service, no Docker, the same adapter powers offline-first apps and `:memory:` test fixtures). New `docs/api.md` (store contract with SQLite-specific semantics: identical to Postgres's shape but on an in-process database), `docs/configuration.md` (`STORE_CONFIG` keys `table_name` and `lib_sql`, peer deps, single env var `SQLITE_FILE` defaulting to `:memory:`, in-process testing tier with no Docker), `docs/schema.md` (DDL verbatim with TEXT/INTEGER affinity instead of VARCHAR/BIGINT/BOOLEAN; SQLite-specific notes: no length enforcement on TEXT, INTEGER-as-Number on read so no driver-boundary coercion needed unlike Postgres's BIGINT-as-string, INTEGER 0/1 boolean encoding, JSON-encoding of `custom_data`, lowercase `excluded` UPSERT pseudo-table, index strategy), `docs/cleanup.md` (no native TTL; in-process cron mechanism, `:memory:` deployments do not need cleanup, WAL-mode concurrency notes, file growth and VACUUM guidance). ROBOTS.md added with eleven behaviors-not-to-violate. **No comparison with sibling adapters anywhere in the package** |
+| js-server-helper-auth-store-mysql | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Wave 9. MySQL / MariaDB SQL case under the new four-doc rubric. README condensed from 189 lines to ~70, following the full Universal Section list (bullet 5 matches postgres: schema and cleanup built in). New `docs/api.md` (store contract with MySQL-specific semantics: UPSERT uses `ON DUPLICATE KEY UPDATE col = VALUES(col)` not Postgres's `ON CONFLICT ... EXCLUDED`, same 8 methods), `docs/configuration.md` (`STORE_CONFIG` keys `table_name` and `lib_sql`, peer deps, env vars `MYSQL_HOST`/`PORT`/`DATABASE`/`USER`/`PASSWORD` with port 3307 to avoid collision, Docker testing tier), `docs/schema.md` (DDL verbatim with backtick-quoted identifiers, `TINYINT(1)` boolean encoding with defensive driver-normalization, BIGINT handled same as postgres but without driver-string-coercion since `mysql2` returns Number, inlined `INDEX` in `CREATE TABLE` because MySQL lacks `CREATE INDEX IF NOT EXISTS`, `INSERT ... ON DUPLICATE KEY UPDATE` UPSERT semantics), `docs/cleanup.md` (no native TTL; scheduled cleanup via cron or MySQL Event Scheduler alternative, `OPTIMIZE TABLE` note for space reclamation). ROBOTS.md added with twelve behaviors-not-to-violate (includes backtick-quoting and MariaDB wire-compatibility note). **No comparison with sibling adapters anywhere in the package** |
+| js-server-helper-auth-store-dynamodb | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Wave 9. AWS DynamoDB NoSQL case under the new four-doc rubric. README condensed from 209 lines to ~70, following the full Universal Section list (bullet 5 calls out the native TTL option and Scan-then-batchDelete fallback). **Fixed factual drift in README**: env var is `DYNAMO_ENDPOINT` (not `DYNAMODB_ENDPOINT`), local emulator port is 8001 (not 8000), Sort Key attribute is `session_key` (not `actor_id_token_key`). New `docs/api.md` (store contract with DynamoDB-specific semantics: `setupNewStore` returns `NOT_IMPLEMENTED`, `GetItem`+hash-compare for `getSession`, `Query` with `begins_with` for `listSessionsByActor`, `PutItem` full replace for `setSession`, `UpdateItem` for `updateSessionActivity` with identity blocklist including `session_key`, `DeleteItem`/`BatchWriteItem` for deletes, `Scan`-then-`BatchWriteItem` for cleanup), `docs/configuration.md` (`STORE_CONFIG` keys `table_name` and `lib_dynamodb`, peer deps, **IAM permissions table** with minimum policy JSON, env vars `AWS_REGION`/`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`DYNAMO_ENDPOINT`, Docker testing tier with `amazon/dynamodb-local`), `docs/schema.md` (single-table design with PK=`tenant_id`, SK=`session_key` computed as `` `${actor_id}#${token_key}` ``, CloudFormation/CDK example with **corrected `session_key` attribute name**, item shape example with DynamoDB JSON and canonical record, no GSI required, attribute type mapping including native BOOL and Map for `custom_data`), `docs/cleanup.md` (native TTL on `expires_at` as recommended path with 48-hour eventual consistency caveat, Scan-then-batchDelete fallback for immediate consistency, cost implications of Scan on large tables). ROBOTS.md added with eleven behaviors-not-to-violate (includes `session_key` as blocked identity field and chunking delegation note). **No comparison with sibling adapters anywhere in the package** |
+| js-server-helper-logger-store-* (5) | F | No | No | No | Wave 9. Sqlite, postgres, mysql, mongodb, dynamodb. Per the logger module's `TODO.md`, this also includes splitting the centralized tests in `js-server-helper-logger/_test/` into per-adapter `_test/store-contract-suite.js` files. Use `auth-store-postgres` as the structural template once the auth fleet is fully migrated |
 
 ---
 
@@ -187,9 +238,10 @@ Tracks which modules have been restructured per [`module-readme-structure.md`](m
 3. **Done. Wave 2 (Class C NoSQL):** `nosql-mongodb`, `nosql-aws-dynamodb`. NoSQL family + the first Class D credentials pattern.
 4. **Done. Wave 3 (Class D cloud storage pilot):** `storage-aws-s3`. First Class D reference, AWS family pattern.
 5. **Done. Wave 4 (writing-guide pass):** Full em-dash sweep across all six migrated modules + the rubric, with the writing-guide rules now codified in the rubric so future migrations inherit them by example.
-6. **Next. Class E feature modules:** `auth`, `verify`, `logger`. Highest user-visible impact (current READMEs are 370-550 lines). The existing `docs/` folders mean less new content. Mostly pruning the README and reframing the value bullets.
-7. **Then. Class D remainder:** `http`, `storage-aws-s3-url-signer`, `queue-aws-sqs`. Smaller surface per module than Class E.
-8. **Then. Class B and Class A:** lifecycle (`instance`, `crypto`) and foundation (`utils`, `debug`, `time`, `client-crypto`). Smallest surface; sets the reference for non-driver modules.
-9. **Last. Class F adapters:** 15 modules, all mechanical once the parent feature modules land.
+6. **Done. Wave 5 (Class A foundations):** `js-helper-utils`, `js-helper-debug`, `js-helper-time`, `js-client-helper-crypto`. Established the four-bullet pattern for non-I/O modules and the runtime-pair Hot-Swappable shape. Also rebased every module's `engines.node` and the framework docs from `>=20.19` to `>=24` and renamed README section #8 from "Learn More" to "Extended Documentation".
+7. **Done. Wave 6 (Class B extended utility):** `js-server-helper-instance`, `js-server-helper-crypto`. Established the Class B 'Behavior' section pattern (lifecycle semantics, cleanup ordering) and completed the reciprocal Hot-Swappable cross-link with `js-client-helper-crypto`.
+8. **Next. Class B remainder:** `js-server-helper-http`. Recategorized from Class D. Wraps Node's built-in `fetch`; no cloud SDK, no IAM story, so it sits with `instance` and `server-crypto` rather than with the AWS family.
+9. **Then. Class E feature modules:** `verify`, `auth`, `logger`. Highest user-visible impact (current READMEs are 370-550 lines). The existing `docs/` folders mean less new content. Mostly pruning the README and reframing the value bullets.
+10. **Last. Class F adapters:** 15 modules, all mechanical once the parent feature modules land.
 
 The full backlog (with priority order, scope notes, and any per-module pitfalls already discovered) lives in [`__dev__/plans/0008-module-readme-pilot.md`](../../__dev__/plans/0008-module-readme-pilot.md).

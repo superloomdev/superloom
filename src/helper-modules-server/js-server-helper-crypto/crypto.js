@@ -1,7 +1,7 @@
 // Info: Server-side cryptography utility library. Hashing, encryption, UUID, random strings, base conversion.
 // Server-only: uses Node.js crypto module. Self-contained - no dependency on client crypto.
 //
-// Compatibility: Node.js 20.19+.
+// Compatibility: Node.js 24+.
 //
 // Factory pattern: each loader call returns an independent Crypto interface
 // with its own Lib and CONFIG. Stateless - no per-instance resources.

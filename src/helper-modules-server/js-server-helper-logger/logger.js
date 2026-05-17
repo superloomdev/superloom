@@ -19,7 +19,7 @@
 // need durable confirmation (compliance: "do not return 200 OK until the
 // password-change audit row is committed") pass `options.await = true`.
 //
-// Compatibility: Node.js 20.19+.
+// Compatibility: Node.js 24+.
 //
 // Factory pattern: each loader call returns an independent Logger with its
 // own Lib, CONFIG, and store.

@@ -154,8 +154,24 @@ superloom/
       js-server-helper-storage-aws-s3/    #   S3 file operations
       js-server-helper-storage-aws-s3-url-signer/  #   S3 presigned URLs
       js-server-helper-queue-aws-sqs/#   SQS message queue wrapper
+      js-server-helper-auth/       #   Session lifecycle + JWT auth with refresh-token rotation; storage-agnostic adapter
+        js-server-helper-auth-store-sqlite/   #     Auth store: SQLite (embedded, zero-network, dev/test)
+        js-server-helper-auth-store-postgres/ #     Auth store: PostgreSQL (production SQL)
+        js-server-helper-auth-store-mysql/    #     Auth store: MySQL / MariaDB (production SQL)
+        js-server-helper-auth-store-mongodb/  #     Auth store: MongoDB (document store)
+        js-server-helper-auth-store-dynamodb/ #     Auth store: DynamoDB (single-table, native TTL)
       js-server-helper-verify/    #   One-time verification codes (pin/code/token), storage-agnostic adapter
+        js-server-helper-verify-store-sqlite/   #     Verify store: SQLite (embedded, zero-network, dev/test)
+        js-server-helper-verify-store-postgres/ #     Verify store: PostgreSQL (production SQL)
+        js-server-helper-verify-store-mysql/    #     Verify store: MySQL / MariaDB (production SQL)
+        js-server-helper-verify-store-mongodb/  #     Verify store: MongoDB (native TTL via sparse _ttl index)
+        js-server-helper-verify-store-dynamodb/ #     Verify store: DynamoDB (single-table, native TTL on expires_at)
       js-server-helper-logger/    #   Compliance-friendly action log: per-row retention (persistent | TTL) + optional IP encryption, multi-backend
+        js-server-helper-logger-store-sqlite/   #     Logger store: SQLite (embedded, zero-network, dev/test)
+        js-server-helper-logger-store-postgres/ #     Logger store: PostgreSQL (production SQL)
+        js-server-helper-logger-store-mysql/    #     Logger store: MySQL / MariaDB (production SQL)
+        js-server-helper-logger-store-mongodb/  #     Logger store: MongoDB (native TTL, data as embedded doc, compound pk/actor keys)
+        js-server-helper-logger-store-dynamodb/ #     Logger store: DynamoDB (entity_pk base table + actor_gsi, native TTL on expires_at)
     helper-modules-client/        # Client-specific helpers (browser, mobile)
       js-client-helper-crypto/    #   UUID, random strings, base64 (Web Crypto API). Delegates to core crypto when available.
   demo-project/                   # Seed project - copy this to start
@@ -452,7 +468,7 @@ Applies to every section closer: `Public Functions END`, `Private Functions END`
   4. Update `dependencies` / `devDependencies` with `^<major>.<minor>.<patch>`
   5. Update `engines.node` field if the new version requires a newer Node.js
   6. Run `npm install` and `npm test` to verify no regressions
-- **Every module declares `engines.node`** - minimum Node.js version the module supports. Example: `"engines": { "node": ">=20.19" }`
+- **Every module declares `engines.node`** - minimum Node.js version the module supports. Example: `"engines": { "node": ">=24" }`
 - **No `keywords` field** in `package.json` - omit it entirely
 - **When to re-verify:** On every module migration, before major dependency bumps, and whenever a lint/test regression might be caused by an outdated package
 
@@ -494,7 +510,7 @@ Every module documents itself across three files, each with one audience. Full r
 5. Hot-Swappable with Other Backends *(class-conditional. Modules with siblings)*
 6. Class-specific section *(class-conditional. See class table below)*
 7. Aligned with Superloom Philosophy (separate section, NOT a Why bullet)
-8. Learn More (`docs/*.md` + Superloom; NEVER link `ROBOTS.md` here)
+8. Extended Documentation (`docs/*.md` + Superloom; NEVER link `ROBOTS.md` here)
 9. Adding to Your Project (peer-dependency via loader pattern; NO `npm install` snippet)
 10. Testing Status (which tiers passed; test runtime details live in `docs/configuration.md`)
 11. License

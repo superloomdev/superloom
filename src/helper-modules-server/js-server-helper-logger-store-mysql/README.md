@@ -1,172 +1,60 @@
 # @superloomdev/js-server-helper-logger-store-mysql
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-MySQL store adapter for [`@superloomdev/js-server-helper-logger`](../js-server-helper-logger). Implements the 5-method store contract backed by MySQL via `@superloomdev/js-server-helper-sql-mysql`.
+A MySQL / MariaDB-backed implementation of the [Logger](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger) module's storage contract. Plug it into the parent's `STORE` config; the Logger module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent.** Tests require a running MySQL instance. The Docker lifecycle is managed automatically by `npm test` via `pretest`/`posttest` scripts — no manual `docker compose` needed.
+## What This Is
 
-## How This Adapter Fits In
+A thin layer between the Logger parent module and a MySQL log table. Well-suited for production deployments on MySQL or MariaDB stacks requiring InnoDB transactions, connection pooling, and utf8mb4 character support.
 
-The logger module calls this adapter as a factory:
+The adapter cannot stand alone. It is always loaded together with the Logger parent and the [`js-server-helper-sql-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-mysql) driver helper.
 
-```js
-const store = require('@superloomdev/js-server-helper-logger-store-mysql')(Lib, CONFIG, ERRORS);
-```
+## Why Use This Module
 
-The adapter receives the full narrowed `Lib` (Utils, Debug, Crypto, Instance), the merged `CONFIG` (from which it extracts `CONFIG.STORE_CONFIG` internally), and the frozen logger `ERRORS` catalog (used verbatim in error envelopes). It returns the 5-method store interface consumed by `logger.js`. The caller never needs to know which backend is active.
+- **Library updates won't break your code.** When `mysql2` ships a breaking change, only this adapter and the `sql-mysql` driver helper need updating.
 
-This is the standard **adapter factory protocol** shared by all `logger-store-*` packages.
+- **Pre-tested at every release.** A full store-contract and Logger-lifecycle integration suite run against a Dockerized MySQL instance in CI on every push.
 
-## Install
+- **InnoDB + utf8mb4.** `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci` — row-level locking and full Unicode support out of the box.
 
-```bash
-npm install @superloomdev/js-server-helper-logger \
-            @superloomdev/js-server-helper-logger-store-mysql \
-            @superloomdev/js-server-helper-sql-mysql
-```
+- **Single-statement idempotent setup.** All indexes are inlined into `CREATE TABLE IF NOT EXISTS` for full idempotency in one round-trip.
 
-## Usage
+- **Idempotent `addLog`.** Uses `ON DUPLICATE KEY UPDATE \`sort_key\` = \`sort_key\`` (MySQL no-op). Re-sending the same log record is always safe.
 
-Pass the adapter factory to `STORE`. Pass the `Lib.MySQL` instance in `STORE_CONFIG`.
+## Hot-Swappable with Other Backends
 
-```js
-const Lib = {};
-Lib.Utils    = require('@superloomdev/js-helper-utils')(Lib, {});
-Lib.Debug    = require('@superloomdev/js-helper-debug')(Lib, {});
-Lib.Crypto   = require('@superloomdev/js-server-helper-crypto')(Lib, {});
-Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
+- [`@superloomdev/js-server-helper-logger-store-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger-store-sqlite) - SQLite (embedded, zero-network, dev/test)
+- [`@superloomdev/js-server-helper-logger-store-postgres`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger-store-postgres) - PostgreSQL
+- [`@superloomdev/js-server-helper-logger-store-mongodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger-store-mongodb) - MongoDB
+- [`@superloomdev/js-server-helper-logger-store-dynamodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger-store-dynamodb) - AWS DynamoDB
 
-Lib.MySQL = require('@superloomdev/js-server-helper-sql-mysql')(Lib, {
-  HOST:     process.env.DB_HOST,
-  DATABASE: process.env.DB_NAME,
-  USER:     process.env.DB_USER,
-  PASSWORD: process.env.DB_PASSWORD,
-  POOL_MAX: 10
-});
+## Aligned with Superloom Philosophy
 
-Lib.Logger = require('@superloomdev/js-server-helper-logger')(Lib, {
-  STORE: require('@superloomdev/js-server-helper-logger-store-mysql'),
-  STORE_CONFIG: {
-    table_name: 'action_log',
-    lib_sql:    Lib.MySQL
-  },
-  IP_ENCRYPT_KEY: process.env.IP_ENCRYPT_KEY  // optional
-});
+If your project is built on Superloom conventions (the same loader pattern, the same response envelopes, the same testing model), this adapter slots in without you needing to learn anything new.
 
-// Create table + index at boot (idempotent)
-await Lib.Logger.setupNewStore(Lib.Instance.initialize());
-```
+## Extended Documentation
 
-## STORE_CONFIG
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mysql/docs/api.md). The store contract this adapter implements and MySQL-specific semantics
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mysql/docs/configuration.md). `STORE_CONFIG` keys, peer dependencies, environment variables, testing tier
+- [Schema](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mysql/docs/schema.md). DDL, backtick quoting, inlined index strategy, InnoDB engine
+- [Cleanup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mysql/docs/cleanup.md). MySQL has no native TTL; scheduled cleanup is required
+- [Logger parent module](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger). The data model, error catalog, and Logger-side configuration this adapter plugs into
 
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `table_name` | `String` | Yes | Name of the log table. One table per logger instance. |
-| `lib_sql` | `Object` | Yes | An initialized `Lib.MySQL` instance (`@superloomdev/js-server-helper-sql-mysql`). |
+## Adding to Your Project
 
-## Schema
+This adapter is installed alongside the Logger parent module and the `sql-mysql` driver helper. The loader pattern is documented in the Logger parent's README.
 
-`setupNewStore` issues two idempotent DDL statements:
+Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
-```sql
-CREATE TABLE IF NOT EXISTS `action_log` (
-  `scope` VARCHAR(64) NOT NULL,
-  `entity_type` VARCHAR(64) NOT NULL,
-  `entity_id` VARCHAR(128) NOT NULL,
-  `actor_type` VARCHAR(64) NOT NULL,
-  `actor_id` VARCHAR(128) NOT NULL,
-  `action` VARCHAR(128) NOT NULL,
-  `data` TEXT,
-  `ip` VARCHAR(64),
-  `user_agent` TEXT,
-  `created_at` BIGINT NOT NULL,
-  `created_at_ms` BIGINT NOT NULL,
-  `sort_key` VARCHAR(24) NOT NULL,
-  `expires_at` BIGINT,
-  PRIMARY KEY (`scope`, `entity_type`, `entity_id`, `sort_key`)
-) ENGINE=InnoDB;
+## Testing Status
 
-CREATE INDEX IF NOT EXISTS `idx_action_log_expires_at`
-  ON `action_log` (`expires_at`);
-```
+| Tier | Runtime | Status |
+|---|---|---|
+| Contract + Integration | MySQL via Docker Compose | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-### MySQL-Specific Notes
-
-- **Backticks** for identifiers (`` `col` ``). The adapter rejects any `table_name` containing backticks at loader time.
-- **Engine** is `InnoDB` for transaction support.
-- **BIGINT** stores Unix timestamps. Returned as JavaScript numbers.
-- **JSON** fields (`data`) are stored as `TEXT` and parsed on read for cross-backend consistency.
-- **Upsert** uses `INSERT ... ON DUPLICATE KEY UPDATE` (MySQL-specific syntax).
-- **Partial indexes** — MySQL 8.0.13+ supports partial indexes via `WHERE`; older versions create full index.
-
-## Store Contract
-
-This adapter implements the 5-method contract consumed by `logger.js`:
-
-| Method | Signature | Returns |
-|--------|-----------|---------|
-| `setupNewStore` | `(instance)` | `{ success, error }` — idempotent table + index creation |
-| `addLog` | `(instance, record)` | `{ success, error }` — persist one log record |
-| `getLogsByEntity` | `(instance, query)` | `{ success, records, next_cursor, error }` — "what happened to this entity?" |
-| `getLogsByActor` | `(instance, query)` | `{ success, records, next_cursor, error }` — "what did this actor do?" |
-| `cleanupExpiredLogs` | `(instance)` | `{ success, deleted_count, error }` — sweep expired rows |
-
-`getLogsByEntity` and `getLogsByActor` support:
-- Cursor-based pagination via `next_cursor`
-- Optional action glob filtering (`'auth.*'`)
-- Time range filtering (`start_time_ms`, `end_time_ms`)
-
-## Expired Log Cleanup
-
-MySQL has no native TTL. Run `cleanupExpiredLogs` on a cron:
-
-```js
-setInterval(async function () {
-  const result = await Lib.Logger.cleanupExpiredLogs(Lib.Instance.initialize());
-  if (result.success) {
-    Lib.Debug.info('Cleanup deleted ' + result.deleted_count + ' expired logs');
-  }
-}, 3600 * 1000);  // hourly, or daily for low-traffic systems
-```
-
-Alternative: Use MySQL `EVENT` scheduler for database-native cleanup.
-
-## Environment Variables
-
-Consumed by `_test/loader.js` — never read anywhere else.
-
-| Variable | Default (Docker) | Description |
-|----------|------------------|-------------|
-| `MYSQL_HOST` | `localhost` | MySQL host |
-| `MYSQL_PORT` | `3306` | MySQL port |
-| `MYSQL_DATABASE` | `test_db` | Database name |
-| `MYSQL_USER` | `test_user` | MySQL user |
-| `MYSQL_PASSWORD` | `test_pw` | MySQL password |
-
-## Peer Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `@superloomdev/js-helper-utils` | Type checks |
-| `@superloomdev/js-helper-debug` | Structured debug logging |
-| `@superloomdev/js-server-helper-sql-mysql` | MySQL driver wrapper (`Lib.MySQL`) |
-
-## Testing
-
-```bash
-cd _test && npm install && npm test
-```
-
-Docker lifecycle is fully automatic. `pretest` starts a MySQL 8 container; `posttest` stops and removes it (containers and volumes only — images are cached). No manual `docker compose up` needed.
-
-`_test/store-contract-suite.js` is a local copy of the shared integration suite maintained by the logger module. It is not fetched from the logger package at test time — this keeps the adapter's test harness self-contained and records which contract version it was built against.
-
-The suite covers:
-- Adapter unit tests (Tier 1): store loader config validation, SQL coercion, index behavior, upsert idempotency
-- Full logger lifecycle integration (Tier 3): every public Logger API path driven against the real MySQL backend via the store contract suite
+Docker lifecycle is fully automatic — `npm test` from `_test/` manages `pretest`/`posttest`. Test runtime details live in [Configuration → Testing Tier](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mysql/docs/configuration.md#testing-tier).
 
 ## License
 

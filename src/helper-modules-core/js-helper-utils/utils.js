@@ -1,7 +1,7 @@
 // Info: Utility functions for type checks, validation, sanitization, and data
 // manipulation. Zero runtime dependencies - no external libs required.
 //
-// Compatibility: Node.js 20.19+.
+// Compatibility: Node.js 24+.
 //
 // Factory pattern: each loader call returns an independent Utils interface.
 // Functions are pure - no shared module-level state between instances.

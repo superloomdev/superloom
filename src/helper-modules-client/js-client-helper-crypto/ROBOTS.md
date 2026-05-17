@@ -26,23 +26,30 @@ Each loader call returns an independent Crypto interface with its own `Lib` and 
 
 ### Random & UUIDs
 generateRandomString(charset, length) → String | async:no
-  Random string from given charset, using Web Crypto for entropy.
+  Random string from given charset, using Web Crypto for entropy. Returns '' on empty/non-positive input.
 
 generateUUID() → String | async:no
-  Standard UUID v4 via `crypto.randomUUID()`.
+  Standard UUID v4 via `crypto.randomUUID()` with polyfill fallback.
 
 generateCompactUUID() → String | async:no
-  Shorter identifier suitable for URLs and logs (non-hyphenated, base-36).
+  Shorter identifier suitable for URLs and logs (25 chars, base-36).
 
-### Low-level Web Crypto Access
-webCrypto() → SubtleCrypto | async:no
-  Returns the runtime Web Crypto reference (`globalThis.crypto`).
+### Base64 Encoding
+stringToBase64(str) → String | async:no
+  UTF-8 string to standard base64 (`+`/`/` with `=` padding). Uses Buffer in Node, btoa+TextEncoder in browsers.
 
-getRandomValues(length) → Uint8Array | async:no
-  Fill a typed array with cryptographically-strong random bytes.
+base64ToString(str) → String | async:no
+  Standard base64 to UTF-8 string. Uses Buffer in Node, atob+TextDecoder in browsers.
+
+### URL-Safe Base64
+urlEncodeBase64(str) → String | async:no
+  Standard base64 to URL-safe form. `+`→`-`, `/`→`_`, strips trailing `=`.
+
+urlDecodeBase64(str) → String | async:no
+  Inverse: re-pads then `_`→`/`, `-`→`+`. Returns input unchanged when empty.
 
 ## Patterns
-- **Browser-safe:** Uses Web Crypto API, works in browsers, React Native, Node.js 19+
-- **No Node.js-specific APIs:** Avoids `crypto` module, `Buffer` (except via Uint8Array)
-- **Uses Lib.Utils:** For input validation (e.g., `Lib.Utils.isString`, `Lib.Utils.isNumber`)
-- **Server equivalent:** For server-side hashing, encryption, base conversion - use `@superloomdev/js-server-helper-crypto` instead
+- **Web Crypto first, polyfill fallback:** Uses `globalThis.crypto` when available; falls back to `Math.random` only when Web Crypto is missing entirely (the latter is NOT cryptographically secure)
+- **Runtime-symmetric base64:** `Buffer.from` in Node; `btoa`/`atob` + `TextEncoder`/`TextDecoder` in browsers. Throws when neither is available (rare)
+- **Uses Lib.Utils:** For input validation (`isEmpty`, `isFunction`)
+- **Server-side sibling:** `@superloomdev/js-server-helper-crypto` shares the same names and signatures for the seven functions above and adds hashing, HMAC, encryption, and base conversion on top

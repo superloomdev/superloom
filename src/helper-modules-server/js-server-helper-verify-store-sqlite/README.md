@@ -1,147 +1,62 @@
 # @superloomdev/js-server-helper-verify-store-sqlite
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 22.13+](https://img.shields.io/badge/Node.js-22.13%2B-brightgreen.svg)](https://nodejs.org)
+[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-SQLite store adapter for [`@superloomdev/js-server-helper-verify`](../js-server-helper-verify). Implements the 6-method store contract backed by SQLite via `@superloomdev/js-server-helper-sql-sqlite`.
+A SQLite-backed implementation of the [Verify](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify) module's storage contract. Plug it into the parent's `STORE` config; the Verify module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
 
-> **Offline module** — tests run against an in-memory SQLite database. No Docker, no credentials, no network.
+## What This Is
 
-## How This Adapter Fits In
+A thin layer between the Verify parent module and a SQLite verification table. SQLite runs in-process through Node's built-in `node:sqlite` module, so there is no external database to provision and no network round-trip on a query. The adapter is well suited to offline-first applications, single-node deployments, command-line tools, and ephemeral test fixtures; for high-concurrency production deployments the Postgres, MySQL, or MongoDB adapter is a better fit.
 
-The verify module calls this adapter as a factory:
+The adapter cannot stand alone. It is always loaded together with the Verify parent and the underlying [`js-server-helper-sql-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-sqlite) driver helper.
 
-```js
-const store = require('@superloomdev/js-server-helper-verify-store-sqlite')(Lib, CONFIG, ERRORS);
-```
+## Why Use This Module
 
-The adapter receives the full narrowed `Lib` (Utils, Debug), the merged `CONFIG` (from which it extracts `CONFIG.STORE_CONFIG` internally), and the frozen verify `ERRORS` catalog (used verbatim in error envelopes). It returns the 6-method store interface consumed by `verify.js`. The caller never needs to know which backend is active.
+- **Library updates won't break your code.** When `node:sqlite` ships a breaking change, only this adapter and the `sql-sqlite` driver helper need updating. Your application code and the Verify-module call sites stay exactly as they are.
 
-This is the standard **adapter factory protocol** shared by all `verify-store-*` packages.
+- **Pre-tested at every release.** A full store-contract suite plus a full Verify-lifecycle integration suite run against an in-process `:memory:` SQLite database in CI on every push. Your project trusts the adapter instead of re-verifying code plumbing on each release.
 
-## Install
+- **Designed for human review.** The adapter is laid out as clearly-marked visual sections so a reviewer can read it top to bottom and follow each store-contract method without getting lost in dense logic.
 
-```bash
-npm install @superloomdev/js-server-helper-verify \
-            @superloomdev/js-server-helper-verify-store-sqlite \
-            @superloomdev/js-server-helper-sql-sqlite
-```
+- **Built-in observability.** Every store call is timed against the active request via `Lib.Debug`, the same way every other Superloom helper does.
 
-## Usage
+- **Embedded persistence, no infrastructure.** Runs in-process. No external database to provision, no network to debug, no connection string to manage. Schema creation (`setupNewStore`) and expired-record cleanup (`cleanupExpiredRecords`) are built in. The schema, index strategy, and recommended cleanup cadence live in [`docs/schema.md`](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-sqlite/docs/schema.md) and [`docs/cleanup.md`](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-sqlite/docs/cleanup.md).
 
-Pass the adapter factory to `STORE`. Pass the `Lib.SQLite` instance in `STORE_CONFIG`.
+## Hot-Swappable with Other Backends
 
-```js
-const Lib = {};
-Lib.Utils = require('@superloomdev/js-helper-utils')(Lib, {});
-Lib.Debug = require('@superloomdev/js-helper-debug')(Lib, {});
+This adapter is part of the `verify-store-*` family. Every sibling implements the same store contract. Swap by changing one config value; the rest of your code keeps working.
 
-Lib.SQLite = require('@superloomdev/js-server-helper-sql-sqlite')(Lib, {
-  FILE: '/var/data/verify.db',  // or ':memory:' for tests
-  JOURNAL_MODE: 'WAL'
-});
+- [`@superloomdev/js-server-helper-verify-store-postgres`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-postgres) - PostgreSQL
+- [`@superloomdev/js-server-helper-verify-store-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-mysql) - MySQL or MariaDB
+- [`@superloomdev/js-server-helper-verify-store-mongodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-mongodb) - MongoDB
+- [`@superloomdev/js-server-helper-verify-store-dynamodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-dynamodb) - AWS DynamoDB
 
-Lib.Verify = require('@superloomdev/js-server-helper-verify')(Lib, {
-  STORE: require('@superloomdev/js-server-helper-verify-store-sqlite'),
-  STORE_CONFIG: {
-    table_name: 'verification_codes',
-    lib_sql:    Lib.SQLite
-  }
-});
+## Aligned with Superloom Philosophy
 
-// Create table + index at boot (idempotent)
-await Lib.Verify.setupNewStore(Lib.Instance.initialize());
-```
+If your project is built on Superloom conventions (the same loader pattern, the same response envelopes, the same testing model), this adapter slots in without you needing to learn anything new.
 
-## STORE_CONFIG
+## Extended Documentation
 
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `table_name` | `String` | Yes | Name of the verification table. One table per verify instance. |
-| `lib_sql` | `Object` | Yes | An initialized `Lib.SQLite` instance (`@superloomdev/js-server-helper-sql-sqlite`). |
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-sqlite/docs/api.md). The store contract this adapter implements and SQLite-specific semantics
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-sqlite/docs/configuration.md). `STORE_CONFIG` keys, peer dependencies, environment variables, testing tier
+- [Schema](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-sqlite/docs/schema.md). DDL, identifier quoting, UPSERT semantics, index strategy
+- [Cleanup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-sqlite/docs/cleanup.md). SQLite has no native TTL; scheduled cleanup is required for file-backed deployments
+- [Verify parent module](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify). The data model, error catalog, and Verify-side configuration this adapter plugs into
 
-## Schema
+## Adding to Your Project
 
-`setupNewStore` issues two idempotent DDL statements:
+This adapter is installed alongside the Verify parent module and the `sql-sqlite` driver helper. The loader pattern, including the full `Lib` container shape and how the adapter factory is passed to the Verify parent's `STORE` config key, is documented in the Verify parent's README.
 
-```sql
-CREATE TABLE IF NOT EXISTS "verification_codes" (
-  "scope" VARCHAR(64) NOT NULL,
-  "key" VARCHAR(128) NOT NULL,
-  "code" VARCHAR(32) NOT NULL,
-  "fail_count" INTEGER NOT NULL DEFAULT 0,
-  "created_at" BIGINT NOT NULL,
-  "expires_at" BIGINT NOT NULL,
-  PRIMARY KEY ("scope", "key")
-);
+Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
-CREATE INDEX IF NOT EXISTS "idx_verification_codes_expires_at"
-  ON "verification_codes" ("expires_at") WHERE "expires_at" IS NOT NULL;
-```
+## Testing Status
 
-### SQLite-Specific Notes
+| Tier | Runtime | Status |
+|---|---|---|
+| Contract + Integration | SQLite (`:memory:`, in-process via `node:sqlite`) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-- **Identifiers** are double-quoted (`"col"`). The adapter rejects any `table_name` containing a double-quote at loader time.
-- **Partial index** on `expires_at` — SQLite ignores it for expired cleanup, keeping index size small.
-- **UPSERT** uses `INSERT ... ON CONFLICT (scope, key) DO UPDATE` for idempotent writes.
-- **Transaction safety** — SQLite `node:sqlite` module handles atomicity natively.
-
-## Store Contract
-
-This adapter implements the 6-method contract consumed by `verify.js`:
-
-| Method | Signature | Returns |
-|--------|-----------|---------|
-| `setupNewStore` | `(instance)` | `{ success, error }` — idempotent table + index creation |
-| `getRecord` | `(instance, scope, key)` | `{ success, record, error }` — fetch one verification record |
-| `setRecord` | `(instance, scope, key, record)` | `{ success, error }` — upsert a verification record |
-| `incrementFailCount` | `(instance, scope, key)` | `{ success, error }` — atomically increment fail counter |
-| `deleteRecord` | `(instance, scope, key)` | `{ success, error }` — delete record after successful verify |
-| `cleanupExpiredRecords` | `(instance)` | `{ success, deleted_count, error }` — sweep expired records |
-
-## Expired Record Cleanup
-
-SQLite has no native TTL. Run `cleanupExpiredRecords` on a cron:
-
-```js
-setInterval(async function () {
-  const result = await Lib.Verify.cleanupExpiredRecords(Lib.Instance.initialize());
-  if (result.success) {
-    Lib.Debug.info('Cleanup deleted ' + result.deleted_count + ' expired codes');
-  }
-}, 3600 * 1000);  // hourly
-```
-
-## Environment Variables
-
-Consumed by `_test/loader.js` — never read anywhere else.
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SQLITE_FILE` | `':memory:'` | SQLite database file (or `:memory:`) |
-
-## Peer Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `@superloomdev/js-helper-utils` | Type checks |
-| `@superloomdev/js-helper-debug` | Structured debug logging |
-| `@superloomdev/js-server-helper-sql-sqlite` | SQLite driver wrapper (`Lib.SQLite`) |
-
-## Testing
-
-```bash
-cd _test && npm install && npm test
-```
-
-Tests run against an in-memory SQLite database. No Docker, no external services.
-
-`_test/store-contract-suite.js` is a local copy of the shared integration suite maintained by the verify module. It is not fetched from the verify package at test time — this keeps the adapter's test harness self-contained and records which contract version it was built against.
-
-The suite covers:
-- Adapter unit tests (Tier 1): store loader config validation, SQL coercion, partial index behavior, upsert idempotency, fail count increment
-- Full verify lifecycle integration (Tier 3): `createPin`/`createCode`/`createToken`, `verify`, `cleanupExpiredRecords`, fail counting, expiry handling
+Tests run fully in-process; no Docker, no service to provision. Test runtime details live in [Configuration → Testing Tier](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-sqlite/docs/configuration.md#testing-tier).
 
 ## License
 

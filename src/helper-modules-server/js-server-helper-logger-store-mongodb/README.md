@@ -1,187 +1,58 @@
 # @superloomdev/js-server-helper-logger-store-mongodb
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-MongoDB store adapter for [`@superloomdev/js-server-helper-logger`](../js-server-helper-logger). Implements the 5-method store contract backed by MongoDB via `@superloomdev/js-server-helper-nosql-mongodb`.
+A MongoDB-backed implementation of the [Logger](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger) module's storage contract. Plug it into the parent's `STORE` config; the Logger module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent.** Tests require a running MongoDB instance. The Docker lifecycle is managed automatically by `npm test` via `pretest`/`posttest` scripts — no manual `docker compose` needed.
+## What This Is
 
-## How This Adapter Fits In
+A thin layer between the Logger parent module and a MongoDB log collection. Uses `_id = sort_key` for deterministic document identity, compound indexes on the canonical fields for the two query paths, and a sparse TTL index on `_ttl` for automatic expiry.
 
-The logger module calls this adapter as a factory:
+The adapter cannot stand alone. It is always loaded together with the Logger parent and the [`js-server-helper-nosql-mongodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-nosql-mongodb) driver helper.
 
-```js
-const store = require('@superloomdev/js-server-helper-logger-store-mongodb')(Lib, CONFIG, ERRORS);
-```
+## Why Use This Module
 
-The adapter receives the full narrowed `Lib` (Utils, Debug, Crypto, Instance), the merged `CONFIG` (from which it extracts `CONFIG.STORE_CONFIG` internally), and the frozen logger `ERRORS` catalog (used verbatim in error envelopes). It returns the 5-method store interface consumed by `logger.js`. The caller never needs to know which backend is active.
+- **Library updates won't break your code.** When the MongoDB native driver ships a breaking change, only this adapter and the `nosql-mongodb` driver helper need updating.
 
-This is the standard **adapter factory protocol** shared by all `logger-store-*` packages.
+- **Pre-tested at every release.** A full store-contract and Logger-lifecycle integration suite run against a Dockerized MongoDB instance in CI on every push.
 
-## Install
+- **Native TTL.** Expired log records are automatically deleted by MongoDB's TTL sweeper (~60s lag). `cleanupExpiredLogs` is also available for deterministic explicit cleanup.
 
-```bash
-npm install @superloomdev/js-server-helper-logger \
-            @superloomdev/js-server-helper-logger-store-mongodb \
-            @superloomdev/js-server-helper-nosql-mongodb
-```
+- **`data` stored as embedded document.** Unlike SQL adapters that JSON-serialize `data` to a string, this adapter stores it as a native MongoDB embedded document — enabling sub-field queries, projections, and indexing without string parsing.
 
-## Usage
+## Hot-Swappable with Other Backends
 
-Pass the adapter factory to `STORE`. Pass the `Lib.MongoDB` instance in `STORE_CONFIG`.
+- [`@superloomdev/js-server-helper-logger-store-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger-store-sqlite) - SQLite (embedded, zero-network, dev/test)
+- [`@superloomdev/js-server-helper-logger-store-postgres`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger-store-postgres) - PostgreSQL
+- [`@superloomdev/js-server-helper-logger-store-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger-store-mysql) - MySQL or MariaDB
+- [`@superloomdev/js-server-helper-logger-store-dynamodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger-store-dynamodb) - AWS DynamoDB
 
-```js
-const Lib = {};
-Lib.Utils    = require('@superloomdev/js-helper-utils')(Lib, {});
-Lib.Debug    = require('@superloomdev/js-helper-debug')(Lib, {});
-Lib.Crypto   = require('@superloomdev/js-server-helper-crypto')(Lib, {});
-Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
+## Aligned with Superloom Philosophy
 
-Lib.MongoDB = require('@superloomdev/js-server-helper-nosql-mongodb')(Lib, {
-  URI: process.env.MONGODB_URI,
-  DATABASE: 'audit'
-});
+If your project is built on Superloom conventions (the same loader pattern, the same response envelopes, the same testing model), this adapter slots in without you needing to learn anything new.
 
-Lib.Logger = require('@superloomdev/js-server-helper-logger')(Lib, {
-  STORE: require('@superloomdev/js-server-helper-logger-store-mongodb'),
-  STORE_CONFIG: {
-    collection_name: 'action_log',
-    lib_mongodb:     Lib.MongoDB
-  },
-  IP_ENCRYPT_KEY: process.env.IP_ENCRYPT_KEY  // optional
-});
+## Extended Documentation
 
-// Create indexes at boot (idempotent)
-await Lib.Logger.setupNewStore(Lib.Instance.initialize());
-```
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mongodb/docs/api.md). The store contract this adapter implements and MongoDB-specific semantics
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mongodb/docs/configuration.md). `STORE_CONFIG` keys, peer dependencies, environment variables, testing tier
+- [Schema](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mongodb/docs/schema.md). Document shape, compound indexes, sparse TTL index, `data` as embedded document
+- [Cleanup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mongodb/docs/cleanup.md). Native TTL and explicit `cleanupExpiredLogs` — when to use each
+- [Logger parent module](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-logger). The data model, error catalog, and Logger-side configuration this adapter plugs into
 
-## STORE_CONFIG
+## Adding to Your Project
 
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `collection_name` | `String` | Yes | Name of the log collection. One collection per logger instance. |
-| `lib_mongodb` | `Object` | Yes | An initialized `Lib.MongoDB` instance (`@superloomdev/js-server-helper-nosql-mongodb`). |
+This adapter is installed alongside the Logger parent module and the `nosql-mongodb` driver helper. The loader pattern is documented in the Logger parent's README.
 
-## Schema
+Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
-`setupNewStore` creates three indexes:
+## Testing Status
 
-```javascript
-// Primary query index: getLogsByEntity
-db.action_log.createIndex(
-  { entity_pk: 1, sort_key: -1 },
-  { name: 'idx_entity_sort' }
-);
+| Tier | Runtime | Status |
+|---|---|---|
+| Contract + Integration | MongoDB via Docker Compose | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-// Secondary query index: getLogsByActor
-db.action_log.createIndex(
-  { actor_pk: 1, sort_key: -1 },
-  { name: 'idx_actor_sort' }
-);
-
-// TTL index: automatic expiration of temporary logs
-db.action_log.createIndex(
-  { _ttl: 1 },
-  { name: 'idx_ttl', expireAfterSeconds: 0 }
-);
-```
-
-### Document Structure
-
-MongoDB stores the same fields as SQL backends, with computed keys added:
-
-```javascript
-{
-  _id: "<sort_key>",                    // document ID = sort_key
-  entity_pk: "<scope>#<type>#<id>",    // computed compound key
-  actor_pk: "<scope>#<type>#<id>",       // computed compound key
-  scope: "...",
-  entity_type: "...",
-  entity_id: "...",
-  actor_type: "...",
-  actor_id: "...",
-  action: "...",
-  data: { ... },
-  ip: "...",
-  user_agent: "...",
-  created_at: 1715180412,
-  created_at_ms: 1715180412345,
-  sort_key: "1715180412345-xqp",
-  expires_at: 1722956412,                 // null for persistent rows
-  _ttl: ISODate("2024-08-06T12:00:12Z") // Date-typed for TTL index (derived from expires_at)
-}
-```
-
-### MongoDB-Specific Notes
-
-- **Compound keys** (`entity_pk`, `actor_pk`) enable efficient range queries on the two main access patterns.
-- **TTL index** on `_ttl` field — MongoDB automatically deletes documents ~60 seconds after the TTL date passes. Requires `Date` type (not epoch seconds).
-- **`_id`** is set to `sort_key` for deterministic document identity across insertions.
-- **Indexes** are created idempotently — `createIndex` is a no-op if the index already exists.
-
-## Store Contract
-
-This adapter implements the 5-method contract consumed by `logger.js`:
-
-| Method | Signature | Returns |
-|--------|-----------|---------|
-| `setupNewStore` | `(instance)` | `{ success, error }` — idempotent index creation |
-| `addLog` | `(instance, record)` | `{ success, error }` — persist one log record |
-| `getLogsByEntity` | `(instance, query)` | `{ success, records, next_cursor, error }` — "what happened to this entity?" |
-| `getLogsByActor` | `(instance, query)` | `{ success, records, next_cursor, error }` — "what did this actor do?" |
-| `cleanupExpiredLogs` | `(instance)` | `{ success, deleted_count, error }` — explicit sweep (fallback) |
-
-`getLogsByEntity` and `getLogsByActor` support:
-- Cursor-based pagination via `next_cursor`
-- Optional action glob filtering (`'auth.*'`)
-- Time range filtering (`start_time_ms`, `end_time_ms`)
-
-## Expired Log Cleanup
-
-MongoDB has native TTL via the `_ttl` index. Documents are automatically removed ~60 seconds after the TTL date.
-
-The explicit `cleanupExpiredLogs` function is provided for:
-- Deterministic test cleanup
-- Environments where TTL is disabled
-- Immediate removal needs
-
-```js
-// Optional: explicit cleanup (native TTL handles most cases)
-const result = await Lib.Logger.cleanupExpiredLogs(Lib.Instance.initialize());
-```
-
-## Environment Variables
-
-Consumed by `_test/loader.js` — never read anywhere else.
-
-| Variable | Default (Docker) | Description |
-|----------|------------------|-------------|
-| `MONGODB_URI` | `mongodb://localhost:27017` | MongoDB connection URI |
-| `MONGODB_DATABASE` | `test` | Database name |
-
-## Peer Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `@superloomdev/js-helper-utils` | Type checks |
-| `@superloomdev/js-helper-debug` | Structured debug logging |
-| `@superloomdev/js-server-helper-nosql-mongodb` | MongoDB driver wrapper (`Lib.MongoDB`) |
-
-## Testing
-
-```bash
-cd _test && npm install && npm test
-```
-
-Docker lifecycle is fully automatic. `pretest` starts a MongoDB 7 container; `posttest` stops and removes it (containers and volumes only — images are cached). No manual `docker compose up` needed.
-
-`_test/store-contract-suite.js` is a local copy of the shared integration suite maintained by the logger module. It is not fetched from the logger package at test time — this keeps the adapter's test harness self-contained and records which contract version it was built against.
-
-The suite covers:
-- Adapter unit tests (Tier 1): store loader config validation, compound key generation, TTL index behavior
-- Full logger lifecycle integration (Tier 3): every public Logger API path driven against the real MongoDB backend via the store contract suite
+Docker lifecycle is fully automatic — `npm test` from `_test/` manages `pretest`/`posttest`. Test runtime details live in [Configuration → Testing Tier](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-logger-store-mongodb/docs/configuration.md#testing-tier).
 
 ## License
 

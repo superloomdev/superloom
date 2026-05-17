@@ -95,7 +95,7 @@ Run this checklist when adding a new helper module or migrating an existing one 
 - [ ] `private: false`, `license: MIT`
 - [ ] `scripts` includes: `lint`, `lint:fix`, `test`
 - [ ] No stale or unused dependencies
-- [ ] `engines.node` is set (e.g., `">=20.19"`) - matches the minimum Node.js required by the newest dependency
+- [ ] `engines.node` is set (e.g., `">=24"`) - matches the framework-wide minimum (CI tests on Node 24)
 - [ ] `package.json` uses multi-line JSON (not compressed single-line) - makes diffs readable
 - [ ] **Version Management**: New modules start at version 1.0.0 (not 2.0.0)
 - [ ] **Clean Migration**: For migrated modules, use `git reset --hard <base-commit>` to clean history

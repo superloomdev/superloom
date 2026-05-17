@@ -1,173 +1,67 @@
 # @superloomdev/js-server-helper-auth-store-sqlite
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-SQLite session store adapter for [`@superloomdev/js-server-helper-auth`](../js-server-helper-auth). Implements the 8-method store contract backed by SQLite via the built-in Node.js `node:sqlite` module (no native add-ons, no Docker).
+A SQLite-backed implementation of the [Auth](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth) module's storage contract. Plug it into the parent's `STORE` config; the Auth module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
 
-> **Offline / embedded.** Suitable for development, testing, embedded single-process applications, and CLI tools. For production deployments under concurrent load, use the Postgres, MySQL, or MongoDB adapter.
+## What This Is
 
-## How This Adapter Fits In
+A thin layer between the Auth parent module and a SQLite sessions table. SQLite runs in-process through Node's built-in `node:sqlite` module, so there is no external database to provision and no network round-trip on a query. The adapter is well suited to offline-first applications, single-node deployments, command-line tools, and ephemeral test fixtures; for high-concurrency production deployments the Postgres, MySQL, or MongoDB adapter is a better fit.
 
-The auth module calls this adapter as a factory:
+The adapter cannot stand alone. It is always loaded together with the Auth parent and the underlying [`js-server-helper-sql-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-sqlite) driver helper, and inherits whatever the driver helper provides (file-backed or `:memory:` mode, request-level timing, error envelopes).
 
-```js
-const store = require('@superloomdev/js-server-helper-auth-store-sqlite')(Lib, CONFIG, ERRORS);
-```
+## Why Use This Module
 
-The adapter receives the full narrowed `Lib` (Utils, Debug, Crypto, Instance), the merged `CONFIG` (from which it extracts `CONFIG.STORE_CONFIG` internally), and the frozen auth `ERRORS` catalog (used verbatim in error envelopes). It returns the 8-method store interface consumed by `auth.js`. The caller — `auth.js` — never needs to know which backend is active.
+- **Library updates won't break your code.** When `node:sqlite` ships a breaking change, only this adapter and the [`sql-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-sqlite) driver helper need updating. Your application code and the Auth-module call sites stay exactly as they are.
 
-This is the standard **adapter factory protocol** shared by all `auth-store-*` packages.
+- **Pre-tested at every release.** A full store-contract suite plus a full Auth-lifecycle integration suite run against an in-process `:memory:` SQLite database in CI on every push. Your project trusts the adapter instead of re-verifying session plumbing on each release.
 
-## Install
+- **Designed for human review.** The adapter is laid out as clearly-marked visual sections (section banners, short functions, scoped comments) so a reviewer can read it top to bottom and follow each store-contract method without ever getting lost in dense logic. Open `store.js` to see the structure.
 
-```bash
-npm install @superloomdev/js-server-helper-auth \
-            @superloomdev/js-server-helper-auth-store-sqlite \
-            @superloomdev/js-server-helper-sql-sqlite
-```
+- **Built-in observability.** Every store call is timed against the active request via `Lib.Debug.performanceAuditLog`, the same way every other Superloom helper does. Slow-store review and request profiling are built in. No instrumentation code to write.
 
-## Usage
+- **Embedded persistence, no infrastructure.** Runs in-process. No external database to provision, no network to debug, no connection string to manage. The same adapter powers offline-first apps, single-node deployments, `:memory:` test fixtures, and edge runtimes. Schema creation (`setupNewStore`) and expired-row cleanup (`cleanupExpiredSessions`) are built in and work the same way as every sibling adapter. The schema, the index strategy, and the recommended cleanup cadence live in [`docs/schema.md`](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-sqlite/docs/schema.md) and [`docs/cleanup.md`](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-sqlite/docs/cleanup.md).
 
-Pass the adapter factory directly to `STORE`. Pass the `Lib.SQLite` instance in `STORE_CONFIG`.
+## Hot-Swappable with Other Backends
 
-```js
-const Lib = {};
-Lib.Utils    = require('@superloomdev/js-helper-utils')(Lib, {});
-Lib.Debug    = require('@superloomdev/js-helper-debug')(Lib, {});
-Lib.Crypto   = require('@superloomdev/js-server-helper-crypto')(Lib, {});
-Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
+This adapter is part of the `auth-store-*` family. Every sibling implements the same store contract. Swap by changing one config value; the rest of your code keeps working.
 
-Lib.SQLite = require('@superloomdev/js-server-helper-sql-sqlite')(Lib, {
-  FILE: '/var/data/sessions.db'    // or ':memory:' for tests
-});
+- [`@superloomdev/js-server-helper-auth-store-postgres`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth-store-postgres) - PostgreSQL
+- [`@superloomdev/js-server-helper-auth-store-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth-store-mysql) - MySQL or MariaDB
+- [`@superloomdev/js-server-helper-auth-store-mongodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth-store-mongodb) - MongoDB
+- [`@superloomdev/js-server-helper-auth-store-dynamodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth-store-dynamodb) - AWS DynamoDB
 
-Lib.AuthUser = require('@superloomdev/js-server-helper-auth')(Lib, {
-  STORE: require('@superloomdev/js-server-helper-auth-store-sqlite'),
-  STORE_CONFIG: {
-    table_name: 'sessions_user',
-    lib_sql:    Lib.SQLite
-  },
-  ACTOR_TYPE:  'user',
-  TTL_SECONDS: 2592000
-});
+## Aligned with Superloom Philosophy
 
-// Create table + index at boot (idempotent)
-await Lib.AuthUser.setupNewStore(Lib.Instance.initialize());
-```
+If your project is built on Superloom conventions (the same loader pattern, the same response envelopes, the same testing model), this adapter slots in without you needing to learn anything new. It is written using the same opinionated principles as the Auth parent and the `sql-sqlite` driver helper, so adopting it does not introduce inconsistency into your codebase.
 
-## STORE_CONFIG
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-| Key | Type | Required | Description |
-|---|---|---|---|
-| `table_name` | `String` | Yes | Name of the sessions table. Use one table per `actor_type` (e.g. `sessions_user`, `sessions_admin`). |
-| `lib_sql` | `Object` | Yes | An initialized `Lib.SQLite` instance (`@superloomdev/js-server-helper-sql-sqlite`). |
+## Extended Documentation
 
-## Schema
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-sqlite/docs/api.md). The store contract this adapter implements and the adapter factory protocol
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-sqlite/docs/configuration.md). `STORE_CONFIG` keys, peer dependencies, environment variables, testing tier
+- [Schema](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-sqlite/docs/schema.md). DDL, identifier quoting, boolean encoding, JSON encoding, UPSERT semantics, index strategy
+- [Cleanup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-sqlite/docs/cleanup.md). SQLite has no native TTL; scheduled cleanup is required for file-backed deployments
+- [Auth parent module](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth). The data model, error catalog, and Auth-side configuration this adapter plugs into
+- [Superloom](https://superloom.dev). The framework
 
-`setupNewStore` issues two idempotent DDL statements:
+## Adding to Your Project
 
-```sql
-CREATE TABLE IF NOT EXISTS "sessions_user" (
-  "tenant_id"           TEXT NOT NULL,
-  "actor_id"            TEXT NOT NULL,
-  "actor_type"          TEXT NOT NULL,
-  "token_key"           TEXT NOT NULL,
-  "token_secret_hash"   TEXT NOT NULL,
-  "refresh_token_hash"  TEXT,
-  "refresh_family_id"   TEXT,
-  "created_at"          INTEGER NOT NULL,
-  "expires_at"          INTEGER NOT NULL,
-  "last_active_at"      INTEGER NOT NULL,
-  "install_id"          TEXT,
-  "install_platform"    TEXT NOT NULL,
-  "install_form_factor" TEXT NOT NULL,
-  "client_name"         TEXT,
-  "client_version"      TEXT,
-  "client_is_browser"   INTEGER NOT NULL DEFAULT 0,
-  "client_os_name"      TEXT,
-  "client_os_version"   TEXT,
-  "client_screen_w"     INTEGER,
-  "client_screen_h"     INTEGER,
-  "client_ip_address"   TEXT,
-  "client_user_agent"   TEXT,
-  "push_provider"       TEXT,
-  "push_token"          TEXT,
-  "custom_data"         TEXT,
-  PRIMARY KEY ("tenant_id", "actor_id", "token_key")
-);
+This adapter is installed alongside the Auth parent module and the `sql-sqlite` driver helper as peer dependencies through the standard Superloom loader. The canonical install command for the parent + adapter + driver triple lives in the Auth parent's [Adding to Your Project](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth#adding-to-your-project) section; substitute `auth-store-sqlite` for the adapter name and add `js-server-helper-sql-sqlite` to the install list.
 
-CREATE INDEX IF NOT EXISTS "idx_sessions_user_expires_at"
-  ON "sessions_user" ("expires_at");
-```
+Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
-### SQLite-Specific Notes
+The loader pattern, including the full `Lib` container shape and how the adapter factory is passed to the Auth parent's `STORE` config key, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
 
-- **Booleans** (`client_is_browser`) are stored as `INTEGER 0/1`. Coerced on both write and read.
-- **Timestamps** (`created_at`, `expires_at`, `last_active_at`) are `INTEGER` Unix epoch seconds.
-- **`custom_data`** is serialized as a JSON string in the `TEXT` column and parsed back on read.
-- **`node:sqlite`** (Node.js 22.5+) is used — no external `better-sqlite3` or `sqlite3` dependency.
-- There are no column length constraints; `TEXT` columns accept any length. The column declarations document intent, not enforcement.
-- `UPSERT` uses `ON CONFLICT ... DO UPDATE SET col = excluded.col` (SQLite 3.24+, available in every Node.js version that ships `node:sqlite`).
-- `CREATE INDEX IF NOT EXISTS` is fully supported and idempotent.
+## Testing Status
 
-## Store Contract
-
-This adapter implements the 8-method contract consumed by `auth.js`:
-
-| Method | Signature | Returns |
+| Tier | Runtime | Status |
 |---|---|---|
-| `setupNewStore` | `(instance)` | `{ success, error }` |
-| `getSession` | `(instance, tenant_id, actor_id, token_key, token_secret_hash)` | `{ success, record, error }` |
-| `listSessionsByActor` | `(instance, tenant_id, actor_id)` | `{ success, records, error }` |
-| `setSession` | `(instance, record)` | `{ success, error }` |
-| `updateSessionActivity` | `(instance, tenant_id, actor_id, token_key, updates)` | `{ success, error }` |
-| `deleteSession` | `(instance, tenant_id, actor_id, token_key)` | `{ success, error }` |
-| `deleteSessions` | `(instance, tenant_id, keys)` | `{ success, error }` |
-| `cleanupExpiredSessions` | `(instance)` | `{ success, deleted_count, error }` |
+| Contract + Integration | SQLite (`:memory:`, in-process via `node:sqlite`) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-`getSession` checks `token_secret_hash` after the primary key read. A wrong secret returns `{ record: null }` — identical to a missing row — to prevent timing-based enumeration.
-
-`updateSessionActivity` throws `TypeError` if `updates` contains any identity or primary-key field (`tenant_id`, `actor_id`, `actor_type`, `token_key`, `token_secret_hash`, `created_at`, `install_id`, `install_platform`, `install_form_factor`). This is a programmer-error guard; `auth.js` never passes those fields.
-
-`cleanupExpiredSessions` deletes all rows where `expires_at < instance.time`. Uses the `expires_at` index for an efficient range scan.
-
-## Expired Session Cleanup
-
-SQLite has no native TTL. Run `cleanupExpiredSessions` on a cron:
-
-```js
-// Example: run cleanup every hour
-setInterval(async function () {
-  const result = await Lib.AuthUser.cleanupExpiredSessions(Lib.Instance.initialize());
-  if (result.success) {
-    Lib.Debug.info('Cleanup deleted ' + result.deleted_count + ' expired sessions');
-  }
-}, 3600 * 1000);
-```
-
-## Peer Dependencies
-
-| Package | Purpose |
-|---|---|
-| `@superloomdev/js-helper-utils` | Type checks |
-| `@superloomdev/js-helper-debug` | Structured debug logging |
-| `@superloomdev/js-server-helper-sql-sqlite` | SQLite driver wrapper (`Lib.SQLite`) |
-
-## Testing
-
-No Docker required — tests run fully in-process using a `:memory:` SQLite database.
-
-```bash
-cd _test && npm install && npm test
-```
-
-`_test/store-contract-suite.js` is a local copy of the shared integration suite maintained by the auth module. It is not fetched from the auth package at test time — this keeps the adapter's test harness self-contained and records which contract version it was built against.
-
-The suite covers:
-- Adapter unit tests (Tier 1): store loader config validation, identifier quoting, boolean and `custom_data` coercions, hash-mismatch "not found" behavior, `updateSessionActivity` identity blocklist, upsert immutability, `cleanupExpiredSessions` deleted count
-- Full auth lifecycle integration (Tier 3): every public Auth API path driven against the real SQLite backend via the store contract suite
+Tests run fully in-process; no Docker, no service to provision. Test runtime details live in [Configuration → Testing Tier](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-sqlite/docs/configuration.md#testing-tier).
 
 ## License
 

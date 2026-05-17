@@ -1,7 +1,7 @@
 // Info: AWS SQS message queue wrapper. Send, receive, delete, and schedule messages.
 // Server-only: uses AWS SDK v3 SQS client with explicit credential injection.
 //
-// Compatibility: Node.js 20.19+.
+// Compatibility: Node.js 24+.
 //
 // Factory pattern: each loader call returns an independent SQS interface
 // with its own Lib, CONFIG, and per-instance SQS client.

@@ -14,7 +14,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "engines": {
-    "node": ">=22.13"
+    "node": ">=24"
   },
   "peerDependencies": {
     "@superloomdev/js-helper-utils": ">=1.0.0",

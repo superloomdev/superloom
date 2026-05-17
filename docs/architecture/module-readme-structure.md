@@ -33,7 +33,7 @@ Each module's documentation is split across three files. Each file has one audie
 
 **The README is the entry point.** It explains *what the module is and why it exists* in plain language. It links into `docs/` for reference detail and to `ROBOTS.md` for AI-specific guidance. It does not contain configuration tables, function signatures, or return shapes. Those belong in `docs/`.
 
-**The `docs/` folder is the reference layer.** Complete, exhaustive, written for someone actively integrating or maintaining the module. Adapter modules and simple foundation modules usually skip this folder; driver and feature modules need it.
+**The `docs/` folder is the reference layer.** Complete, exhaustive, written for someone actively integrating or maintaining the module. Every class ships at least `docs/api.md` and `docs/configuration.md`; deeper classes add more (Class D may add `iam.md`; Class E adds `data-model.md` and optional `runtime.md`; Class F adds `schema.md` and `cleanup.md`).
 
 **`ROBOTS.md` is the AI surface.** Compact, structured, every exported function with its signature and return shape. See `ROBOTS.md` in each module for the existing convention.
 
@@ -68,7 +68,7 @@ Every module README follows this section order, regardless of class. Two section
 | 5 | **Hot-Swappable with Other Backends** *(class-conditional)* | Bullet list of sibling modules with the same API. Present for any module with at least one sibling (Class C drivers, some Class D cloud wrappers, some Class E feature modules). |
 | 6 | **Class-Specific Section** *(class-conditional)* | One section per [Class-Specific Sections](#class-specific-sections) (e.g. "Architecture overview" for Class E feature modules). |
 | 7 | **Aligned with Superloom Philosophy** | One short paragraph explaining that the module follows Superloom conventions, so adopting it preserves consistency for projects already on Superloom. |
-| 8 | **Learn More** | Links to extended documentation in `docs/` and to Superloom. Does NOT link to `ROBOTS.md`. That file is for AI assistants, not human readers. |
+| 8 | **Extended Documentation** | Links to extended documentation in `docs/` and to Superloom. Does NOT link to `ROBOTS.md`. That file is for AI assistants, not human readers. |
 | 9 | **Adding to Your Project** | Recommends installation as a peer dependency through the project's loader pattern. Does NOT include a copy-paste `npm install` snippet. Links to the loader-pattern doc instead. |
 | 10 | **Testing Status** | Status table showing which test tiers have passed (Emulated / Integration). Test runtime details (Docker lifecycle, env vars) live in `docs/configuration.md` under "Testing Tiers", not here. |
 | 11 | **License** | MIT |
@@ -97,13 +97,13 @@ One short paragraph. Frames Superloom alignment as **consistency for projects th
 
 This deliberately is NOT one of the Why bullets. See [Anti-Patterns](#anti-patterns-to-avoid).
 
-### Section 8. Learn More
+### Section 8. Extended Documentation
 
 A short list pointing to:
 
 - `docs/api.md` (if present) - full API reference
 - `docs/configuration.md` (if present) - all config keys, environment variables, patterns
-- `docs/data-model.md` / `docs/storage-adapters.md` (Class E only)
+- `docs/data-model.md` (Class E only)
 - [Superloom](https://superloom.dev) - the framework
 
 Do NOT link to `ROBOTS.md` from the README. `ROBOTS.md` is the AI surface; humans should not be directed there.
@@ -138,8 +138,8 @@ Every module belongs to one of six classes (enumerated in [`module-categorizatio
 | **C. Driver wrapper** | (none extra) | The Hot-Swappable section at position 5 already serves Class C's special case. |
 | **D. Cloud service wrapper** | "Credentials & Permissions" | Short section on credentials, regional config, IAM/permissions. Vendor-neutral wording. |
 | **B. Extended utility** | "Behavior" | Explains lifecycle semantics (cleanup ordering, background tasks). |
-| **E. Feature module with adapters** | "Architecture Overview" | High-level diagram or tree. Storage-adapter selection callout linking to `docs/storage-adapters.md`. |
-| **F. Storage adapter** | "How This Fits Into the Parent Module" | Adapter factory protocol explanation. Link to parent module's docs. |
+| **E. Feature module with adapters** | "Architecture Overview" + "Storage Adapters" | Two adjacent README subsections. Architecture Overview is a high-level diagram or tree. Storage Adapters is a short list/table of available adapters with a one-sentence selection rule and a pointer to each adapter package's README for backend-specific details. **No separate `docs/storage-adapters.md` file.** |
+| **F. Storage adapter** | (none extra) | Class F READMEs use only the universal sections. The "extension of the parent module" framing lives in the tagline; the factory-protocol explanation lives in `docs/api.md`. |
 
 The Hot-Swappable section at position 5 is itself class-conditional. It appears whenever a module has at least one sibling, irrespective of class.
 
@@ -149,14 +149,18 @@ The Hot-Swappable section at position 5 is itself class-conditional. It appears 
 
 The `docs/` folder is where the dense technical material lives. Different classes need different depths.
 
+Every class ships **at minimum** `docs/api.md` and `docs/configuration.md`. Class-specific extras stack on top.
+
 | Class | Recommended `docs/` files |
 |---|---|
-| **A. Foundation** | None. The README is enough |
+| **A. Foundation** | `docs/api.md`, `docs/configuration.md` |
+| **B. Extended utility** | `docs/api.md`, `docs/configuration.md` |
 | **C. Driver** | `docs/api.md`, `docs/configuration.md` |
 | **D. Cloud service** | `docs/api.md`, `docs/configuration.md`, optionally `docs/iam.md` |
-| **B. Lifecycle** | Usually none; `docs/api.md` only if the lifecycle is non-trivial |
-| **E. Feature** | `docs/data-model.md`, `docs/configuration.md`, `docs/storage-adapters.md`, optionally `docs/integration-express.md`, `docs/integration-lambda.md` |
-| **F. Adapter** | None. The README and the schema section inside it are enough |
+| **E. Feature** | `docs/api.md`, `docs/configuration.md`, `docs/data-model.md`, optionally `docs/runtime.md`. Storage-adapter documentation lives in each Class F adapter package, not in the parent |
+| **F. Adapter** | `docs/api.md`, `docs/configuration.md`, `docs/schema.md`, `docs/cleanup.md`. Each adapter is the authoritative source for its own backend's operational detail (DDL, indexes, TTL behavior, `STORE_CONFIG` shape) |
+
+The canonical reasoning, audience map, and per-class footprint are documented in [`module-categorization.md` → Universal Documentation Footprint](module-categorization.md#universal-documentation-footprint).
 
 For the long-form structure of feature-module `docs/` folders see [`complex-module-docs-guide.md`](complex-module-docs-guide.md).
 
@@ -221,37 +225,36 @@ These four bullets do not apply unchanged to Class A foundation modules (which o
 
 ### Class A. Foundation Utility
 
-Platform-agnostic utilities with no service dependencies and no `docs/` folder.
+No external dependencies. Pure JavaScript that runs in any modern JS environment (Node, browser, edge, mobile). Ships `docs/api.md` and `docs/configuration.md` per the [universal footprint](module-categorization.md#universal-documentation-footprint). For the full conceptual definition see [`module-categorization.md` → Class A](module-categorization.md#class-a-foundation-utility).
 
 **Tagline template:**
 
 > A [domain] helper for [Node.js | the browser | both] that ships pre-tested and has zero runtime dependencies. Part of [Superloom](https://superloom.dev).
 
-**Value bullets.** The four universal bullets transfer **with adjustments**:
-- **Bullet 1 (insulation):** keep if the module wraps a built-in (e.g. `node:crypto`); drop or rephrase as "Zero dependencies, drop in anywhere" if pure JavaScript
-- **Bullet 2 (pre-tested):** keep, with appropriate test target ("comprehensive unit suite in CI on every push")
-- **Bullets 3, 4:** keep verbatim
-- **Bullet 5:** "Zero dependencies, drop in anywhere" (pure JavaScript with no external packages, works in Node, browsers, edge runtimes) anywhere the right module system runs
+**Value bullets. Four total**, ordered as:
 
-**Class-specific section. "API Categories":** a grouped one-line listing of available function categories. NOT a full signature table. Example shape:
+1. **Zero runtime dependencies.** Adding the module to a project adds zero packages to the dependency tree. The supply chain ends at this package.
+2. **Runs everywhere.** Pure JavaScript with no platform-specific globals. Works under Node.js, in a browser bundle, in an edge runtime, in a Lambda, in a Cloudflare Worker.
+3. **Pre-tested at every release.** Verbatim from the [universal pre-tested bullet](#universal-why-use-this-module-bullets), adapted: the test target is "in CI on every push" without a service backing, and the noun in the closing clause becomes "utility plumbing" rather than "SQL plumbing".
+4. **Designed for human review.** Verbatim from the [universal designed-for-review bullet](#universal-why-use-this-module-bullets); only the source filename in the closing sentence changes (`utils.js`, `debug.js`, etc.).
 
-> - **Type checks:** `isString`, `isNumber`, `isArray`, `isObject`, …
-> - **Validation:** `isEmail`, `isPhoneNumber`, …
-> - **Data manipulation:** `pick`, `omit`, `merge`, …
+Class A does **not** carry the universal Bullet 1 (insulation against driver/SDK churn) or Bullet 4 (observability). Foundation modules wrap nothing and time nothing.
 
-**No `docs/` folder needed.** No Hot-Swappable section (foundation modules typically don't have functional siblings. The `js-helper-crypto` server/client pair is the exception and should cross-link in Hot-Swappable form).
+**README class-specific section.** None. The categorized function survey moves to `docs/api.md`. The README does not duplicate it.
 
-**Pilot status:** *not yet migrated.* The first Class A migration sets the concrete reference. Planned in [plan 0008](../../__dev__/plans/0008-module-readme-pilot.md).
+**No Hot-Swappable section.** Foundation modules typically don't have functional siblings. The `js-helper-crypto` server/client pair is the exception and may cross-link in Hot-Swappable form.
+
+**Pilot status:** `js-helper-utils` is the active Class A pilot.
 
 ### Class B. Extended Utility
 
-Per-request or per-process plumbing rather than data I/O (e.g. `js-server-helper-instance`).
+Depends only on the Node.js runtime (Node built-ins like `crypto`, `process`, `fetch`, `Buffer`). No third-party npm packages, no external services. Examples: `js-server-helper-instance`, `js-server-helper-crypto`, `js-server-helper-http`. Ships `docs/api.md` and `docs/configuration.md` per the [universal footprint](module-categorization.md#universal-documentation-footprint). For the full conceptual definition see [`module-categorization.md` → Class B](module-categorization.md#class-b-extended-utility).
 
 **Class-specific section. "Behavior":** short, central. Explains the lifecycle semantics. Cleanup ordering, background tasks, scope boundaries.
 
 **Value bullets.** Class B modules often need a substantially different bullet set because they don't wrap a third-party library and don't do I/O. Bullets 3 (human review) and 4 (observability) usually still transfer. The first migration of a Class B module sets the pattern.
 
-**Pilot status:** *not yet migrated.* `js-server-helper-instance` is the planned reference.
+**Pilot status:** `js-server-helper-instance` is the Class B pilot (Wave 6). `js-server-helper-crypto` follows the same pattern. `js-server-helper-http` is the remaining unmigrated Class B.
 
 ### Class C. Driver Wrapper
 
@@ -270,7 +273,8 @@ Per-request or per-process plumbing rather than data I/O (e.g. `js-server-helper
 | **SQL driver. Server-required** | "Works on both serverless and persistent infrastructure. The same module configures cleanly for serverless deployments (cloud functions, on-demand workers) and persistent ones (containers, virtual machines, orchestrated platforms). Switch deployment shape by changing one config value, not by changing the driver or the calling code." |
 | **SQL driver. Embedded** | "Runs in-process, with zero infrastructure. [DB] is embedded. There is no server to provision, no credentials to manage, no network to debug. The same module powers an in-memory test database, a local file-backed cache, an offline-first desktop or edge app, or a per-process analytics store. Switch between in-memory and on-disk by changing one config value." |
 | **NoSQL driver. Managed** | Either the universal serverless-or-persistent framing, **or** a domain-specific safety-net bullet ("Built-in safety nets against accidental full-collection writes. `query()`, `count()`, and `deleteRecordsByFilter()` reject empty filters at runtime. There is no path by which an empty or `null` filter can accidentally read or wipe an entire collection."). Pick whichever is the stronger pitch for the module. |
-| **NoSQL driver. Cloud-managed** (DynamoDB) | The Class D "Explicit credentials" bullet. See Class D below. Cloud-managed NoSQL drivers inherit the Class D credentials treatment. |
+
+*Note: cloud-only NoSQL services (e.g. DynamoDB) are Class D, not Class C. The dividing line is whether the database can be self-hosted on commodity infrastructure. See [`module-categorization.md`](module-categorization.md#class-d-cloud-service-wrapper).*
 
 **Hot-Swappable section template** (replace the placeholders in `[...]` with concrete values):
 
@@ -283,7 +287,7 @@ This module is part of a [SQL or NoSQL] family of database helpers that share th
 - [`@superloomdev/[sibling-2-package-name]`]([full GitHub URL]) - [one-line description]
 ```
 
-**Do NOT add a closing paragraph pointing to "the other family" (NoSQL→SQL or SQL→NoSQL).** The cross-family pointer was tried in the first wave of v2 migrations and dropped after review. It added noise without serving any persona, and the Learn More section + the Superloom site already give cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
+**Do NOT add a closing paragraph pointing to "the other family" (NoSQL→SQL or SQL→NoSQL).** The cross-family pointer was tried in the first wave of v2 migrations and dropped after review. It added noise without serving any persona, and the Extended Documentation section + the Superloom site already give cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
 
 **`docs/api.md` structure. SQL driver variant:**
 
@@ -338,7 +342,8 @@ Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g
 - SQL driver: `src/helper-modules-server/js-server-helper-sql-mysql/` (most generic SQL shape)
 - SQL driver. Embedded: `src/helper-modules-server/js-server-helper-sql-sqlite/`
 - NoSQL driver: `src/helper-modules-server/js-server-helper-nosql-mongodb/`
-- NoSQL driver. Cloud-managed: `src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/` (also follows Class D credentials pattern)
+
+*DynamoDB lives under Class D, not Class C. See the Class D section below.*
 
 ### Class D. Cloud Service Wrapper
 
@@ -350,7 +355,7 @@ Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g
 
 > **Explicit credentials, not implicit ones.** Credentials are passed through the loader, not picked up from an ambient SDK environment chain. This makes it impossible to accidentally talk to the wrong account from a developer machine, a CI runner, or a multi-tenant deployment. *(Optional second sentence. Add when an emulator exists:)* Local emulator runs the same way as real [service] - only the `ENDPOINT` config changes.
 
-**Hot-Swappable section.** Only when there's a real same-API sibling. S3 ↔ URL-signer is NOT a Hot-Swap (different surfaces). DynamoDB ↔ MongoDB IS a Hot-Swap (NoSQL family). When in doubt, omit and surface the related module in Learn More instead.
+**Hot-Swappable section.** Only when there's a real same-API sibling. S3 ↔ URL-signer is NOT a Hot-Swap (different surfaces). DynamoDB ↔ MongoDB IS a Hot-Swap (NoSQL family). When in doubt, omit and surface the related module in Extended Documentation instead.
 
 **`docs/api.md` structure. Three-Layer pattern** (recommended for SDK-wrapped CRUD; works whenever the SDK exposes Command objects, including AWS SDK v3):
 
@@ -377,7 +382,7 @@ Patterns block:
 2. **Minimum IAM permissions table.** One row per exported function, listing the cloud-specific actions it uses
 3. Resource ARN format example
 4. **Worked example minimal IAM policy** (JSON)
-5. Brief note about credential rotation behaviour. The module does not refresh in-flight; pass refreshed values on a new loader call
+5. Brief note about credential rotation behavior. The module does not refresh in-flight; pass refreshed values on a new loader call
 
 **Pilot references:**
 - AWS cloud DB: `src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/`
@@ -385,28 +390,56 @@ Patterns block:
 
 ### Class E. Feature Module with Adapters
 
-Business logic + pluggable storage. Each Class E module already has a `docs/` folder from the framework's earlier era; the migration audits and reorganises rather than rebuilds.
+Full-featured business-logic module. May combine Class A utilities, Class B services, Class C/D backends through Class F adapters. Each Class E module already has a `docs/` folder from the framework's earlier era; the migration audits and reorganises rather than rebuilds. For the full conceptual definition see [`module-categorization.md` → Class E](module-categorization.md#class-e-feature-module-with-adapters).
 
-**Class-specific section. "Architecture Overview":** high-level diagram or tree. Includes a callout pointing to `docs/storage-adapters.md` for storage adapter selection.
+**Class-specific README subsections.** Class E uses **two** adjacent class-specific subsections in the README:
+
+- **Architecture Overview.** High-level diagram or tree. Shows the loader factory shape, the `parts/` split, and how the chosen Class F adapter is wired in.
+- **Storage Adapters.** Short list or table of available adapters (one row per Class F package) plus a one- or two-sentence selection rule (typically: "match your application's database") plus a pointer to each adapter's own README for backend-specific configuration, schema, indexes, TTL behavior, and IaC provisioning. **No separate `docs/storage-adapters.md` file.** Each Class F adapter is the authoritative source for its own backend; the parent's README only points to the list.
 
 **`docs/` folder shape** per [`complex-module-docs-guide.md`](complex-module-docs-guide.md):
 - `docs/data-model.md`. Record fields and design rationale
 - `docs/configuration.md`. Config keys, env vars, patterns
-- `docs/storage-adapters.md`. Adapter selection guide
-- `docs/integration-express.md`. Express integration *(optional)*
-- `docs/integration-lambda.md`. Lambda integration *(optional)*
+- `docs/runtime.md`. Persistent-server vs serverless-function runtime differences only. Not a framework cookbook *(optional)*
+
+Storage-adapter detail is owned by each Class F adapter package, not by the parent's `docs/`.
 
 **Pilot status:** *not yet migrated.* `verify`, `logger`, `auth` are the planned waves (smallest to largest).
 
 ### Class F. Storage Adapter
 
-Implements a parent module's store contract. Thin.
+Cannot function on its own. Implements a Class E parent module's store contract for a single backend. Thin wrapper around a Class C or Class D module. For the full conceptual definition see [`module-categorization.md` → Class F](module-categorization.md#class-f-storage-adapter).
 
-**Class-specific section. "How This Fits Into the Parent Module":** explains the adapter factory protocol. Links to the parent's `docs/storage-adapters.md`.
+**Tagline template:**
 
-**No `docs/` folder.** README should be small (60–80 lines), with the data schema inline if it's brief.
+> A [Backend Name]-backed implementation of the [Parent] module's storage contract. Plug it into the parent's `STORE` config; the [Parent] module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
 
-**Pilot status:** *not yet migrated.* `auth-store-dynamodb` and `auth-store-mongodb` are the planned waves.
+The tagline does not name competitor adapters and does not promise multi-backend support at the adapter scope (that promise belongs to the Class E parent's README).
+
+**README structure.** Class F READMEs follow the **same Universal Section list as every other class**. They are kept short by condensing each section, not by skipping sections. There is no class-specific section (position 6 is empty for Class F); the "extension of the parent module" framing is carried by the tagline (position 2) and the brief "What This Is" paragraph (position 3), not by a separate "How This Fits Into the Parent Module" subsection. The factory-protocol explanation lives in `docs/api.md`, not the README.
+
+The README does not duplicate the schema, the contract, the configuration table, the environment variables, or the testing-runtime detail; those all live in `docs/`. **Section 9 ("Adding to Your Project") points to the parent module's install instructions and the loader-pattern doc; it does NOT contain its own `npm install` snippet.** Class F adapters cannot be installed alone (the parent and the underlying driver helper are mandatory peers), so the canonical install command for the parent + adapter pair lives in the parent's README; each adapter's README links into that section instead of duplicating it.
+
+A realistic Class F README is **~70-90 lines** (comparable to a Class C driver like `sql-postgres`). Compared to the Class E parent's README, the Why bullets are fewer (4-5 instead of 5-7) and the Architecture Overview is absent (the parent owns it).
+
+**Value bullets.** Bullets 1-4 from the [universal set](#universal-why-use-this-module-bullets) transfer near-verbatim. The wrapped object is the underlying driver helper (e.g. `Lib.Postgres` / the `pg` driver), not the Class E parent. Bullet 5 is the **class-specific bullet for Class F**:
+
+> **[Backend Name]-correct semantics handled for you.** [List the backend-specific operational concerns the adapter encapsulates. PostgreSQL: `INSERT ... ON CONFLICT ... DO UPDATE` UPSERT, BIGINT-as-string coercion at the `pg` driver boundary, double-quoted identifiers, native `BOOLEAN`, JSON encoding of the canonical record's free-form fields. MongoDB: native `expireAfterSeconds` TTL index, BSON encoding, replica-set requirement for transactions. DynamoDB: native AWS table-level TTL, GSI design, conditional UPSERT via `PutItem`.] Application code writes against the parent module; the adapter's job is to make [Backend Name] behave correctly.
+
+**Hot-Swappable section.** Present whenever sibling adapters exist for the same parent (true for every current Class F family: `auth-store-*`, `verify-store-*`, `logger-store-*`). Short list of sibling adapter packages with a one-sentence framing that swapping is a one-line config change.
+
+**`docs/` folder shape:**
+
+- `docs/api.md`. The store contract this adapter implements. One subsection per method with its signature, return shape, and any backend-specific semantic notes (timing-safe lookups, batch deletes, programmer-error guards, integer coercion at the driver boundary).
+- `docs/configuration.md`. The `STORE_CONFIG` keys this adapter requires. Peer dependencies. Environment variables consumed by `_test/loader.js`. Testing tier.
+- `docs/schema.md`. What `setupNewStore` creates. The DDL or `createIndex` / `CreateTable` calls verbatim. Backend-specific syntax notes (identifier quoting, integer coercion at the driver boundary, JSON serialization, UPSERT semantics, native-TTL configuration).
+- `docs/cleanup.md`. The TTL behavior of this specific backend (none, native via index, or table-level). The recommended cleanup mechanism for this backend. How `cleanupExpired*` is implemented in this adapter.
+
+**No `docs/data-model.md` or `docs/runtime.md`.** The data model is owned by the Class E parent (`auth/docs/data-model.md`); the adapter only documents column-to-field mapping where the encoding diverges from the parent's canonical record (BIGINT-as-string from a driver, JSON-encoding of a structured field). Runtime-shape concerns are also owned by the parent; the adapter only cross-links to the parent's `docs/runtime.md` when discussing cleanup scheduling.
+
+**No comparison to sibling adapters.** Each Class F adapter documents only its own backend. No "Postgres has X, MongoDB has Y" tables anywhere in the package. The Class E parent's README has a short "Storage Adapters" list that points to each adapter, and each adapter's Hot-Swappable section lists its siblings as a flat package list. Those are the only places sibling adapters appear together.
+
+**Pilot status:** `auth-store-postgres` is the SQL pilot (Wave 9). The five `verify-store-*` packages were the first Class F migrations under the previous (no-`docs/`, install-and-usage-in-README) shape and will be re-migrated to this shape during Wave 9 cleanup.
 
 ---
 
@@ -424,7 +457,7 @@ All AWS-service wrappers share:
 - **`docs/configuration.md` "Multi-Region / Multi-Account Setup" section.** Same boilerplate; only the config keys differ.
 - **Configuration keys.** `REGION`, `KEY`, `SECRET`, `ENDPOINT`, `MAX_RETRIES` are universal across AWS modules; add service-specific extras (e.g. `FORCE_PATH_STYLE` for S3-compatible stores).
 - **Environment variable convention.** `AWS_*` for cross-service shared values (`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`), service-specific prefixes for overrides (`DYNAMODB_ENDPOINT`, `S3_ENDPOINT`, etc.).
-- **Cross-link in Learn More.** Every AWS module should reference at least one sibling AWS module in its Learn More section when there's a logical companion (S3 ↔ S3 URL signer, etc.).
+- **Cross-link in Extended Documentation.** Every AWS module should reference at least one sibling AWS module in its Extended Documentation section when there's a logical companion (S3 ↔ S3 URL signer, etc.).
 
 When adding a new AWS-service wrapper, copy the closest existing AWS module's `docs/configuration.md` and edit the service-specific bits; the structural sections transfer near-verbatim.
 
@@ -524,7 +557,7 @@ If the answer to either of the first two is "no", revise. If the answer to the t
 
 ### Pass 2. Integrator pass (Persona 3)
 
-Read the README looking at sections 8 (Learn More) and 9 (Adding to Your Project). Ask:
+Read the README looking at sections 8 (Extended Documentation) and 9 (Adding to Your Project). Ask:
 
 - Do I know which extended docs to read for the API and the configuration?
 - Do I know how to add this module to my project as a peer dependency?
@@ -551,7 +584,7 @@ The project does not use em dashes (the `—` character, U+2014) in any file: `.
 | Two em dashes mid-sentence, like `X — Y — Z` | Use parentheses: `X (Y) Z`. Or split into separate sentences. |
 | List separator inside running prose | Restructure. Two ideas joined by an em dash usually become two sentences without losing anything. |
 
-The same rule applies to ASCII double-hyphen (`--`) used as a stand-in for an em dash. Do not write `X -- Y`. Split, comma, or parenthesise.
+The same rule applies to ASCII double-hyphen (`--`) used as a stand-in for an em dash. Do not write `X -- Y`. Split, comma, or parenthesize.
 
 ### Table Cells Do Not End With Periods
 
@@ -586,7 +619,7 @@ These were the failure modes surfaced when the rubric was first applied to the P
 - **Test instructions in the README.** Test runtime detail (Docker lifecycle, env vars) is reference material; it lives in `docs/configuration.md`. README has only the testing **status** at the bottom.
 - **Relative links in the README.** npm strips relative paths. Always use full `https://github.com/superloomdev/superloom/blob/main/...` URLs in `README.md`.
 - **CI / test status badges at the top of the README.** They distract from identity. Identity badges (license, runtime) at top; test status badges in the testing-status block at the bottom.
-- **Cross-family "see the other family" closing paragraph in Hot-Swappable.** Tried in the first v2 wave and dropped after review. It adds noise without serving any persona. The Learn More section and the Superloom site already provide cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
+- **Cross-family "see the other family" closing paragraph in Hot-Swappable.** Tried in the first v2 wave and dropped after review. It adds noise without serving any persona. The Extended Documentation section and the Superloom site already provide cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
 - **Em dashes (`—`) anywhere in the module docs.** Tell-tale sign of AI-generated prose. Use the patterns in [Writing Style and Prose Quality](#writing-style-and-prose-quality). Source of truth: [`documentation-standards.md`](../dev/documentation-standards.md).
 - **Table cells ending with a period.** Cells are not sentences. Ending them with a period reads as machine-generated.
 
@@ -609,7 +642,7 @@ When writing or revising a module README:
 - [ ] Every link in the README is a full `https://github.com/...` URL (no relative paths)
 - [ ] No configuration tables in the README. They live in `docs/configuration.md`
 - [ ] No function signature tables in the README. They live in `docs/api.md`
-- [ ] No `ROBOTS.md` link in the README's Learn More. `ROBOTS.md` is for AI agents, not human readers
+- [ ] No `ROBOTS.md` link in the README's Extended Documentation section. `ROBOTS.md` is for AI agents, not human readers
 - [ ] `ROBOTS.md` is current and matches the actual exported surface
 - [ ] `docs/configuration.md` reference block (Loader, Keys, Env Vars, Deps) precedes its patterns block (Multi-instance, SSL, Pool tuning, Testing)
 - [ ] Tagline ends with "Part of [Superloom](https://superloom.dev)". No sibling backends or competitor modules mentioned in the tagline itself

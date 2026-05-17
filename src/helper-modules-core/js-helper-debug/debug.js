@@ -1,7 +1,7 @@
 // Info: Structured logging library with log levels, dual output formats, and
 // performance audit support. Zero runtime dependencies - no external libs required.
 //
-// Compatibility: Node.js 20.19+.
+// Compatibility: Node.js 24+.
 //
 // Factory pattern: each loader call returns an independent Debug interface
 // with its own config. shared_libs is accepted for interface uniformity but

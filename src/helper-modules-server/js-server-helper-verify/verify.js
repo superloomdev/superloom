@@ -14,7 +14,7 @@
 //   js-server-helper-verify-store-mongodb
 //   js-server-helper-verify-store-dynamodb
 //
-// Compatibility: Node.js 20.19+
+// Compatibility: Node.js 24+
 'use strict';
 
 

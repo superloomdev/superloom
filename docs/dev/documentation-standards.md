@@ -77,7 +77,7 @@ Every module falls into one of these categories. Each category has a specific RE
 - Thin wrapper around driver module
 - Used with parent feature module
 
-**README Style:** "How This Fits In" section first. Contract implementation details. Schema documentation.
+**README Style:** Same Universal Section list as every other class (Title, Tagline, What This Is, Why Use This Module, Hot-Swappable, Aligned with Superloom Philosophy, Extended Documentation, Adding to Your Project, Testing Status, License); each section is condensed. No `## Install` block (Section 9 points to the parent module's install instructions and the loader-pattern doc instead). No `## Usage` / Quick Start. The contract, configuration, schema, and cleanup behaviour live in `docs/` (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`). No comparison to sibling adapters anywhere in the package.
 
 ### 6. AWS Service Modules
 
@@ -175,8 +175,8 @@ Explain the problem this module solves. Not an API reference - the "why" and "wh
 
 ```markdown
 **Further reading:**
-- [`docs/integration-express.md`](docs/integration-express.md) — Express setup
-- [`docs/data-model.md`](docs/data-model.md) — Session record fields explained
+- [`docs/runtime.md`](docs/runtime.md). Persistent-server vs serverless-function runtime differences
+- [`docs/data-model.md`](docs/data-model.md). Session record fields explained
 ```
 
 ### Installation
@@ -301,10 +301,8 @@ module-name/
   README.md              # Overview, quick start, API
   docs/
     data-model.md        # Record fields, data types, constraints
-    integration-express.md  # Express-specific setup
-    integration-lambda.md   # Lambda-specific setup
+    runtime.md           # Persistent-server vs serverless-function runtime differences only
     configuration.md     # Deep config reference
-    storage-adapters.md    # Adapter comparison, selection guide
 ```
 
 **data-model.md should include:**
@@ -313,10 +311,16 @@ module-name/
 - Design rationale for key decisions
 - Quick reference tables for common scenarios
 
-**integration-*.md should include:**
-- Framework-specific setup steps
-- Middleware examples
-- Route handler patterns
+**runtime.md should include only the differences between runtime shapes:**
+- How `instance.http_request` and `instance.http_response` are constructed in a persistent server (bind framework `req` / `res` directly) vs in a serverless function (adapt the platform event; buffer writes for the returned response object)
+- How scheduled cleanup is wired (cron library inside the process vs scheduled function invocation outside it). Only when the chosen storage adapter requires it
+
+**runtime.md should NOT include:**
+- Framework cookbook material (Express middleware, login/refresh/logout endpoint code, active-devices UI examples). That belongs in the user's application code, not module docs
+- Bootstrap walk-throughs (those live in `configuration.md`)
+- Auth-module function call sites (those live in `api.md`)
+- Cold-start cost figures, connection-pool guidance, schema provisioning (those live in each Class F adapter's README)
+- Error-type → HTTP status mapping (that lives in `api.md`)
 
 ---
 
@@ -331,11 +335,15 @@ module-name/
 
 ### Storage Adapter Modules
 
-- Start with "How This Fits In" section
-- Link to parent module prominently
-- Store contract implementation table
-- Schema DDL
-- Environment variables for testing only
+- README follows the full Universal Section list (same as every other class), condensed to ~70-90 lines
+- Section 4 (Why Use This Module) has 4-5 bullets, not the parent's 5-7. Bullets 1-4 are the universal set (insulation, pre-tested, designed-for-review, observability); bullet 5 is backend-specific (e.g. "PostgreSQL-correct semantics handled for you")
+- Section 5 (Hot-Swappable) lists the sibling adapter packages with a one-line framing
+- Section 9 (Adding to Your Project) points to the parent module's install instructions and the loader-pattern doc. No `npm install` snippet in the adapter's README
+- `docs/api.md` holds the store contract (one subsection per method)
+- `docs/configuration.md` holds `STORE_CONFIG`, peer dependencies, environment variables, testing tier
+- `docs/schema.md` holds the DDL or createIndex / CreateTable calls and backend-specific syntax notes
+- `docs/cleanup.md` holds the TTL behaviour and recommended cleanup mechanism
+- No comparison with sibling adapters; each adapter documents only its own backend
 
 ### AWS Modules
 

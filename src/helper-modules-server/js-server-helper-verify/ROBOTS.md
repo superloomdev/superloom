@@ -1,166 +1,140 @@
-# Verify Module - AI Reference
+# ROBOTS.md. `js-server-helper-verify`
+
+Compact, AI-targeted reference for the public interface. Humans should read `README.md` and `docs/`.
 
 ## Module Overview
-One-time verification code lifecycle: generate, store, validate, consume.
-Multi-backend - one Verify instance per loader call, backed by one of:
-sqlite, postgres, mysql, mongodb, dynamodb. Three create
-interfaces (pin, code, token) over one core flow plus one verify interface.
-Three independent defenses: cooldown on creation, expiry (TTL), per-record
-fail counter. One-time use (background delete on match).
+
+One-time verification code lifecycle: generate, store, validate, consume. Three create interfaces (`createPin`, `createCode`, `createToken`) over one shared flow, plus one `verify` function that consumes any of them. Three independent defenses against abuse: cooldown on creation, expiry (TTL), per-record fail counter. Successful verify deletes the record in the background. Storage backends are standalone Class F adapter packages (`@superloomdev/js-server-helper-verify-store-*`); the caller passes the adapter factory directly as `CONFIG.STORE`.
 
 ## Factory Pattern
 
-```javascript
+```js
 module.exports = function loader (shared_libs, config) {
   // Returns independent instance with isolated Lib + CONFIG.
-  // Validates CONFIG at construction (STORE factory fn, STORE_CONFIG) -
-  // throws on any missing required key.
+  // Validates CONFIG at construction (STORE must be a function; STORE_CONFIG must be an object).
+  // Throws synchronously on misconfiguration.
   return { createPin, createCode, createToken, verify, setupNewStore, cleanupExpiredRecords };
 };
 ```
 
+`CONFIG.STORE` is a **factory function**, not a string. The loader calls it as `CONFIG.STORE(Lib, CONFIG, ERRORS)` and binds the returned store object to the instance. Passing a string throws `CONFIG.STORE is required and must be a store factory function`.
+
+```js
+Lib.Verify = require('@superloomdev/js-server-helper-verify')(Lib, {
+  STORE:        require('@superloomdev/js-server-helper-verify-store-postgres'),
+  STORE_CONFIG: { table_name: 'verification_codes', lib_sql: Lib.Postgres }
+});
+```
+
 ## Public Functions
 
-### createPin(instance, options) - async
-Generate, store, and return a numeric PIN (charset `0-9`). SMS OTP use case.
-- **options.scope**: String - logical owner namespace
-- **options.key**: String - specific verification purpose
-- **options.length**: Integer - number of digits
-- **options.ttl_seconds**: Integer - lifetime before expiry
-- **options.cooldown_seconds**: Integer - min gap before next pin (use 0 to disable)
-- **Returns**: `{ success, code, expires_at, error }`
+### `createPin(instance, options)` *(async)*
 
-### createCode(instance, options) - async
-Crockford Base32 (`0-9 A-Z` minus `I L O U`). Login or 2FA codes.
-- Same `options` shape as `createPin`.
-- **Returns**: `{ success, code, expires_at, error }`
+Generates a numeric PIN from `CONFIG.PIN_CHARSET` (default `0-9`). SMS OTP use case.
 
-### createToken(instance, options) - async
-URL-safe alphanumeric (`a-zA-Z0-9`). Magic-link tail.
-- Same `options` shape as `createPin`.
-- **Returns**: `{ success, code, expires_at, error }`
+- **options.scope**: String, required. Logical owner namespace.
+- **options.key**: String, required. Specific verification purpose.
+- **options.length**: Integer, required. Number of characters (must be `> 0`).
+- **options.ttl_seconds**: Integer, required. Lifetime before expiry (must be `> 0`).
+- **options.cooldown_seconds**: Integer, required. Minimum gap before the next `create*` call. Use `0` to disable (must be `>= 0`).
+- **Returns**: `{ success, code, expires_at, error }`.
 
-### verify(instance, options) - async
-Validate a submitted value. On match: record deleted in the background.
-On mismatch: fail counter incremented atomically.
-- **options.scope**, **options.key**, **options.value**, **options.max_fail_count** - all required
-- **Returns**: `{ success, error }`. On failure, error.type
-    is one of: NOT_FOUND, EXPIRED, MAX_FAILS, WRONG_VALUE, SERVICE_UNAVAILABLE.
+### `createCode(instance, options)` *(async)*
 
-### setupNewStore(instance) - async
-Idempotent backend setup. SQL: CREATE TABLE IF NOT EXISTS +
-index on `expires_at`. MongoDB: TTL index on `_ttl` with `expireAfterSeconds: 0`.
-DynamoDB: CreateTable with composite key (table-level TTL on `expires_at` is
-enabled separately via AWS console / IaC).
-- **Returns**: `{ success, error }`
+Generates an alphanumeric code from `CONFIG.CODE_CHARSET` (default: Crockford Base32). Same options shape as `createPin`. Use case: codes read aloud or printed.
 
-### cleanupExpiredRecords(instance) - async
-Sweep expired records. Cron-driven. SQL backends rely on this; MongoDB has
-native TTL but exposes this for explicit lifecycle control; DynamoDB exposes
-this as a fallback to AWS's ~48 h native sweep.
-- **Returns**: `{ success, deleted_count, error }`
+- **Returns**: `{ success, code, expires_at, error }`.
+
+### `createToken(instance, options)` *(async)*
+
+Generates a URL-safe token from `CONFIG.TOKEN_CHARSET` (default `a-zA-Z0-9`). Same options shape as `createPin`. Use case: magic-link query parameter.
+
+- **Returns**: `{ success, code, expires_at, error }`.
+
+### `verify(instance, options)` *(async)*
+
+Consumes any code generated by the three `create*` functions. The module does not distinguish the code's origin type.
+
+- **options.scope**, **options.key**, **options.value** (non-empty string), **options.max_fail_count** (integer `> 0`): all required.
+- **Returns**: `{ success, error }`. On failure, `error.type` is one of: `VERIFY_NOT_FOUND`, `VERIFY_EXPIRED`, `VERIFY_MAX_FAILS`, `VERIFY_WRONG_VALUE`, `VERIFY_SERVICE_UNAVAILABLE`.
+
+On match, schedules `deleteRecord` via `Lib.Instance.backgroundRoutine`. The background delete is what enforces the one-time guarantee.
+
+### `setupNewStore(instance)` *(async)*
+
+Idempotent backend setup. Behaviour varies by adapter: SQL creates table plus index; NoSQL adapters may provision indexes or rely on out-of-band IaC.
+
+- **Returns**: `{ success, error }`.
+
+### `cleanupExpiredRecords(instance)` *(async)*
+
+Bulk-deletes records whose `expires_at` is in the past. SQL backends require this on a cron; MongoDB and DynamoDB adapters expose this as an explicit fallback alongside native TTL.
+
+- **Returns**: `{ success, deleted_count, error }`.
 
 ## Configuration
 
-| Key | Default | Notes |
-|---|---|---|
-| `STORE` | `null` (required) | Store factory function (e.g. `require('./stores/sqlite')`) |
-| `STORE_CONFIG` | `null` (required) | Per-store config; shape varies |
-| `PIN_CHARSET` | `'0123456789'` | |
-| `CODE_CHARSET` | `'0123456789ABCDEFGHJKMNPQRTVWXYZ'` | Crockford Base32 |
-| `TOKEN_CHARSET` | `a-zA-Z0-9` | |
-
-### STORE_CONFIG per backend
-
-| `STORE` factory | Required keys |
-|---|---|
-| `require('./stores/sqlite')` | `{ table_name, lib_sql: Lib.SQLite }` |
-| `require('./stores/postgres')` | `{ table_name, lib_sql: Lib.Postgres }` |
-| `require('./stores/mysql')` | `{ table_name, lib_sql: Lib.MySQL }` |
-| `require('./stores/mongodb')` | `{ collection_name, lib_mongodb: Lib.MongoDB }` |
-| `require('./stores/dynamodb')` | `{ table_name, lib_dynamodb: Lib.DynamoDB }` |
-
-### Error Catalog
-
-All operational errors are defined in `verify.errors.js`:
-
-| Error Type | When Returned |
-|---|---|
-| `COOLDOWN_ACTIVE` | createPin/Code/Token during cooldown window |
-| `NOT_FOUND` | verify with no matching record |
-| `EXPIRED` | verify past `expires_at` |
-| `MAX_FAILS` | verify after `fail_count >= max_fail_count` |
-| `WRONG_VALUE` | verify with non-matching code |
-| `SERVICE_UNAVAILABLE` | Any store adapter operation failed |
-
-Shape: `{ type: string, message: string }` (frozen). Projects may pass through
-directly or map `error.type` to domain errors in service layer.
-
-## Storage Internals
-
-| Backend | Primary key | Native TTL | Recommended cleanup |
+| Key | Type | Required | Notes |
 |---|---|---|---|
-| sqlite | composite `(scope, id)` PK + index `(expires_at)` | No | `cleanupExpiredRecords` |
-| postgres | same | No | EventBridge / cron / `pg_cron` |
-| mysql | same | No | EventBridge / cron / `EVENT` scheduler |
-| mongodb | compound `_id: { scope, id }` + TTL index on `_ttl` (Date) | Yes (~60 s) | TTL index is automatic; explicit fallback exists |
-| dynamodb | PK `scope`, SK `id`; AWS table-level TTL on `expires_at` | Yes (~48 h) | Enable AWS TTL; explicit fallback exists |
+| `STORE` | function | Yes | Store factory function. `require('@superloomdev/js-server-helper-verify-store-<backend>')` |
+| `STORE_CONFIG` | object | Yes | Per-adapter config. Shape lives in each adapter's README |
+| `PIN_CHARSET` | string | No | Default `'0123456789'` |
+| `CODE_CHARSET` | string | No | Default Crockford Base32 (`'0123456789ABCDEFGHJKMNPQRSTVWXYZ'`) |
+| `TOKEN_CHARSET` | string | No | Default `a-zA-Z0-9` (62 chars) |
 
-All access patterns use indexes - never a scan (except DynamoDB
-`cleanupExpiredRecords`, which is the only operation that requires a scan).
+## Error Catalog
 
-## Tested Backends
+| `error.type` | Trigger | Surfaces in |
+|---|---|---|
+| `VERIFY_COOLDOWN_ACTIVE` | `create*` during cooldown window | `createPin`, `createCode`, `createToken` |
+| `VERIFY_NOT_FOUND` | `verify` with no record for `(scope, key)` | `verify` |
+| `VERIFY_EXPIRED` | `verify` on a record past `expires_at` | `verify` |
+| `VERIFY_MAX_FAILS` | `verify` after `fail_count >= max_fail_count` | `verify` |
+| `VERIFY_WRONG_VALUE` | `verify` on a record whose code does not match | `verify` |
+| `VERIFY_SERVICE_UNAVAILABLE` | Adapter returned `{ success: false }` | All async functions |
 
-SQLite runs on every push (no Docker; in-memory file). Postgres / MySQL / MongoDB /
-DynamoDB-Local run via the module's `_test/docker-compose.yml`. The shared
-store suite (`_test/shared-store-suite.js`) runs identical end-to-end
-coverage against every backend - 14 tests per backend × 5 backends + unit
-tests in `test.js` (offline, inline factory store).
-
-## Dependencies (peer)
-- **Lib.Utils**: type checks (`isNullOrUndefined`, `isFunction`, `isString`, `isInteger`, `isEmptyString`)
-- **Lib.Debug**: `debug` for adapter-failure diagnostic logs
-- **Lib.Crypto**: `generateRandomString(charset, length)` for code generation
-- **Lib.Instance**: `backgroundRoutine(instance)` for non-blocking post-match cleanup
-
-Plus one of: Lib.SQLite / Lib.Postgres / Lib.MySQL / Lib.MongoDB / Lib.DynamoDB
-- depending on which `STORE` is selected. The verify module never imports any
-of these directly; it consumes them through `STORE_CONFIG`.
-
-## Caller Pattern - Pass-Through
-
-Because every envelope failure carries a domain error from `CONFIG.ERRORS`,
-the caller branches on `success` once:
-
-```javascript
-const result = await Lib.Verify.verify(instance, options);
-if (result.success === false) {
-  return { success: false, error: result.error };  // pass-through
-}
-// success path
-```
-
-No per-error `if`/`switch` is needed.
-
-## Out of Scope
-- **Recovery codes**: handled by the user/auth model, not here.
-- **Notification delivery**: this module returns the generated code. Sending
-  it via SMS, email, or push is the caller's responsibility.
-- **Rate limiting beyond per-record cooldown**: per-IP or per-account global
-  rate limits live one layer up.
-
-## Wire Format
-
-This module has no wire format. Codes are bytes returned to the caller, and
-the caller passes any value back as `verify(options.value)`. The module never
-parses or composes its own envelope.
+Error shape is frozen at module load: `{ type: 'VERIFY_NOT_FOUND', message: 'Verification code not found or already consumed' }`.
 
 ## Lifecycle (verify flow)
 
-1. Validate options shape (throws `TypeError` on bad input - programmer error)
-2. `getRecord(scope, key)` - on adapter failure return `{ success: false, error: SERVICE_UNAVAILABLE }`
-3. If `record == null` -> `{ success: false, error: NOT_FOUND }`
-4. If `instance.time > record.expires_at` -> `{ success: false, error: EXPIRED }`
-5. If `record.fail_count >= max_fail_count` -> `{ success: false, error: MAX_FAILS }`
-6. If `record.code !== value` -> call `incrementFailCount` (best-effort), return `WRONG_VALUE`
-7. Match -> schedule background delete via `Lib.Instance.backgroundRoutine`, return `{ success: true, error: null }`
+1. Validate options (throws `TypeError` on programmer error).
+2. `getRecord(scope, key)`. Store failure becomes `VERIFY_SERVICE_UNAVAILABLE`.
+3. `record == null` returns `VERIFY_NOT_FOUND`.
+4. `instance.time > record.expires_at` returns `VERIFY_EXPIRED`.
+5. `record.fail_count >= max_fail_count` returns `VERIFY_MAX_FAILS`.
+6. `record.code !== value` calls `incrementFailCount` (best-effort) and returns `VERIFY_WRONG_VALUE`.
+7. On match, schedules `deleteRecord` via `Lib.Instance.backgroundRoutine` and returns `{ success: true, error: null }`.
+
+## Critical Behaviour for Code-Generating Tools
+
+- **`instance` is always the first argument.** Every function reads `instance.time` for timestamps.
+- **`STORE` is a factory function, not a string.** The loader throws on string, object, or missing.
+- **Programmer errors throw, operational errors return.** Missing required options throw `TypeError`; store failures return `{ success: false, error }`.
+- **One `(scope, key)` pair holds at most one active record.** A new `create*` call replaces the previous record. There is no accumulation.
+- **One-time guarantee via background delete.** On successful verify, the record is removed in the background. In serverless runtimes, the container freeze may defer the delete; see `docs/runtime.md` for the caveat and mitigations.
+- **No notification delivery.** The module returns the generated code; sending it via SMS, email, or push is the caller's responsibility.
+
+## Peer Dependencies
+
+| `Lib.*` | Source | Used for |
+|---|---|---|
+| `Lib.Utils` | `@superloomdev/js-helper-utils` | Type checks |
+| `Lib.Debug` | `@superloomdev/js-helper-debug` | Diagnostics for the post-verify background delete |
+| `Lib.Crypto` | `@superloomdev/js-server-helper-crypto` | `generateRandomString(charset, length)` |
+| `Lib.Instance` | `@superloomdev/js-server-helper-instance` | `backgroundRoutine` for post-verify record deletion |
+
+The store adapter (`CONFIG.STORE`) consumes its own driver helper (`Lib.SQLite`, `Lib.Postgres`, `Lib.MySQL`, `Lib.MongoDB`, or `Lib.DynamoDB`) through `CONFIG.STORE_CONFIG`. The verify module never imports a database driver helper directly.
+
+## Out of Scope
+
+- **Recovery codes.** Durable, batch-generated codes that need backup belong in the user/auth model, not here.
+- **Notification delivery.** This module returns the generated code; SMS, email, and push delivery are the caller's responsibility.
+- **Rate limiting beyond per-record cooldown.** Per-IP or per-account global rate limits live one layer up.
+
+## Documentation
+
+- `docs/api.md`. Full API reference (every function, every option, every error type)
+- `docs/configuration.md`. Loader pattern, every config key, charset overrides, peer dependencies, testing tier
+- `docs/data-model.md`. Canonical record shape, core concepts, design decisions
+- `docs/runtime.md`. The runtime-shape differences for the verify module (post-verify background delete caveat in serverless, scheduled cleanup mechanism). Not a framework cookbook
+- Storage adapters: see the README's "Storage Adapters" section for the list plus selection rule. Per-backend schema, indexes, TTL, IaC notes, and `STORE_CONFIG` shape live in each adapter package's own README (`@superloomdev/js-server-helper-verify-store-*`)

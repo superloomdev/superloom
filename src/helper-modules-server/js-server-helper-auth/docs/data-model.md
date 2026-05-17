@@ -4,7 +4,7 @@ Every session is stored as a single flat record. This document explains what eac
 
 ## Core Concepts
 
-**Tenant** — the top-level isolation boundary. Every session record carries a `tenant_id` and all queries are scoped to `(tenant_id, actor_id, ...)`. Two tenants in the same table are completely invisible to each other.
+**Tenant.** The top-level isolation boundary. Every session record carries a `tenant_id` and all queries are scoped to `(tenant_id, actor_id, ...)`. Two tenants in the same table are completely invisible to each other.
 
 ```
 tenant_id: 'tenant_42'        // SaaS tenant
@@ -12,9 +12,9 @@ tenant_id: 'org_acme'         // organisation slug
 tenant_id: 'default'          // single-tenant deployment (one known value)
 ```
 
-Tenant isolation is enforced at every store method — there is no cross-tenant query. Your application must ensure the tenant_id passed in is authoritative for the caller before passing it to auth.
+Tenant isolation is enforced at every store method. There is no cross-tenant query. Your application must ensure the tenant_id passed in is authoritative for the caller before passing it to auth.
 
-**Actor** — the authenticated principal. An actor has a `type` (what kind of actor it is) and an `id` (which specific principal). The Auth module is instantiated once per `actor_type`; the instance only ever reads and writes sessions for that type.
+**Actor.** The authenticated principal. An actor has a `type` (what kind of actor it is) and an `id` (which specific principal). The Auth module is instantiated once per `actor_type`; the instance only ever reads and writes sessions for that type.
 
 ```
 actor_type: 'user'            actor_id: 'usr_9f2a'      // end user
@@ -23,14 +23,14 @@ actor_type: 'merchant'        actor_id: 'mrch_10'       // B2B account
 actor_type: 'service'         actor_id: 'billing-api'   // machine-to-machine
 ```
 
-`actor_type` is validated on every `verifySession` call — a session stored under `actor_type: 'user'` will be rejected by an `admin` Auth instance even if the token is otherwise valid. This is a defense-in-depth guard against misconfigured table pointers.
+`actor_type` is validated on every `verifySession` call. A session stored under `actor_type: 'user'` will be rejected by an `admin` Auth instance even if the token is otherwise valid. This is a defense-in-depth guard against misconfigured table pointers.
 
-**Token key and secret** — together these are the session identity:
+**Token key and secret.** Together these are the session identity:
 
-- `token_key` — a random 16-char hex string. Forms part of the composite primary key. Safe to log.
-- `token_secret` — a random 32-char hex string. **Never stored.** Only its SHA-256 hash (`token_secret_hash`) is persisted. A lookup with the wrong secret returns the same "not found" response as a missing row — no timing oracle.
+- `token_key`. A random 16-char hex string. Forms part of the composite primary key. Safe to log.
+- `token_secret`. A random 32-char hex string. **Never stored.** Only its SHA-256 hash (`token_secret_hash`) is persisted. A lookup with the wrong secret returns the same "not found" response as a missing row. No timing oracle.
 
-**auth_id** — the wire-format token the client holds:
+**auth_id.** The wire-format token the client holds:
 
 ```
 auth_id = "{actor_id}-{token_key}-{token_secret}"
@@ -38,7 +38,7 @@ auth_id = "{actor_id}-{token_key}-{token_secret}"
 
 Reserved characters are `-` (segment separator) and `#` (composite-key separator inside MongoDB `_id` and DynamoDB sort key). Both are forbidden in any user-supplied `actor_id`. Validation runs at `createSession` and `createAuthId`.
 
-**install_id** — an optional client-supplied device or browser identifier. When provided and it matches an existing session's `install_id`, the prior session is **replaced atomically** regardless of session limits. This implements "log in again on the same device overrides the previous session" without requiring the client to remember the old `token_key`.
+**install_id.** An optional client-supplied device or browser identifier. When provided and it matches an existing session's `install_id`, the prior session is **replaced atomically** regardless of session limits. This implements "log in again on the same device overrides the previous session" without requiring the client to remember the old `token_key`.
 
 ```
 install_id: 'device-uuid-1234'   // generated once on first install, persisted client-side
@@ -61,7 +61,7 @@ install_id: null                  // omit when the platform has no stable device
 | `created_at` | Number | auth module | Unix epoch seconds. Immutable. Derived from `instance.time`. |
 | `expires_at` | Number | auth module | Unix epoch seconds. Set to `created_at + TTL_SECONDS` and rolled forward by `TTL_SECONDS` on each throttled activity refresh. |
 | `last_active_at` | Number | auth module | Unix epoch seconds. Updated by `verifySession` at most once per `LAST_ACTIVE_UPDATE_INTERVAL_SECONDS` to avoid a DB write on every request. |
-| `install_id` | String\|null | caller | Client-assigned device identifier. Enables same-device replacement. **Immutable** after creation — not updated by activity refresh. |
+| `install_id` | String\|null | caller | Client-assigned device identifier. Enables same-device replacement. **Immutable** after creation. Not updated by activity refresh. |
 | `install_platform` | String | caller | e.g. `'web'`, `'ios'`, `'android'`, `'macos'`, `'windows'`, `'linux'`, `'other'`. Used by `by_platform_max` limits. Immutable. |
 | `install_form_factor` | String | caller | e.g. `'desktop'`, `'mobile'`, `'tablet'`, `'tv'`, `'watch'`, `'other'`. Used by `by_form_factor_max` limits. Immutable. |
 | `client_name` | String\|null | caller | Browser or app name (e.g. `'Chrome'`, `'Safari'`, `'MyApp'`). |
@@ -75,7 +75,7 @@ install_id: null                  // omit when the platform has no stable device
 | `client_user_agent` | String\|null | caller | HTTP `User-Agent` string at login time. |
 | `push_provider` | String\|null | caller | Push notification provider (e.g. `'fcm'`, `'apns'`, `'webpush'`, `'expo'`). Set via `attachDeviceToSession`. |
 | `push_token` | String\|null | caller | Provider-specific push registration token. Set via `attachDeviceToSession`. Used by `listPushTargetsByActor` to fan out notifications. |
-| `custom_data` | Object\|null | caller | Project-owned arbitrary JSON. Opaque to auth — returned as-is on every read. |
+| `custom_data` | Object\|null | caller | Project-owned arbitrary JSON. Opaque to auth. Returned as-is on every read. |
 
 ---
 
@@ -118,7 +118,7 @@ Do **not** store secrets, session tokens from other systems, or large blobs in `
 
 ### Why Flat Records?
 
-Every session is one row. No joins, no foreign keys. This makes the "list all sessions for this actor" query fast and simple — a single indexed lookup.
+Every session is one row. No joins, no foreign keys. This makes the "list all sessions for this actor" query fast and simple: a single indexed lookup.
 
 ### Why Composite Primary Key?
 
@@ -129,7 +129,7 @@ The primary key is `(tenant_id, actor_id, token_key)`. This enables:
 
 ### Why Immutable install_id?
 
-The `install_id` never changes after creation. If a user reinstalls your app (new install_id), they get a new session slot rather than replacing the old one. This is intentional — a reinstall is a "new device" from a security perspective.
+The `install_id` never changes after creation. If a user reinstalls your app (new install_id), they get a new session slot rather than replacing the old one. This is intentional: a reinstall is a "new device" from a security perspective.
 
 ### Why Throttled last_active_at?
 
@@ -137,4 +137,4 @@ Updating `last_active_at` on every request would create a database write for eve
 
 ### Why Token Secret Hash?
 
-The actual `token_secret` is never stored. If your database is compromised, attackers cannot impersonate users even with full table access — they only have hashes, not the tokens clients hold.
+The actual `token_secret` is never stored. If your database is compromised, attackers cannot impersonate users even with full table access. They only have hashes, not the tokens clients hold.

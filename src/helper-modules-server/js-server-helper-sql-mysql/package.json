@@ -13,7 +13,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "engines": {
-    "node": ">=20.19"
+    "node": ">=24"
   },
   "bundleDependencies": false,
   "peerDependencies": {

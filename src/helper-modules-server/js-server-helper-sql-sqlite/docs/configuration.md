@@ -91,7 +91,7 @@ The `Lib.Instance` peer is technically optional. The module reads `instance.time
 
 | Package | Source | Purpose |
 |---|---|---|
-| `node:sqlite` | Node.js built-in | SQLite driver. Lazy-loaded on first query, cached at module scope. Requires Node 22.13+ (stable) or 24+. |
+| `node:sqlite` | Node.js built-in | SQLite driver. Lazy-loaded on first query, cached at module scope. Requires Node 24+. |
 
 There are **no** direct npm dependencies. The driver ships with Node itself.
 

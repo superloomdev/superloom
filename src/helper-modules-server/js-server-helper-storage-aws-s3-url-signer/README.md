@@ -1,7 +1,7 @@
 # @superloomdev/js-server-helper-storage-aws-s3-url-signer
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 20.19+](https://img.shields.io/badge/Node.js-20.19%2B-brightgreen.svg)](https://nodejs.org)
+[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
 A presigned-URL helper for Node.js that lets your browser, mobile app, or partner system upload to and download from your object store directly, without ever sending the file through your own server. Part of [Superloom](https://superloom.dev).
 
@@ -35,8 +35,7 @@ If your project is built on Superloom conventions (the same loader pattern, the 
 
 If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-## Learn More
-
+## Extended Documentation
 Extended documentation lives alongside the source on GitHub:
 
 - [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer/docs/api.md) - every exported function with its signature, parameters, return shape, and worked examples

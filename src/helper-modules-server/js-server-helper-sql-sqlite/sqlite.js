@@ -1,6 +1,6 @@
 // Info: SQLite client built on the Node.js built-in 'node:sqlite' module.
 //
-// Compatibility: Node.js 22.13+ (stable) or 24+ / SQLite 3.x (bundled)
+// Compatibility: Node.js 24+ / SQLite 3.x (bundled)
 //
 // Factory pattern: each loader call returns an independent instance with
 // its own database handle and config. Useful for multi-db scenarios

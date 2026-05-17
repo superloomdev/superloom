@@ -1,113 +1,60 @@
 # @superloomdev/js-server-helper-verify-store-mongodb
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-MongoDB store adapter for [`@superloomdev/js-server-helper-verify`](../js-server-helper-verify). Implements the 6-method store contract backed by MongoDB via `@superloomdev/js-server-helper-nosql-mongodb`.
+A MongoDB-backed implementation of the [Verify](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify) module's storage contract. Plug it into the parent's `STORE` config; the Verify module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent.** Tests require a running MongoDB instance. Docker lifecycle managed automatically by `npm test`.
+## What This Is
 
-## How This Adapter Fits In
+A thin layer between the Verify parent module and a MongoDB verification collection. Uses a compound `_id = { scope, id }` for the primary key and a TTL index on a `_ttl` Date field for automatic expiry. Well-suited for projects already running MongoDB that want automatic document expiry without application-side scheduling.
 
-```js
-const store = require('@superloomdev/js-server-helper-verify-store-mongodb')(Lib, CONFIG, ERRORS);
-```
+The adapter cannot stand alone. It is always loaded together with the Verify parent and the [`js-server-helper-nosql-mongodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-nosql-mongodb) driver helper.
 
-## Install
+## Why Use This Module
 
-```bash
-npm install @superloomdev/js-server-helper-verify \
-            @superloomdev/js-server-helper-verify-store-mongodb \
-            @superloomdev/js-server-helper-nosql-mongodb
-```
+- **Library updates won't break your code.** When the MongoDB native driver ships a breaking change, only this adapter and the `nosql-mongodb` driver helper need updating.
 
-## Usage
+- **Pre-tested at every release.** A full store-contract and Verify-lifecycle integration suite run against a Dockerized MongoDB instance in CI on every push.
 
-```js
-Lib.MongoDB = require('@superloomdev/js-server-helper-nosql-mongodb')(Lib, {
-  URI: process.env.MONGODB_URI,
-  DATABASE: 'verify'
-});
+- **Native TTL.** Expired verification records are deleted automatically by MongoDB's background TTL sweeper (~60s lag) — no application scheduling required. `cleanupExpiredRecords` is also available for deterministic explicit cleanup.
 
-Lib.Verify = require('@superloomdev/js-server-helper-verify')(Lib, {
-  STORE: require('@superloomdev/js-server-helper-verify-store-mongodb'),
-  STORE_CONFIG: {
-    collection_name: 'verification_codes',
-    lib_mongodb:     Lib.MongoDB
-  }
-});
+- **No application cleanup needed in steady state.** Verify codes always carry an `expires_at`; the TTL index drives automatic deletion ~60s after the configured expiry. `cleanupExpiredRecords` is exposed only for deterministic test runs and explicit immediate sweeps.
 
-await Lib.Verify.setupNewStore(Lib.Instance.initialize());
-```
+## Hot-Swappable with Other Backends
 
-## STORE_CONFIG
+This adapter is part of the `verify-store-*` family. Every sibling implements the same store contract. Swap by changing one config value; the rest of your code keeps working.
 
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `collection_name` | `String` | Yes | Name of the verification collection. |
-| `lib_mongodb` | `Object` | Yes | An initialized `Lib.MongoDB` instance. |
+- [`@superloomdev/js-server-helper-verify-store-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-sqlite) - SQLite (embedded, zero-network, dev/test)
+- [`@superloomdev/js-server-helper-verify-store-postgres`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-postgres) - PostgreSQL
+- [`@superloomdev/js-server-helper-verify-store-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-mysql) - MySQL or MariaDB
+- [`@superloomdev/js-server-helper-verify-store-dynamodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-dynamodb) - AWS DynamoDB
 
-## Schema
+## Aligned with Superloom Philosophy
 
-`setupNewStore` creates two indexes:
+If your project is built on Superloom conventions (the same loader pattern, the same response envelopes, the same testing model), this adapter slots in without you needing to learn anything new.
 
-```javascript
-// Primary key (composite)
-db.verification_codes.createIndex(
-  { scope: 1, key: 1 },
-  { name: 'idx_scope_key', unique: true }
-);
+## Extended Documentation
 
-// TTL index for automatic expiration
-db.verification_codes.createIndex(
-  { _ttl: 1 },
-  { name: 'idx_ttl', expireAfterSeconds: 0 }
-);
-```
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mongodb/docs/api.md). The store contract this adapter implements and MongoDB-specific semantics
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mongodb/docs/configuration.md). `STORE_CONFIG` keys, peer dependencies, environment variables, testing tier
+- [Schema](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mongodb/docs/schema.md). Document shape, compound `_id`, `_ttl` field, TTL index
+- [Cleanup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mongodb/docs/cleanup.md). Native TTL and explicit `cleanupExpiredRecords` — when to use each
+- [Verify parent module](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify). The data model, error catalog, and Verify-side configuration this adapter plugs into
 
-### Document Structure
+## Adding to Your Project
 
-```javascript
-{
-  _id: ObjectId,           // auto-generated
-  scope: "user.usr_9f2a",
-  key: "login-phone.+919999912345",
-  code: "742856",
-  fail_count: 0,
-  created_at: 1715180412,
-  expires_at: 1715184012,
-  _ttl: ISODate("2024-05-08T14:00:12Z")  // Date type for TTL index
-}
-```
+This adapter is installed alongside the Verify parent module and the `nosql-mongodb` driver helper. The loader pattern is documented in the Verify parent's README.
 
-### MongoDB-Specific Notes
+Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
-- **TTL index** on `_ttl` field — automatic cleanup ~60 seconds after expiry.
-- **Composite key** via `{ scope: 1, key: 1 }` unique index.
+## Testing Status
 
-## Store Contract
+| Tier | Runtime | Status |
+|---|---|---|
+| Contract + Integration | MongoDB via Docker Compose | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-| Method | Signature | Returns |
-|--------|-----------|---------|
-| `setupNewStore` | `(instance)` | `{ success, error }` |
-| `getRecord` | `(instance, scope, key)` | `{ success, record, error }` |
-| `setRecord` | `(instance, scope, key, record)` | `{ success, error }` |
-| `incrementFailCount` | `(instance, scope, key)` | `{ success, error }` |
-| `deleteRecord` | `(instance, scope, key)` | `{ success, error }` |
-| `cleanupExpiredRecords` | `(instance)` | `{ success, deleted_count, error }` |
-
-## Cleanup
-
-MongoDB has native TTL via the `_ttl` index. `cleanupExpiredRecords` is provided as explicit fallback.
-
-## Testing
-
-```bash
-cd _test && npm install && npm test
-```
-
-Docker lifecycle is fully automatic.
+Docker lifecycle is fully automatic — `npm test` from `_test/` manages `pretest`/`posttest`. Test runtime details live in [Configuration → Testing Tier](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mongodb/docs/configuration.md#testing-tier).
 
 ## License
 

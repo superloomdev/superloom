@@ -1,159 +1,74 @@
 # @superloomdev/js-server-helper-http
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-Outgoing HTTP client for Node.js. Modern async/await wrapper around the **built-in `fetch` API** (Node 22+) with Bearer/Basic auth, timeouts via `AbortSignal.timeout`, custom headers, and a normalized response shape. Zero runtime dependencies. Part of the [Superloom](https://github.com/superloomdev/superloom).
+An outgoing HTTP client for Node.js that ships pre-tested, has zero runtime dependencies, and never throws. Part of [Superloom](https://superloom.dev).
 
-## Installation
+## What This Is
 
-```bash
-npm install @superloomdev/js-server-helper-http
+A thin wrapper around Node's built-in `fetch` global that adds three things: a normalized response envelope, request-level timing, and pluggable auth (Bearer or Basic). One core function (`fetchJSON`) plus six convenience methods (`get`, `post`, `postForm`, `put`, `delete`, `patch`).
+
+Every call returns the same envelope, on success and on every failure mode:
+
+```
+success / status / headers / data / error
 ```
 
-## Peer Dependencies (Injected via Loader)
+Error handling, result reading, and exception expectations are the same across every function. There are no surprises between methods, and the module never throws.
 
-- `@superloomdev/js-helper-utils` - type checks (`Lib.Utils`)
-- `@superloomdev/js-helper-debug` - logging and performance audit (`Lib.Debug`)
+## Why Use This Module
 
-## Direct Dependencies (Bundled)
+- **Zero npm dependencies.** Built on Node's standard-library `fetch` global (Node 24+). Adding the module to your project adds zero packages to your dependency tree. The supply chain you audit ends at this package itself.
 
-None. Uses Node.js 22+ built-in globals: `fetch`, `AbortSignal`, `URL`, `URLSearchParams`, `Buffer`, `FormData`.
+- **One response shape for every outcome.** Successful response, HTTP 4xx/5xx, timeout, DNS failure, TLS error, or a body that fails to parse as JSON. Each one returns the same `{ success, status, headers, data, error }` envelope. The module never throws. Calling code branches once on `result.success` instead of stitching together `try`/`catch`, `response.ok`, and manual body parsing.
 
-## Exported Functions
+- **Pre-tested at every release.** A real-network integration suite runs against `httpbin.org` in CI on every push. Your project trusts the wrapper instead of re-verifying fetch, auth, multipart, and timeout plumbing on each release.
 
-### Core Request Function
+- **Designed for human review.** The code is laid out as clearly-marked visual sections (section banners, short functions, scoped comments) so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `http.js` to see the structure.
 
-| Function | Params | Return | Description |
-|---|---|---|---|
-| `fetchJSON` | `(url, method, params?, content_type?, options?)` | `Promise<Object>` | Generic HTTP request |
+- **Built-in observability.** Every outbound request is timed against the active request and routed into your structured logs automatically. Slow-call review, request profiling, and the toggle to enable it during local development or silence it in production are all built in. No instrumentation code to write.
 
-### Convenience Methods
+## Behavior
 
-| Function | Params | Return | Description |
-|---|---|---|---|
-| `get` | `(url, params?, options?)` | `Promise<Object>` | GET request |
-| `post` | `(url, params?, options?)` | `Promise<Object>` | POST with JSON body |
-| `postForm` | `(url, params?, options?)` | `Promise<Object>` | POST with url-encoded body |
-| `put` | `(url, params?, options?)` | `Promise<Object>` | PUT with JSON body |
-| `delete` | `(url, params?, options?)` | `Promise<Object>` | DELETE request |
-| `patch` | `(url, params?, options?)` | `Promise<Object>` | PATCH with JSON body |
+The module is a thin layer over Node's native `fetch`. Three concerns shape its behavior:
 
-## Response Format
+- **Normalized envelope.** Every call returns `{ success, status, headers, data, error }`. `success` is `true` only for 2xx responses. `status` is the HTTP status code, or `0` when no response was received (timeout, network failure, request-setup error). `headers` is a plain object with lowercase keys. `data` is parsed JSON, falls back to raw text when the body is not valid JSON, and is `null` when the body is empty. `error` is a `{ type, message }` object on failure, or `null` on success.
 
-All functions return a standardized response object (never throws):
+- **Never throws.** HTTP errors (4xx/5xx), timeouts (`AbortSignal.timeout`), network failures (DNS, connection refused, TLS), and request-setup errors all become structured results with `success: false`. Calling code does not need `try`/`catch` around the call. The distinction between an HTTP error and a network failure is `result.status`: greater than zero means the server replied; zero means no response was received.
 
-```javascript
-{
-  success: true,        // Boolean: request succeeded (2xx status)
-  status: 200,          // Integer: HTTP status code (0 on network error / timeout)
-  headers: {},          // Object: response headers (lowercase keys)
-  data: {},             // Object | String | null: parsed JSON, raw text, or null on empty body
-  error: null           // Object | null: error details if success=false
-}
-```
+- **Performance audit reference.** Every outbound request emits a `Lib.Debug.performanceAuditLog('HTTP <METHOD>', url, start_ms)` line on both success and failure paths. Combined with `js-server-helper-instance` providing `instance.time_ms`, slow-call review and request profiling work out of the box.
 
-Error object structure:
+Full mechanics, the parameter tables for `fetchJSON` and the six convenience methods, the content-type matrix, the four error types, and worked examples for auth, multipart upload, and timeouts live in [`docs/api.md`](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-http/docs/api.md).
 
-```javascript
-{
-  type: 'HTTP_ERROR',   // 'HTTP_ERROR' | 'NETWORK_ERROR' | 'REQUEST_ERROR'
-  message: '...'        // Human-readable error description
-}
-```
+## Aligned with Superloom Philosophy
 
-| Error Type | When |
-|---|---|
-| `HTTP_ERROR` | Server responded with non-2xx status |
-| `NETWORK_ERROR` | Timeout, DNS failure, connection refused, TLS error |
-| `REQUEST_ERROR` | Unexpected failure in request setup |
+If your project is built on Superloom conventions (the same loader pattern, the same testing model), this module slots in without you needing to learn anything new.
 
-## Options Object
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-```javascript
-{
-  timeout: 30,          // Override default timeout (seconds)
-  headers: {},          // Additional headers to send
-  auth: {
-    bearer_token: '...',  // Bearer token
-    basic: { username: '...', password: '...' }  // Basic auth (base64 encoded via Buffer)
-  }
-}
-```
+## Extended Documentation
 
-## Usage
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-http/docs/api.md) - every exported function with its signature, parameters, return shape, content types, error types, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-http/docs/configuration.md) - loader pattern, two configuration keys, dependency notes, testing tier
+- [`js-server-helper-instance`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-instance) - the per-request lifecycle module whose `instance.time_ms` powers the request-level timing
+- [Superloom](https://superloom.dev) - the framework
 
-```javascript
-// In loader (Lib must contain Utils and Debug)
-Lib.Http = require('@superloomdev/js-server-helper-http')(Lib, { /* config overrides */ });
+## Adding to Your Project
 
-// Simple GET
-const result = await Lib.Http.get('https://api.example.com/users');
-if (result.success) {
-  console.log(result.data);
-}
+Install this module as a peer dependency in your project's `package.json` and load it through the standard Superloom loader. Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
-// POST with JSON
-const result = await Lib.Http.post('https://api.example.com/users', {
-  name: 'John',
-  email: 'john@example.com'
-});
+The loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
 
-// Authenticated request
-const result = await Lib.Http.get('https://api.example.com/protected', null, {
-  auth: { bearer_token: 'my-token' }
-});
-
-// Custom headers + timeout
-const result = await Lib.Http.get('https://api.example.com/data', null, {
-  headers: { 'X-API-Key': 'secret-key' },
-  timeout: 10
-});
-
-// Multipart upload - pass a FormData instance as params
-const form = new FormData();
-form.append('file', new Blob([file_buffer]), 'report.pdf');
-form.append('title', 'Quarterly Report');
-const result = await Lib.Http.fetchJSON(
-  'https://api.example.com/upload',
-  'POST',
-  form,
-  'multipart',
-  { timeout: 60, auth: { bearer_token: 'token' } }
-);
-```
-
-## Content Types
-
-| Type | Used For | Content-Type Header |
-|---|---|---|
-| `json` | POST/PUT/PATCH with JSON body | `application/json` |
-| `urlencoded` | POST/PUT/PATCH with form data | `application/x-www-form-urlencoded` |
-| `multipart` | File uploads (pass a `FormData` instance) | Set automatically by `fetch` (with boundary) |
-
-## Configuration
-
-| Key | Default | Description |
-|---|---|---|
-| `TIMEOUT` | `30` | Default timeout in seconds (`AbortSignal.timeout`) |
-| `USER_AGENT` | `'Open-Framework-HTTP/2.0'` | Default User-Agent header |
-
-## Testing
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Unit Tests** | Node.js `node --test` (hits `httpbin.org`) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Unit | Node.js `node --test` (real network, hits `httpbin.org`) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-Run locally (requires network access):
-
-```bash
-cd _test
-npm install && npm test
-```
-
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
+Test runtime details (no Docker, but network access is required) live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-http/docs/configuration.md#testing-tiers).
 
 ## License
 
 MIT
+

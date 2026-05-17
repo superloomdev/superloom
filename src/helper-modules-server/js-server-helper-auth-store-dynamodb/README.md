@@ -1,207 +1,67 @@
 # @superloomdev/js-server-helper-auth-store-dynamodb
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-AWS DynamoDB session store adapter for [`@superloomdev/js-server-helper-auth`](../js-server-helper-auth). Implements the 8-method store contract backed by DynamoDB via `@superloomdev/js-server-helper-nosql-aws-dynamodb`.
+An AWS DynamoDB-backed implementation of the [Auth](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth) module's storage contract. Plug it into the parent's `STORE` config; the Auth module's calling shape stays identical regardless of which storage backend is active. Table provisioning is out-of-band (IaC). Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent.** Tests run against a local DynamoDB emulator (via Docker). The Docker lifecycle is managed automatically by `npm test` via `pretest`/`posttest` scripts — no manual `docker compose` needed.
+## What This Is
 
-> **Table must be provisioned out-of-band.** `setupNewStore` is not implemented — the DynamoDB table must be created via IaC, AWS Console, or a one-shot script before the auth module is used.
+A thin layer between the Auth parent module and a DynamoDB sessions table. The adapter uses a single-table design with composite keys so every hot-path query is a direct primary-index hit; no secondary indexes are required for the auth access patterns.
 
-## How This Adapter Fits In
+The adapter cannot stand alone. It is always loaded together with the Auth parent and the underlying [`js-server-helper-nosql-aws-dynamodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb) driver helper, and inherits whatever the driver helper provides (AWS SDK client configuration, request-level timing, error envelopes, credential chain). The table itself must be provisioned out-of-band before the adapter is used; `setupNewStore` is not implemented for DynamoDB.
 
-The auth module calls this adapter as a factory:
+## Why Use This Module
 
-```js
-const store = require('@superloomdev/js-server-helper-auth-store-dynamodb')(Lib, CONFIG, ERRORS);
-```
+- **Library updates won't break your code.** When the AWS SDK ships a breaking change, only this adapter and the [`nosql-aws-dynamodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb) driver helper need updating. Your application code and the Auth-module call sites stay exactly as they are.
 
-The adapter receives the full narrowed `Lib` (Utils, Debug, Crypto, Instance), the merged `CONFIG` (from which it extracts `CONFIG.STORE_CONFIG` internally), and the frozen auth `ERRORS` catalog (used verbatim in error envelopes). It returns the 8-method store interface consumed by `auth.js`. The caller — `auth.js` — never needs to know which backend is active.
+- **Pre-tested at every release.** A full store-contract suite plus a full Auth-lifecycle integration suite run against a local DynamoDB emulator in CI on every push. Your project trusts the adapter instead of re-verifying session plumbing on each release.
 
-This is the standard **adapter factory protocol** shared by all `auth-store-*` packages.
+- **Designed for human review.** The adapter is laid out as clearly-marked visual sections (section banners, short functions, scoped comments) so a reviewer can read it top to bottom and follow each store-contract method without ever getting lost in dense logic. Open `store.js` to see the structure.
 
-## Install
+- **Built-in observability.** Every store call is timed against the active request via `Lib.Debug.performanceAuditLog`, the same way every other Superloom helper does. Slow-store review and request profiling are built in. No instrumentation code to write.
 
-```bash
-npm install @superloomdev/js-server-helper-auth \
-            @superloomdev/js-server-helper-auth-store-dynamodb \
-            @superloomdev/js-server-helper-nosql-aws-dynamodb
-```
+- **Native TTL option.** DynamoDB supports automatic item expiry via table-level TTL. Enable it on the `expires_at` attribute during table provisioning and expired sessions disappear without application-managed cleanup. The fallback `cleanupExpiredSessions` path is available for immediate consistency when needed. The table design, the key schema, the TTL configuration, and the IaC examples live in [`docs/schema.md`](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-dynamodb/docs/schema.md) and [`docs/cleanup.md`](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-dynamodb/docs/cleanup.md).
 
-## Usage
+## Hot-Swappable with Other Backends
 
-Pass the adapter factory to `STORE`. Pass the `Lib.DynamoDB` instance in `STORE_CONFIG`.
+This adapter is part of the `auth-store-*` family. Every sibling implements the same store contract. Swap by changing one config value; the rest of your code keeps working.
 
-```js
-const Lib = {};
-Lib.Utils    = require('@superloomdev/js-helper-utils')(Lib, {});
-Lib.Debug    = require('@superloomdev/js-helper-debug')(Lib, {});
-Lib.Crypto   = require('@superloomdev/js-server-helper-crypto')(Lib, {});
-Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
+- [`@superloomdev/js-server-helper-auth-store-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth-store-sqlite) - SQLite (embedded, in-process)
+- [`@superloomdev/js-server-helper-auth-store-postgres`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth-store-postgres) - PostgreSQL
+- [`@superloomdev/js-server-helper-auth-store-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth-store-mysql) - MySQL / MariaDB
+- [`@superloomdev/js-server-helper-auth-store-mongodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth-store-mongodb) - MongoDB
 
-Lib.DynamoDB = require('@superloomdev/js-server-helper-nosql-aws-dynamodb')(Lib, {
-  REGION: process.env.AWS_REGION
-});
+## Aligned with Superloom Philosophy
 
-Lib.AuthUser = require('@superloomdev/js-server-helper-auth')(Lib, {
-  STORE: require('@superloomdev/js-server-helper-auth-store-dynamodb'),
-  STORE_CONFIG: {
-    table_name:   'sessions_user',
-    lib_dynamodb: Lib.DynamoDB
-  },
-  ACTOR_TYPE:  'user',
-  TTL_SECONDS: 2592000
-});
-```
+If your project is built on Superloom conventions (the same loader pattern, the same response envelopes, the same testing model), this adapter slots in without you needing to learn anything new. It is written using the same opinionated principles as the Auth parent and the `nosql-aws-dynamodb` driver helper, so adopting it does not introduce inconsistency into your codebase.
 
-> **No `setupNewStore` call needed.** Provision the table out-of-band (see [Table Provisioning](#table-provisioning) below).
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-## STORE_CONFIG
+## Extended Documentation
 
-| Key | Type | Required | Description |
-|---|---|---|---|
-| `table_name` | `String` | Yes | Name of the DynamoDB table. Use one table per `actor_type` (e.g. `sessions_user`, `sessions_admin`), or use a single shared table with `actor_type` as a key discriminator if your workload requires it. |
-| `lib_dynamodb` | `Object` | Yes | An initialized `Lib.DynamoDB` instance (`@superloomdev/js-server-helper-nosql-aws-dynamodb`). |
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-dynamodb/docs/api.md). The store contract this adapter implements and the adapter factory protocol
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-dynamodb/docs/configuration.md). `STORE_CONFIG` keys, IAM permissions, peer dependencies, environment variables, testing tier
+- [Schema](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-dynamodb/docs/schema.md). Single-table design, PK/SK strategy, CloudFormation example, attribute type mapping
+- [Cleanup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-dynamodb/docs/cleanup.md). Native TTL vs application-managed cleanup, Scan-then-batchDelete fallback, operational notes
+- [Auth parent module](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth). The data model, error catalog, and Auth-side configuration this adapter plugs into
+- [Superloom](https://superloom.dev). The framework
 
-## Table Design
+## Adding to Your Project
 
-This adapter uses a **single-table design** tuned for the auth query patterns:
+This adapter is installed alongside the Auth parent module and the `nosql-aws-dynamodb` driver helper as peer dependencies through the standard Superloom loader. The canonical install command for the parent + adapter + driver triple lives in the Auth parent's [Adding to Your Project](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth#adding-to-your-project) section; substitute `auth-store-dynamodb` for the adapter name and add `js-server-helper-nosql-aws-dynamodb` to the install list.
 
-| Key | Type | Value |
+Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
+
+The loader pattern, including the full `Lib` container shape and how the adapter factory is passed to the Auth parent's `STORE` config key, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
+
+## Testing Status
+
+| Tier | Runtime | Status |
 |---|---|---|
-| Partition Key (`PK`) | `String` | `tenant_id` |
-| Sort Key (`SK`) | `String` | `"{actor_id}#{token_key}"` |
+| Contract + Integration | DynamoDB Local emulator in Docker | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-This layout ensures every hot-path query is a direct index hit — no GSI required:
-
-| Operation | DynamoDB call | Access pattern |
-|---|---|---|
-| `getSession(t, a, k, h)` | `GetItem` | PK=`t`, SK=`a#k` |
-| `listSessionsByActor(t, a)` | `Query` | PK=`t`, SK begins_with `"a#"` |
-| `setSession(record)` | `PutItem` | PK=`t`, SK=`a#k` |
-| `deleteSession(t, a, k)` | `DeleteItem` | PK=`t`, SK=`a#k` |
-| `deleteSessions(t, keys)` | `BatchWriteItem` | PK=`t`, SK per key |
-| `cleanupExpiredSessions` | `Scan` with `FilterExpression` | `expires_at < now` |
-
-The `token_secret_hash` is stored as a regular attribute (not part of the Sort Key), so the `(tenant_id, actor_id, token_key)` triple remains unique regardless of secret rotation.
-
-### DynamoDB-Specific Notes
-
-- **`setupNewStore` is not implemented** — returns `{ success: false, error: { type: 'NOT_IMPLEMENTED' } }`. Provision the table via IaC before use.
-- **Timestamps** (`created_at`, `expires_at`, `last_active_at`) are stored as `Number` (Unix epoch seconds), not as ISO strings. All adapters use the same epoch seconds convention.
-- **`client_is_browser`** is stored as a DynamoDB `BOOL` attribute.
-- **`custom_data`** is stored as a DynamoDB `M` (Map) attribute — no JSON serialization needed. `null` custom_data is omitted from the item entirely and returns as `null` on read.
-- **LRU eviction and install-id replacement** both use `listSessionsByActor` + client-side filtering, matching the pattern of the SQL and MongoDB adapters.
-- **`cleanupExpiredSessions`** performs a table Scan with a `FilterExpression` on `expires_at`. This is an O(table-size) operation. For large tables, enable DynamoDB native TTL instead (see below).
-
-## Table Provisioning
-
-Provision before using the auth module. Example CloudFormation / CDK skeleton:
-
-```yaml
-# CloudFormation snippet
-SessionsUserTable:
-  Type: AWS::DynamoDB::Table
-  Properties:
-    TableName: sessions_user
-    BillingMode: PAY_PER_REQUEST
-    AttributeDefinitions:
-      - AttributeName: tenant_id
-        AttributeType: S
-      - AttributeName: actor_id_token_key
-        AttributeType: S
-    KeySchema:
-      - AttributeName: tenant_id
-        KeyType: HASH
-      - AttributeName: actor_id_token_key
-        KeyType: RANGE
-    # Optional: enable native TTL (see below)
-    TimeToLiveSpecification:
-      AttributeName: expires_at
-      Enabled: true
-```
-
-> **Important:** The Sort Key attribute name in the CloudFormation definition must match the key name used by the adapter (`actor_id_token_key` or the equivalent that concatenates `actor_id#token_key`). Check the adapter source (`store.js`) for the exact SK attribute name used.
-
-## Native TTL (Optional)
-
-DynamoDB supports automatic item expiry via TTL. When enabled, DynamoDB deletes items whose `expires_at` epoch value is in the past — typically within 48 hours of expiry.
-
-To enable: set `TimeToLiveSpecification.AttributeName` to `expires_at` on the table (out-of-band, via IaC or AWS Console). Once enabled, there is no need to run `cleanupExpiredSessions` for garbage collection. You may still run it for immediate consistency if needed.
-
-**Caveats:**
-- Native TTL deletion is **eventually consistent** — expired items can remain visible for up to 48 hours.
-- `cleanupExpiredSessions` performs an immediate hard delete and respects the exact epoch boundary; native TTL does not.
-- `verifySession` always checks `expires_at` at the application layer regardless of TTL configuration, so expired-but-not-yet-deleted items are correctly rejected.
-
-## Store Contract
-
-This adapter implements the 8-method contract consumed by `auth.js`:
-
-| Method | Signature | Returns |
-|---|---|---|
-| `setupNewStore` | `(instance)` | `{ success: false, error: { type: 'NOT_IMPLEMENTED' } }` |
-| `getSession` | `(instance, tenant_id, actor_id, token_key, token_secret_hash)` | `{ success, record, error }` |
-| `listSessionsByActor` | `(instance, tenant_id, actor_id)` | `{ success, records, error }` |
-| `setSession` | `(instance, record)` | `{ success, error }` |
-| `updateSessionActivity` | `(instance, tenant_id, actor_id, token_key, updates)` | `{ success, error }` |
-| `deleteSession` | `(instance, tenant_id, actor_id, token_key)` | `{ success, error }` |
-| `deleteSessions` | `(instance, tenant_id, keys)` | `{ success, error }` |
-| `cleanupExpiredSessions` | `(instance)` | `{ success, deleted_count, error }` |
-
-`getSession` performs a `GetItem` then compares `token_secret_hash`. A wrong secret returns `{ record: null }` — identical to a missing item — to prevent timing-based enumeration.
-
-`updateSessionActivity` throws `TypeError` if `updates` contains any identity field. It issues an `UpdateItem` with an `UpdateExpression` covering only the supplied mutable fields.
-
-`deleteSessions` uses `BatchWriteItem` to delete all keys in one request (DynamoDB batch limit of 25 items per call; the adapter handles chunking automatically if needed).
-
-## Expired Session Cleanup
-
-If not using native DynamoDB TTL, run `cleanupExpiredSessions` on a cron:
-
-```js
-setInterval(async function () {
-  const result = await Lib.AuthUser.cleanupExpiredSessions(Lib.Instance.initialize());
-  if (result.success) {
-    Lib.Debug.info('Cleanup deleted ' + result.deleted_count + ' expired sessions');
-  }
-}, 3600 * 1000);
-```
-
-## Environment Variables
-
-Consumed by `_test/loader.js` — never read anywhere else.
-
-| Variable | Default (Docker emulator) | Description |
-|---|---|---|
-| `AWS_REGION` | `us-east-1` | AWS region |
-| `AWS_ACCESS_KEY_ID` | `local` | Dummy credential for local emulator |
-| `AWS_SECRET_ACCESS_KEY` | `local` | Dummy credential for local emulator |
-| `DYNAMODB_ENDPOINT` | `http://localhost:8000` | Override endpoint for local emulator |
-
-## Peer Dependencies
-
-| Package | Purpose |
-|---|---|
-| `@superloomdev/js-helper-utils` | Type checks |
-| `@superloomdev/js-helper-debug` | Structured debug logging |
-| `@superloomdev/js-server-helper-nosql-aws-dynamodb` | DynamoDB driver wrapper (`Lib.DynamoDB`) |
-
-## Testing
-
-```bash
-cd _test && npm install && npm test
-```
-
-Docker lifecycle is fully automatic. `pretest` starts a `amazon/dynamodb-local` emulator container; `posttest` stops and removes it. No manual `docker compose up` needed. Dummy AWS credentials (`local`/`local`) are set in the `npm test` script — no real AWS account required.
-
-`_test/store-contract-suite.js` is a local copy of the shared integration suite maintained by the auth module. It is not fetched from the auth package at test time — this keeps the adapter's test harness self-contained and records which contract version it was built against.
-
-The suite covers:
-- Adapter unit tests (Tier 1): store loader config validation, PK/SK construction, `custom_data` native Map storage, hash-mismatch "not found" behavior, `updateSessionActivity` identity blocklist, upsert immutability, `cleanupExpiredSessions` deleted count
-- Full auth lifecycle integration (Tier 3): every public Auth API path driven against the real DynamoDB emulator via the store contract suite
+Test runtime details (Docker lifecycle, environment variables, contract suite coverage) live in [Configuration → Testing Tier](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-auth-store-dynamodb/docs/configuration.md#testing-tier).
 
 ## License
 

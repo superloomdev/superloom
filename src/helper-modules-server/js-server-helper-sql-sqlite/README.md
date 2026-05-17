@@ -1,13 +1,13 @@
 # @superloomdev/js-server-helper-sql-sqlite
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 22.13+](https://img.shields.io/badge/Node.js-22.13%2B-brightgreen.svg)](https://nodejs.org)
+[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
 A SQLite helper for Node.js that runs in-process with zero external infrastructure and ships pre-tested, so your project never has to re-verify SQL connectivity. Part of [Superloom](https://superloom.dev).
 
 ## What This Is
 
-A thin, opinionated layer over the **built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) module** (stable since Node.js 22.13). The driver ships with Node itself. There is no external dependency to install, manage, or upgrade. The wrapper adds request-level timing, a single consistent response shape, and the same calling pattern as the other Superloom SQL helpers.
+A thin, opinionated layer over the **built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) module**. The driver ships with Node itself. There is no external dependency to install, manage, or upgrade. The wrapper adds request-level timing, a single consistent response shape, and the same calling pattern as the other Superloom SQL helpers.
 
 Every read and every write returns the same envelope:
 
@@ -42,8 +42,7 @@ If your project is built on Superloom conventions (the same loader pattern, the 
 
 If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-## Learn More
-
+## Extended Documentation
 Extended documentation lives alongside the source on GitHub:
 
 - [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-sqlite/docs/api.md) - every exported function with its signature, parameters, return shape, and worked examples

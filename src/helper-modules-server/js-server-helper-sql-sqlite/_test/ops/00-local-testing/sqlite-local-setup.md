@@ -6,7 +6,7 @@ Node.js itself.
 
 ## Requirements
 
-- Node.js 22.13+ (stable `node:sqlite`) or 24+
+- Node.js 24+
 
 ## 1. Install and Run
 

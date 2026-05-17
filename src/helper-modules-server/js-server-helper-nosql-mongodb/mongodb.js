@@ -1,7 +1,7 @@
 // Info: MongoDB wrapper with CRUD, batch, query, scan, and transaction operations. Lazy-loaded native driver.
 // Server-only: uses 'mongodb' npm package with connection pooling.
 //
-// Compatibility: Node.js 20.19+.
+// Compatibility: Node.js 24+.
 //
 // Factory pattern: each loader call returns an independent MongoDB interface
 // with its own Lib, CONFIG, and per-instance MongoClient.

@@ -1,98 +1,49 @@
 # @superloomdev/js-helper-debug
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-Zero-dependency structured logging library with log levels, dual output formats, and backward compatibility. Part of the [Superloom](https://github.com/superloomdev/superloom).
+A structured-logging helper for Node.js and the browser that ships pre-tested and has zero runtime dependencies. Part of [Superloom](https://superloom.dev).
 
-> **Foundation module** - zero runtime dependencies by design. This module and `js-helper-utils` form the self-contained base layer. All other helper modules may depend on them, but never the reverse.
+## What This Is
 
-## Features
-- **Log Levels:** `debug`, `info`, `warn`, `error`, `none` (threshold-based filtering)
-- **Text Format:** Human-readable for local dev and Docker stdout
-- **JSON Format:** Structured JSON for AWS CloudWatch, log aggregators, and machine parsing
-- **Error Logging:** Automatic stack trace capture, error codes, extra context
-- **Timing Audit:** Performance timing with memory usage tracking
-- **Backward Compatible:** `.log()` still works as `console.log` at info level
+A flat collection of small functions covering the four standard log levels (`debug`, `info`, `warn`, `error`), per-request performance auditing, and per-instance configuration of the level threshold and output format (text for humans, JSON for log aggregators). Synchronous, side-effect-free, and dependency-free.
 
-## Exported Functions
+## Why Use This Module
 
-- **`debug(message, data?)`** - Debug-level log (verbose diagnostics)
-- **`info(message, data?)`** - Info-level log (general operational info)
-- **`warn(message, data?)`** - Warn-level log (recoverable issues)
-- **`error(message, error?, extra_info?)`** - Error-level log (to stderr, with stack trace)
-- **`log(...args)`** - `console.log` at info level
-- **`performanceAuditLog(action, routine, reference_time?)`** - Performance audit with elapsed time and heap usage
+- **Zero runtime dependencies.** Adding this module to your project adds zero packages to your dependency tree. The supply chain you audit ends at this package itself.
 
-## Configuration
+- **Runs everywhere.** Pure JavaScript with no platform-specific globals. The same module works under Node.js, in a browser bundle, in an edge runtime, in a Lambda, in a Cloudflare Worker. Memory usage is reported only where the runtime exposes it; the rest of the surface is universal.
 
-| Key | Type | Default | Description |
-|---|---|---|---|
-| `LOG_LEVEL` | String | `'debug'` | Threshold: `debug` < `info` < `warn` < `error` < `none` |
-| `LOG_FORMAT` | String | `'text'` | Output format: `'text'` or `'json'` |
-| `INCLUDE_STACK_TRACE` | Boolean | `true` | Include stack traces in error logs |
-| `INCLUDE_MEMORY_USAGE` | Boolean | `true` | Include heap usage in audit logs |
-| `APP_NAME` | String | `'app'` | Application name in structured logs |
-| `ENVIRONMENT` | String | `'development'` | Environment identifier in structured logs |
+- **Pre-tested at every release.** A full test suite runs in CI on every push. Your project trusts the wrapper instead of re-verifying logging plumbing on each release.
 
-## Dependencies
+- **Designed for human review.** The code is laid out as clearly-marked visual sections (section banners, short functions, scoped comments) so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `debug.js` to see the structure.
 
-None. This module is fully self-contained with zero runtime dependencies.
+## Aligned with Superloom Philosophy
 
-## Installation
-```bash
-npm install @superloomdev/js-helper-debug
-```
+If your project is built on Superloom conventions (the same loader pattern, the same testing model), this module slots in without you needing to learn anything new. It is the logging foundation that nearly every other Superloom helper depends on, so adopting it preserves consistency with the rest of the framework.
 
-## Usage
-```javascript
-// In loader (shared_libs accepted for interface uniformity, unused)
-Lib.Debug = require('@superloomdev/js-helper-debug')(Lib, {
-  LOG_LEVEL: 'info',
-  LOG_FORMAT: 'json',       // Use 'json' for CloudWatch, 'text' for dev
-  APP_NAME: 'my-service',
-  ENVIRONMENT: 'production'
-});
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-// Log at different levels
-Lib.Debug.debug('Processing request', { request_id: '123' });
-Lib.Debug.info('User created', { user_id: 'usr_abc' });
-Lib.Debug.warn('Rate limit approaching', { current: 95, max: 100 });
-Lib.Debug.error('Failed to save', new Error('DB timeout'), 'user-service');
+## Extended Documentation
 
-// Performance audit
-const start = Date.now();
-// ... operation ...
-Lib.Debug.performanceAuditLog('End', 'DB Query', start);
-```
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-core/js-helper-debug/docs/api.md) - every exported function with its signature, parameters, return shape, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-core/js-helper-debug/docs/configuration.md) - all six configuration keys, output-format reference, and testing tier
+- [Superloom](https://superloom.dev) - the framework
 
-### JSON Output Example (CloudWatch)
-```json
-{"timestamp":"2026-03-31T00:00:00.000Z","level":"ERROR","message":"Failed to save","app":"my-service","env":"production","data":{"error":"DB timeout","code":null,"stack":"Error: DB timeout\n    at ..."}}
-```
+## Adding to Your Project
 
-### Text Output Example (Docker/Dev)
-```
-[2026-03-31T00:00:00.000Z] [ERROR] Failed to save
-  Error: DB timeout
-  Stack: Error: DB timeout at ...
-```
+Install this module as a peer dependency in your project's `package.json` and load it through the standard Superloom loader. Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
-## Testing
+The loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
+
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Unit Tests** | Node.js `node --test` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Unit | Node.js `node --test` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-Run locally:
-
-```bash
-cd _test
-npm install && npm test
-```
-
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
+Test runtime details (no Docker, no service required) live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-core/js-helper-debug/docs/configuration.md#testing-tiers).
 
 ## License
 

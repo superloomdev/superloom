@@ -130,7 +130,7 @@ Create `package.json`:
   },
   "bundleDependencies": false,
   "engines": {
-    "node": ">=20.19"
+    "node": ">=24"
   },
   "dependencies": {},
   "devDependencies": {

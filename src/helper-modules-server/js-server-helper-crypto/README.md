@@ -1,79 +1,56 @@
 # @superloomdev/js-server-helper-crypto
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-Server-side cryptography utility library. Hashing, encryption, UUID generation, random strings, and base conversion using Node.js `crypto`. Self-contained - no external dependencies. Part of the [Superloom](https://github.com/superloomdev/superloom).
+A server-side cryptography helper for Node.js that ships pre-tested and is built on Node's audited `crypto` module. Part of [Superloom](https://superloom.dev).
 
-## Installation
+## What This Is
 
-```bash
-npm install @superloomdev/js-server-helper-crypto
-```
+A flat collection of small functions covering UUID v4 and base-36 compact identifiers, charset-bounded random strings, MD5 and HMAC-SHA256 hashing, AES-128-CBC encryption / decryption, integer-to-base-36 conversion, and base64 encode / decode (including the URL-safe variant). Synchronous, side-effect-free. Every operation delegates to Node's built-in `crypto` module; the wrapper adds no novel cryptography.
 
-## Exported Functions
+## Hot-Swappable with the Browser-Side Sibling
 
-| Function | Params | Return | Description |
-|---|---|---|---|
-| `generateRandomString` | `(charset, length)` | `String` | Cryptographically secure random string |
-| `generateTimeRandomString` | `(time, min_length?, epoch_offset?)` | `String` | Time-prefixed base36 random ID |
-| `generateUUID` | `()` | `String` | UUIDv4 (36 char hex) |
-| `generateCompactUUID` | `()` | `String` | Compact UUID (25 char base36) |
-| `md5String` | `(str)` | `String` | MD5 hash (32 char hex) |
-| `sha256String` | `(str, secret?)` | `String` | HMAC-SHA256 (64 char hex) |
-| `aesEncrypt` | `(str, secret)` | `String` | AES-128-CBC encrypt → hex |
-| `aesDecrypt` | `(str, secret)` | `String` | AES-128-CBC decrypt → utf8 |
-| `intToBase36` | `(num)` | `String` | Integer → base36 |
-| `base36ToInt` | `(str)` | `Integer` | Base36 → integer |
-| `stringToBase64` | `(str)` | `String` | String → base64 |
-| `base64ToString` | `(str)` | `String` | Base64 → UTF-8 string |
-| `bufferToBase64` | `(buf)` | `String` | Buffer → base64 |
-| `urlEncodeBase64` | `(str)` | `String` | Standard → URL-safe base64 |
-| `urlDecodeBase64` | `(str)` | `String` | URL-safe → standard base64 |
+This module is the server-side member of a runtime pair. The seven shared functions (`generateRandomString`, `generateUUID`, `generateCompactUUID`, `stringToBase64`, `base64ToString`, `urlEncodeBase64`, `urlDecodeBase64`) have the same names and the same calling shape on both sides. Switch the loader line to move between runtimes without rewriting your code.
 
-## Usage
+- [`@superloomdev/js-client-helper-crypto`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-client/js-client-helper-crypto) - Browser-side equivalent. Implements the shared seven functions on the Web Crypto API, omitting the server-only operations (hashing, HMAC, AES, base conversion, time-prefixed random, buffer-to-base64)
 
-```javascript
-// In loader (Lib must contain Utils)
-Lib.Crypto = require('@superloomdev/js-server-helper-crypto')(Lib, { /* config overrides */ });
+## Why Use This Module
 
-// UUID
-Lib.Crypto.generateUUID();          // 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-Lib.Crypto.generateCompactUUID();   // '1a2b3c4d5e6f7g8h9i0j1k2l3' (25 chars)
+- **Zero npm dependencies.** Built on Node's audited `crypto` module, which ships with the runtime. Adding this module to your project adds zero packages to your dependency tree.
 
-// Hashing
-Lib.Crypto.md5String('hello');            // '5d41402abc4b2a76b9719d911017c592'
-Lib.Crypto.sha256String('data', 'key');   // 64-char hex
+- **Backed by Node's built-in crypto.** Hashing, HMAC, AES-128-CBC, and UUID v4 all delegate to OpenSSL via Node's standard library. The wrapper adds no novel cryptography; it standardises calling shape and names so they line up with the browser-side sibling.
 
-// Encryption
-const encrypted = Lib.Crypto.aesEncrypt('secret data', 'my-key');
-const decrypted = Lib.Crypto.aesDecrypt(encrypted, 'my-key'); // 'secret data'
+- **Pre-tested at every release.** A full test suite runs in CI on every push. Your project trusts the wrapper instead of re-verifying server-crypto plumbing on each release.
 
-// Base conversion
-Lib.Crypto.intToBase36(1600000000);  // 'qi0dts'
-Lib.Crypto.base36ToInt('qi0dts');    // 1600000000
-```
+- **Designed for human review.** The code is laid out as clearly-marked visual sections (section banners, short functions, scoped comments) so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `crypto.js` to see the structure.
 
-## Notes
+## Aligned with Superloom Philosophy
 
-- Uses Node.js built-in `crypto` module - no npm dependencies
-- For client-side UUID and base64 helpers, use `@superloomdev/js-client-helper-crypto`
+If your project is built on Superloom conventions (the same loader pattern, the same testing model), this module slots in without you needing to learn anything new.
 
-## Testing
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
+
+## Extended Documentation
+
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-crypto/docs/api.md) - every exported function with its signature, parameters, return shape, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-crypto/docs/configuration.md) - loader pattern, three configuration keys, dependency notes, testing tier
+- [`js-client-helper-crypto`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-client/js-client-helper-crypto) - the browser-side sibling
+- [Superloom](https://superloom.dev) - the framework
+
+## Adding to Your Project
+
+Install this module as a peer dependency in your project's `package.json` and load it through the standard Superloom loader. Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
+
+The loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
+
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Unit Tests** | Node.js `node --test` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Unit | Node.js `node --test` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-Run locally:
-
-```bash
-cd _test
-npm install && npm test
-```
-
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
+Test runtime details (no Docker, no service required) live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-crypto/docs/configuration.md#testing-tiers).
 
 ## License
 

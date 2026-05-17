@@ -1,7 +1,7 @@
 # @superloomdev/js-server-helper-nosql-aws-dynamodb
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 20.19+](https://img.shields.io/badge/Node.js-20.19%2B-brightgreen.svg)](https://nodejs.org)
+[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
 A DynamoDB helper for Node.js that insulates your application from SDK changes and ships pre-tested, so your project never has to re-verify NoSQL connectivity. Part of [Superloom](https://superloom.dev).
 
@@ -41,8 +41,7 @@ If your project is built on Superloom conventions (the same loader pattern, the 
 
 If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-## Learn More
-
+## Extended Documentation
 Extended documentation lives alongside the source on GitHub:
 
 - [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/docs/api.md) - every exported function (CRUD, command builders, executors, batch, transactions, table management) with signature, parameters, return shape, and worked examples

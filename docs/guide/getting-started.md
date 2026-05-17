@@ -18,7 +18,7 @@ A walkthrough that gets you from a clean machine to a running Superloom project.
 
 | Tool | Version | Why |
 |---|---|---|
-| **Node.js** | 24.x recommended (most modules support `>=20.19`) | Runtime |
+| **Node.js** | 24.x or higher | Runtime |
 | **npm** | 10.x or higher | Package manager |
 | **Git** | Any recent | Version control |
 | **Docker Desktop** | Latest | Optional - only needed for service-dependent module tests |

@@ -14,7 +14,7 @@ Server helper. Offline (no Docker, no network - uses `:memory:` or a local file)
 - `@superloomdev/js-server-helper-instance` - injected as `Lib.Instance`
 
 ## Direct Dependencies
-- `node:sqlite` - Node.js built-in SQLite driver (lazy-loaded, requires Node 22.13+)
+- `node:sqlite` - Node.js built-in SQLite driver (lazy-loaded, requires Node 24+)
 
 ## Loader Pattern (Multi-DB Capable)
 

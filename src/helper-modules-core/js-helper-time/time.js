@@ -1,7 +1,7 @@
 // Info: Date/Time utility library. Platform-agnostic date math, timezone,
 // and formatting using native JS Date and Intl APIs. No external dependencies.
 //
-// Compatibility: Node.js 20.19+ (Intl.DateTimeFormat with hourCycle, native Date).
+// Compatibility: Node.js 24+ (Intl.DateTimeFormat with hourCycle, native Date).
 //
 // Factory pattern: each loader call returns an independent Time interface
 // with its own config. All functions are pure - no shared module-level

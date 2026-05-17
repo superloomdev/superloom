@@ -1,103 +1,60 @@
 # @superloomdev/js-server-helper-verify-store-mysql
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-MySQL store adapter for [`@superloomdev/js-server-helper-verify`](../js-server-helper-verify). Implements the 6-method store contract backed by MySQL via `@superloomdev/js-server-helper-sql-mysql`.
+A MySQL / MariaDB-backed implementation of the [Verify](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify) module's storage contract. Plug it into the parent's `STORE` config; the Verify module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
 
-> **Service-dependent.** Tests require a running MySQL instance. The Docker lifecycle is managed automatically by `npm test` via `pretest`/`posttest` scripts.
+## What This Is
 
-## How This Adapter Fits In
+A thin layer between the Verify parent module and a MySQL verification table. Well-suited for production deployments on MySQL or MariaDB stacks requiring InnoDB transactions, connection pooling, and utf8mb4 character support.
 
-```js
-const store = require('@superloomdev/js-server-helper-verify-store-mysql')(Lib, CONFIG, ERRORS);
-```
+The adapter cannot stand alone. It is always loaded together with the Verify parent and the [`js-server-helper-sql-mysql`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-sql-mysql) driver helper.
 
-The adapter receives `Lib` (Utils, Debug), `CONFIG` (extracts `STORE_CONFIG`), and `ERRORS`. It returns the 6-method store interface consumed by `verify.js`.
+## Why Use This Module
 
-## Install
+- **Library updates won't break your code.** When `mysql2` ships a breaking change, only this adapter and the `sql-mysql` driver helper need updating. Your application code and Verify call sites stay exactly as they are.
 
-```bash
-npm install @superloomdev/js-server-helper-verify \
-            @superloomdev/js-server-helper-verify-store-mysql \
-            @superloomdev/js-server-helper-sql-mysql
-```
+- **Pre-tested at every release.** A full store-contract and Verify-lifecycle integration suite run against a Dockerized MySQL instance in CI on every push.
 
-## Usage
+- **InnoDB + utf8mb4.** `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci` — row-level locking and full Unicode support out of the box.
 
-```js
-Lib.MySQL = require('@superloomdev/js-server-helper-sql-mysql')(Lib, {
-  HOST:     process.env.DB_HOST,
-  DATABASE: process.env.DB_NAME,
-  USER:     process.env.DB_USER,
-  PASSWORD: process.env.DB_PASSWORD,
-  POOL_MAX: 10
-});
+- **Single-statement idempotent setup.** MySQL does not support `CREATE INDEX IF NOT EXISTS` standalone; all indexes are inlined into `CREATE TABLE IF NOT EXISTS` so `setupNewStore` is fully idempotent in one round-trip.
 
-Lib.Verify = require('@superloomdev/js-server-helper-verify')(Lib, {
-  STORE: require('@superloomdev/js-server-helper-verify-store-mysql'),
-  STORE_CONFIG: {
-    table_name: 'verification_codes',
-    lib_sql:    Lib.MySQL
-  }
-});
+## Hot-Swappable with Other Backends
 
-await Lib.Verify.setupNewStore(Lib.Instance.initialize());
-```
+This adapter is part of the `verify-store-*` family. Every sibling implements the same store contract. Swap by changing one config value; the rest of your code keeps working.
 
-## STORE_CONFIG
+- [`@superloomdev/js-server-helper-verify-store-sqlite`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-sqlite) - SQLite (embedded, zero-network, dev/test)
+- [`@superloomdev/js-server-helper-verify-store-postgres`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-postgres) - PostgreSQL
+- [`@superloomdev/js-server-helper-verify-store-mongodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-mongodb) - MongoDB
+- [`@superloomdev/js-server-helper-verify-store-dynamodb`](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify-store-dynamodb) - AWS DynamoDB
 
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `table_name` | `String` | Yes | Name of the verification table. |
-| `lib_sql` | `Object` | Yes | An initialized `Lib.MySQL` instance. |
+## Aligned with Superloom Philosophy
 
-## Schema
+If your project is built on Superloom conventions (the same loader pattern, the same response envelopes, the same testing model), this adapter slots in without you needing to learn anything new.
 
-```sql
-CREATE TABLE IF NOT EXISTS `verification_codes` (
-  `scope` VARCHAR(64) NOT NULL,
-  `key` VARCHAR(128) NOT NULL,
-  `code` VARCHAR(32) NOT NULL,
-  `fail_count` INTEGER NOT NULL DEFAULT 0,
-  `created_at` BIGINT NOT NULL,
-  `expires_at` BIGINT NOT NULL,
-  PRIMARY KEY (`scope`, `key`)
-) ENGINE=InnoDB;
+## Extended Documentation
 
-CREATE INDEX IF NOT EXISTS `idx_verification_codes_expires_at`
-  ON `verification_codes` (`expires_at`);
-```
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mysql/docs/api.md). The store contract this adapter implements and MySQL-specific semantics
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mysql/docs/configuration.md). `STORE_CONFIG` keys, peer dependencies, environment variables, testing tier
+- [Schema](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mysql/docs/schema.md). DDL, identifier quoting, UPSERT semantics, inlined index strategy
+- [Cleanup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mysql/docs/cleanup.md). MySQL has no native TTL; scheduled cleanup is required
+- [Verify parent module](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-verify). The data model, error catalog, and Verify-side configuration this adapter plugs into
 
-### MySQL-Specific Notes
+## Adding to Your Project
 
-- **Backticks** for identifiers (`` `col` ``).
-- **Engine** is `InnoDB` for transaction support.
-- **UPSERT** uses `INSERT ... ON DUPLICATE KEY UPDATE`.
+This adapter is installed alongside the Verify parent module and the `sql-mysql` driver helper. The loader pattern is documented in the Verify parent's README.
 
-## Store Contract
+Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
-| Method | Signature | Returns |
-|--------|-----------|---------|
-| `setupNewStore` | `(instance)` | `{ success, error }` |
-| `getRecord` | `(instance, scope, key)` | `{ success, record, error }` |
-| `setRecord` | `(instance, scope, key, record)` | `{ success, error }` |
-| `incrementFailCount` | `(instance, scope, key)` | `{ success, error }` |
-| `deleteRecord` | `(instance, scope, key)` | `{ success, error }` |
-| `cleanupExpiredRecords` | `(instance)` | `{ success, deleted_count, error }` |
+## Testing Status
 
-## Cleanup
+| Tier | Runtime | Status |
+|---|---|---|
+| Contract + Integration | MySQL via Docker Compose | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-MySQL has no native TTL. Run `cleanupExpiredRecords` via cron or MySQL `EVENT` scheduler.
-
-## Testing
-
-```bash
-cd _test && npm install && npm test
-```
-
-Docker lifecycle is fully automatic.
+Docker lifecycle is fully automatic — `npm test` from `_test/` manages `pretest`/`posttest`. Test runtime details live in [Configuration → Testing Tier](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-verify-store-mysql/docs/configuration.md#testing-tier).
 
 ## License
 

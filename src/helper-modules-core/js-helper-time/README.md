@@ -1,134 +1,49 @@
 # @superloomdev/js-helper-time
 
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-Date/Time utility library. Platform-agnostic date math, timezone conversion, and formatting using native JS `Date` and `Intl` APIs. Part of the [Superloom](https://github.com/superloomdev/superloom).
+A date and time helper for Node.js and the browser that ships pre-tested and has zero runtime dependencies. Part of [Superloom](https://superloom.dev).
 
-## Peer Dependencies (Injected via Loader)
+## What This Is
 
-- `@superloomdev/js-helper-utils` - injected as `Lib.Utils`
+A flat collection of small, pure functions covering day-and-time math, unixtime and ISO-8601 conversions, structured "data set" decompositions of a date, time formatting, IANA timezone offset and wall-clock conversions, and calendar helpers. Synchronous, side-effect-free, built on the native `Date` and `Intl` APIs.
 
-## Direct Dependencies (Bundled)
+## Why Use This Module
 
-None.
+- **Zero runtime dependencies.** Adding this module to your project adds zero packages to your dependency tree. The supply chain you audit ends at this package itself. No moment, no luxon, no date-fns to track for security advisories.
 
-## Installation
+- **Runs everywhere.** Pure JavaScript with no platform-specific globals. The same module works under Node.js, in a browser bundle, in an edge runtime, in a Lambda, in a Cloudflare Worker. Timezone math uses the runtime's built-in `Intl.DateTimeFormat`, which every modern JavaScript runtime ships.
 
-```bash
-npm install @superloomdev/js-helper-time @superloomdev/js-helper-utils
-```
+- **Pre-tested at every release.** A full test suite runs in CI on every push. Your project trusts the wrapper instead of re-verifying date plumbing on each release.
 
-## Exported Functions
+- **Designed for human review.** The code is laid out as clearly-marked visual sections (section banners, short functions, scoped comments) so a reviewer can read it top to bottom in order, use the section breaks as checkpoints to mark how far they have got, and finish without ever getting lost in dense logic. This matters most when an AI assistant is generating the change and a human still has to sign off on it. Open `time.js` to see the structure.
 
-Functions are grouped by responsibility. Unixtime values are always in **seconds**, not milliseconds.
+## Aligned with Superloom Philosophy
 
-### Day and Time Calculations
+If your project is built on Superloom conventions (the same loader pattern, the same testing model), this module slots in without you needing to learn anything new.
 
-| Function | Params | Return | Description |
-|---|---|---|---|
-| `dayName` | `(year, month, day)` | `String` | Week day name for a date |
-| `epochDay` | `(hours?, minutes?, seconds?)` | `Integer` | Seconds since midnight |
-| `reverseEpochDay` | `(day_in_seconds)` | `[h, m, s]` | Convert seconds to H/M/S |
-| `time24ToSeconds` | `(time_24h)` | `Integer` | 24-hour time to seconds: `'2330'` → `84600` |
+If you are not yet using Superloom, the principles are documented at [superloom.dev](https://superloom.dev).
 
-### Unixtime and Date Conversions
+## Extended Documentation
 
-| Function | Params | Return | Description |
-|---|---|---|---|
-| `unixtimeToDate` | `(unixtime)` | `Date` | Seconds → Date |
-| `dateToUnixtime` | `(date)` | `Integer` | Date → seconds |
-| `unixtimeToDateString` | `(unixtime)` | `String` | Seconds → ISO 8601 |
-| `dateStringToUnixtime` | `(date_string)` | `Integer` | ISO 8601 → seconds |
-| `unixtimeToUtcString` | `(unixtime)` | `String` | Seconds → UTC string |
-| `utcStringToUnixtime` | `(date_string)` | `Integer` | UTC string → seconds |
-| `unixtimeToUnixDay` | `(unixtime)` | `Integer` | Start of day for timestamp |
+- [API reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-core/js-helper-time/docs/api.md) - every exported function with its signature, parameters, return shape, and worked examples
+- [Configuration](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-core/js-helper-time/docs/configuration.md) - loader pattern, dependency notes, testing tier
+- [Superloom](https://superloom.dev) - the framework
 
-### Date Data Set
+## Adding to Your Project
 
-| Function | Params | Return | Description |
-|---|---|---|---|
-| `dateDataSet` | `(y, m, d, h, min, s)` | `Object` | Build date data set (plural keys) |
-| `dateStringToDataSet` | `(date_string)` | `Object` | Parse ISO → data set (singular keys) |
-| `dateToDataSet` | `(date)` | `Object` | Date → data set (singular keys) |
-| `dateDataSetToDate` | `(date_data)` | `Date` | Data set → Date (UTC) |
-| `dateDataSetToDateString` | `(date_data)` | `String` | Data set → ISO string |
-| `dateDataSetToUnixtime` | `(date_data)` | `Integer` | Data set → seconds |
+Install this module as a peer dependency in your project's `package.json` and load it through the standard Superloom loader. Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
-### Time Formatting
+The loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
 
-| Function | Params | Return | Description |
-|---|---|---|---|
-| `formatHourMinTo12HourTime` | `(hours, minutes)` | `String` | `'4:30 PM'` |
-| `secondsToTimeString` | `(seconds)` | `String` | Seconds → `'10:05 AM'` |
-
-### Timezone Operations
-
-| Function | Params | Return | Description |
-|---|---|---|---|
-| `calcTimeWithOffset` | `(unixtime, offset)` | `Integer` | Add/subtract offset |
-| `getTimezoneOffset` | `(unixtime, timezone)` | `Integer` | DST-aware offset in seconds |
-| `unixtimeToTimezoneTime` | `(unixtime, timezone)` | `Integer` | UTC → timezone wall-clock time |
-| `unixtimeToTimezoneDate` | `(unixtime, timezone)` | `Date` | UTC → timezone Date |
-
-### Calendar
-
-| Function | Params | Return | Description |
-|---|---|---|---|
-| `getLastDayOfMonth` | `(year, month)` | `String` | Last day of month (`'28'` / `'29'` / `'30'` / `'31'`) |
-
-## Configuration
-
-| Key | Default | Description |
-|---|---|---|
-| `TIMEZONE_MIN_LENGTH` | `2` | Min IANA timezone string length |
-| `TIMEZONE_MAX_LENGTH` | `50` | Max IANA timezone string length |
-| `TIMEZONE_SANITIZE_REGEX` | `/[^0-9a-zA-Z/+\-_]/g` | Valid timezone characters |
-
-## Usage
-
-The module is a factory - every loader call returns an independent `Time` interface. In practice, a project loads one instance on `Lib.Time`, but separate instances can be used in tests or when different callers need different config overrides.
-
-```javascript
-// In loader
-Lib.Time = require('@superloomdev/js-helper-time')(Lib, {});
-
-// Day operations
-Lib.Time.dayName(2024, 1, 1);           // 'monday'
-Lib.Time.epochDay(14, 30, 0);           // 52200
-Lib.Time.time24ToSeconds('2330');       // 84600
-
-// Conversions
-Lib.Time.unixtimeToDateString(1600000000); // '2020-09-13T12:26:40.000Z'
-Lib.Time.dateStringToUnixtime('2020-09-13T12:26:40.000Z'); // 1600000000
-
-// Timezone
-Lib.Time.getTimezoneOffset(1600000000, 'Asia/Kolkata'); // 19800
-```
-
-## Patterns
-
-- **Factory per loader:** every loader call returns its own `Time` interface. Functions close over the `Lib` and `CONFIG` captured at loader time. No module-level singletons.
-- **Pure functions:** all operations are deterministic transformations of their inputs. No I/O, no side effects.
-- **Unixtime in seconds:** every unixtime parameter and return value is in **seconds** (not milliseconds). Convert with `* 1000` when interfacing with native `Date`.
-- **Timezone strings:** standard IANA names (`'America/New_York'`, `'UTC'`, `'Asia/Kolkata'`).
-- **Date Data Set shape:** two variants - plural keys (`{ year, month, day, hours, minutes, seconds }`) when building a date, singular keys (`{ year, month, day, hour, minute, second }`) when parsing an ISO string. Both variants are supported; pick the one produced by the helper you called.
-
-## Testing
+## Testing Status
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Unit Tests** | Node.js `node --test` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| Unit | Node.js `node --test` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
 
-Run locally:
-
-```bash
-cd _test
-npm install && npm test
-```
-
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
+Test runtime details (no Docker, no service required) live in [Configuration → Testing Tiers](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-core/js-helper-time/docs/configuration.md#testing-tiers).
 
 ## License
 

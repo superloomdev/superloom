@@ -20,7 +20,7 @@ Lib.Utils = require('@superloomdev/js-helper-utils')(Lib, { /* config overrides 
 ## Config Keys
 None.
 
-## Exported Functions (53 total)
+## Exported Functions (54 total)
 
 ### Type Checks
 isNull(arg) → Boolean | async:no

@@ -1,5 +1,5 @@
 // Info: Outgoing HTTP client for Node.js. Native `fetch` wrapper with auth support and normalized response shape.
-// Server-only: uses Node.js 22+ built-in `fetch`, `AbortSignal.timeout`, `URL`, `URLSearchParams`, `Buffer`. No runtime dependencies.
+// Server-only: uses Node.js 24+ built-in `fetch`, `AbortSignal.timeout`, `URL`, `URLSearchParams`, `Buffer`. No runtime dependencies.
 //
 // Factory pattern: each loader call returns an independent Http interface
 // with its own Lib and CONFIG. Stateless - no per-instance resources.
