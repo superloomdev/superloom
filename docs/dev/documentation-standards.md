@@ -2,7 +2,17 @@
 
 > **Language:** JavaScript
 
-This guide defines how to write human-readable, consistent documentation for Superloom modules. Every module in the framework follows these patterns so that a person can pick up any module and immediately understand its purpose and usage.
+The writing-style guide every Superloom doc, README, and `ROBOTS.md` follows. Defines voice, prose mechanics, terminology, em-dash ban, table-cell rules, spelling, and placeholder syntax.
+
+**Companion docs.** This file is the **writing-style** half of the documentation standards. The **structural** rules live in:
+
+- [`module-categorization.md`](../modules/module-categorization.md) - the six module classes and which class each existing module belongs to.
+- [`module-readme-structure.md`](../modules/module-readme-structure.md) - Universal README Sections, class-specific sections, the three-tier model (README + `docs/` + `ROBOTS.md`), and persona-based review.
+- [`complex-module-docs-guide.md`](../modules/complex-module-docs-guide.md) - the deep guide for `docs/` folders in Class E feature modules.
+
+Use this file for **how to write the words**; use the companion docs for **what sections to include**.
+
+---
 
 ## Core Philosophy
 
@@ -14,81 +24,6 @@ This guide defines how to write human-readable, consistent documentation for Sup
 - **Show, don't just tell.** Code examples should be copy-paste ready and runnable.
 - **Consistency across modules.** Once a developer learns one module, learning the next should feel familiar.
 - **Progressive disclosure.** Quick start for the impatient, deep docs for the curious.
-
----
-
-## Module Categories
-
-Every module falls into one of these categories. Each category has a specific README template:
-
-### 1. Core Foundation Modules
-
-**Examples:** `js-helper-utils`, `js-helper-debug`, `js-helper-time`
-
-**Characteristics:**
-- Zero or minimal dependencies
-- Pure utility functions
-- Platform-agnostic (run anywhere)
-- Self-contained building blocks
-
-**README Style:** Simple, function-focused. List what it does. Show examples.
-
-### 2. Service/Helper Modules
-
-**Examples:** `js-server-helper-crypto`, `js-server-helper-instance`, `js-server-helper-http`
-
-**Characteristics:**
-- Provides a specific service (crypto, request lifecycle, HTTP)
-- Depends on foundation modules
-- Factory pattern: returns configured instance
-- Single purpose, well-scoped
-
-**README Style:** Clear purpose statement. Factory pattern explanation. API table.
-
-### 3. Database Driver Modules
-
-**Examples:** `js-server-helper-sql-postgres`, `js-server-helper-sql-mysql`, `js-server-helper-nosql-mongodb`, `js-server-helper-sql-sqlite`
-
-**Characteristics:**
-- Wraps a specific database driver
-- Provides common API across different backends
-- Connection management, query building
-
-**README Style:** Connection setup prominently. Query examples. Placeholder syntax explanation.
-
-### 4. Feature Modules with Storage Adapters
-
-**Examples:** `js-server-helper-auth`, `js-server-helper-verify`, `js-server-helper-logger`
-
-**Characteristics:**
-- Core business logic module
-- Multiple storage adapter options (SQL, NoSQL, etc.)
-- Complex configuration
-- Multi-tenancy support
-
-**README Style:** Architecture overview prominently. Storage adapter comparison table. Deep data model documentation. Separate `docs/` folder for implementation details.
-
-### 5. Storage Adapter Modules
-
-**Examples:** `js-server-helper-auth-store-postgres`, `js-server-helper-verify-store-mongodb`
-
-**Characteristics:**
-- Implements store contract for a specific backend
-- Thin wrapper around driver module
-- Used with parent feature module
-
-**README Style:** Same Universal Section list as every other class (Title, Tagline, What This Is, Why Use This Module, Hot-Swappable, Aligned with Superloom Philosophy, Extended Documentation, Adding to Your Project, Testing Status, License); each section is condensed. No `## Install` block (Section 9 points to the parent module's install instructions and the loader-pattern doc instead). No `## Usage` / Quick Start. The contract, configuration, schema, and cleanup behaviour live in `docs/` (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`). No comparison to sibling adapters anywhere in the package.
-
-### 6. AWS Service Modules
-
-**Examples:** `js-server-helper-nosql-aws-dynamodb`, `js-server-helper-storage-aws-s3`, `js-server-helper-queue-aws-sqs`
-
-**Characteristics:**
-- Wraps AWS SDK
-- Credential management
-- Regional configuration
-
-**README Style:** Credential setup. AWS-specific options. IAM permissions required.
 
 ---
 
@@ -136,274 +71,6 @@ Use the same words across all docs:
 
 ---
 
-## README Structure Template
-
-Every README follows this structure. Sections marked [optional] can be omitted if not relevant.
-
-### Header Block
-
-```markdown
-# @superloomdev/{package-name}
-
-[Badges: Test, License, Node version]
-
-One-sentence description. What it does, not how it works.
-
-Part of the [Superloom](https://github.com/superloomdev/superloom) framework.
-```
-
-**Badge order:** Test status → License → Node version
-
-### Tag Line (for specific module types)
-
-```markdown
-> **Foundation module** - zero runtime dependencies. Other modules may depend on this, never the reverse.
-
-> **Service-dependent.** Tests require [resource]. Docker lifecycle managed by npm test.
-
-> **Offline module** - tests use in-memory [resource]. No Docker, no credentials.
-```
-
-### What It Does (2-3 paragraphs max)
-
-Explain the problem this module solves. Not an API reference - the "why" and "what."
-
-**Good example:**
-> This module manages session lifecycle for Superloom applications. One loader call creates an independent Auth instance bound to one actor type and one storage backend. Multiple instances coexist in the same process with completely isolated state.
-
-### Quick Links [optional for complex modules]
-
-```markdown
-**Further reading:**
-- [`docs/runtime.md`](docs/runtime.md). Persistent-server vs serverless-function runtime differences
-- [`docs/data-model.md`](docs/data-model.md). Session record fields explained
-```
-
-### Installation
-
-```markdown
-## Installation
-
-```bash
-npm install @superloomdev/{package-name}
-```
-```
-
-For modules with peer dependencies (store adapters, etc.):
-
-```markdown
-## Installation
-
-```bash
-npm install @superloomdev/{parent-module} \
-            @superloomdev/{this-adapter}
-```
-```
-
-### Quick Start
-
-Runnable code example. Should work if copied into a test file.
-
-```markdown
-## Quick Start
-
-```javascript
-// Setup
-Lib.Module = require('@superloomdev/{package-name}')(Lib, {
-  // minimal config
-});
-
-// Usage
-const result = await Lib.Module.doSomething(instance, {
-  // minimal example
-});
-```
-```
-
-### API Reference
-
-**Simple modules:** Inline function list with descriptions.
-
-**Complex modules:** Table format.
-
-```markdown
-## API
-
-| Function | Params | Returns | Description |
-|----------|--------|---------|-------------|
-| `doSomething` | `(instance, options)` | `{ success, data, error }` | Description here |
-```
-
-### Configuration
-
-Table of config options. Mark required fields.
-
-```markdown
-## Configuration
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `OPTION_NAME` | `String` | — | **Required.** What this does. |
-| `OPTIONAL_ONE` | `Boolean` | `false` | What this does. |
-```
-
-### Peer Dependencies [if applicable]
-
-```markdown
-## Peer Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `@superloomdev/js-helper-utils` | Type checks |
-```
-
-### Testing
-
-Consistent across all modules:
-
-```markdown
-## Testing
-
-| Tier | Runtime | Status |
-|------|---------|--------|
-| **Unit Tests** | Node.js `node --test` | [Badge] |
-
-Run locally:
-
-```bash
-cd _test
-npm install && npm test
-```
-```
-
-For service-dependent modules, note the Docker lifecycle:
-
-```markdown
-Docker lifecycle is fully automatic. `pretest` starts the container; `posttest` stops it.
-```
-
-### License
-
-```markdown
-## License
-
-MIT
-```
-
----
-
-## Complex Module Docs/ Folder
-
-Modules like `auth`, `verify`, and `logger` need deeper documentation. Create a `docs/` folder inside the module with:
-
-```
-module-name/
-  README.md              # Overview, quick start, API
-  docs/
-    data-model.md        # Record fields, data types, constraints
-    runtime.md           # Persistent-server vs serverless-function runtime differences only
-    configuration.md     # Deep config reference
-```
-
-**data-model.md should include:**
-- Core concepts (tenant, actor, entity, etc.)
-- Record field table (field, type, set by, description)
-- Design rationale for key decisions
-- Quick reference tables for common scenarios
-
-**runtime.md should include only the differences between runtime shapes:**
-- How `instance.http_request` and `instance.http_response` are constructed in a persistent server (bind framework `req` / `res` directly) vs in a serverless function (adapt the platform event; buffer writes for the returned response object)
-- How scheduled cleanup is wired (cron library inside the process vs scheduled function invocation outside it). Only when the chosen storage adapter requires it
-
-**runtime.md should NOT include:**
-- Framework cookbook material (Express middleware, login/refresh/logout endpoint code, active-devices UI examples). That belongs in the user's application code, not module docs
-- Bootstrap walk-throughs (those live in `configuration.md`)
-- Auth-module function call sites (those live in `api.md`)
-- Cold-start cost figures, connection-pool guidance, schema provisioning (those live in each Class F adapter's README)
-- Error-type → HTTP status mapping (that lives in `api.md`)
-
----
-
-## Category-Specific Variations
-
-### Foundation Modules (utils, debug, time)
-
-- Simple header, no "What It Does" essay
-- Function list is the focus
-- Minimal configuration section
-- Example: `js-helper-debug` README
-
-### Storage Adapter Modules
-
-- README follows the full Universal Section list (same as every other class), condensed to ~70-90 lines
-- Section 4 (Why Use This Module) has 4-5 bullets, not the parent's 5-7. Bullets 1-4 are the universal set (insulation, pre-tested, designed-for-review, observability); bullet 5 is backend-specific (e.g. "PostgreSQL-correct semantics handled for you")
-- Section 5 (Hot-Swappable) lists the sibling adapter packages with a one-line framing
-- Section 9 (Adding to Your Project) points to the parent module's install instructions and the loader-pattern doc. No `npm install` snippet in the adapter's README
-- `docs/api.md` holds the store contract (one subsection per method)
-- `docs/configuration.md` holds `STORE_CONFIG`, peer dependencies, environment variables, testing tier
-- `docs/schema.md` holds the DDL or createIndex / CreateTable calls and backend-specific syntax notes
-- `docs/cleanup.md` holds the TTL behaviour and recommended cleanup mechanism
-- No comparison with sibling adapters; each adapter documents only its own backend
-
-### AWS Modules
-
-- Credentials section early
-- IAM permissions required table
-- Regional configuration note
-- AWS SDK version compatibility note
-
----
-
-## Template Placeholder Syntax
-
-When writing template files (fill-in-the-blank READMEs, guides, or any document with placeholder values), use **angle brackets with uppercase names**:
-
-```
-<PACKAGE_NAME>
-<ONE_SENTENCE_DESCRIPTION>
-<DRIVER_MODULE>
-```
-
-Do not use curly braces `{PLACEHOLDER}` — VitePress parses them as Vue template expressions and will crash when building the documentation site.
-
-| Correct | Incorrect |
-|---|---|
-| `<PACKAGE_NAME>` | `{PACKAGE_NAME}` |
-| `<ONE_SENTENCE_DESCRIPTION>` | `{ONE_SENTENCE_DESCRIPTION}` |
-| `<VERSION>` | `{VERSION}` |
-
-This convention also matches the standard placeholder syntax used in CLI documentation, RFCs, and man pages, so readers recognize fill-in slots immediately.
-
----
-
-## Common Mistakes to Avoid
-
-1. **Starting with implementation details.** Lead with purpose, not mechanics.
-2. **Writing for yourself.** The reader doesn't know your design decisions.
-3. **Skipping the "why."** Every section should answer why, not just what.
-4. **Inconsistent formatting.** Pick one format for tables, code blocks, lists.
-5. **Missing runnable examples.** Every code block should be copy-paste ready.
-6. **Assuming context.** Mention Superloom, link to related modules, explain terminology.
-
----
-
-## Review Checklist
-
-Before finalizing a README:
-
-- [ ] One-sentence description is clear and accurate
-- [ ] Quick start example runs without modification
-- [ ] All code blocks have language tags
-- [ ] Configuration table includes all options
-- [ ] Peer dependencies listed if applicable
-- [ ] Testing section follows standard format
-- [ ] No AI-sounding phrases (facilitate, comprehensive, robust)
-- [ ] Active voice used throughout
-- [ ] Second person for instructions
-- [ ] Consistent terminology with other modules
-
----
-
 ## Language and Spelling
 
 All project text uses **American English**: code comments, documentation, `package.json` descriptions, commit messages, and README files.
@@ -427,9 +94,9 @@ Em dashes are not used in any project file: `.js`, `.md`, `package.json`, commit
 
 | Pattern | Correct | Incorrect |
 |---|---|---|
-| Sentence aside | `The loader runs once. It is the only place that reads env vars.` | `The loader runs once — it is the only place that reads env vars.` |
-| Bullet list item | `**Term.** Explanation sentence.` | `**Term** — explanation` |
-| Compound word | `transport-agnostic`, `hand-written`, `per-entity` | `transport—agnostic` |
+| Sentence aside | `The loader runs once. It is the only place that reads env vars.` | `The loader runs once - it is the only place that reads env vars.` |
+| Bullet list item | `**Term.** Explanation sentence.` | `**Term** - explanation` |
+| Compound word | `transport-agnostic`, `hand-written`, `per-entity` | `transport-agnostic` |
 
 ### Table Cell Punctuation
 
@@ -449,8 +116,65 @@ Keep prose sentences to approximately 30 words or fewer. Split at conjunctions (
 
 ---
 
+## Template Placeholder Syntax
+
+When writing template files (fill-in-the-blank READMEs, guides, or any document with placeholder values), use **angle brackets with uppercase names**:
+
+```
+<PACKAGE_NAME>
+<ONE_SENTENCE_DESCRIPTION>
+<DRIVER_MODULE>
+```
+
+Do not use curly braces `{PLACEHOLDER}` - VitePress parses them as Vue template expressions and will crash when building the documentation site.
+
+| Correct | Incorrect |
+|---|---|
+| `<PACKAGE_NAME>` | `{PACKAGE_NAME}` |
+| `<ONE_SENTENCE_DESCRIPTION>` | `{ONE_SENTENCE_DESCRIPTION}` |
+| `<VERSION>` | `{VERSION}` |
+
+This convention also matches the standard placeholder syntax used in CLI documentation, RFCs, and man pages, so readers recognize fill-in slots immediately.
+
+---
+
+## Common Writing Mistakes
+
+1. **Starting with implementation details.** Lead with purpose, not mechanics.
+2. **Writing for yourself.** The reader doesn't know your design decisions.
+3. **Skipping the "why."** Every section should answer why, not just what.
+4. **Missing runnable examples.** Every code block should be copy-paste ready.
+5. **Assuming context.** Mention Superloom, link to related modules, explain terminology.
+6. **AI-sounding phrases.** Avoid `facilitate`, `comprehensive`, `robust`, `seamless`, `leverages`. Use a verb the reader would say out loud.
+
+For **structural** mistakes (wrong section order, missing Universal Sections, wrong class-specific sections), see [`module-readme-structure.md` → Anti-Patterns](../modules/module-readme-structure.md#anti-patterns-to-avoid).
+
+---
+
+## Review Checklist (Writing-Style Pass)
+
+Before finalizing any `.md` file:
+
+- [ ] One-sentence description is clear and accurate
+- [ ] No AI-sounding phrases (facilitate, comprehensive, robust, seamless, leverage)
+- [ ] Active voice used throughout
+- [ ] Second person for instructions
+- [ ] Consistent terminology with other modules
+- [ ] No em dashes anywhere (`-` only for compound words)
+- [ ] No periods at the end of table cells
+- [ ] Code blocks contain only real comments, no doc instructions disguised as comments
+- [ ] Sentences are roughly 30 words or fewer
+- [ ] American English spelling (`-ize`, `-or`, `-ization`, `license`)
+- [ ] Placeholders use `<UPPERCASE>` angle brackets, not `{curly braces}`
+
+For the **structural** README checklist (Universal Sections present, class-specific section correct, ROBOTS.md current, etc.), see [`module-readme-structure.md` → Checklist](../modules/module-readme-structure.md#checklist).
+
+---
+
 ## Related Documentation
 
-- [Module Structure (JavaScript)](../modules/module-structure-js)
-- [Module Testing](../testing/module-testing.md)
-- [Unit Test Authoring (JavaScript)](../testing/unit-test-authoring-js.md)
+- [`module-categorization.md`](../modules/module-categorization.md) - the six module classes
+- [`module-readme-structure.md`](../modules/module-readme-structure.md) - Universal README Sections and class-specific sections
+- [`complex-module-docs-guide.md`](../modules/complex-module-docs-guide.md) - `docs/` folder structure for Class E feature modules
+- [`code-formatting-js.md`](../foundations/code-formatting-js.md) - JavaScript code style (the prose-style rules above also apply to `.js` comments and JSDoc)
+- [`module-testing.md`](../testing/module-testing.md) and [`unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md) - testing rules and how to author a unit test

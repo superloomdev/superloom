@@ -1,6 +1,12 @@
 # Module README Structure
 
-How every helper module documents itself. Each module ships three files: `README.md`, `docs/*.md`, and `ROBOTS.md`. Each one targets a distinct reader and serves a distinct purpose. This page defines what goes where, in what order, and why.
+How every helper module documents itself. Each module ships three files: `README.md`, `docs/*.md`, and `ROBOTS.md`. Each one targets a distinct reader and serves a distinct purpose. This page defines **what goes where, in what order, and why**.
+
+**Companion docs.**
+
+- [`module-categorization.md`](module-categorization.md) - the six module classes and which class each existing module belongs to.
+- [`../dev/documentation-standards.md`](../dev/documentation-standards.md) - writing-style rules (voice, prose mechanics, em-dash ban, table-cell rules, placeholder syntax).
+- [`complex-module-docs-guide.md`](complex-module-docs-guide.md) - deep guide for `docs/` folders in Class E feature modules.
 
 ## On This Page
 

@@ -1,8 +1,12 @@
 # Module Categorization
 
-Every Superloom helper module belongs to one of six classes. The class determines the README structure, which `docs/` files (if any) accompany it, and which template to start from. For the full documentation rubric (universal sections, class-specific sections, personas, ordering, prose style), see [`module-readme-structure.md`](module-readme-structure.md).
+Every Superloom helper module belongs to one of six classes. The class determines the README structure, which `docs/` files (if any) accompany it, and which template to start from. This page is **the enumeration**: which module belongs to which class, and the current documentation status of each.
 
-This page is the enumeration: which module belongs to which class, and the current documentation status of each.
+**Companion docs.**
+
+- [`module-readme-structure.md`](module-readme-structure.md) - the full documentation rubric (Universal README Sections, class-specific sections, personas, ordering, three-tier model).
+- [`../dev/documentation-standards.md`](../dev/documentation-standards.md) - writing-style rules (voice, prose mechanics, em-dash ban, table-cell rules, placeholder syntax).
+- [`complex-module-docs-guide.md`](complex-module-docs-guide.md) - deep guide for `docs/` folders in Class E feature modules.
 
 ## On This Page
 
