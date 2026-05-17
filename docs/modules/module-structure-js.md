@@ -1,6 +1,3 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Module Structure
 
 > **Language:** [JavaScript](module-structure-js)
@@ -75,10 +72,9 @@ All application modules (models, services, controllers) follow a **strict, ident
 
 ### Standard Module Template
 
-<Tabs>
-<TabItem value="js" label="JavaScript">
+::: code-group
 
-```javascript
+```javascript [JavaScript]
 // [Module purpose - 1 line]
 // [What it does - 1 line]
 // [Pattern indicator - 1 line]
@@ -144,11 +140,7 @@ const ModuleName = {
 
 };////////////////////////////Public Functions END///////////////////////////////
 ```
-
-</TabItem>
-<TabItem value="python" label="Python">
-
-```python
+```python [Python]
 # TODO: Python module template
 # class ModuleName:
 #     def __init__(self, shared_libs, config, errors):
@@ -160,11 +152,7 @@ const ModuleName = {
 #         # Implementation
 #         return result
 ```
-
-</TabItem>
-<TabItem value="java" label="Java">
-
-```java
+```java [Java]
 // TODO: Java module template
 // public class ModuleName {
 //     private final Lib lib;
@@ -182,8 +170,7 @@ const ModuleName = {
 // }
 ```
 
-</TabItem>
-</Tabs>
+:::
 
 ---
 
@@ -653,7 +640,7 @@ The adapter extracts its slice of `CONFIG` internally (`CONFIG.STORE_CONFIG.tabl
 
 The parent module's error catalog is the **single source of truth** for the public envelope shape. Adapters must use the same catalog objects in their failure returns so envelopes are identical regardless of which backend is active. The catalog is forwarded as `ERRORS`; adapters never define their own envelope shapes.
 
-This is the operational consequence of the wrapper-purity rule - see [`error-handling.mdx`](../foundations/error-handling#wrapper-purity-the-catalog-owns-the-envelope).
+This is the operational consequence of the wrapper-purity rule - see [`error-handling.md`](../foundations/error-handling#wrapper-purity-the-catalog-owns-the-envelope).
 
 ### Adapter Contract: Documented Method Set
 
@@ -954,7 +941,7 @@ module.exports = Object.freeze({
 });
 ```
 
-See [error-handling.mdx](../foundations/error-handling) for full error handling patterns.
+See [error-handling.md](../foundations/error-handling) for full error handling patterns.
 
 ---
 
@@ -1003,7 +990,7 @@ External libraries (always wrapped)
 | Server bootstrap and DI | [`server-loader.md`](../server/server-loader.md) |
 | Data philosophy | [`model-modules.md`](../server/model-modules.md) |
 | Validation approach | [`validation-approach.md`](../foundations/validation-approach.md) |
-| Error handling rules | [`error-handling.mdx`](../foundations/error-handling) |
+| Error handling rules | [`error-handling.md`](../foundations/error-handling) |
 | Module testing | [`module-testing.md`](../testing/module-testing.md) |
 | Module publishing | [`module-publishing.md`](module-publishing.md) |
 | Peer dependency strategy | [`peer-dependencies.md`](peer-dependencies.md) |

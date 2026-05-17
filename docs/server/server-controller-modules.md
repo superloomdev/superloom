@@ -109,7 +109,7 @@ Interfaces (API / Hook / Job)
   <- Standard response envelope
 ```
 
-Both the request and response shapes are documented in [`server-interfaces.mdx`](server-interfaces).
+Both the request and response shapes are documented in [`server-interfaces.md`](server-interfaces).
 
 ---
 

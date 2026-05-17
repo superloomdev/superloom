@@ -92,7 +92,7 @@ Client request
   <- Interface converts standard response back into transport-specific format
 ```
 
-The standardized request and response shapes are documented in [`server-interfaces.mdx`](../server/server-interfaces).
+The standardized request and response shapes are documented in [`server-interfaces.md`](../server/server-interfaces).
 
 ---
 

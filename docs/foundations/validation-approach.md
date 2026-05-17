@@ -62,7 +62,7 @@ module.exports = {
 
 This convention is consistent across all validation functions. Always check with `if (result)` - truthy means errors exist.
 
-Domain validation errors are **user-facing**: the `message` field is intended to be shown to the end user (e.g. `"Email address format is invalid"`). This is distinct from helper-module errors and from programmer errors. See [`error-handling.mdx`](error-handling) for the full three-category model and how the controller forwards these errors via `Lib.Functions.errorResponse`.
+Domain validation errors are **user-facing**: the `message` field is intended to be shown to the end user (e.g. `"Email address format is invalid"`). This is distinct from helper-module errors and from programmer errors. See [`error-handling.md`](error-handling) for the full three-category model and how the controller forwards these errors via `Lib.Functions.errorResponse`.
 
 ---
 

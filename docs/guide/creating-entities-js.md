@@ -158,7 +158,7 @@ app.use('/[entity]', require('./routes/[entity]')(Lib));
 
 **AWS Lambda** - create one handler file per endpoint under `src/server/interfaces/api/lambda-aws/[entity]/` and a corresponding `serverless.yml` under `src/server/_deploy/serverless-aws/[entity]/`. Each entity is its own deployable Serverless service.
 
-See [`server/server-interfaces.mdx`](../server/server-interfaces) for the standardized request/response shapes both adapters produce.
+See [`server/server-interfaces.md`](../server/server-interfaces) for the standardized request/response shapes both adapters produce.
 
 ---
 

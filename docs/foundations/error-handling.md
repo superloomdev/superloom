@@ -1,6 +1,3 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Error Handling
 
 The framework recognizes **three** error categories. Each has exactly one correct disposal mechanism. Mixing them is the most common cause of confusing bugs and leaked diagnostic strings - so this document spells out which is which, why each exists, and how the service layer is responsible for translating between them.
@@ -157,10 +154,9 @@ When a helper module catches a driver / SDK exception:
 - **Public envelope** carries the frozen catalog object **and nothing else**.
 - **Debug log** carries everything needed for diagnostics - driver message, driver code, stack, plus the catalog `type` for log↔envelope correlation.
 
-<Tabs>
-<TabItem value="js" label="JavaScript">
+::: code-group
 
-```javascript
+```javascript [JavaScript]
 // Inside the catch block
 catch (error) {
 
@@ -182,11 +178,7 @@ catch (error) {
 
 }
 ```
-
-</TabItem>
-<TabItem value="python" label="Python">
-
-```python
+```python [Python]
 # TODO: Python implementation
 # except Exception as error:
 #     Lib.Debug.debug('Postgres query failed', {
@@ -199,11 +191,7 @@ catch (error) {
 #         'error': ERRORS['DATABASE_QUERY_FAILED']
 #     }
 ```
-
-</TabItem>
-<TabItem value="java" label="Java">
-
-```java
+```java [Java]
 // TODO: Java implementation
 // catch (Exception error) {
 //     Lib.Debug.debug("Postgres query failed", Map.of(
@@ -214,8 +202,7 @@ catch (error) {
 // }
 ```
 
-</TabItem>
-</Tabs>
+:::
 
 The same shape applies to every backend in the SQL / NoSQL family, every storage adapter, every HTTP wrapper, and every queue helper. The driver and the wrapper change; the public contract does not.
 
@@ -240,10 +227,9 @@ If a finer-grained distinction is genuinely needed at the helper boundary (e.g.,
 
 Any service that calls a helper module **must** translate the helper's error envelope into a domain error from its own `[entity].errors.js` before returning to the controller.
 
-<Tabs>
-<TabItem value="js" label="JavaScript">
+::: code-group
 
-```javascript
+```javascript [JavaScript]
 // user.service.js (illustrative)
 const result = await Lib.MongoDB.findOne(instance, 'users', { email: email });
 
@@ -260,11 +246,7 @@ if (result.document === null) {
 
 return { success: true, data: result.document };
 ```
-
-</TabItem>
-<TabItem value="python" label="Python">
-
-```python
+```python [Python]
 # TODO: Python implementation
 # result = await Lib.MongoDB.find_one(instance, 'users', {'email': email})
 #
@@ -277,11 +259,7 @@ return { success: true, data: result.document };
 #
 # return {'success': True, 'data': result['document']}
 ```
-
-</TabItem>
-<TabItem value="java" label="Java">
-
-```java
+```java [Java]
 // TODO: Java implementation
 // Result result = Lib.MongoDB.findOne(instance, "users", Map.of("email", email));
 //
@@ -297,8 +275,7 @@ return { success: true, data: result.document };
 // return Result.success(result.getDocument());
 ```
 
-</TabItem>
-</Tabs>
+:::
 
 The bad-argument case (`TypeError` from the helper) is intentionally not handled - it bubbles up as an uncaught exception so the bug is visible.
 
@@ -308,10 +285,9 @@ The bad-argument case (`TypeError` from the helper) is intentionally not handled
 
 Every helper module maintains its own frozen error catalog in `[module].errors.js`. This is the standard pattern for all framework modules. The catalog contains operational errors that can be returned via `{success: false, error}` envelopes. Errors are frozen to prevent accidental mutation.
 
-<Tabs>
-<TabItem value="js" label="JavaScript">
+::: code-group
 
-```javascript
+```javascript [JavaScript]
 // verify.errors.js - the module's internal error catalog
 module.exports = Object.freeze({
   COOLDOWN_ACTIVE: Object.freeze({
@@ -325,11 +301,7 @@ module.exports = Object.freeze({
   // ... more errors
 });
 ```
-
-</TabItem>
-<TabItem value="python" label="Python">
-
-```python
+```python [Python]
 # TODO: Python implementation
 # ERRORS = {
 #     'COOLDOWN_ACTIVE': {
@@ -342,11 +314,7 @@ module.exports = Object.freeze({
 #     }
 # }
 ```
-
-</TabItem>
-<TabItem value="java" label="Java">
-
-```java
+```java [Java]
 // TODO: Java implementation
 // public enum VerifyError {
 //     COOLDOWN_ACTIVE("COOLDOWN_ACTIVE", "Rate limit active - wait before requesting another code"),
@@ -354,8 +322,7 @@ module.exports = Object.freeze({
 // }
 ```
 
-</TabItem>
-</Tabs>
+:::
 
 The service layer translates these errors to domain errors:
 

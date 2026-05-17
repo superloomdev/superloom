@@ -12,36 +12,10 @@ export default defineConfig({
     'docs/modules/templates/*.md',
   ],
 
-  // Strict link-checking. Pre-existing dead links are whitelisted below as Phase 3 cleanup targets;
-  // any NEW broken cross-link will fail the build. See __dev__/plans/0008-module-readme-pilot.md
-  // (Phase 2 Step 2.8 Execution Notes) for why each pattern is here.
-  ignoreDeadLinks: [
-    // .mdx orphan files - VitePress 1.x does not route .mdx files (these have Docusaurus-era
-    // `import Tabs` and `<Tabs>` JSX). Phase 3 cleanup: convert to .md.
-    // Affects: error-handling, module-structure-js, entity-creation-guide-js, server-interfaces.
-    /\/error-handling$/,
-    /\/module-structure-js$/,
-    /\/entity-creation-guide-js$/,
-    /\/server-interfaces$/,
-
-    // Out-of-docs-tree references - VitePress only resolves links inside srcDir.
-    // Phase 3 cleanup: convert these to absolute GitHub URLs.
-    /\.windsurf\//,
-    /__dev__\//,
-    /\/AGENTS$/,
-
-    // Pre-existing wrong path in ops/README.md (website-ops tree). Phase 3 cleanup target.
-    /docs\/ops\/index$/,
-
-    // Pre-existing references to files that have never existed.
-    // Phase 3 cleanup: replace with valid links or remove.
-    /\/CHANGELOG$/,
-    /\/ROBOTS$/,
-    /\.env\..*\.example$/,
-    /\/dev\/index$/,
-    /\/templates\/index$/,
-    /\/configuration$/,
-  ],
+  // Strict link-checking with empty whitelist. Phase 3 cleared all pre-existing dead links;
+  // any broken cross-link will now fail the build. Add a regex here only as a last resort
+  // and document why in the same line.
+  ignoreDeadLinks: [],
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo-color.svg' }],

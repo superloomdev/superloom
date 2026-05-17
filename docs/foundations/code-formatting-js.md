@@ -1,6 +1,6 @@
 # JavaScript Coding Standards
 
-The complete style guide for JavaScript code in Superloom modules. ESLint enforces most of these rules automatically; the rest are conventions every contributor and AI agent is expected to follow. The compressed mirror of this guide lives in [`AGENTS.md`](../../AGENTS.md).
+The complete style guide for JavaScript code in Superloom modules. ESLint enforces most of these rules automatically; the rest are conventions every contributor and AI agent is expected to follow. The compressed mirror of this guide lives in [`AGENTS.md`](https://github.com/superloomdev/superloom/blob/main/AGENTS.md).
 
 ## On This Page
 
@@ -434,7 +434,7 @@ Three categories, three disposal mechanisms. Never mix them.
 | **Operational / state error from a helper module** | Return envelope `{ success: false, error: { type, message } }` |
 | **Domain / user-facing validation error** | Return `{ success: false, error: <DomainError> }` where `<DomainError>` is `{ code, message, status }` from `[entity].errors.js` |
 
-Full rule with rationale and worked examples: [`error-handling.mdx`](error-handling).
+Full rule with rationale and worked examples: [`error-handling.md`](error-handling).
 
 ---
 
@@ -594,4 +594,4 @@ When writing helper modules that wrap AWS or other cloud SDKs:
 | **Batch API limits** | Cloud APIs impose batch size limits. Handle large batches with recursive chunking - split, process sequentially, combine results |
 | **Service-specific options** | Configure marshalling, serialization, and retry behavior appropriate to the cloud service (e.g., removing undefined values, retry config) |
 
-Full module structure templates (Pattern 1 Singleton vs Pattern 2 Factory) live in [`module-structure-js.mdx`](../modules/module-structure-js) under "Helper Module Configuration Patterns".
+Full module structure templates (Pattern 1 Singleton vs Pattern 2 Factory) live in [`module-structure-js.md`](../modules/module-structure-js) under "Helper Module Configuration Patterns".

@@ -56,14 +56,14 @@ src/helper-modules-server/js-server-helper-[module-name]/  # Alternative naming 
 
 ## 3. Create Main Implementation File
 
-First, pick the config pattern that matches the module's needs. Full rules: `docs/modules/module-structure-js.mdx` -> "Helper Module Configuration Patterns".
+First, pick the config pattern that matches the module's needs. Full rules: `docs/modules/module-structure-js.md` -> "Helper Module Configuration Patterns".
 
 | Pattern | Use when |
 |---|---|
 | **Pattern 1 (Singleton Config)** | Pure stateless wrapper; same config applies process-wide (utility libs, crypto, logging, time) |
 | **Pattern 2 (Multi-Instance Factory)** | Wraps any per-instance state - connection pool, persistent client, authenticated session |
 
-Create `[module-name].js` using the template that matches the chosen pattern. Full templates with comments live in `docs/modules/module-structure-js.mdx`. Reference implementations:
+Create `[module-name].js` using the template that matches the chosen pattern. Full templates with comments live in `docs/modules/module-structure-js.md`. Reference implementations:
 
 - **Pattern 1** example: `src/helper-modules-core/js-helper-utils/`
 - **Pattern 2** example: `src/helper-modules-server/js-server-helper-mysql/mysql.js`

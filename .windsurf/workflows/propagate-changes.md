@@ -26,7 +26,7 @@ This is the most important step. `AGENTS.md` contains a compressed summary of al
 1. Read the changed file(s) in `docs/`
 2. Update the corresponding section in `AGENTS.md`:
    - `docs/foundations/code-formatting-js.md` → "Coding Standards (Mandatory)" section
-   - `docs/modules/module-structure-js.mdx` → "Module Patterns" section
+   - `docs/modules/module-structure-js.md` → "Module Patterns" section
    - `docs/modules/module-publishing.md` → "Publishing" section
    - `docs/modules/peer-dependencies.md` → "Dependency Hierarchy" section
    - `docs/testing/testing-strategy.md` or `docs/testing/unit-test-authoring-js.md` → "Testing" section
@@ -59,7 +59,7 @@ This is the most important step. `AGENTS.md` contains a compressed summary of al
 ## When Directory Structure Changes
 
 1. Update `AGENTS.md` → "Directory Map"
-2. Update `docs/modules/module-structure-js.mdx`
+2. Update `docs/modules/module-structure-js.md`
 3. Update `docs/foundations/architectural-philosophy.md` directory locations
 4. Update `.windsurf/workflows/` if paths changed
 

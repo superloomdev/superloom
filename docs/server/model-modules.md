@@ -69,7 +69,7 @@ The model layer is where every entity defines its **shape, validation rules, err
 | **Dependencies note** | `// Dependencies: Contact, User (uses Contact.validation, User.process)` |
 | **Pattern note** | `// Standard pattern: Loader receives Lib and config override, returns { data, errors, process, validation, _config }` |
 
-The full `index.js` template lives in [`module-structure-js.mdx`](../modules/module-structure-js#model-package-index).
+The full `index.js` template lives in [`module-structure-js.md`](../modules/module-structure-js#model-package-index).
 
 ### `[entity].data.js` Function Set
 

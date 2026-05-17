@@ -82,7 +82,7 @@ The repository is structured by **responsibility and execution context**, with s
 
 ### Helper Modules (Framework Level)
 
-Helper modules provide reusable utilities and can be integrated into your project in three different ways. For detailed implementation approaches, pros/cons, and setup instructions, see [`module-structure-js.mdx`](../modules/module-structure-js#implementation-approaches) and [`getting-started.md`](../guide/getting-started.md#step-1---choose-your-implementation-approach).
+Helper modules provide reusable utilities and can be integrated into your project in three different ways. For detailed implementation approaches, pros/cons, and setup instructions, see [`module-structure-js.md`](../modules/module-structure-js#implementation-approaches) and [`getting-started.md`](../guide/getting-started.md#step-1---choose-your-implementation-approach).
 
 #### Framework Structure (Reference)
 
@@ -107,7 +107,7 @@ Helper modules provide reusable utilities and can be integrated into your projec
 - Server: `[js|py]-server-helper-[name]`
 - Client: `[js|py]-[platform]-helper-[name]` where `[platform]` is one of the [platform keys](#platform-identifiers)
 
-Module file structure and the configuration patterns for each helper type live in [`module-structure-js.mdx`](../modules/module-structure-js).
+Module file structure and the configuration patterns for each helper type live in [`module-structure-js.md`](../modules/module-structure-js).
 
 ### Server Application
 
@@ -168,8 +168,8 @@ Every contributor has a personal workspace folder at the repository root called 
 | File | Purpose |
 |---|---|
 | `me.md` | Your GitHub username, SSH key name, local aliases, machine-specific notes |
-| `.env.dev` | Dev environment values (copied from [`docs/dev/.env.dev.example`](../dev/.env.dev.example)) |
-| `.env.integration` | Integration environment values (copied from [`docs/dev/.env.integration.example`](../dev/.env.integration.example)) |
+| `.env.dev` | Dev environment values (copied from [`docs/dev/.env.dev.example`](https://github.com/superloomdev/superloom/blob/main/docs/dev/.env.dev.example)) |
+| `.env.integration` | Integration environment values (copied from [`docs/dev/.env.integration.example`](https://github.com/superloomdev/superloom/blob/main/docs/dev/.env.integration.example)) |
 | `progress.md` | Current work, pending tasks, session notes |
 | `context.md` | Developer-specific AI context - your patterns, preferences, working notes |
 | `migration-changelog.md` | Personal log of module migrations (see [`migration-pitfalls.md`](../testing/migration-pitfalls.md)) |
@@ -179,7 +179,7 @@ The `__dev__/` convention guarantees that no developer's personal configuration 
 
 ### Developer Documentation (`docs/dev/`)
 
-All documentation a developer needs to set up and work on the project lives in [`docs/dev/`](../dev/). This is committed and shared with all contributors. It covers Git account setup, GitHub Packages tokens, npm registry configuration, local Docker services, and environment variable templates.
+All documentation a developer needs to set up and work on the project lives in [`docs/dev/`](../dev/README.md). This is committed and shared with all contributors. It covers Git account setup, GitHub Packages tokens, npm registry configuration, local Docker services, and environment variable templates.
 
 The developer documentation is part of the repository knowledge base - written for humans **and** AI agents. Keep it current as the project evolves.
 
@@ -207,9 +207,9 @@ The repository remote always uses the canonical `github.com` URL. Developers wit
 | Topic | Document |
 |---|---|
 | **Coding standards** (formatting, naming, JSDoc) | [`code-formatting-js.md`](code-formatting-js.md) _(JavaScript)_ |
-| **Module structure** (loader pattern, factory pattern) | [`module-structure-js.mdx`](../modules/module-structure-js) |
+| **Module structure** (loader pattern, factory pattern) | [`module-structure-js.md`](../modules/module-structure-js) |
 | **Model layer** (base, server, client) | [`model-modules.md`](../server/model-modules.md) |
-| **Server layers** (controller, service, common, interfaces) | [`server-controller-modules.md`](../server/server-controller-modules.md), [`server-service-modules.md`](../server/server-service-modules.md), [`server-common.md`](../server/server-common.md), [`server-interfaces.mdx`](../server/server-interfaces) |
+| **Server layers** (controller, service, common, interfaces) | [`server-controller-modules.md`](../server/server-controller-modules.md), [`server-service-modules.md`](../server/server-service-modules.md), [`server-common.md`](../server/server-common.md), [`server-interfaces.md`](../server/server-interfaces) |
 | **Helper modules** (core and server) | [`core-helper-modules.md`](../modules/core-helper-modules.md), [`server-helper-modules.md`](../modules/server-helper-modules.md) |
-| **Validation, errors, testing** | [`validation-approach.md`](validation-approach.md), [`error-handling.mdx`](error-handling), [`testing-strategy.md`](../testing/testing-strategy.md) |
+| **Validation, errors, testing** | [`validation-approach.md`](validation-approach.md), [`error-handling.md`](error-handling), [`testing-strategy.md`](../testing/testing-strategy.md) |
 | **Operations and deployment** | [`operations-documentation.md`](operations-documentation.md), [`module-publishing.md`](../modules/module-publishing.md) |

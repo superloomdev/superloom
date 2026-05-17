@@ -1,6 +1,3 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Server Interfaces
 
 `server-interfaces` are the **entry points** into the server application. They handle protocol translation - converting transport-specific requests (HTTP, Lambda event, webhook payload) into a **standardized internal format** before passing to `server-controller`, then converting controller responses back into transport-specific responses.
@@ -146,10 +143,9 @@ Each adapter then converts this into its transport-specific response format.
 
 ## Express Adapter Pattern
 
-<Tabs>
-<TabItem value="js" label="JavaScript">
+::: code-group
 
-```javascript
+```javascript [JavaScript]
 // src/server/interfaces/api/express/routes.js
 const express = require('express');
 const router = express.Router();
@@ -181,11 +177,7 @@ router.post('/user/create', function (req, res) {
 
 });
 ```
-
-</TabItem>
-<TabItem value="python" label="Python">
-
-```python
+```python [Python]
 # TODO: Python implementation (e.g. Flask/FastAPI adapter)
 # @app.post('/user/create')
 # async def create_user(request: Request):
@@ -199,11 +191,7 @@ router.post('/user/create', function (req, res) {
 #     result = Lib.User.controller.create(standard_request)
 #     return JSONResponse(content=result, status_code=result['status'])
 ```
-
-</TabItem>
-<TabItem value="java" label="Java">
-
-```java
+```java [Java]
 // TODO: Java implementation (e.g. Spring Boot adapter)
 // @PostMapping("/user/create")
 // public ResponseEntity<Map> createUser(@RequestBody Map body, HttpServletRequest req) {
@@ -218,8 +206,7 @@ router.post('/user/create', function (req, res) {
 // }
 ```
 
-</TabItem>
-</Tabs>
+:::
 
 ---
 

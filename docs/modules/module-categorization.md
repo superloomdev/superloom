@@ -244,4 +244,4 @@ Tracks which modules have been restructured per [`module-readme-structure.md`](m
 9. **Then. Class E feature modules:** `verify`, `auth`, `logger`. Highest user-visible impact (current READMEs are 370-550 lines). The existing `docs/` folders mean less new content. Mostly pruning the README and reframing the value bullets.
 10. **Last. Class F adapters:** 15 modules, all mechanical once the parent feature modules land.
 
-The full backlog (with priority order, scope notes, and any per-module pitfalls already discovered) lives in [`__dev__/plans/0008-module-readme-pilot.md`](../../__dev__/plans/0008-module-readme-pilot.md).
+The full backlog (with priority order, scope notes, and any per-module pitfalls already discovered) lives in `__dev__/plans/0008-module-readme-pilot.md` (gitignored - personal workspace).

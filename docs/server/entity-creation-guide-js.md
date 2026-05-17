@@ -1,6 +1,3 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Entity Creation Guide
 
 > **Language:** [JavaScript](entity-creation-guide-js)

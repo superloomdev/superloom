@@ -14,9 +14,9 @@ For contributors: edit files in this directory directly. Changes are picked up b
 |---|---|---|
 | **First-time visitor** | [superloom.dev/docs/intro](https://superloom.dev/docs/intro) | [`philosophy/why-server-mvc.md`](philosophy/why-server-mvc.md) |
 | **New contributor** | [`guide/getting-started.md`](guide/getting-started.md) | [`dev/README.md`](dev/README.md) |
-| **Adding a domain entity** | [`guide/creating-entities-js.md`](guide/creating-entities-js.md) | [`server/entity-creation-guide-js.mdx`](server/entity-creation-guide-js) |
+| **Adding a domain entity** | [`guide/creating-entities-js.md`](guide/creating-entities-js.md) | [`server/entity-creation-guide-js.md`](server/entity-creation-guide-js) |
 | **Architect evaluating the framework** | [`philosophy/`](philosophy/) | [`foundations/architectural-philosophy.md`](foundations/architectural-philosophy.md) |
-| **AI agent (Cascade, Cursor, Copilot)** | [`../AGENTS.md`](../AGENTS.md) | Module-level `ROBOTS.md` files |
+| **AI agent (Cascade, Cursor, Copilot)** | [`AGENTS.md`](https://github.com/superloomdev/superloom/blob/main/AGENTS.md) | Module-level `ROBOTS.md` files |
 | **DevOps / infrastructure** | [`ops/README.md`](ops/README.md) | [`foundations/operations-documentation.md`](foundations/operations-documentation.md) |
 | **CI/CD or publishing** | [`dev/cicd-publishing.md`](dev/cicd-publishing.md) | [`modules/module-publishing.md`](modules/module-publishing.md) |
 
@@ -50,16 +50,16 @@ docs/
   architecture/                       # Technical standards (~22 documents)
     architectural-philosophy.md       #   High-level rules and directory layout
     code-formatting-js.md             #   JavaScript coding standards
-    error-handling.mdx                 #   Throw vs return, three error categories
+    error-handling.md                 #   Throw vs return, three error categories
     validation-approach.md            #   Hand-written, co-located validation
-    module-structure-js.mdx               #   How helper modules are built
+    module-structure-js.md               #   How helper modules are built
     module-testing.md                 #   Testing tiers and emulator setup
     module-publishing.md              #   CI/CD publishing pipeline
     peer-dependencies.md              #   Self-contained foundation + peer deps
-    entity-creation-guide-js.mdx          #   Full entity creation walkthrough
+    entity-creation-guide-js.md          #   Full entity creation walkthrough
     model-modules.md                  #   Base, server, and client model layers
     server-loader.md                  #   Dependency injection and the Lib container
-    server-interfaces.mdx              #   Express and Lambda adapters
+    server-interfaces.md              #   Express and Lambda adapters
     server-controller-modules.md      #   Thin adapters between interfaces and services
     server-service-modules.md         #   Business logic and orchestration
     server-helper-modules.md          #   Server-only helper modules
@@ -111,7 +111,7 @@ docs/
 
 ## Documentation Principles
 
-Every file in this directory follows the rules in [`.windsurf/GOD.md`](../.windsurf/GOD.md) Directive 12:
+Every file in this directory follows the rules in [`.windsurf/GOD.md`](https://github.com/superloomdev/superloom/blob/main/.windsurf/GOD.md) Directive 12:
 
 - **Prescriptive over prohibitive** - state what to do, not what to avoid
 - **Generic over specific** - use placeholders (`[module]`, `[entity]`) in framework rules
@@ -119,7 +119,7 @@ Every file in this directory follows the rules in [`.windsurf/GOD.md`](../.winds
 - **Compact** - tables and bullets, never prose paragraphs for rules
 - **No preamble** - skip "This section explains..." and similar throat-clearing
 
-The compressed, AI-facing mirror of these documents lives in [`AGENTS.md`](../AGENTS.md). When a file in `docs/` changes, run the `/propagate-changes` workflow to keep the mirror in sync.
+The compressed, AI-facing mirror of these documents lives in [`AGENTS.md`](https://github.com/superloomdev/superloom/blob/main/AGENTS.md). When a file in `docs/` changes, run the `/propagate-changes` workflow to keep the mirror in sync.
 
 ### Pitfall Journals (AI-Oriented)
 

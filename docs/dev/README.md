@@ -122,7 +122,7 @@ This prompts you to select `dev` or `integration` and loads the corresponding `_
 The `__dev__/` folder at the repository root is your personal workspace. It is listed in `.gitignore` and never committed. Use it for:
 
 - `me.md` - your GitHub username, SSH key name, local aliases
-- `.env.dev` - dev environment values (copied from [`.env.dev.example`](.env.dev.example))
+- `.env.dev` - dev environment values (copied from [`.env.dev.example`](https://github.com/superloomdev/superloom/blob/main/docs/dev/.env.dev.example))
 - `.env.integration` - integration environment values (real cloud, sandbox account)
 - `progress.md` - current work, pending tasks, session notes
 - `context.md` - developer-specific AI context (your patterns, preferences, working notes)

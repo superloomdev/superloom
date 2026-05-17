@@ -316,5 +316,5 @@ Changing any of these = **breaking change**.
 ## References
 
 - [Semantic Versioning](https://semver.org/)
-- [ROBOTS.md](./ROBOTS.md) in each module
-- [CHANGELOG.md](./CHANGELOG.md) for change history
+- `ROBOTS.md` in each module - per-module public-API reference
+- `CHANGELOG.md` in each module - per-module change history

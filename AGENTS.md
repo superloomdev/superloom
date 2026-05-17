@@ -370,7 +370,7 @@ The framework recognises **three** error categories. Each has one correct dispos
 
 **This applies to every helper module** (dynamodb, mongodb, s3, sql-*, verify, http, etc.) and every entity service. When in doubt: programmer errors throw, everything else returns an envelope, and the service translates before the controller sees it.
 
-Full rule with rationale, anti-patterns, Approach B details, and worked examples: `docs/foundations/error-handling.mdx`.
+Full rule with rationale, anti-patterns, Approach B details, and worked examples: `docs/foundations/error-handling.md`.
 
 ### Section Header Hierarchy
 
@@ -592,7 +592,7 @@ The following items are mandatory for every helper module. These caught real iss
 
 ### Helper Module Structure (Two Patterns)
 
-All helper modules use **Pattern 2 (Multi-Instance / Factory)** - each loader call returns an independent interface with its own `Lib`, `CONFIG`, and (for stateful modules) `state`. Pattern 1 (Singleton Config) is legacy and no longer used in this framework; the Pattern 1 template below is preserved for historical reference only. Full rules: `docs/modules/module-structure-js.mdx` -> "Helper Module Configuration Patterns".
+All helper modules use **Pattern 2 (Multi-Instance / Factory)** - each loader call returns an independent interface with its own `Lib`, `CONFIG`, and (for stateful modules) `state`. Pattern 1 (Singleton Config) is legacy and no longer used in this framework; the Pattern 1 template below is preserved for historical reference only. Full rules: `docs/modules/module-structure-js.md` -> "Helper Module Configuration Patterns".
 
 **Quick decision:**
 
@@ -753,7 +753,7 @@ const createInterface = function (Lib, CONFIG, state) {
 
 ### Parts Pattern (Complex Helper Modules)
 
-When a helper module's `createInterface` body grows beyond ~500 lines and decomposes into bounded **stateless** responsibilities, split each responsibility into a co-located factory under `parts/`. Source: `docs/modules/module-structure-js.mdx` -> "Parts Pattern".
+When a helper module's `createInterface` body grows beyond ~500 lines and decomposes into bounded **stateless** responsibilities, split each responsibility into a co-located factory under `parts/`. Source: `docs/modules/module-structure-js.md` -> "Parts Pattern".
 
 - **Folder:** `[module]/parts/[name].js` - one factory per part
 - **Uniform signature:** every part is `module.exports = function loader (Lib, CONFIG, ERRORS) { return createInterface(Lib, CONFIG, ERRORS); }` - parts that don't consume `CONFIG` or `ERRORS` still accept and ignore them
@@ -765,7 +765,7 @@ When a helper module's `createInterface` body grows beyond ~500 lines and decomp
 
 ### Adapter Pattern (Multi-Backend Helper Modules)
 
-When a helper module needs interchangeable backends (databases, transports, key/value stores), each backend is a **standalone npm package**. The parent module accepts the adapter factory via configuration. Source: `docs/modules/module-structure-js.mdx` -> "Adapter Pattern".
+When a helper module needs interchangeable backends (databases, transports, key/value stores), each backend is a **standalone npm package**. The parent module accepts the adapter factory via configuration. Source: `docs/modules/module-structure-js.md` -> "Adapter Pattern".
 
 - **Naming:** `[parent]-store-[backend]` for database-backed adapters; `[parent]-adapter-[name]` for non-database adapters; the general concept is "adapter" - "store" is reserved for database backings
 - **Factory injection only:** parent accepts `CONFIG.STORE = require('@superloomdev/[parent]-store-[backend]')` - the factory function itself, not a string. No internal registry, no string dispatch

@@ -86,7 +86,7 @@ Server helper modules load base defaults from a config file and merge loader-inj
 | **Pattern 2 (Multi-Instance Factory)** | All helper modules. Stateful (connection pool, persistent client, authenticated session) or stateless |
 | **Pattern 1 (Singleton Config)** | **Legacy.** Preserved for historical reference only - not used in new modules |
 
-See [`module-structure-js.mdx`](module-structure-js) for full templates and the rules each pattern follows.
+See [`module-structure-js.md`](module-structure-js) for full templates and the rules each pattern follows.
 
 ---
 

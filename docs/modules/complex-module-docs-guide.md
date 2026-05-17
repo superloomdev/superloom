@@ -339,7 +339,7 @@ Same human-first approach as READMEs:
 1. **Lead with the use case.** "You need this when..."
 2. **Progressive examples.** Start simple, add complexity.
 3. **Explain the why.** "We use composite keys because..."
-4. **Cross-link liberally.** "See [configuration](configuration.md) for details."
+4. **Cross-link liberally.** Inside each module's `docs/` write things like `` See [configuration](configuration.md) for details. `` so readers can hop between files.
 5. **Tables for reference.** Quick lookup tables for common scenarios.
 
 ---

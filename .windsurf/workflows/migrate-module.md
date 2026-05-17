@@ -28,7 +28,7 @@ Run this checklist when adding a new helper module or migrating an existing one 
 ## 1. Code Standards Audit
 
 - [ ] Module follows the standard structure: Loader → Exports → Public → Private (Singleton) or Loader → createInterface (Factory)
-- [ ] Module picks the correct config pattern. Modules wrapping any per-instance state (pool, persistent client, session) use Pattern 2 (Multi-Instance Factory). Pure stateless wrappers use Pattern 1 (Singleton). Full rules: `docs/modules/module-structure-js.mdx`
+- [ ] Module picks the correct config pattern. Modules wrapping any per-instance state (pool, persistent client, session) use Pattern 2 (Multi-Instance Factory). Pure stateless wrappers use Pattern 1 (Singleton). Full rules: `docs/modules/module-structure-js.md`
 - [ ] `Lib.Utils` injected in loader and used for all type/null checks (no inline `typeof` except foundation modules)
 - [ ] **Factory pattern (Pattern 2) specifics** (only if applicable):
   - [ ] Loader body only builds `Lib`, `CONFIG`, `state` and returns `createInterface(Lib, CONFIG, state)`
