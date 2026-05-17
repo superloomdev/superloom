@@ -2,7 +2,16 @@
 
 > **Language:** JavaScript
 
-How to test helper modules. This document covers the **strategy** (testing tiers, when to run what, badges, env vars). For developer machine setup see [`docs/dev/`](../dev/README.md). For how to actually write a unit test see [`unit-test-authoring-js.md`](unit-test-authoring-js.md).
+How to test helper modules. This document covers the **strategy** (testing tiers, when to run what, badges, env vars).
+
+**Companion docs.**
+
+- [`../dev/testing-local-modules.md`](../dev/testing-local-modules.md) - the **operational** how-to for running tests on a developer machine (Docker prerequisites, pre-publish lint+test gate, healthcheck philosophy, test concurrency rules).
+- [`unit-test-authoring-js.md`](unit-test-authoring-js.md) - how to actually write a single unit test (rules, naming, assertion methods, template).
+- [`integration-testing.md`](integration-testing.md) - integration testing against real cloud services (sandbox accounts).
+- [`migration-pitfalls.md`](migration-pitfalls.md) - testing issues encountered while migrating modules.
+
+Use this file for **what to test and which tier**; use the companion docs for **how to run the tests** and **how to write a test file**.
 
 ## On This Page
 
@@ -156,28 +165,16 @@ Staging and production environments are managed by the application project, not 
 
 ## Running Tests
 
-Every module follows the same pattern:
-
-```bash
-cd src/helper-modules-core/js-helper-utils/_test
-npm install
-npm test
-```
-
-For service-dependent modules, Docker lifecycle is automated via npm scripts:
-
-```bash
-cd src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/_test
-npm install && npm test
-```
-
-`npm test` runs: `pretest` (stop stale containers + start emulator) → `test` (run tests) → `posttest` (stop and remove containers and volumes only — images are cached). No manual `docker compose up/down` needed.
+The contract every module follows:
 
 - **Runner:** Node.js built-in test runner (`node --test`)
 - **Assertions:** `require('node:assert/strict')`
 - **Location:** `_test/test.js` inside each module
 - **Naming:** `should [expected behavior] when [condition]`
 - **Coverage:** Every exported function must have at least one test
+- **Lifecycle:** `npm test` is self-contained. For service-dependent modules, `pretest` starts the emulator and `posttest` stops it. No manual `docker compose up/down` needed.
+
+For the **operational** step-by-step (which directory to `cd` into, when to re-run `npm install`, the pre-publish lint+test gate, healthcheck philosophy, test concurrency rules), see [`../dev/testing-local-modules.md`](../dev/testing-local-modules.md).
 
 ## Module Categories
 

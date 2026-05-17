@@ -1,8 +1,10 @@
 # Creating Entities
 
 > **Language:** [JavaScript](creating-entities-js.md)
+>
+> **When to read this.** First pass through entity creation, or refreshing on the overall shape. ~15 minutes. For the file-by-file long-form reference (model fields, server-extension contracts, full controller/service templates) read [`Entity Creation Guide`](../server/entity-creation-guide-js.md) instead.
 
-A quick-start guide for adding a domain entity to a Superloom project. Use this for the high-level shape; for the full walkthrough with file-by-file templates, see [Entity Creation Guide](../server/entity-creation-guide-js).
+A quick-start guide for adding a domain entity to a Superloom project.
 
 ## On This Page
 

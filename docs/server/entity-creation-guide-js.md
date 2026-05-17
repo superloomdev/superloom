@@ -1,8 +1,10 @@
 # Entity Creation Guide
 
 > **Language:** [JavaScript](entity-creation-guide-js)
+>
+> **When to read this.** Actually building an entity, or migrating a legacy one. File-by-file templates, full model/server/controller/service contracts. For the 15-minute overview first, read [`Creating Entities (JavaScript)`](../guide/creating-entities-js.md) and come back here when you start writing files.
 
-Complete walkthrough for creating a new domain entity in a Superloom project, from base model through server extensions to controller and service. This is the long-form reference; for the high-level summary see [Creating Entities (JavaScript)](../guide/creating-entities-js.md).
+Complete walkthrough for creating a new domain entity in a Superloom project, from base model through server extensions to controller and service.
 
 ## On This Page
 

@@ -2,7 +2,15 @@
 
 > **Language:** JavaScript
 
-This guide is the canonical reference for running module tests on a developer machine. It focuses on the *why* behind healthcheck and lifecycle rules. The journal of real failures that produced these rules lives in [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing) — read that before assuming a "weird" failure is unique.
+This guide is the canonical reference for running module tests on a developer machine. It focuses on the **operational how-to** plus the *why* behind healthcheck and lifecycle rules. The journal of real failures that produced these rules lives in [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing) - read that before assuming a "weird" failure is unique.
+
+**Companion docs.**
+
+- [`../testing/module-testing.md`](../testing/module-testing.md) - the **strategy** (testing tiers, badges, env vars, when to run what, module categories).
+- [`../testing/unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md) - how to author a single unit test (rules, naming, assertions).
+- [`../testing/integration-testing.md`](../testing/integration-testing.md) - integration testing against real cloud services.
+
+Use this file for **how to run the tests on your machine**; use the strategy doc for **which tier to run and why**.
 
 ## Prerequisites
 

@@ -1,8 +1,10 @@
 # Developer Setup
 
+> **Audience.** Contributors and maintainers working on the Superloom framework itself (helper modules, the demo project, the docs). If you are building an application *with* Superloom rather than working on the framework, start at [`../guide/getting-started.md`](../guide/getting-started.md) instead.
+>
 > **Language:** JavaScript (Node.js). These setup instructions cover the JavaScript modules, which are the current reference implementation.
 
-Everything a developer needs to start working on Superloom helper modules and the demo project. Read this once, in order; you should be running tests within 15 minutes.
+Everything a contributor needs to start working on Superloom helper modules and the demo project. Read this once, in order; you should be running tests within 15 minutes.
 
 ## On This Page
 
@@ -27,31 +29,9 @@ Everything a developer needs to start working on Superloom helper modules and th
 
 ## Quick Start
 
-### 1. Test an offline module (no Docker needed)
+To run a single module's tests on your machine, see [`testing-local-modules.md`](testing-local-modules.md) - it covers the offline and service-dependent flows plus the pre-publish lint+test gate. For the broader testing strategy (tiers, badges, env vars) see [`../testing/module-testing.md`](../testing/module-testing.md).
 
-```bash
-cd src/helper-modules-core/js-helper-utils/_test
-npm install
-npm test
-```
-
-All core modules and several server modules (crypto, cache, auth, etc.) work this way. See `docs/testing/module-testing.md` for the full list.
-
-### 2. Test a service-dependent module
-
-Each module manages its own Docker lifecycle automatically via npm scripts:
-
-```bash
-cd src/helper-modules-server/js-server-helper-sql-postgres/_test
-npm install
-npm test
-```
-
-`npm test` runs: `pretest` (stop stale containers + start emulator) → `test` (run tests) → `posttest` (stop and remove containers and volumes only — images are cached). No manual `docker compose up/down` needed.
-
-### 3. Central dev services (for application development)
-
-The central `docs/dev/docker-compose.yml` runs all services together for **application-level** development (not module testing). It uses named volumes so data persists across restarts:
+For **application-level** development against multiple services at once (separate from per-module testing), the central `docs/dev/docker-compose.yml` runs every emulator together with named volumes so data persists across restarts:
 
 ```bash
 docker compose -f docs/dev/docker-compose.yml up -d    # start

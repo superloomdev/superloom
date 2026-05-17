@@ -1,8 +1,10 @@
 # Superloom Documentation
 
-> **The published documentation lives at [superloom.dev/docs](https://superloom.dev/docs).**
+> **Audience.** Contributors browsing the source tree on GitHub. This file is excluded from the rendered website (`srcExclude` in VitePress config).
+>
+> **For readers:** the published documentation lives at [superloom.dev/docs](https://superloom.dev/docs); start there. The website's landing page is [`index.md`](index.md) in this same folder.
 
-This directory is the canonical source for all Superloom technical documentation. Files here are the single source of truth — the website at `superloom.dev` renders from this content.
+This directory is the canonical source for all Superloom technical documentation. Files here are the single source of truth - the website at `superloom.dev` renders from this content.
 
 The introductory overview and landing page content lives in the [website repository](https://github.com/superloomdev/superloom.dev). Start at [superloom.dev](https://superloom.dev) for the full experience.
 
