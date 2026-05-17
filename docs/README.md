@@ -70,9 +70,8 @@ docs/
     unit-test-authoring-js.md            #   How to write unit tests
     integration-testing.md            #   Real cloud testing in a sandbox account
     migration-pitfalls.md             #   Common issues during module migrations
-    module-categorization.md          #   Which template to use for each module
+    module-categorization.md          #   Which class each module belongs to
     complex-module-docs-guide.md      #   docs/ folder structure for feature modules
-    templates/                        #   README templates for each module category
 
   dev/                                # Developer setup
     README.md                         #   Onboarding quick start

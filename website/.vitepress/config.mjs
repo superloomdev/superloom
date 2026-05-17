@@ -9,7 +9,6 @@ export default defineConfig({
 
   srcExclude: [
     'docs/README.md',
-    'docs/modules/templates/*.md',
   ],
 
   // Strict link-checking with empty whitelist. Phase 3 cleared all pre-existing dead links;
