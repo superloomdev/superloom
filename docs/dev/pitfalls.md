@@ -4,7 +4,7 @@
 >
 > **Shape.** Every entry is **Symptom → Cause → Lesson/Fix**. When a new failure mode is discovered, add the entry here first (per the Golden Rule in `AGENTS.md`), then propagate a compact rule into `AGENTS.md` via `/propagate-changes`.
 >
-> **Scope.** This file covers the `docs/dev/` domain: AI tool-bridge, CI/CD publishing, local module testing. Architecture-level pitfalls (module migration, refactors) live in [`docs/architecture/testing/migration-pitfalls.md`](../architecture/testing/migration-pitfalls.md).
+> **Scope.** This file covers the `docs/dev/` domain: AI tool-bridge, CI/CD publishing, local module testing. Architecture-level pitfalls (module migration, refactors) live in [`docs/testing/migration-pitfalls.md`](../testing/migration-pitfalls.md).
 
 ## On This Page
 
@@ -520,7 +520,7 @@ The reported line number is often **far below** the line that actually caused th
 
 1. **Never use `<...>` placeholders outside backticks in prose.** Use square brackets (`[name]`), curly braces (`{name}`), or plain capitalized phrases ("Domain operations") instead.
 2. **For verbatim copy-paste templates inside fenced code blocks, prefer the `text` language hint.** Switching ` ```markdown ` to ` ```text ` disables the secondary Vue scan and lets the placeholders survive untouched. If the syntax-highlighting loss is unacceptable for a particular block, replace the angle-bracket placeholders with square-bracket ones at template-author time and keep the `markdown` hint.
-3. **Verify documentation changes locally before pushing** when the change touches `docs/architecture/` or any other file that VitePress will render. Run `npm run build` from `website/`. That is the same pipeline CI runs (`vitepress build .` after `sync-docs`). Watch for the `Element is missing end tag` family of errors. Local build is fast (single-digit seconds) and catches the failure before it occupies a CI runner.
+3. **Verify documentation changes locally before pushing** when the change touches any VitePress-rendered file in `docs/`. Run `npm run build` from `website/`. That is the same pipeline CI runs (`vitepress build .` after `sync-docs`). Watch for the `Element is missing end tag` family of errors. Local build is fast (single-digit seconds) and catches the failure before it occupies a CI runner.
 
 This pitfall is distinct from the helper-modules CI chain (entries 1–14): it lives in `ci-deploy-website.yml`, not `ci-helper-modules.yml`, and a website-deploy failure does not block module publishing. The two pipelines are independent. But the same commit that triggers helper-module publishing will also trigger website deploy if it touches any `docs/` file, so a documentation-side bug is a hidden cost on every push that updates rules.
 
@@ -722,6 +722,6 @@ Doc drift is the slowest bug to find. **No exceptions** — every new lesson goe
 
 Cross-reference rules:
 
-- Pitfalls that belong to the `docs/architecture/` domain (module migration, refactors) go in [`../architecture/testing/migration-pitfalls.md`](../architecture/testing/migration-pitfalls.md), not here.
+- Pitfalls that belong to the architecture domain (`docs/foundations/`, `docs/modules/`, `docs/server/`, `docs/testing/` - module migration, refactors) go in [`../testing/migration-pitfalls.md`](../testing/migration-pitfalls.md), not here.
 - The philosophy docs [`cicd-publishing.md`](cicd-publishing.md) and [`testing-local-modules.md`](testing-local-modules.md) keep only the **positive** rules (what to do). Symptoms and root causes always live here.
 - Anchors in this file are stable — `AGENTS.md` and other cross-references rely on them. Never rename an H2 or H3 after it is published.

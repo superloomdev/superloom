@@ -2,7 +2,7 @@
 
 Loader pattern, configuration keys, dependency notes, and testing tier. For the function reference see [API Reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-http/docs/api.md).
 
-This page is intentionally short. HTTP has two configuration keys, no environment variables, and one testing tier. The page exists for shape consistency: every Superloom module ships a `docs/configuration.md` so contributors and AI tooling can find the loader pattern and runtime details in the same place across the framework. The canonical reasoning is in [`module-categorization.md` → Universal Documentation Footprint](https://github.com/superloomdev/superloom/blob/main/docs/architecture/modules/module-categorization.md#universal-documentation-footprint).
+This page is intentionally short. HTTP has two configuration keys, no environment variables, and one testing tier. The page exists for shape consistency: every Superloom module ships a `docs/configuration.md` so contributors and AI tooling can find the loader pattern and runtime details in the same place across the framework. The canonical reasoning is in [`module-categorization.md` → Universal Documentation Footprint](https://github.com/superloomdev/superloom/blob/main/docs/modules/module-categorization.md#universal-documentation-footprint).
 
 ## On This Page
 
@@ -100,4 +100,4 @@ The test runner uses Node's built-in test framework (`node --test` plus `node:as
 
 > **CI requires network egress.** Self-hosted runners or air-gapped environments need an HTTP proxy or a local `httpbin` mirror. The GitHub-hosted runners that the project's CI workflow uses have unrestricted egress.
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/testing/module-testing.md).

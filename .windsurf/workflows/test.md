@@ -56,4 +56,4 @@ Example: `npm run test:user`, `npm run test:survey`, `npm run test:contact`
 - Test naming: `should [expected behavior] when [condition]`
 - Every exported function has at least one test case
 
-Full rules: [`docs/architecture/testing/unit-test-authoring-js.md`](../../docs/architecture/testing/unit-test-authoring-js.md).
+Full rules: [`docs/testing/unit-test-authoring-js.md`](../../docs/testing/unit-test-authoring-js.md).

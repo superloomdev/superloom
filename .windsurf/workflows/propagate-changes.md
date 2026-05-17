@@ -25,12 +25,12 @@ This is the most important step. `AGENTS.md` contains a compressed summary of al
 
 1. Read the changed file(s) in `docs/`
 2. Update the corresponding section in `AGENTS.md`:
-   - `docs/architecture/foundations/code-formatting-js.md` → "Coding Standards (Mandatory)" section
-   - `docs/architecture/modules/module-structure-js.mdx` → "Module Patterns" section
-   - `docs/architecture/modules/module-publishing.md` → "Publishing" section
-   - `docs/architecture/modules/peer-dependencies.md` → "Dependency Hierarchy" section
-   - `docs/architecture/testing/testing-strategy.md` or `docs/architecture/testing/unit-test-authoring-js.md` → "Testing" section
-   - `docs/architecture/foundations/architectural-philosophy.md` → "Core Philosophy" section
+   - `docs/foundations/code-formatting-js.md` → "Coding Standards (Mandatory)" section
+   - `docs/modules/module-structure-js.mdx` → "Module Patterns" section
+   - `docs/modules/module-publishing.md` → "Publishing" section
+   - `docs/modules/peer-dependencies.md` → "Dependency Hierarchy" section
+   - `docs/testing/testing-strategy.md` or `docs/testing/unit-test-authoring-js.md` → "Testing" section
+   - `docs/foundations/architectural-philosophy.md` → "Core Philosophy" section
    - `docs/dev/*` → "Publishing" or relevant operational section
 3. Keep the `AGENTS.md` version compressed (tables, bullets, no prose)
 
@@ -47,20 +47,20 @@ This is the most important step. `AGENTS.md` contains a compressed summary of al
 2. Update the entity's `_test/test.js` with new test cases
 3. If new entity: register in `demo-project/src/server/common/loader.js`
 4. If new entity: create Express routes + Lambda handlers
-5. If architecture changed: update relevant files in `docs/architecture/`
+5. If architecture changed: update relevant files in `docs/foundations/`, `docs/modules/`, `docs/server/`, or `docs/testing/`
 6. Run `/propagate-changes` to sync `AGENTS.md`
 
 ## When Architecture/Philosophy Changes
 
-1. Update the relevant file in `docs/architecture/`
+1. Update the relevant file in `docs/foundations/`, `docs/modules/`, `docs/server/`, or `docs/testing/`
 2. Update `AGENTS.md` → corresponding embedded section
 3. Update `docs/philosophy/` if applicable
 
 ## When Directory Structure Changes
 
 1. Update `AGENTS.md` → "Directory Map"
-2. Update `docs/architecture/modules/module-structure-js.mdx`
-3. Update `docs/architecture/foundations/architectural-philosophy.md` directory locations
+2. Update `docs/modules/module-structure-js.mdx`
+3. Update `docs/foundations/architectural-philosophy.md` directory locations
 4. Update `.windsurf/workflows/` if paths changed
 
 ## Verification Checklist

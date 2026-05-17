@@ -82,7 +82,7 @@ The repository is structured by **responsibility and execution context**, with s
 
 ### Helper Modules (Framework Level)
 
-Helper modules provide reusable utilities and can be integrated into your project in three different ways. For detailed implementation approaches, pros/cons, and setup instructions, see [`module-structure-js.mdx`](../modules/module-structure-js#implementation-approaches) and [`getting-started.md`](../../guide/getting-started.md#step-1---choose-your-implementation-approach).
+Helper modules provide reusable utilities and can be integrated into your project in three different ways. For detailed implementation approaches, pros/cons, and setup instructions, see [`module-structure-js.mdx`](../modules/module-structure-js#implementation-approaches) and [`getting-started.md`](../guide/getting-started.md#step-1---choose-your-implementation-approach).
 
 #### Framework Structure (Reference)
 
@@ -168,8 +168,8 @@ Every contributor has a personal workspace folder at the repository root called 
 | File | Purpose |
 |---|---|
 | `me.md` | Your GitHub username, SSH key name, local aliases, machine-specific notes |
-| `.env.dev` | Dev environment values (copied from [`docs/dev/.env.dev.example`](../../dev/.env.dev.example)) |
-| `.env.integration` | Integration environment values (copied from [`docs/dev/.env.integration.example`](../../dev/.env.integration.example)) |
+| `.env.dev` | Dev environment values (copied from [`docs/dev/.env.dev.example`](../dev/.env.dev.example)) |
+| `.env.integration` | Integration environment values (copied from [`docs/dev/.env.integration.example`](../dev/.env.integration.example)) |
 | `progress.md` | Current work, pending tasks, session notes |
 | `context.md` | Developer-specific AI context - your patterns, preferences, working notes |
 | `migration-changelog.md` | Personal log of module migrations (see [`migration-pitfalls.md`](../testing/migration-pitfalls.md)) |
@@ -179,7 +179,7 @@ The `__dev__/` convention guarantees that no developer's personal configuration 
 
 ### Developer Documentation (`docs/dev/`)
 
-All documentation a developer needs to set up and work on the project lives in [`docs/dev/`](../../dev/). This is committed and shared with all contributors. It covers Git account setup, GitHub Packages tokens, npm registry configuration, local Docker services, and environment variable templates.
+All documentation a developer needs to set up and work on the project lives in [`docs/dev/`](../dev/). This is committed and shared with all contributors. It covers Git account setup, GitHub Packages tokens, npm registry configuration, local Docker services, and environment variable templates.
 
 The developer documentation is part of the repository knowledge base - written for humans **and** AI agents. Keep it current as the project evolves.
 
@@ -189,14 +189,14 @@ Modules in this framework support two environments:
 
 | Environment | Purpose | Configuration source |
 |---|---|---|
-| **dev** | Local machine, Docker emulators (databases, S3-compatible store, message queue) defined in [`docs/dev/docker-compose.yml`](../../dev/docker-compose.yml) | `__dev__/.env.dev`, loaded via `source init-env.sh` |
+| **dev** | Local machine, Docker emulators (databases, S3-compatible store, message queue) defined in [`docs/dev/docker-compose.yml`](../dev/docker-compose.yml) | `__dev__/.env.dev`, loaded via `source init-env.sh` |
 | **integration** (sandbox) | Real cloud services with isolated test data. Mirrors the production configuration | Cloud provider's parameter store (e.g., AWS SSM); credentials in `__dev__/secrets/` |
 
 Production testing is the responsibility of the **application project** consuming these modules, not the modules themselves.
 
 ### Git Identity
 
-The project is hosted under a GitHub organization. Contributors use their personal GitHub account (which must be a member of the org). Each contributor configures their own machine so commits to this repository use the correct GitHub identity. The step-by-step guide is in [`docs/dev/onboarding-git-account.md`](../../dev/onboarding-git-account.md).
+The project is hosted under a GitHub organization. Contributors use their personal GitHub account (which must be a member of the org). Each contributor configures their own machine so commits to this repository use the correct GitHub identity. The step-by-step guide is in [`docs/dev/onboarding-git-account.md`](../dev/onboarding-git-account.md).
 
 The repository remote always uses the canonical `github.com` URL. Developers with multiple GitHub accounts optionally override the remote URL locally using an SSH alias - this override is never committed.
 

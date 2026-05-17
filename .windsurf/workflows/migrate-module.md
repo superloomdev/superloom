@@ -28,7 +28,7 @@ Run this checklist when adding a new helper module or migrating an existing one 
 ## 1. Code Standards Audit
 
 - [ ] Module follows the standard structure: Loader → Exports → Public → Private (Singleton) or Loader → createInterface (Factory)
-- [ ] Module picks the correct config pattern. Modules wrapping any per-instance state (pool, persistent client, session) use Pattern 2 (Multi-Instance Factory). Pure stateless wrappers use Pattern 1 (Singleton). Full rules: `docs/architecture/modules/module-structure-js.mdx`
+- [ ] Module picks the correct config pattern. Modules wrapping any per-instance state (pool, persistent client, session) use Pattern 2 (Multi-Instance Factory). Pure stateless wrappers use Pattern 1 (Singleton). Full rules: `docs/modules/module-structure-js.mdx`
 - [ ] `Lib.Utils` injected in loader and used for all type/null checks (no inline `typeof` except foundation modules)
 - [ ] **Factory pattern (Pattern 2) specifics** (only if applicable):
   - [ ] Loader body only builds `Lib`, `CONFIG`, `state` and returns `createInterface(Lib, CONFIG, state)`
@@ -64,7 +64,7 @@ Run this checklist when adding a new helper module or migrating an existing one 
 - [ ] American English spelling (`initialize`, `standardize` - not British `initialise`)
 - [ ] **Return objects are multi-line** - never inline `return { key: val, key2: val2 }`
 - [ ] **Every logical block has a single-line comment** explaining what the next 2-5 lines do
-- [ ] **Human-tone comments** - no em-dashes, no migration/legacy references, no hosting-vendor-specific wording (AWS, Azure, GCP, RDS, Aurora) in framework docs. Database/protocol vendor names (MySQL, Postgres, DynamoDB, S3) are acceptable. Full rules: `docs/architecture/foundations/code-formatting-js.md` -> "Comment Authoring Style"
+- [ ] **Human-tone comments** - no em-dashes, no migration/legacy references, no hosting-vendor-specific wording (AWS, Azure, GCP, RDS, Aurora) in framework docs. Database/protocol vendor names (MySQL, Postgres, DynamoDB, S3) are acceptable. Full rules: `docs/foundations/code-formatting-js.md` -> "Comment Authoring Style"
 - [ ] **Standard Internal Comments**: Each function includes exactly 8 required comments:
   1. `// Initialize [service] SDK client (lazy loading)`
   2. `// Ensure options object exists`
@@ -216,11 +216,11 @@ For every runtime and dev dependency, verify the latest stable version before lo
 - [ ] Module has `ROBOTS.md` at root (compact AI agent reference - functions, deps, config, patterns)
 - [ ] README includes: badges, description, API table, usage example, config table, Testing section
 - [ ] **Every module has exactly 3 header badges**: Test (GitHub native badge, linked to `ci-helper-modules.yml`) + License + Node.js
-- [ ] **Every module has a `## Testing` section** with a status table near the end of the README (template in `docs/architecture/testing/module-testing.md`)
+- [ ] **Every module has a `## Testing` section** with a status table near the end of the README (template in `docs/testing/module-testing.md`)
   - Offline modules: 1 row (Unit Tests)
   - Service-dependent modules: 2 rows (Emulated Tests + Integration Tests)
 - [ ] Integration test badge set to correct status (`not_yet_tested`, `passing`, or `failing`) inside the Testing table - not in the header
-- [ ] Badge and table templates are in `docs/architecture/testing/module-testing.md` - copy from there
+- [ ] Badge and table templates are in `docs/testing/module-testing.md` - copy from there
 
 ## 6. CI/CD Registration
 
@@ -232,7 +232,7 @@ There is a single unified workflow: `.github/workflows/ci-helper-modules.yml`. I
 
 ## 7. Documentation Sync
 
-- [ ] `docs/architecture/testing/module-testing.md` updated with module entry
+- [ ] `docs/testing/module-testing.md` updated with module entry
 - [ ] `AGENTS.md` updated if architecture changed (run `/propagate-changes`)
 - [ ] Any new patterns or learnings documented
 
@@ -250,7 +250,7 @@ git grep "js-server-helper-<old-name>" -- \
 git grep -l "js-server-helper-<old-name>"
 
 # Common files that need updates:
-# - docs/architecture/*.md (module examples, pattern references)
+# - docs/{foundations,modules,server,testing}/*.md (module examples, pattern references)
 # - docs/dev/*.md (developer guides)
 # - AGENTS.md (directory map)
 # - demo-project/src/server/common/loader.js (example loader)

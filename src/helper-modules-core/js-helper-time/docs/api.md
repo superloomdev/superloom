@@ -231,6 +231,6 @@ Returns the last day of the given month, accounting for leap years.
 
 ## Lifecycle
 
-There is nothing to clean up. The module exposes only pure synchronous functions. Loader-time initialization captures the function bindings in a closure (the [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server/server-loader.md) defines this pattern); after that, no module-level state changes for the lifetime of the process.
+There is nothing to clean up. The module exposes only pure synchronous functions. Loader-time initialization captures the function bindings in a closure (the [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/server/server-loader.md) defines this pattern); after that, no module-level state changes for the lifetime of the process.
 
 For module-level setup details (loader signature, peer-dep notes) see [Configuration → Loader Pattern](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-core/js-helper-time/docs/configuration.md#loader-pattern).

@@ -95,7 +95,7 @@ None. The module never reads `process.env`. All configuration flows through the 
 
 None. Foundation modules cannot have peer dependencies. They ARE the foundation. Every other Superloom helper may consume `js-helper-debug`; this module imports nothing.
 
-The wider rationale (foundation invariants, the "no upward import" rule) is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server/server-loader.md).
+The wider rationale (foundation invariants, the "no upward import" rule) is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/server/server-loader.md).
 
 ---
 
@@ -121,4 +121,4 @@ cd _test && npm install && npm test
 
 The test runner uses Node's built-in test framework (`node --test` plus `node:assert/strict`). Test runtime is sub-second.
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/testing/module-testing.md).

@@ -1,6 +1,6 @@
 # JavaScript Coding Standards
 
-The complete style guide for JavaScript code in Superloom modules. ESLint enforces most of these rules automatically; the rest are conventions every contributor and AI agent is expected to follow. The compressed mirror of this guide lives in [`AGENTS.md`](../../../AGENTS.md).
+The complete style guide for JavaScript code in Superloom modules. ESLint enforces most of these rules automatically; the rest are conventions every contributor and AI agent is expected to follow. The compressed mirror of this guide lives in [`AGENTS.md`](../../AGENTS.md).
 
 ## On This Page
 
@@ -33,7 +33,7 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
 |---|---|---|
 | **ESLint v9+** | Lint and auto-fix | `npm run lint`, `npm run lint:fix` |
 | **Flat config** | Required by ESLint v9 | Every module ships an `eslint.config.js` |
-| **Editor integration** | Auto-fix on save | See [`docs/guide/ide-setup.md`](../../guide/ide-setup.md) |
+| **Editor integration** | Auto-fix on save | See [`docs/guide/ide-setup.md`](../guide/ide-setup.md) |
 
 ESLint catches `no-var`, `prefer-const`, `no-unused-vars`, `no-useless-assignment`, and the formatting rules below. CI runs `npm run lint` on every push - fix locally before pushing.
 

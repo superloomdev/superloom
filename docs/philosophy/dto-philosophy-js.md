@@ -129,6 +129,6 @@ The server extension **composes** on top of the base - it does not redefine the 
 ## Further Reading
 
 - [Why the Server Uses MVC](why-server-mvc.md) - how DTOs fit into the layered architecture
-- [Model Modules](../architecture/server/model-modules.md) - the file layout for `[entity].data.js`
-- [Validation Approach](../architecture/foundations/validation-approach.md) - how validation runs against DTO inputs
-- [Entity Creation Guide](../architecture/server/entity-creation-guide-js) - end-to-end example of building DTOs for a new entity
+- [Model Modules](../server/model-modules.md) - the file layout for `[entity].data.js`
+- [Validation Approach](../foundations/validation-approach.md) - how validation runs against DTO inputs
+- [Entity Creation Guide](../server/entity-creation-guide-js) - end-to-end example of building DTOs for a new entity

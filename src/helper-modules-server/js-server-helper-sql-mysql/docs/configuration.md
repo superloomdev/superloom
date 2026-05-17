@@ -212,4 +212,4 @@ The integration tier connects to a real MySQL-compatible database (any managed M
 
 Full setup guide: [MySQL Integration Setup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-mysql/_test/ops/01-integration-testing/mysql-integration-setup.md).
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/testing/module-testing.md).

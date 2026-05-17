@@ -39,7 +39,7 @@ Full documentation at **[superloom.dev](https://superloom.dev)**.
 |---|---|
 | [What is Superloom?](https://superloom.dev/docs/) | The 60-second overview, the four messages above in detail, and a tour of a real module file |
 | [Getting Started](https://superloom.dev/docs/guide/getting-started) | Three integration approaches (fork, local copy, direct), running the demo project, first endpoint |
-| [Architecture](https://superloom.dev/docs/architecture/foundations/architectural-philosophy) | Layered design, request flow, validation, error handling, code-formatting standards |
+| [Architecture](https://superloom.dev/docs/foundations/architectural-philosophy) | Layered design, request flow, validation, error handling, code-formatting standards |
 | [Developer Setup](docs/dev/README.md) | Environment, tokens, Docker, Git |
 
 ## Quick Start

@@ -270,5 +270,5 @@ The slash command is a **convenience layer** over the file conventions in this d
 ## Further Reading
 
 - [`.windsurf/workflows/plan.md`](../../.windsurf/workflows/plan.md) - the slash-command implementation
-- [Personal Workspace](../architecture/foundations/architectural-philosophy.md#personal-workspace-dev) - why `__dev__/` exists and what else lives there
-- [Migration Pitfalls](../architecture/testing/migration-pitfalls.md) - the journal pattern that this system extends to in-flight work
+- [Personal Workspace](../foundations/architectural-philosophy.md#personal-workspace-dev) - why `__dev__/` exists and what else lives there
+- [Migration Pitfalls](../testing/migration-pitfalls.md) - the journal pattern that this system extends to in-flight work

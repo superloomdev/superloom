@@ -2,7 +2,7 @@
 
 > **Language:** JavaScript
 
-How to test helper modules. This document covers the **strategy** (testing tiers, when to run what, badges, env vars). For developer machine setup see [`docs/dev/`](../../dev/). For how to actually write a unit test see [`unit-test-authoring-js.md`](unit-test-authoring-js.md).
+How to test helper modules. This document covers the **strategy** (testing tiers, when to run what, badges, env vars). For developer machine setup see [`docs/dev/`](../dev/). For how to actually write a unit test see [`unit-test-authoring-js.md`](unit-test-authoring-js.md).
 
 ## On This Page
 
@@ -82,7 +82,7 @@ cd _test
 npm install && npm test
 \`\`\`
 
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md) for the full testing architecture.
+See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/testing/module-testing.md) for the full testing architecture.
 ```
 
 **Service-dependent modules** (2 rows - emulated + integration):
@@ -114,7 +114,7 @@ cd _test && npm install && npm test
 
 Full guide: `_test/ops/01-integration-testing/[module]-integration-setup.md`
 
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md) for the full testing architecture.
+See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/testing/module-testing.md) for the full testing architecture.
 ```
 
 **Integration test badge values** (use whichever matches current reality):
@@ -237,7 +237,7 @@ test-nosql-aws-dynamodb:
 
 ## Integration Testing
 
-Integration testing uses real cloud services with isolated test data. This validates behavior with features not available in emulators (e.g., DynamoDB Streams, TTL, IAM policies). Full guide: `docs/architecture/testing/integration-testing.md`.
+Integration testing uses real cloud services with isolated test data. This validates behavior with features not available in emulators (e.g., DynamoDB Streams, TTL, IAM policies). Full guide: `docs/testing/integration-testing.md`.
 
 ### When to Run
 

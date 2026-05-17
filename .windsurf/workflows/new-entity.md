@@ -685,7 +685,7 @@ cd demo-project/src/server && npm run test:all
 
 ## See Also
 
-- [Entity Creation Guide](../../docs/architecture/server/entity-creation-guide-js.mdx) - the full architectural reference
+- [Entity Creation Guide](../../docs/server/entity-creation-guide-js.mdx) - the full architectural reference
 - [Creating Entities](../../docs/guide/creating-entities-js.md) - quick-start guide
-- [Server Service Modules](../../docs/architecture/server/server-service-modules.md) - the service layer rules
-- [Server Controller Modules](../../docs/architecture/server/server-controller-modules.md) - the controller layer rules
+- [Server Service Modules](../../docs/server/server-service-modules.md) - the service layer rules
+- [Server Controller Modules](../../docs/server/server-controller-modules.md) - the controller layer rules

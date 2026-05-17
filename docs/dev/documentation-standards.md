@@ -415,7 +415,7 @@ All project text uses **American English**: code comments, documentation, `packa
 | **-ization not -isation** | `optimization`, `organization` | `optimisation`, `organisation` |
 | **license** | `license` | `licence` |
 
-The full spelling and prose-quality table lives in [`code-formatting-js.md`](../architecture/foundations/code-formatting-js.md#spelling-and-prose-quality).
+The full spelling and prose-quality table lives in [`code-formatting-js.md`](../foundations/code-formatting-js.md#spelling-and-prose-quality).
 
 ---
 
@@ -451,6 +451,6 @@ Keep prose sentences to approximately 30 words or fewer. Split at conjunctions (
 
 ## Related Documentation
 
-- [Module Structure (JavaScript)](../architecture/modules/module-structure-js)
-- [Module Testing](../architecture/testing/module-testing.md)
-- [Unit Test Authoring (JavaScript)](../architecture/testing/unit-test-authoring-js.md)
+- [Module Structure (JavaScript)](../modules/module-structure-js)
+- [Module Testing](../testing/module-testing.md)
+- [Unit Test Authoring (JavaScript)](../testing/unit-test-authoring-js.md)

@@ -154,7 +154,7 @@ cd src/model-server && npm test   # Server model extension tests
 cd src/server && npm run test:all # Controller and service tests
 ```
 
-All JavaScript tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict` — no external test framework. See [`architecture/testing/testing-strategy.md`](../architecture/testing/testing-strategy.md) and [`architecture/testing/unit-test-authoring-js.md`](../architecture/testing/unit-test-authoring-js.md) for the conventions.
+All JavaScript tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict` — no external test framework. See [`testing/testing-strategy.md`](../testing/testing-strategy.md) and [`testing/unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md) for the conventions.
 
 ---
 
@@ -210,4 +210,4 @@ All personal secrets, environment files, and AI session notes live in `__dev__/`
 | Set up your dev machine end-to-end | [Developer Setup](../dev/README.md) |
 | Understand the server architecture pattern | [Why the Server Uses MVC](../philosophy/why-server-mvc.md) |
 | Understand the one-shape DTO rule | [DTO Philosophy (JavaScript)](../philosophy/dto-philosophy-js.md) |
-| Read the full entity walkthrough | [Entity Creation Guide](../architecture/server/entity-creation-guide-js) |
+| Read the full entity walkthrough | [Entity Creation Guide](../server/entity-creation-guide-js) |

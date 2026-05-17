@@ -17,7 +17,7 @@ When the user invokes `/review`, act as a senior software engineer performing a 
 6. **Resource management** - leaks, unclosed connections, missing cleanup
 7. **API contract violations** (return shape, status codes, error envelope)
 8. **Caching defects** - staleness, key collisions, incorrect invalidation, ineffective caching
-9. **Violations of existing code patterns** - factory pattern, error envelope, DTO shape, the rules in [`docs/architecture/`](../../docs/architecture/)
+9. **Violations of existing code patterns** - factory pattern, error envelope, DTO shape, the rules in [`docs/foundations/`](../../docs/foundations/), [`docs/modules/`](../../docs/modules/), [`docs/server/`](../../docs/server/), [`docs/testing/`](../../docs/testing/)
 
 ## Operating Rules
 

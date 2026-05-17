@@ -81,4 +81,4 @@ cd _test && npm install && npm test
 
 The test runner uses Node's built-in test framework (`node --test` plus `node:assert/strict`). Test runtime is sub-second.
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/testing/module-testing.md).

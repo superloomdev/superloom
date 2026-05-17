@@ -83,7 +83,7 @@ Each entity's data module typically exports:
 | `toSummary(...)` | Minimal version for list views |
 | `toInternal(...)` | Map external input to canonical internal shape |
 
-Keys not provided (`undefined`) are simply **not added** to the resulting object. See [DTO Philosophy (JavaScript)](../../philosophy/dto-philosophy-js.md) for the rationale.
+Keys not provided (`undefined`) are simply **not added** to the resulting object. See [DTO Philosophy (JavaScript)](../philosophy/dto-philosophy-js.md) for the rationale.
 
 ### `[entity].validation.js` Cross-Module Validation
 
@@ -231,7 +231,7 @@ Same as server model - the client-side loader merges base + client extension key
 
 ## Further Reading
 
-- [DTO Philosophy (JavaScript)](../../philosophy/dto-philosophy-js.md) - the one-shape rule for data transfer objects
+- [DTO Philosophy (JavaScript)](../philosophy/dto-philosophy-js.md) - the one-shape rule for data transfer objects
 - [Validation Approach](../foundations/validation-approach.md) - how `[entity].validation.js` produces user-facing errors
 - [Module Structure (JavaScript)](../modules/module-structure-js#model-package-index) - the index file template and the merge pattern in detail
 - [Server Loader](server-loader.md) - where the merge actually happens at runtime

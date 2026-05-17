@@ -35,7 +35,7 @@ npm install
 npm test
 ```
 
-All core modules and several server modules (crypto, cache, auth, etc.) work this way. See `docs/architecture/testing/module-testing.md` for the full list.
+All core modules and several server modules (crypto, cache, auth, etc.) work this way. See `docs/testing/module-testing.md` for the full list.
 
 ### 2. Test a service-dependent module
 
@@ -129,5 +129,5 @@ The `__dev__/` folder at the repository root is your personal workspace. It is l
 - `migration-changelog.md` - personal log of module migration changes
 - `secrets/` - real credentials, API keys, sandbox passwords (never copied anywhere committed)
 
-See [Architectural Philosophy](../architecture/foundations/architectural-philosophy.md#personal-workspace-dev) for the full convention.
+See [Architectural Philosophy](../foundations/architectural-philosophy.md#personal-workspace-dev) for the full convention.
 

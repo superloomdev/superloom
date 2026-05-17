@@ -223,4 +223,4 @@ npm view @your-org/js-helper-utils --registry=https://npm.pkg.github.com
 
 - [Module Publishing](module-publishing.md) - how versions are bumped and published
 - [Module Structure (JavaScript)](module-structure-js) - the factory pattern that `Lib` injection relies on
-- [npmrc Setup](../../dev/npmrc-setup.md) - the global npmrc configuration that resolves `@your-org/*` packages
+- [npmrc Setup](../dev/npmrc-setup.md) - the global npmrc configuration that resolves `@your-org/*` packages

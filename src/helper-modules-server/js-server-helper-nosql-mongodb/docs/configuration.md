@@ -162,4 +162,4 @@ cd _test && npm install && npm test
 
 The integration tier connects to a real MongoDB cluster (Atlas, self-hosted, or any MongoDB 6+ instance with a replica set). It is opt-in because it costs money and writes real data.
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/testing/module-testing.md).

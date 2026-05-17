@@ -9,7 +9,7 @@ export default defineConfig({
 
   srcExclude: [
     'docs/README.md',
-    'docs/architecture/modules/templates/*.md',
+    'docs/modules/templates/*.md',
   ],
 
   // Strict link-checking. Pre-existing dead links are whitelisted below as Phase 3 cleanup targets;
@@ -30,8 +30,7 @@ export default defineConfig({
     /__dev__\//,
     /\/AGENTS$/,
 
-    // Pre-existing wrong paths in ops/README.md (website-ops tree). Phase 3 cleanup.
-    /docs\/architecture\/operations-documentation$/,
+    // Pre-existing wrong path in ops/README.md (website-ops tree). Phase 3 cleanup target.
     /docs\/ops\/index$/,
 
     // Pre-existing references to files that have never existed.
@@ -92,58 +91,52 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Architecture',
+          text: 'Foundations',
+          collapsed: false,
+          items: [
+            { text: 'Architectural Philosophy',  link: '/docs/foundations/architectural-philosophy' },
+            { text: 'Code Formatting',           link: '/docs/foundations/code-formatting-js' },
+            { text: 'Error Handling',            link: '/docs/foundations/error-handling' },
+            { text: 'Validation Approach',       link: '/docs/foundations/validation-approach' },
+            { text: 'Operations Documentation',  link: '/docs/foundations/operations-documentation' },
+          ],
+        },
+        {
+          text: 'Modules',
           collapsed: true,
           items: [
-            {
-              text: 'Foundations',
-              collapsed: false,
-              items: [
-                { text: 'Architectural Philosophy',  link: '/docs/architecture/foundations/architectural-philosophy' },
-                { text: 'Code Formatting',           link: '/docs/architecture/foundations/code-formatting-js' },
-                { text: 'Error Handling',            link: '/docs/architecture/foundations/error-handling' },
-                { text: 'Validation Approach',       link: '/docs/architecture/foundations/validation-approach' },
-                { text: 'Operations Documentation',  link: '/docs/architecture/foundations/operations-documentation' },
-              ],
-            },
-            {
-              text: 'Server',
-              collapsed: true,
-              items: [
-                { text: 'Server Loader',         link: '/docs/architecture/server/server-loader' },
-                { text: 'Server Interfaces',     link: '/docs/architecture/server/server-interfaces' },
-                { text: 'Controllers',           link: '/docs/architecture/server/server-controller-modules' },
-                { text: 'Services',              link: '/docs/architecture/server/server-service-modules' },
-                { text: 'Server Common',         link: '/docs/architecture/server/server-common' },
-                { text: 'Model Modules',         link: '/docs/architecture/server/model-modules' },
-                { text: 'Entity Creation Guide', link: '/docs/architecture/server/entity-creation-guide-js' },
-              ],
-            },
-            {
-              text: 'Modules',
-              collapsed: true,
-              items: [
-                { text: 'Module Structure',         link: '/docs/architecture/modules/module-structure-js' },
-                { text: 'Module Categorization',    link: '/docs/architecture/modules/module-categorization' },
-                { text: 'README Structure',         link: '/docs/architecture/modules/module-readme-structure' },
-                { text: 'Module Publishing',        link: '/docs/architecture/modules/module-publishing' },
-                { text: 'Core Helpers',             link: '/docs/architecture/modules/core-helper-modules' },
-                { text: 'Server Helpers',           link: '/docs/architecture/modules/server-helper-modules' },
-                { text: 'Peer Dependencies',        link: '/docs/architecture/modules/peer-dependencies' },
-                { text: 'Complex Module Docs',      link: '/docs/architecture/modules/complex-module-docs-guide' },
-              ],
-            },
-            {
-              text: 'Testing',
-              collapsed: true,
-              items: [
-                { text: 'Testing Strategy',     link: '/docs/architecture/testing/testing-strategy' },
-                { text: 'Module Testing',       link: '/docs/architecture/testing/module-testing' },
-                { text: 'Unit Test Authoring',  link: '/docs/architecture/testing/unit-test-authoring-js' },
-                { text: 'Integration Testing',  link: '/docs/architecture/testing/integration-testing' },
-                { text: 'Migration Pitfalls',   link: '/docs/architecture/testing/migration-pitfalls' },
-              ],
-            },
+            { text: 'Module Structure',         link: '/docs/modules/module-structure-js' },
+            { text: 'Module Categorization',    link: '/docs/modules/module-categorization' },
+            { text: 'README Structure',         link: '/docs/modules/module-readme-structure' },
+            { text: 'Module Publishing',        link: '/docs/modules/module-publishing' },
+            { text: 'Core Helpers',             link: '/docs/modules/core-helper-modules' },
+            { text: 'Server Helpers',           link: '/docs/modules/server-helper-modules' },
+            { text: 'Peer Dependencies',        link: '/docs/modules/peer-dependencies' },
+            { text: 'Complex Module Docs',      link: '/docs/modules/complex-module-docs-guide' },
+          ],
+        },
+        {
+          text: 'Server',
+          collapsed: true,
+          items: [
+            { text: 'Server Loader',         link: '/docs/server/server-loader' },
+            { text: 'Server Interfaces',     link: '/docs/server/server-interfaces' },
+            { text: 'Controllers',           link: '/docs/server/server-controller-modules' },
+            { text: 'Services',              link: '/docs/server/server-service-modules' },
+            { text: 'Server Common',         link: '/docs/server/server-common' },
+            { text: 'Model Modules',         link: '/docs/server/model-modules' },
+            { text: 'Entity Creation Guide', link: '/docs/server/entity-creation-guide-js' },
+          ],
+        },
+        {
+          text: 'Testing',
+          collapsed: true,
+          items: [
+            { text: 'Testing Strategy',     link: '/docs/testing/testing-strategy' },
+            { text: 'Module Testing',       link: '/docs/testing/module-testing' },
+            { text: 'Unit Test Authoring',  link: '/docs/testing/unit-test-authoring-js' },
+            { text: 'Integration Testing',  link: '/docs/testing/integration-testing' },
+            { text: 'Migration Pitfalls',   link: '/docs/testing/migration-pitfalls' },
           ],
         },
         {
@@ -171,6 +164,7 @@ export default defineConfig({
             { text: 'Version Bump Checklist', link: '/docs/versioning/bump-checklist' },
             { text: 'Changelog Format',       link: '/docs/versioning/changelog-format' },
             { text: 'API Stability',          link: '/docs/versioning/api-stability-js' },
+            { text: 'README Versioning Section', link: '/docs/versioning/version-bump-section' },
           ],
         },
         {

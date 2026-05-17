@@ -12,7 +12,7 @@
 >
 > When discovering a new failure mode, document it in the correct pitfall file BEFORE fixing:
 > - `docs/dev/pitfalls.md`. Terminal/CI/testing failures
-> - `docs/architecture/testing/migration-pitfalls.md`. Module migration failures
+> - `docs/testing/migration-pitfalls.md`. Module migration failures
 
 ---
 
@@ -43,7 +43,7 @@ Assist developers working on **Superloom**, a modular application framework buil
 - Read `README.md` before modifying any module
 - **Read `ROBOTS.md` before using any module's functions.** Compact AI reference with signatures, types, patterns
 - Always run tests before returning: `npm test` from `_test/` directories
-- **Two-pass check after refactor** touching 3+ functions: Pass 1 (logic + lint), Pass 2 (re-read full file. Step comments, 3/2/1 spacing, banner widths, return objects multi-line, `};` combined with END banners, lint again). See `docs/architecture/testing/migration-pitfalls.md`
+- **Two-pass check after refactor** touching 3+ functions: Pass 1 (logic + lint), Pass 2 (re-read full file. Step comments, 3/2/1 spacing, banner widths, return objects multi-line, `};` combined with END banners, lint again). See `docs/testing/migration-pitfalls.md`
 - Use workflows in `.windsurf/workflows/` for new modules
 - Use `/learn` to capture new knowledge (enforces GOD.md Directive 12)
 - When docs change, run `/propagate-changes`
@@ -104,7 +104,7 @@ publish-foo:
 
 **Auto-run is for read-only or idempotent operations only.** Never set `SafeToAutoRun: true` for `rm -rf`, `git push --force`, `docker volume rm`, `npm publish`, or state mutation, even if user previously approved similar command.
 
-**VitePress / Vue parser crashes on bare angle-bracket placeholders in `docs/` markdown.** Any `<lowercase-or-PascalCase-name>` outside backticks is parsed as an HTML/Vue element open tag and hangs `vitepress build` with `Element is missing end tag` (the reported line number is often far below the real culprit). Rules: (1) never use `<...>` placeholders in prose. Use `[name]`, `{name}`, or plain capitalized phrases instead. (2) For verbatim copy-paste templates inside fenced blocks, use ` ```text ` instead of ` ```markdown ` to disable Vue's secondary scan. (3) When changes touch `docs/architecture/` or any other VitePress-rendered file, run `npm run build` from `website/` locally before pushing. The single-digit-second build catches the failure before CI does. See `docs/dev/pitfalls.md` entry 15.
+**VitePress / Vue parser crashes on bare angle-bracket placeholders in `docs/` markdown.** Any `<lowercase-or-PascalCase-name>` outside backticks is parsed as an HTML/Vue element open tag and hangs `vitepress build` with `Element is missing end tag` (the reported line number is often far below the real culprit). Rules: (1) never use `<...>` placeholders in prose. Use `[name]`, `{name}`, or plain capitalized phrases instead. (2) For verbatim copy-paste templates inside fenced blocks, use ` ```text ` instead of ` ```markdown ` to disable Vue's secondary scan. (3) When changes touch any VitePress-rendered file in `docs/`, run `npm run build` from `website/` locally before pushing. The single-digit-second build catches the failure before CI does. See `docs/dev/pitfalls.md` entry 15.
 
 ## Boundaries
 
@@ -184,12 +184,17 @@ superloom/
     src/server/interfaces/api/express/      # Express routes
     src/server/interfaces/api/lambda-aws/   # Per-entity AWS Lambda handlers
     _deploy/                      #   Per-entity Serverless Framework configs
-  docs/architecture/              # Architecture rules, coding standards
-  docs/intro.md                   # Documentation landing page
-  docs/guide/                     # Step-by-step guides (getting started, entities)
-  docs/philosophy/                # Design philosophy (why MVC, DTO approach)
-  docs/dev/                       # Developer setup docs (git, npm, docker, env)
-  docs/ops/                       # Generic infrastructure reference guides
+  docs/index.md                   # Documentation landing page
+  docs/philosophy/                # Why this way (MVC philosophy, DTO philosophy)
+  docs/guide/                     # Step-by-step guides (getting started, entities, IDE setup)
+  docs/foundations/               # Cross-cutting rules (architectural philosophy, code formatting, error handling, validation, ops-doc strategy)
+  docs/modules/                   # Module authoring (structure, README rubric, categorization, publishing, peer-deps)
+    templates/                    #   Copy-paste README templates per module class
+  docs/server/                    # Server architecture (loader, controllers, services, models, entity guide)
+  docs/testing/                   # Testing approach (strategy, module testing, unit-test authoring, integration, migration pitfalls)
+  docs/dev/                       # Developer setup docs (git, npm, docker, env, pitfalls)
+  docs/versioning/                # Release management (semver, dep mgmt, CI dep graph, bump checklist, changelog, API stability)
+  docs/ops/                       # Cloud infrastructure ops (one folder per service: dns, cdn, s3, ...)
   .windsurf/                      # AI workflows and automation
   __dev__/                           # Personal workspace (gitignored)
     secrets/                      #   Project secrets (never committed)
@@ -228,7 +233,7 @@ Server modules (may depend on foundation + core, use Node.js APIs):
 
 ## Coding Standards (Mandatory)
 
-These rules apply to **ALL** code written in this project. Source: `docs/architecture/foundations/code-formatting-js.md`.
+These rules apply to **ALL** code written in this project. Source: `docs/foundations/code-formatting-js.md`.
 
 ### DRY: Reuse Helper Modules (CRITICAL)
 
@@ -280,7 +285,7 @@ These rules apply to **every file the AI writes or edits** - `.js` comments/stri
 
 ### Uniform Factory Signatures
 
-When a `parts/` family uses a **uniform factory signature** `(Lib, CONFIG, ERRORS)` so the parent can call all parts identically, some parts will not consume every param. This is expected. Do not narrow the signature. Suppress unused params with `// eslint-disable-line no-unused-vars` on the signature line. Never use `void CONFIG;` or `void ERRORS;` as a workaround. Full spec: `docs/architecture/foundations/code-formatting-js.md` -> "Uniform Factory Signatures".
+When a `parts/` family uses a **uniform factory signature** `(Lib, CONFIG, ERRORS)` so the parent can call all parts identically, some parts will not consume every param. This is expected. Do not narrow the signature. Suppress unused params with `// eslint-disable-line no-unused-vars` on the signature line. Never use `void CONFIG;` or `void ERRORS;` as a workaround. Full spec: `docs/foundations/code-formatting-js.md` -> "Uniform Factory Signatures".
 
 ### Function Parameter Conventions
 
@@ -306,7 +311,7 @@ _Auth.scheduleBackgroundRefresh({ Lib, store, instance, record, ttl_seconds });
 _Auth.scheduleBackgroundRefresh(instance, record, ttl_seconds, tenant_id);
 ```
 
-Full spec: `docs/architecture/foundations/code-formatting-js.md` -> "Function Parameter Conventions".
+Full spec: `docs/foundations/code-formatting-js.md` -> "Function Parameter Conventions".
 
 ### Variable Declarations (let/const over var)
 
@@ -365,11 +370,11 @@ The framework recognises **three** error categories. Each has one correct dispos
 
 **This applies to every helper module** (dynamodb, mongodb, s3, sql-*, verify, http, etc.) and every entity service. When in doubt: programmer errors throw, everything else returns an envelope, and the service translates before the controller sees it.
 
-Full rule with rationale, anti-patterns, Approach B details, and worked examples: `docs/architecture/foundations/error-handling.mdx`.
+Full rule with rationale, anti-patterns, Approach B details, and worked examples: `docs/foundations/error-handling.mdx`.
 
 ### Section Header Hierarchy
 
-Three levels of section separators. Use from coarsest to finest. Full spec: `docs/architecture/foundations/code-formatting-js.md` -> "Section Header Hierarchy".
+Three levels of section separators. Use from coarsest to finest. Full spec: `docs/foundations/code-formatting-js.md` -> "Section Header Hierarchy".
 
 | Level | Marker | Purpose |
 |---|---|---|
@@ -399,7 +404,7 @@ const _Validators = {
 Validators.assertNonEmptyString = function (value, field, fn_name) { /* ... */ };
 ```
 
-Full spec: `docs/architecture/foundations/code-formatting-js.md` -> "Private Functions Enclosure".
+Full spec: `docs/foundations/code-formatting-js.md` -> "Private Functions Enclosure".
 
 ### Section Closing Banners
 
@@ -416,7 +421,7 @@ The closing `};` of every named section must be **combined on the same line** as
   ///////////////////////////Public Functions END////////////////////////////////
 ```
 
-Applies to every section closer: `Public Functions END`, `Private Functions END`, `createInterface END`, `Module-Loader END`, `Module Exports END`. Full spec: `docs/architecture/foundations/code-formatting-js.md` -> "Section Closing Banners".
+Applies to every section closer: `Public Functions END`, `Private Functions END`, `createInterface END`, `Module-Loader END`, `Module Exports END`. Full spec: `docs/foundations/code-formatting-js.md` -> "Section Closing Banners".
 
 ### Inline Section Comments
 
@@ -425,7 +430,7 @@ Applies to every section closer: `Public Functions END`, `Private Functions END`
 - The first logical block after `{` opens with a step comment; every subsequent block separated by a blank line also gets one
 - Comments describe intent, not syntax: `// Delete the row by primary key` not `// Call sql.write`
 - Use plain, direct language: `// Return a service error if the driver call failed` not `// Bubble up the error`
-- Worked example (correct vs wrong) in `docs/architecture/foundations/code-formatting-js.md` → "Inline Step Comments Inside Functions"
+- Worked example (correct vs wrong) in `docs/foundations/code-formatting-js.md` → "Inline Step Comments Inside Functions"
 
 ### Comment Authoring Style (human tone)
 
@@ -493,7 +498,7 @@ Applies to every section closer: `Public Functions END`, `Private Functions END`
 
 ### Module Documentation Layers (README / docs/ / ROBOTS.md)
 
-Every module documents itself across three files, each with one audience. Full rubric: `docs/architecture/modules/module-readme-structure.md`. Module-to-class enumeration: `docs/architecture/modules/module-categorization.md`.
+Every module documents itself across three files, each with one audience. Full rubric: `docs/modules/module-readme-structure.md`. Module-to-class enumeration: `docs/modules/module-categorization.md`.
 
 | File | Audience | Tone | Length |
 |---|---|---|---|
@@ -536,9 +541,9 @@ Every module documents itself across three files, each with one audience. Full r
 | E. Feature module with adapters | Business logic + pluggable storage | `data-model.md`, `configuration.md`, `storage-adapters.md` |
 | F. Storage adapter | Implements parent's store contract | None |
 
-**Class-specific templates** for each module class (tagline, value bullet 5 variants, `docs/api.md` and `docs/configuration.md` structure variants, pilot-to-copy reference) live in `docs/architecture/modules/module-readme-structure.md` under "Class-Specific Templates and Reusable Wording". **Cross-cutting patterns** (AWS-family Credentials+IAM section shared by DynamoDB / S3 / future SQS; Hot-Swap family chore. Adding a sibling requires updating every existing sibling's README; "Required (override)" pattern in config tables; response envelope illustration; lazy-init convention) live under "Cross-Cutting Patterns" in the same doc.
+**Class-specific templates** for each module class (tagline, value bullet 5 variants, `docs/api.md` and `docs/configuration.md` structure variants, pilot-to-copy reference) live in `docs/modules/module-readme-structure.md` under "Class-Specific Templates and Reusable Wording". **Cross-cutting patterns** (AWS-family Credentials+IAM section shared by DynamoDB / S3 / future SQS; Hot-Swap family chore. Adding a sibling requires updating every existing sibling's README; "Required (override)" pattern in config tables; response envelope illustration; lazy-init convention) live under "Cross-Cutting Patterns" in the same doc.
 
-**Universal value bullets 1–4** are copy-pasteable across Class C + Class D. Only bullet 5 is class-specific. See [Universal "Why Use This Module" Bullets](docs/architecture/modules/module-readme-structure.md#universal-why-use-this-module-bullets).
+**Universal value bullets 1–4** are copy-pasteable across Class C + Class D. Only bullet 5 is class-specific. See [Universal "Why Use This Module" Bullets](docs/modules/module-readme-structure.md#universal-why-use-this-module-bullets).
 
 **Status:** v2 rubric applied to 6 modules (`sql-postgres`, `sql-mysql`, `sql-sqlite`, `nosql-mongodb`, `nosql-aws-dynamodb`, `storage-aws-s3`) across 4 commit waves on 2026-05-16. 14 modules pending. Prioritized backlog (simple foundation → complex feature) in `__dev__/plans/0008-module-readme-pilot.md`.
 
@@ -587,7 +592,7 @@ The following items are mandatory for every helper module. These caught real iss
 
 ### Helper Module Structure (Two Patterns)
 
-All helper modules use **Pattern 2 (Multi-Instance / Factory)** - each loader call returns an independent interface with its own `Lib`, `CONFIG`, and (for stateful modules) `state`. Pattern 1 (Singleton Config) is legacy and no longer used in this framework; the Pattern 1 template below is preserved for historical reference only. Full rules: `docs/architecture/modules/module-structure-js.mdx` -> "Helper Module Configuration Patterns".
+All helper modules use **Pattern 2 (Multi-Instance / Factory)** - each loader call returns an independent interface with its own `Lib`, `CONFIG`, and (for stateful modules) `state`. Pattern 1 (Singleton Config) is legacy and no longer used in this framework; the Pattern 1 template below is preserved for historical reference only. Full rules: `docs/modules/module-structure-js.mdx` -> "Helper Module Configuration Patterns".
 
 **Quick decision:**
 
@@ -748,7 +753,7 @@ const createInterface = function (Lib, CONFIG, state) {
 
 ### Parts Pattern (Complex Helper Modules)
 
-When a helper module's `createInterface` body grows beyond ~500 lines and decomposes into bounded **stateless** responsibilities, split each responsibility into a co-located factory under `parts/`. Source: `docs/architecture/modules/module-structure-js.mdx` -> "Parts Pattern".
+When a helper module's `createInterface` body grows beyond ~500 lines and decomposes into bounded **stateless** responsibilities, split each responsibility into a co-located factory under `parts/`. Source: `docs/modules/module-structure-js.mdx` -> "Parts Pattern".
 
 - **Folder:** `[module]/parts/[name].js` - one factory per part
 - **Uniform signature:** every part is `module.exports = function loader (Lib, CONFIG, ERRORS) { return createInterface(Lib, CONFIG, ERRORS); }` - parts that don't consume `CONFIG` or `ERRORS` still accept and ignore them
@@ -760,7 +765,7 @@ When a helper module's `createInterface` body grows beyond ~500 lines and decomp
 
 ### Adapter Pattern (Multi-Backend Helper Modules)
 
-When a helper module needs interchangeable backends (databases, transports, key/value stores), each backend is a **standalone npm package**. The parent module accepts the adapter factory via configuration. Source: `docs/architecture/modules/module-structure-js.mdx` -> "Adapter Pattern".
+When a helper module needs interchangeable backends (databases, transports, key/value stores), each backend is a **standalone npm package**. The parent module accepts the adapter factory via configuration. Source: `docs/modules/module-structure-js.mdx` -> "Adapter Pattern".
 
 - **Naming:** `[parent]-store-[backend]` for database-backed adapters; `[parent]-adapter-[name]` for non-database adapters; the general concept is "adapter" - "store" is reserved for database backings
 - **Factory injection only:** parent accepts `CONFIG.STORE = require('@superloomdev/[parent]-store-[backend]')` - the factory function itself, not a string. No internal registry, no string dispatch
@@ -854,11 +859,11 @@ module.exports = function (shared_libs, config_override) {
 - Module README must have exactly 3 header badges: Test + License + Node.js (same for all modules)
 - Test badge uses GitHub's **native** endpoint (`ci-helper-modules.yml/badge.svg?branch=main`) - works with private repos. Label reads "Test" because the workflow is named `Test` in `ci-helper-modules.yml`
 - Service-dependent modules add a Testing status table with an `Integration Tests` row inside the `## Testing` section - not in the header. Integration badge is static (manual update) since integration tests are run manually, not in CI
-- Source: `docs/architecture/testing/module-testing.md`
+- Source: `docs/testing/module-testing.md`
 
 ### Three-Tier Testing for Adapter-Based Modules
 
-Modules using the [Adapter Pattern](#adapter-pattern-multi-backend-helper-modules) test in three tiers, each at a different layer. Source: `docs/architecture/testing/testing-strategy.md` -> "Testing Adapter-Based Modules".
+Modules using the [Adapter Pattern](#adapter-pattern-multi-backend-helper-modules) test in three tiers, each at a different layer. Source: `docs/testing/testing-strategy.md` -> "Testing Adapter-Based Modules".
 
 | Tier | Where | Loads | Docker | Question |
 |---|---|---|---|---|
@@ -889,7 +894,7 @@ These rules apply to every module that uses `_test/docker-compose.yml` and to ev
 
 ## Operations Documentation
 
-Infrastructure and deployment documentation follows a three-layer strategy. Source: `docs/architecture/foundations/operations-documentation.md`.
+Infrastructure and deployment documentation follows a three-layer strategy. Source: `docs/foundations/operations-documentation.md`.
 
 | Layer | Location | In Git? | Content |
 |---|---|---|---|
@@ -917,7 +922,7 @@ Infrastructure and deployment documentation follows a three-layer strategy. Sour
 1. Update source code
 2. Update the module's `README.md`
 3. Update tests
-4. If architecture changed → update `docs/architecture/`
+4. If architecture changed → update the relevant file in `docs/foundations/`, `docs/modules/`, `docs/server/`, or `docs/testing/`
 5. If any docs changed → run `/propagate-changes` to sync this file
 6. Run all tests to verify
 7. If migrating old module → log in `__dev__/migration-changelog.md`

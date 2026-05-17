@@ -158,6 +158,6 @@ You can also bundle multiple bumps in a single commit - CI will publish each one
 
 ## Further Reading
 
-- [CI/CD Publishing](../../dev/cicd-publishing.md) - operational details of the unified `ci-helper-modules.yml` workflow
+- [CI/CD Publishing](../dev/cicd-publishing.md) - operational details of the unified `ci-helper-modules.yml` workflow
 - [Peer Dependencies](peer-dependencies.md) - the dependency strategy that publishing relies on
 - [Module Testing](../testing/module-testing.md) - badges and the testing tiers gating publish

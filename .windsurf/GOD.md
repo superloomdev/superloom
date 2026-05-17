@@ -46,7 +46,7 @@ Before delivering any solution:
 Agent God (this file) - Meta-instructions
     ├── AGENTS.md - AI behavior rules + embedded project knowledge base
     ├── .windsurf/workflows/*.md - Specific task workflows
-    └── docs/architecture/*.md - Human-readable architecture (reference only)
+    └── docs/{foundations,modules,server,testing}/*.md - Human-readable architecture (reference only)
 ```
 
 - **Agent God** issues instructions to subordinate workflows
@@ -107,15 +107,15 @@ These rules govern **every** edit to `docs/`, `AGENTS.md`, `.windsurf/`, `README
 - Exception: a single short "common mistake" callout is acceptable when one specific anti-pattern recurs and breaks builds
 
 **B. Generic over specific**
-- Framework docs (`docs/architecture/`, `AGENTS.md`, workflows) must use placeholders: `[module]`, `[entity]`, `[name]`
+- Framework docs (`docs/foundations/`, `docs/modules/`, `docs/server/`, `docs/testing/`, `AGENTS.md`, workflows) must use placeholders: `[module]`, `[entity]`, `[name]`
 - No project names, no module names (no "MySQL", "Postgres", "DynamoDB" in framework rules)
 - Module-specific examples belong only in that module's `README.md` / `ROBOTS.md`
 
 **C. DRY - single source of truth**
 - Each rule lives in exactly one canonical file
-- Other files cross-reference via path: "see `docs/architecture/[file].md` section [name]"
+- Other files cross-reference via path: "see `docs/[bucket]/[file].md` section [name]"
 - Never duplicate full rule text across files
-- `AGENTS.md` is the only allowed compressed mirror of `docs/architecture/` content
+- `AGENTS.md` is the only allowed compressed mirror of the architecture docs (`docs/foundations/`, `docs/modules/`, `docs/server/`, `docs/testing/`)
 
 **D. Compact over verbose**
 - Tables and bullets, never prose paragraphs for rules
@@ -129,7 +129,7 @@ These rules govern **every** edit to `docs/`, `AGENTS.md`, `.windsurf/`, `README
 |---|---|
 | Universal AI behavior rule | `.windsurf/GOD.md` |
 | Project-wide AI rule (compressed) | `AGENTS.md` |
-| Architectural rule, full detail | `docs/architecture/[topic].md` |
+| Architectural rule, full detail | `docs/[bucket]/[topic].md` (foundations/modules/server/testing) |
 | Step-by-step task procedure | `.windsurf/workflows/[name].md` |
 | Module-specific function/usage | `[module]/README.md` + `[module]/ROBOTS.md` |
 | Operational runbook (env-specific) | `ops/[NN-category]/[vendor-service].md` |

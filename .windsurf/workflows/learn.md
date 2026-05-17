@@ -20,7 +20,7 @@ Map the user's input to one row in this table (from GOD.md Directive 12.E):
 |---|---|
 | Universal AI behavior rule | `.windsurf/GOD.md` |
 | Project-wide AI rule (compressed) | `AGENTS.md` |
-| Architectural rule, full detail | `docs/architecture/[topic].md` |
+| Architectural rule, full detail | `docs/[bucket]/[topic].md` (foundations/modules/server/testing) |
 | Step-by-step task procedure | `.windsurf/workflows/[name].md` |
 | Module-specific function/usage | `[module]/README.md` + `[module]/ROBOTS.md` |
 | Operational runbook (env-specific) | `ops/[NN-category]/[vendor-service].md` |
@@ -59,7 +59,7 @@ Apply the edit using `edit` or `multi_edit`. Include:
 
 Run the **decision sub-tree** for cross-file impact:
 
-- Edited a file in `docs/architecture/`? → Update the matching compressed section in `AGENTS.md` (run `/propagate-changes` if multiple sections affected)
+- Edited a file in `docs/foundations/`, `docs/modules/`, `docs/server/`, or `docs/testing/`? → Update the matching compressed section in `AGENTS.md` (run `/propagate-changes` if multiple sections affected)
 - Edited a rule that appears in code comments anywhere? → Search the codebase and align all comments to match the new wording verbatim
 - Edited a workflow? → Update the workflow count in `GOD.md` "Current Status" if a workflow was added/removed
 - Added a new authoring principle? → It belongs in `GOD.md` Directive 12, not in workflows

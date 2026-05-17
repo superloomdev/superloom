@@ -4,7 +4,7 @@
 
 Common issues encountered when **migrating an existing helper module** to current standards, with the fix for each. Use this as a checklist when bringing a legacy module up to spec, or when a CI run fails on a freshly-migrated module.
 
-For the full migration walkthrough see [`/migrate-module` workflow](../../../.windsurf/workflows/migrate-module.md). For new modules from scratch, see [`/new-helper`](../../../.windsurf/workflows/new-helper.md).
+For the full migration walkthrough see [`/migrate-module` workflow](../../.windsurf/workflows/migrate-module.md). For new modules from scratch, see [`/new-helper`](../../.windsurf/workflows/new-helper.md).
 
 ## On This Page
 
@@ -288,4 +288,4 @@ Before completing any migration:
 - [Module Structure (JavaScript)](../modules/module-structure-js) - the factory pattern every helper module follows
 - [Module Testing](module-testing.md) - testing tiers, badges, and CI/CD setup
 - [Code Formatting](../foundations/code-formatting-js.md) - naming, comments, and the conventions enforced by ESLint
-- [`/migrate-module` workflow](../../../.windsurf/workflows/migrate-module.md) - the operational checklist used during migration
+- [`/migrate-module` workflow](../../.windsurf/workflows/migrate-module.md) - the operational checklist used during migration

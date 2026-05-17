@@ -90,7 +90,7 @@ Module files use a strict vertical-spacing hierarchy so a reviewer can tell from
 
 Look back at the two code blocks above — the spacing is not accidental. It is a structural reading aid.
 
-The full rules (naming, comments, banner widths, section header hierarchy) live in [Code Formatting](architecture/foundations/code-formatting-js).
+The full rules (naming, comments, banner widths, section header hierarchy) live in [Code Formatting](foundations/code-formatting-js).
 
 ### AI configuration sits next to the code
 
@@ -129,7 +129,7 @@ Interface (transport adapter)
 - **Services** hold all business logic
 - **Models** are shared between server and (future) client
 
-For the full picture see [Architectural Philosophy](architecture/foundations/architectural-philosophy).
+For the full picture see [Architectural Philosophy](foundations/architectural-philosophy).
 
 ---
 
@@ -184,6 +184,6 @@ Every module is published independently to GitHub Packages under `@superloomdev/
 | Configure your IDE | [IDE Setup](guide/ide-setup) |
 | Understand the server architecture pattern | [Why the Server Uses MVC](philosophy/why-server-mvc) |
 | Understand the one-shape rule | [DTO Philosophy](philosophy/dto-philosophy-js) |
-| Read every technical rule | [Architectural Philosophy](architecture/foundations/architectural-philosophy) |
+| Read every technical rule | [Architectural Philosophy](foundations/architectural-philosophy) |
 | Set up your dev machine | [Developer Setup](dev/README) |
 | Provision infrastructure | [Operations](ops/README) |
