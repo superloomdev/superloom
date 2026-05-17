@@ -186,4 +186,4 @@ Leave `SQLITE_FILE` unset (or set to `:memory:`) for the default in-memory flow.
 
 Full setup guide: [SQLite Local Setup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-sqlite/_test/ops/00-local-testing/sqlite-local-setup.md).
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).

@@ -14,11 +14,11 @@ For contributors: edit files in this directory directly. Changes are picked up b
 |---|---|---|
 | **First-time visitor** | [superloom.dev/docs/intro](https://superloom.dev/docs/intro) | [`philosophy/why-server-mvc.md`](philosophy/why-server-mvc.md) |
 | **New contributor** | [`guide/getting-started.md`](guide/getting-started.md) | [`dev/README.md`](dev/README.md) |
-| **Adding a domain entity** | [`guide/creating-entities-js.md`](guide/creating-entities-js.md) | [`architecture/entity-creation-guide-js.mdx`](architecture/entity-creation-guide-js.mdx) |
-| **Architect evaluating the framework** | [`philosophy/`](philosophy/) | [`architecture/architectural-philosophy.md`](architecture/architectural-philosophy.md) |
+| **Adding a domain entity** | [`guide/creating-entities-js.md`](guide/creating-entities-js.md) | [`architecture/server/entity-creation-guide-js.mdx`](architecture/server/entity-creation-guide-js) |
+| **Architect evaluating the framework** | [`philosophy/`](philosophy/) | [`architecture/foundations/architectural-philosophy.md`](architecture/foundations/architectural-philosophy.md) |
 | **AI agent (Cascade, Cursor, Copilot)** | [`../AGENTS.md`](../AGENTS.md) | Module-level `ROBOTS.md` files |
-| **DevOps / infrastructure** | [`ops/README.md`](ops/README.md) | [`architecture/operations-documentation.md`](architecture/operations-documentation.md) |
-| **CI/CD or publishing** | [`dev/cicd-publishing.md`](dev/cicd-publishing.md) | [`architecture/module-publishing.md`](architecture/module-publishing.md) |
+| **DevOps / infrastructure** | [`ops/README.md`](ops/README.md) | [`architecture/foundations/operations-documentation.md`](architecture/foundations/operations-documentation.md) |
+| **CI/CD or publishing** | [`dev/cicd-publishing.md`](dev/cicd-publishing.md) | [`architecture/modules/module-publishing.md`](architecture/modules/module-publishing.md) |
 
 ## Section Map
 
@@ -126,7 +126,7 @@ The compressed, AI-facing mirror of these documents lives in [`AGENTS.md`](../AG
 Every `docs/<section>/` folder that accumulates enough "real failures we fixed" gets a single `pitfalls.md` file alongside the philosophy docs:
 
 - [`dev/pitfalls.md`](dev/pitfalls.md) — AI terminal, CI/CD publishing, local module testing.
-- [`architecture/migration-pitfalls.md`](architecture/migration-pitfalls.md) — module-migration failures (kept under its current filename).
+- [`architecture/testing/migration-pitfalls.md`](architecture/testing/migration-pitfalls.md) — module-migration failures (kept under its current filename).
 
 Rules:
 

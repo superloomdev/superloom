@@ -1,6 +1,6 @@
 # Server Controller Modules
 
-`server-controller` modules are the **thin adapters** between [`server-interfaces`](server-interfaces.mdx) and [`server-service`](server-service-modules.md). Their job is to translate a standardized internal request into validated DTOs, delegate the work to the service layer, and translate the service's structured result back into a standardized response. Controllers contain **no business logic**.
+`server-controller` modules are the **thin adapters** between [`server-interfaces`](server-interfaces) and [`server-service`](server-service-modules.md). Their job is to translate a standardized internal request into validated DTOs, delegate the work to the service layer, and translate the service's structured result back into a standardized response. Controllers contain **no business logic**.
 
 ## On This Page
 
@@ -109,7 +109,7 @@ Interfaces (API / Hook / Job)
   <- Standard response envelope
 ```
 
-Both the request and response shapes are documented in [`server-interfaces.mdx`](server-interfaces.mdx).
+Both the request and response shapes are documented in [`server-interfaces.mdx`](server-interfaces).
 
 ---
 
@@ -139,7 +139,7 @@ Both the request and response shapes are documented in [`server-interfaces.mdx`]
 ## Further Reading
 
 - [Server Service Modules](server-service-modules.md) - where business logic lives
-- [Server Interfaces](server-interfaces.mdx) - the standardized request and response formats
+- [Server Interfaces](server-interfaces) - the standardized request and response formats
 - [Model Modules](model-modules.md) - DTO builders and validation
-- [Validation Approach](validation-approach.md) - how validation runs inside the controller
-- [Error Handling](error-handling.mdx) - how the controller forwards domain errors via `Lib.Functions.errorResponse`
+- [Validation Approach](../foundations/validation-approach.md) - how validation runs inside the controller
+- [Error Handling](../foundations/error-handling) - how the controller forwards domain errors via `Lib.Functions.errorResponse`

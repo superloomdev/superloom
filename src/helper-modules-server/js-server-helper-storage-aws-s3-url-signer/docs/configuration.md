@@ -240,4 +240,4 @@ The integration tier connects to a real AWS S3 bucket using credentials from `__
 
 Full setup guide: [AWS S3 Integration Setup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer/_test/ops/01-integration-testing/aws-s3-integration-setup.md).
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).

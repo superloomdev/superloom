@@ -4,7 +4,7 @@
 >
 > **Shape.** Every entry is **Symptom → Cause → Lesson/Fix**. When a new failure mode is discovered, add the entry here first (per the Golden Rule in `AGENTS.md`), then propagate a compact rule into `AGENTS.md` via `/propagate-changes`.
 >
-> **Scope.** This file covers the `docs/dev/` domain: AI tool-bridge, CI/CD publishing, local module testing. Architecture-level pitfalls (module migration, refactors) live in [`docs/architecture/migration-pitfalls.md`](../architecture/migration-pitfalls.md).
+> **Scope.** This file covers the `docs/dev/` domain: AI tool-bridge, CI/CD publishing, local module testing. Architecture-level pitfalls (module migration, refactors) live in [`docs/architecture/testing/migration-pitfalls.md`](../architecture/testing/migration-pitfalls.md).
 
 ## On This Page
 
@@ -722,6 +722,6 @@ Doc drift is the slowest bug to find. **No exceptions** — every new lesson goe
 
 Cross-reference rules:
 
-- Pitfalls that belong to the `docs/architecture/` domain (module migration, refactors) go in [`../architecture/migration-pitfalls.md`](../architecture/migration-pitfalls.md), not here.
+- Pitfalls that belong to the `docs/architecture/` domain (module migration, refactors) go in [`../architecture/testing/migration-pitfalls.md`](../architecture/testing/migration-pitfalls.md), not here.
 - The philosophy docs [`cicd-publishing.md`](cicd-publishing.md) and [`testing-local-modules.md`](testing-local-modules.md) keep only the **positive** rules (what to do). Symptoms and root causes always live here.
 - Anchors in this file are stable — `AGENTS.md` and other cross-references rely on them. Never rename an H2 or H3 after it is published.

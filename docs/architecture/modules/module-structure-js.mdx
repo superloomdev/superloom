@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Module Structure
 
-> **Language:** [JavaScript](module-structure-js.mdx)
+> **Language:** [JavaScript](module-structure-js)
 
 A reference for how every module in Superloom is shaped: the standard application-module skeleton, the helper-module factory pattern, the model package index, and the server-extension merge mechanics. Use this when creating a new module or migrating an existing one.
 
@@ -329,7 +329,7 @@ The loader body mirrors the signature: it builds only the parameters it will pas
 | **Config defaults inlined in the loader** | Use `require('./[module].config')` as one of the operands of `Object.assign` - no top-level `const CONFIG_DEFAULTS` |
 | **Three-job loader body** | Loader does only three things: build `Lib`, build merged `CONFIG`, build mutable `state`. Then call `createInterface(Lib, CONFIG, state)` and return the result |
 | **Public first, private second** | `createInterface` hosts both objects; public is declared before private |
-| **Level 2 subsections when warranted** | Use `// ~~~~~~~ [Name] ~~~~~~~` + one-line purpose comment when public/private has 5+ functions or 2+ responsibility groups - see [`code-formatting-js.md`](code-formatting-js.md) |
+| **Level 2 subsections when warranted** | Use `// ~~~~~~~ [Name] ~~~~~~~` + one-line purpose comment when public/private has 5+ functions or 2+ responsibility groups - see [`code-formatting-js.md`](../foundations/code-formatting-js.md) |
 | **Top-down dependency order** | Order functions so the file reads top-to-bottom as a dependency chain. Put the most common caller-facing helper first; declare each function after its dependencies |
 | **Escape-hatch primitives last** | Low-level primitives (manual checkout, raw connection access) go in the **last** public subsection, labelled with `(Escape Hatch)` and a copy-paste usage example |
 | **Prescriptive private helper names** | `ensureAdapter` loads the vendor library, `initIfNot` builds the per-instance resource, `destroyResource` tears it down. Do not invent new names per module |
@@ -551,7 +551,7 @@ const _[Name] = {
 
 ### Section Header Rules for Singletons
 
-The same 3/2/1 spacing and banner rules from [`code-formatting-js.md`](code-formatting-js.md) apply in full. Key differences from the factory shape:
+The same 3/2/1 spacing and banner rules from [`code-formatting-js.md`](../foundations/code-formatting-js.md) apply in full. Key differences from the factory shape:
 
 | Element | Factory shape | Singleton shape |
 |---|---|---|
@@ -653,7 +653,7 @@ The adapter extracts its slice of `CONFIG` internally (`CONFIG.STORE_CONFIG.tabl
 
 The parent module's error catalog is the **single source of truth** for the public envelope shape. Adapters must use the same catalog objects in their failure returns so envelopes are identical regardless of which backend is active. The catalog is forwarded as `ERRORS`; adapters never define their own envelope shapes.
 
-This is the operational consequence of the wrapper-purity rule - see [`error-handling.mdx`](error-handling.mdx#wrapper-purity-the-catalog-owns-the-envelope).
+This is the operational consequence of the wrapper-purity rule - see [`error-handling.mdx`](../foundations/error-handling#wrapper-purity-the-catalog-owns-the-envelope).
 
 ### Adapter Contract: Documented Method Set
 
@@ -662,7 +662,7 @@ Each parent module that uses the Adapter pattern publishes its **adapter contrac
 1. **Top-of-file comment** in the adapter source (e.g. `store.js`) listing every method, its signature, and its return shape.
 2. **Store Contract table** in the adapter's `README.md`, repeated verbatim across all adapters for the same parent module.
 
-When the parent module evolves the contract (adds a method, changes a return shape), every adapter updates synchronously - this is enforced via the shared contract test suite (see [`testing-strategy.md`](testing-strategy.md)).
+When the parent module evolves the contract (adds a method, changes a return shape), every adapter updates synchronously - this is enforced via the shared contract test suite (see [`testing-strategy.md`](../testing/testing-strategy.md)).
 
 ### Where Store Instantiation Lives
 
@@ -877,7 +877,7 @@ Lib.User.controller = require('../controller/user.controller')(Lib, UserModel._c
 | **Public Functions** | `Public Functions START` to `Public Functions END` with const declaration |
 | **Function spacing** | 2 empty lines between functions |
 
-Vertical spacing rules (the 3/2/1 rule) are detailed in [`code-formatting-js.md`](code-formatting-js.md).
+Vertical spacing rules (the 3/2/1 rule) are detailed in [`code-formatting-js.md`](../foundations/code-formatting-js.md).
 
 ---
 
@@ -954,7 +954,7 @@ module.exports = Object.freeze({
 });
 ```
 
-See [error-handling.mdx](error-handling.mdx) for full error handling patterns.
+See [error-handling.mdx](../foundations/error-handling) for full error handling patterns.
 
 ---
 
@@ -998,16 +998,16 @@ External libraries (always wrapped)
 
 | Topic | Document |
 |---|---|
-| Coding standards (formatting, naming, JSDoc) | [`code-formatting-js.md`](code-formatting-js.md) |
-| Architectural philosophy | [`architectural-philosophy.md`](architectural-philosophy.md) |
-| Server bootstrap and DI | [`server-loader.md`](server-loader.md) |
-| Data philosophy | [`model-modules.md`](model-modules.md) |
-| Validation approach | [`validation-approach.md`](validation-approach.md) |
-| Error handling rules | [`error-handling.mdx`](error-handling.mdx) |
-| Module testing | [`module-testing.md`](module-testing.md) |
+| Coding standards (formatting, naming, JSDoc) | [`code-formatting-js.md`](../foundations/code-formatting-js.md) |
+| Architectural philosophy | [`architectural-philosophy.md`](../foundations/architectural-philosophy.md) |
+| Server bootstrap and DI | [`server-loader.md`](../server/server-loader.md) |
+| Data philosophy | [`model-modules.md`](../server/model-modules.md) |
+| Validation approach | [`validation-approach.md`](../foundations/validation-approach.md) |
+| Error handling rules | [`error-handling.mdx`](../foundations/error-handling) |
+| Module testing | [`module-testing.md`](../testing/module-testing.md) |
 | Module publishing | [`module-publishing.md`](module-publishing.md) |
 | Peer dependency strategy | [`peer-dependencies.md`](peer-dependencies.md) |
-| Creating a new project | [Getting Started](../guide/getting-started.md) |
+| Creating a new project | [Getting Started](../../guide/getting-started.md) |
 
 ---
 

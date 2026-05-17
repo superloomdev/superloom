@@ -133,7 +133,7 @@ describe('Config', function () {
 
 ## Testing Adapter-Based Modules (Three-Tier Pattern)
 
-Modules that use the [Adapter Pattern](module-structure-js.mdx#adapter-pattern-multi-backend-helper-modules) - a parent module plus N standalone backend packages - test in three tiers. Each tier runs at a different layer and answers a different question.
+Modules that use the [Adapter Pattern](../modules/module-structure-js#adapter-pattern-multi-backend-helper-modules) - a parent module plus N standalone backend packages - test in three tiers. Each tier runs at a different layer and answers a different question.
 
 ### The Three Tiers
 
@@ -295,4 +295,4 @@ The AI-facing companion is `ROBOTS.md` - a compact, machine-readable function li
 - [Unit Test Authoring (JavaScript)](unit-test-authoring-js.md) - how to write a single unit test
 - [Module Testing](module-testing.md) - testing tiers, badges, and CI/CD
 - [Integration Testing](integration-testing.md) - testing against real cloud services
-- [Module Structure (JavaScript)](module-structure-js.mdx) - the factory pattern that test loaders mirror
+- [Module Structure (JavaScript)](../modules/module-structure-js) - the factory pattern that test loaders mirror

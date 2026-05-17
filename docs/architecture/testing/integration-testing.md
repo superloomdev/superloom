@@ -149,5 +149,5 @@ This includes:
 
 - [Module Testing](module-testing.md) - the emulated tier and CI/CD setup
 - [Testing Strategy](testing-strategy.md) - directory layout and the test loader pattern
-- [Operations Documentation](operations-documentation.md) - the three-layer ops doc strategy
-- [Architectural Philosophy](architectural-philosophy.md#environment-strategy) - dev vs integration environments
+- [Operations Documentation](../foundations/operations-documentation.md) - the three-layer ops doc strategy
+- [Architectural Philosophy](../foundations/architectural-philosophy.md#environment-strategy) - dev vs integration environments

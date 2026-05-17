@@ -279,6 +279,6 @@ The new owner can then follow the runbook from `00-domain/` to `16-scheduled-tas
 
 ## Further Reading
 
-- [Infrastructure Reference](../ops/README.md) - the framework-level guides themselves
+- [Infrastructure Reference](../../ops/README.md) - the framework-level guides themselves
 - [Architectural Philosophy](architectural-philosophy.md) - the broader directory layout
-- [Module Testing](module-testing.md) - how `_test/ops/` slots into the testing strategy
+- [Module Testing](../testing/module-testing.md) - how `_test/ops/` slots into the testing strategy

@@ -26,14 +26,19 @@ features:
     details: Every piece is independent with its own tests, docs, and version. Work on one module without needing to understand the whole system.
 
   - icon:
+      src: /icons/shield-check.svg
+    title: Reviewable by Humans
+    details: Section banners, short functions, scoped comments. A reviewer can read any module top-to-bottom and spot what an AI got wrong.
+
+  - icon:
       src: /icons/git-merge.svg
-    title: One Shape, Every Time
-    details: One way to structure data. One way to inject dependencies. One testing strategy. When every module follows the same rules, there is nothing to debate and nothing to misinterpret.
+    title: No Architectural Drift. One Shape, Every Time.
+    details: One way to structure data, one way to inject dependencies, one testing strategy. Every contributor stays on the same rails, human or AI, so there is nothing to debate and nothing to misinterpret.
 
   - icon:
       src: /icons/globe.svg
     title: Deploy Anywhere
-    details: The same logic runs on Docker and serverless without duplication. Only the transport adapter changes. Your business code stays untouched.
+    details: The same business logic runs on Docker and AWS Lambda without duplication. Only the transport adapter at the edge changes. Your code stays untouched.
 
   - icon:
       src: /icons/brain.svg
@@ -44,11 +49,6 @@ features:
       src: /icons/scroll.svg
     title: Philosophy, Not Just Code
     details: Every architectural decision is documented with the reasoning behind it. Written by engineers with almost two decades of real-world production experience.
-
-  - icon:
-      src: /icons/shield-check.svg
-    title: Production-Tested Modules
-    details: Databases, auth, storage, queues, crypto and more, all returning the same response shape and all ready to drop into your project.
 ---
 
 <div class="vp-doc home-origin">

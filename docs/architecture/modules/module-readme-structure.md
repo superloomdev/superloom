@@ -85,7 +85,7 @@ This is the heart of the README. The bullets articulate the value of the wrapper
 | **Observability** | Frame around capabilities (timing, slow-query review, toggle for prod vs dev). Do NOT name the specific functions or config keys. Those go in `docs/`. |
 | **Deployment flexibility** | "Works on both serverless and persistent infrastructure". Use industry-neutral category names. Vendor names (Lambda, EC2, Kubernetes) only as illustrative examples in parentheses, never as headline categories. |
 
-Pick the five-to-seven themes that apply to the module's class. The principle behind these bullets lives in [`architectural-philosophy.md`](architectural-philosophy.md#coding-practices) - "All external libraries wrapped".
+Pick the five-to-seven themes that apply to the module's class. The principle behind these bullets lives in [`architectural-philosophy.md`](../foundations/architectural-philosophy.md#coding-practices) - "All external libraries wrapped".
 
 ### Section 5. Hot-Swappable with Other Backends *(class-conditional)*
 
@@ -112,7 +112,7 @@ Do NOT link to `ROBOTS.md` from the README. `ROBOTS.md` is the AI surface; human
 
 Frame the integration as **package peer-dependency through the loader pattern**, not as a `npm install <pkg>` command. Recommend the published package; warn against vendoring or local file dependencies. Link to:
 
-- [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md) - the loader pattern doc on GitHub
+- [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server/server-loader.md) - the loader pattern doc on GitHub
 - [npmrc setup](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md) - one-time GitHub Packages registry setup
 
 ### Section 10. Testing Status
@@ -569,7 +569,7 @@ If any answer is "no" or you copy-pasted a shell command, sections 8 / 9 need wo
 
 ## Writing Style and Prose Quality
 
-The full prose-style guide lives in [`documentation-standards.md`](../dev/documentation-standards.md). The spelling and prose-quality table lives in [`code-formatting-js.md`](code-formatting-js.md#spelling-and-prose-quality). Every module `README.md`, every `docs/*.md` file, and every `ROBOTS.md` follows those rules. The list below is a fast reference for the rules most often violated when authoring new module docs. It is not a replacement for the writing guide.
+The full prose-style guide lives in [`documentation-standards.md`](../../dev/documentation-standards.md). The spelling and prose-quality table lives in [`code-formatting-js.md`](../foundations/code-formatting-js.md#spelling-and-prose-quality). Every module `README.md`, every `docs/*.md` file, and every `ROBOTS.md` follows those rules. The list below is a fast reference for the rules most often violated when authoring new module docs. It is not a replacement for the writing guide.
 
 ### No Em Dashes Anywhere
 
@@ -596,11 +596,11 @@ Aim for 30 words or fewer per sentence. If a sentence grows past 30 words, split
 
 ### AI-Sounding Phrases
 
-The full ban-list lives in [`documentation-standards.md`](../dev/documentation-standards.md#human-writing-style). The most-violated entries while authoring module docs are: `facilitate`, `leverage`, `utilize`, `comprehensive`, `robust`, `streamline`, `it is worth noting`, `this ensures that`, `in order to`. Every one of these has a shorter plain replacement.
+The full ban-list lives in [`documentation-standards.md`](../../dev/documentation-standards.md#human-writing-style). The most-violated entries while authoring module docs are: `facilitate`, `leverage`, `utilize`, `comprehensive`, `robust`, `streamline`, `it is worth noting`, `this ensures that`, `in order to`. Every one of these has a shorter plain replacement.
 
 ### American English
 
-All project text uses American English (`-ize` not `-ise`, `-or` not `-our`, `license` not `licence`). The full table lives in [`documentation-standards.md`](../dev/documentation-standards.md#language-and-spelling).
+All project text uses American English (`-ize` not `-ise`, `-or` not `-our`, `license` not `licence`). The full table lives in [`documentation-standards.md`](../../dev/documentation-standards.md#language-and-spelling).
 
 ---
 
@@ -620,7 +620,7 @@ These were the failure modes surfaced when the rubric was first applied to the P
 - **Relative links in the README.** npm strips relative paths. Always use full `https://github.com/superloomdev/superloom/blob/main/...` URLs in `README.md`.
 - **CI / test status badges at the top of the README.** They distract from identity. Identity badges (license, runtime) at top; test status badges in the testing-status block at the bottom.
 - **Cross-family "see the other family" closing paragraph in Hot-Swappable.** Tried in the first v2 wave and dropped after review. It adds noise without serving any persona. The Extended Documentation section and the Superloom site already provide cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
-- **Em dashes (`—`) anywhere in the module docs.** Tell-tale sign of AI-generated prose. Use the patterns in [Writing Style and Prose Quality](#writing-style-and-prose-quality). Source of truth: [`documentation-standards.md`](../dev/documentation-standards.md).
+- **Em dashes (`—`) anywhere in the module docs.** Tell-tale sign of AI-generated prose. Use the patterns in [Writing Style and Prose Quality](#writing-style-and-prose-quality). Source of truth: [`documentation-standards.md`](../../dev/documentation-standards.md).
 - **Table cells ending with a period.** Cells are not sentences. Ending them with a period reads as machine-generated.
 
 ---
@@ -664,9 +664,9 @@ When writing or revising a module README:
 
 ## Further Reading
 
-- [`documentation-standards.md`](../dev/documentation-standards.md) is the canonical writing guide. It defines the human-first prose style, the em-dash ban, the AI-sounding-phrase ban-list, the table-cell-period rule, and the spelling and sentence-length rules that every module README and `docs/*.md` file follows.
-- [`code-formatting-js.md`](code-formatting-js.md#spelling-and-prose-quality) holds the spelling and prose-quality table that applies to every file the project ships, including `.js` comments, `.md` docs, `package.json`, `ROBOTS.md`, and commit messages.
+- [`documentation-standards.md`](../../dev/documentation-standards.md) is the canonical writing guide. It defines the human-first prose style, the em-dash ban, the AI-sounding-phrase ban-list, the table-cell-period rule, and the spelling and sentence-length rules that every module README and `docs/*.md` file follows.
+- [`code-formatting-js.md`](../foundations/code-formatting-js.md#spelling-and-prose-quality) holds the spelling and prose-quality table that applies to every file the project ships, including `.js` comments, `.md` docs, `package.json`, `ROBOTS.md`, and commit messages.
 - [`module-categorization.md`](module-categorization.md) lists the six module classes and which class each existing module belongs to.
 - [`complex-module-docs-guide.md`](complex-module-docs-guide.md) is the deep guide for `docs/` folders in Class E feature modules.
 - [`templates/`](templates/) - historical README skeletons from the v1 era (`README-foundation-module.md`, `README-master-template.md`, `README-feature-module.md`, `README-storage-adapter.md`). **Currently out of date.** These do NOT match the v2 patterns documented above. Until they are refreshed (or deleted), the authoritative templates are the migrated pilots in `src/helper-modules-server/`: `js-server-helper-sql-mysql/` for Class C SQL (server-required), `js-server-helper-sql-sqlite/` for Class C SQL (embedded), `js-server-helper-nosql-mongodb/` for Class C NoSQL, `js-server-helper-nosql-aws-dynamodb/` for Class C/C cloud-managed NoSQL, `js-server-helper-storage-aws-s3/` for Class D cloud storage. See [Class-Specific Templates and Reusable Wording](#class-specific-templates-and-reusable-wording) for which pilot to copy per class.
-- [`architectural-philosophy.md`](architectural-philosophy.md#coding-practices) - the "All external libraries wrapped" principle that the value bullets articulate
+- [`architectural-philosophy.md`](../foundations/architectural-philosophy.md#coding-practices) - the "All external libraries wrapped" principle that the value bullets articulate

@@ -200,5 +200,5 @@ The example above demonstrates the rules every loader follows:
 - [Server Common](server-common.md) - the directory `loader.js` lives in and what else lives there
 - [Server Service Modules](server-service-modules.md) - what services do once the loader builds them
 - [Server Controller Modules](server-controller-modules.md) - what controllers do once the loader builds them
-- [Module Structure (JavaScript)](module-structure-js.mdx) - the model package index and the server-extension merge mechanics
+- [Module Structure (JavaScript)](../modules/module-structure-js) - the model package index and the server-extension merge mechanics
 - [Model Modules](model-modules.md) - the base + server + client model layers

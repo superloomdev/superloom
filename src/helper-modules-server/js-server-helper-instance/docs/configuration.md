@@ -2,7 +2,7 @@
 
 Loader pattern, dependency notes, and testing tier. For the function reference see [API Reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-instance/docs/api.md).
 
-This page is intentionally short. Instance has no current configuration keys and reads no environment variables. The page exists for shape consistency: every Superloom module ships a `docs/configuration.md` so contributors and AI tooling can find the loader pattern and runtime details in the same place across the framework. The canonical reasoning is in [`module-categorization.md` → Universal Documentation Footprint](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-categorization.md#universal-documentation-footprint).
+This page is intentionally short. Instance has no current configuration keys and reads no environment variables. The page exists for shape consistency: every Superloom module ships a `docs/configuration.md` so contributors and AI tooling can find the loader pattern and runtime details in the same place across the framework. The canonical reasoning is in [`module-categorization.md` → Universal Documentation Footprint](https://github.com/superloomdev/superloom/blob/main/docs/architecture/modules/module-categorization.md#universal-documentation-footprint).
 
 ## On This Page
 
@@ -82,4 +82,4 @@ cd _test && npm install && npm test
 
 The test runner uses Node's built-in test framework (`node --test` plus `node:assert/strict`). Test runtime is sub-second.
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).

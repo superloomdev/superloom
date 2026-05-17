@@ -56,19 +56,19 @@ src/helper-modules-server/js-server-helper-[module-name]/  # Alternative naming 
 
 ## 3. Create Main Implementation File
 
-First, pick the config pattern that matches the module's needs. Full rules: `docs/architecture/module-structure.md` -> "Helper Module Configuration Patterns".
+First, pick the config pattern that matches the module's needs. Full rules: `docs/architecture/modules/module-structure-js.mdx` -> "Helper Module Configuration Patterns".
 
 | Pattern | Use when |
 |---|---|
 | **Pattern 1 (Singleton Config)** | Pure stateless wrapper; same config applies process-wide (utility libs, crypto, logging, time) |
 | **Pattern 2 (Multi-Instance Factory)** | Wraps any per-instance state - connection pool, persistent client, authenticated session |
 
-Create `[module-name].js` using the template that matches the chosen pattern. Full templates with comments live in `docs/architecture/module-structure.md`. Reference implementations:
+Create `[module-name].js` using the template that matches the chosen pattern. Full templates with comments live in `docs/architecture/modules/module-structure-js.mdx`. Reference implementations:
 
 - **Pattern 1** example: `src/helper-modules-core/js-helper-utils/`
 - **Pattern 2** example: `src/helper-modules-server/js-server-helper-mysql/mysql.js`
 
-Follow all coding standards from `docs/architecture/code-formatting-js.md`:
+Follow all coding standards from `docs/architecture/foundations/code-formatting-js.md`:
 - Single quotes, 2-space indent, no trailing commas
 - JSDoc for every function with `@param` and `@returns`
 - Space before function parens and blocks
@@ -236,7 +236,7 @@ describe('functionName', function () {
 ## 9. Create README.md
 
 Create `README.md` with sections in this order:
-- **Badges** - exactly 3 header badges for every module (Test + License + Node.js). Test badge uses GitHub's native endpoint pointing at `ci-helper-modules.yml`. Service-dependent modules add an Integration Tests badge inside the `## Testing` table, not the header. Templates in `docs/architecture/module-testing.md`
+- **Badges** - exactly 3 header badges for every module (Test + License + Node.js). Test badge uses GitHub's native endpoint pointing at `ci-helper-modules.yml`. Service-dependent modules add an Integration Tests badge inside the `## Testing` table, not the header. Templates in `docs/architecture/testing/module-testing.md`
 - **Description** - module name and purpose (1-2 sentences). No hosting vendor names (AWS, Azure, GCP, RDS, Aurora) - use the service/protocol name instead (MySQL, DynamoDB, S3, Postgres)
 - **API table** - all exported functions with signatures
 - **Usage** - example code snippet. Use generic hostnames (`db.example.com`) and `us-east-1` as the example region. Never use hosting-vendor-specific hostnames
@@ -244,7 +244,7 @@ Create `README.md` with sections in this order:
 - **Environment Variables** - required env vars with values per testing tier (emulated vs integration). Column headers: `Emulated (Dev)` and `Integration (Real)`
 - **Peer Dependencies** - `@superloomdev/*` modules injected via loader
 - **Direct Dependencies** - third-party packages bundled in `package.json`
-- **Testing** - lean section near the end (status table + 3-line run command + link to ops guide). Full setup steps live in `_test/ops/` only. See template in `docs/architecture/module-testing.md`
+- **Testing** - lean section near the end (status table + 3-line run command + link to ops guide). Full setup steps live in `_test/ops/` only. See template in `docs/architecture/testing/module-testing.md`
 
 This README serves as the **compact AI context document** for this module.
 
@@ -259,7 +259,7 @@ For every variable read from `process.env` in `_test/loader.js`, add it (with ap
 | `__dev__/.env.dev` | Dummy value matching `_test/docker-compose.yml` |
 | `__dev__/.env.integration` | Placeholder |
 
-Every key in `.env.dev` must also exist in `.env.integration`. Never skip a key in one file. Full rules in `docs/architecture/module-testing.md` → "Environment Variable Registration".
+Every key in `.env.dev` must also exist in `.env.integration`. Never skip a key in one file. Full rules in `docs/architecture/testing/module-testing.md` → "Environment Variable Registration".
 
 ## 11. Verify
 

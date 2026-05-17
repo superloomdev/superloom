@@ -4,7 +4,7 @@
 
 Common issues encountered when **migrating an existing helper module** to current standards, with the fix for each. Use this as a checklist when bringing a legacy module up to spec, or when a CI run fails on a freshly-migrated module.
 
-For the full migration walkthrough see [`/migrate-module` workflow](../../.windsurf/workflows/migrate-module.md). For new modules from scratch, see [`/new-helper`](../../.windsurf/workflows/new-helper.md).
+For the full migration walkthrough see [`/migrate-module` workflow](../../../.windsurf/workflows/migrate-module.md). For new modules from scratch, see [`/new-helper`](../../../.windsurf/workflows/new-helper.md).
 
 ## On This Page
 
@@ -53,7 +53,7 @@ For the full migration walkthrough see [`/migrate-module` workflow](../../.winds
 
 **Symptom:** `js-server-helper-mysql` and `js-server-helper-aws-dynamodb` don't follow the same pattern.
 
-**Fix:** Use category-based naming. See [`code-formatting-js.md`](code-formatting-js.md#module-naming) for the full table:
+**Fix:** Use category-based naming. See [`code-formatting-js.md`](../foundations/code-formatting-js.md#module-naming) for the full table:
 
 | Category | Prefix | Example |
 |---|---|---|
@@ -85,7 +85,7 @@ For the full migration walkthrough see [`/migrate-module` workflow](../../.winds
 
 **Fix:** Public functions come **first**, private functions come **after** within `createInterface`. Public functions reference private via `_ModuleName.functionName()`. Both share the same closure scope (`Lib`, `CONFIG`, `state`).
 
-See [`module-structure-js.mdx`](module-structure-js.mdx#helper-module-pattern-factory) for the canonical structure.
+See [`module-structure-js.mdx`](../modules/module-structure-js#helper-module-pattern-factory) for the canonical structure.
 
 ### Formatting drift after a refactor pass
 
@@ -101,9 +101,9 @@ See [`module-structure-js.mdx`](module-structure-js.mdx#helper-module-pattern-fa
   - (b) Correct 3/2/1 vertical spacing
   - (c) No stale comment text referencing old names
   - (d) Consistent banner widths
-  - (e) **No single-line `return { ... }` objects** — all object returns must be multi-line (see [Return Objects](code-formatting-js.md#return-objects))
-  - (f) **Private helpers in `_Name` enclosure** — no bare `Name.method = function(...)` assignments; all private helpers live inside `const _Name = { ... }` (see [Private Functions Enclosure](code-formatting-js.md#private-functions-enclosure))
-  - (g) **`};` combined with END banner** — no standalone `};` line before `///...END...///` banners (see [Section Closing Banners](code-formatting-js.md#section-closing-banners))
+  - (e) **No single-line `return { ... }` objects** — all object returns must be multi-line (see [Return Objects](../foundations/code-formatting-js.md#return-objects))
+  - (f) **Private helpers in `_Name` enclosure** — no bare `Name.method = function(...)` assignments; all private helpers live inside `const _Name = { ... }` (see [Private Functions Enclosure](../foundations/code-formatting-js.md#private-functions-enclosure))
+  - (g) **`};` combined with END banner** — no standalone `};` line before `///...END...///` banners (see [Section Closing Banners](../foundations/code-formatting-js.md#section-closing-banners))
   - Run `npm run lint` again.
 
 ### Patching when complete rewrite is needed
@@ -115,7 +115,7 @@ See [`module-structure-js.mdx`](module-structure-js.mdx#helper-module-pattern-fa
 **Fix:** When module architecture changes completely:
 
 - Delete the old file and write a new one from scratch
-- Use the [reference implementations](module-structure-js.mdx#reference-implementations) as a template
+- Use the [reference implementations](../modules/module-structure-js#reference-implementations) as a template
 - Copy the structure exactly, then adapt the content
 - Don't try to preserve old code structure when the pattern changes
 
@@ -285,7 +285,7 @@ Before completing any migration:
 
 ## Further Reading
 
-- [Module Structure (JavaScript)](module-structure-js.mdx) - the factory pattern every helper module follows
+- [Module Structure (JavaScript)](../modules/module-structure-js) - the factory pattern every helper module follows
 - [Module Testing](module-testing.md) - testing tiers, badges, and CI/CD setup
-- [Code Formatting](code-formatting-js.md) - naming, comments, and the conventions enforced by ESLint
-- [`/migrate-module` workflow](../../.windsurf/workflows/migrate-module.md) - the operational checklist used during migration
+- [Code Formatting](../foundations/code-formatting-js.md) - naming, comments, and the conventions enforced by ESLint
+- [`/migrate-module` workflow](../../../.windsurf/workflows/migrate-module.md) - the operational checklist used during migration

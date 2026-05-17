@@ -101,6 +101,6 @@ If the answer touches the domain (users, orders, surveys, ...), it does not belo
 ## Further Reading
 
 - [Server Loader](server-loader.md) - the full bootstrap and dependency injection contract
-- [Server Interfaces](server-interfaces.mdx) - how the standardized request/response shapes are wired
+- [Server Interfaces](server-interfaces) - how the standardized request/response shapes are wired
 - [Server Service Modules](server-service-modules.md) - where the business logic actually lives
-- [Architectural Philosophy](architectural-philosophy.md) - the high-level rules
+- [Architectural Philosophy](../foundations/architectural-philosophy.md) - the high-level rules

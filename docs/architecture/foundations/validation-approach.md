@@ -62,7 +62,7 @@ module.exports = {
 
 This convention is consistent across all validation functions. Always check with `if (result)` - truthy means errors exist.
 
-Domain validation errors are **user-facing**: the `message` field is intended to be shown to the end user (e.g. `"Email address format is invalid"`). This is distinct from helper-module errors and from programmer errors. See [`error-handling.mdx`](error-handling.mdx) for the full three-category model and how the controller forwards these errors via `Lib.Functions.errorResponse`.
+Domain validation errors are **user-facing**: the `message` field is intended to be shown to the end user (e.g. `"Email address format is invalid"`). This is distinct from helper-module errors and from programmer errors. See [`error-handling.mdx`](error-handling) for the full three-category model and how the controller forwards these errors via `Lib.Functions.errorResponse`.
 
 ---
 
@@ -128,6 +128,6 @@ Interface (Express/Lambda)
 
 ## Further Reading
 
-- [Error Handling](error-handling.mdx) - the three error categories and how validation errors fit
-- [Model Modules](model-modules.md) - where `[entity].validation.js` lives and how it loads
-- [Entity Creation Guide (JavaScript)](entity-creation-guide-js.mdx) - end-to-end example including a validation module
+- [Error Handling](error-handling) - the three error categories and how validation errors fit
+- [Model Modules](../server/model-modules.md) - where `[entity].validation.js` lives and how it loads
+- [Entity Creation Guide (JavaScript)](../server/entity-creation-guide-js) - end-to-end example including a validation module

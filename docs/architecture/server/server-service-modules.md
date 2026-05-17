@@ -71,7 +71,7 @@ For example, the user service lives at `src/server/service/user.service.js`.
 | **Execute business rules and policies** | The decisions that make this entity what it is |
 | **Coordinate between multiple helpers and models** | DB writes, cache updates, downstream calls |
 | **Handle transactional logic** | Multi-step operations that must succeed or fail together |
-| **Translate helper-module errors into domain errors** | Mandatory - see [Error Handling](error-handling.mdx) |
+| **Translate helper-module errors into domain errors** | Mandatory - see [Error Handling](../foundations/error-handling) |
 | **Return a structured result** | `{ success: true, data: ... }` or `{ success: false, error: ... }` |
 
 ---
@@ -151,5 +151,5 @@ module.exports = function (shared_libs, config) {
 - [Server Controller Modules](server-controller-modules.md) - the layer that calls services
 - [Server Common](server-common.md) - bootstrap, config, and the `Lib` container
 - [Server Loader](server-loader.md) - how `Lib` is built and entities are registered
-- [Error Handling](error-handling.mdx) - the mandatory translation rule (helper envelope -> domain error)
+- [Error Handling](../foundations/error-handling) - the mandatory translation rule (helper envelope -> domain error)
 - [Model Modules](model-modules.md) - the model APIs services consume

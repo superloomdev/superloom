@@ -205,4 +205,4 @@ Coverage:
 
 Integration tests for each storage backend live in the corresponding adapter package (`js-server-helper-auth-store-*`). Those packages have their own `docker-compose.yml` (where needed) and run real network round-trips against PostgreSQL, MySQL, MongoDB, DynamoDB Local, or in-process SQLite.
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).

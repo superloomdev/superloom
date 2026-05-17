@@ -2,7 +2,7 @@
 
 Loader pattern, dependency notes, and testing tier. For the function reference see [API Reference](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-core/js-helper-utils/docs/api.md).
 
-This page is intentionally short. Foundation utility modules accept no config keys, read no environment variables, and inject no peer dependencies. The page exists for shape consistency: every Superloom module ships a `docs/configuration.md` so contributors and AI tooling can find the loader pattern and runtime details in the same place across the framework. The canonical reasoning is in [`module-categorization.md` → Universal Documentation Footprint](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-categorization.md#universal-documentation-footprint).
+This page is intentionally short. Foundation utility modules accept no config keys, read no environment variables, and inject no peer dependencies. The page exists for shape consistency: every Superloom module ships a `docs/configuration.md` so contributors and AI tooling can find the loader pattern and runtime details in the same place across the framework. The canonical reasoning is in [`module-categorization.md` → Universal Documentation Footprint](https://github.com/superloomdev/superloom/blob/main/docs/architecture/modules/module-categorization.md#universal-documentation-footprint).
 
 ## On This Page
 
@@ -49,7 +49,7 @@ None. The module never reads `process.env`.
 
 None. Foundation modules cannot have peer dependencies. They ARE the foundation. Every other Superloom helper may consume `js-helper-utils`; this module imports nothing.
 
-The wider rationale (foundation invariants, the "no upward import" rule) is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server-loader.md).
+The wider rationale (foundation invariants, the "no upward import" rule) is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/architecture/server/server-loader.md).
 
 ---
 
@@ -75,4 +75,4 @@ cd _test && npm install && npm test
 
 The test runner uses Node's built-in test framework (`node --test` plus `node:assert/strict`). Test runtime is sub-second. No `pretest` or `posttest` hook is required.
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).

@@ -43,7 +43,7 @@ Module directory name: `[js|py]-server-helper-[module-name]`
 
 Modules live at `src/helper-modules-server/`. The `server-helper` prefix in the package name and the `helper-modules-server` directory both signal the server-only constraint at every level (file path, package name, npm scope).
 
-For category-based naming (`sql-`, `nosql-`, `nosql-aws-`, `storage-aws-`, `queue-aws-`, ...) see [`code-formatting-js.md`](code-formatting-js.md#module-naming).
+For category-based naming (`sql-`, `nosql-`, `nosql-aws-`, `storage-aws-`, `queue-aws-`, ...) see [`code-formatting-js.md`](../foundations/code-formatting-js.md#module-naming).
 
 ---
 
@@ -86,7 +86,7 @@ Server helper modules load base defaults from a config file and merge loader-inj
 | **Pattern 2 (Multi-Instance Factory)** | All helper modules. Stateful (connection pool, persistent client, authenticated session) or stateless |
 | **Pattern 1 (Singleton Config)** | **Legacy.** Preserved for historical reference only - not used in new modules |
 
-See [`module-structure-js.mdx`](module-structure-js.mdx) for full templates and the rules each pattern follows.
+See [`module-structure-js.mdx`](module-structure-js) for full templates and the rules each pattern follows.
 
 ---
 
@@ -104,7 +104,7 @@ See [`module-structure-js.mdx`](module-structure-js.mdx) for full templates and 
 ## Further Reading
 
 - [Core Helper Modules](core-helper-modules.md) - the platform-agnostic foundation layer
-- [Module Structure (JavaScript)](module-structure-js.mdx) - the Pattern 2 (Factory) template every server helper follows
-- [Module Testing](module-testing.md) - emulator setup and integration testing for service-dependent modules
+- [Module Structure (JavaScript)](module-structure-js) - the Pattern 2 (Factory) template every server helper follows
+- [Module Testing](../testing/module-testing.md) - emulator setup and integration testing for service-dependent modules
 - [Module Publishing](module-publishing.md) - CI/CD pipeline for `@your-org/*` packages
-- [Code Formatting](code-formatting-js.md#aws-and-cloud-sdk-modules) - cloud SDK conventions (lazy load, explicit credentials)
+- [Code Formatting](../foundations/code-formatting-js.md#aws-and-cloud-sdk-modules) - cloud SDK conventions (lazy load, explicit credentials)

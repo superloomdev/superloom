@@ -115,4 +115,4 @@ The unified pipeline at `.github/workflows/ci-helper-modules.yml`:
 
 - [npmrc Setup](npmrc-setup.md) - the full guide for the global npmrc configuration
 - [CI/CD Publishing](cicd-publishing.md) - operational details of the publish pipeline
-- [Module Publishing](../architecture/module-publishing.md) - the architectural rules around package identity
+- [Module Publishing](../architecture/modules/module-publishing.md) - the architectural rules around package identity

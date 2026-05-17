@@ -201,4 +201,4 @@ The integration tier connects to real AWS DynamoDB using credentials from `__dev
 
 Full setup guide: [AWS DynamoDB Integration Setup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/_test/ops/01-integration-testing/aws-dynamodb-integration-setup.md).
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).

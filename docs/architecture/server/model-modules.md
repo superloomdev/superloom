@@ -69,7 +69,7 @@ The model layer is where every entity defines its **shape, validation rules, err
 | **Dependencies note** | `// Dependencies: Contact, User (uses Contact.validation, User.process)` |
 | **Pattern note** | `// Standard pattern: Loader receives Lib and config override, returns { data, errors, process, validation, _config }` |
 
-The full `index.js` template lives in [`module-structure-js.mdx`](module-structure-js.mdx#model-package-index).
+The full `index.js` template lives in [`module-structure-js.mdx`](../modules/module-structure-js#model-package-index).
 
 ### `[entity].data.js` Function Set
 
@@ -83,7 +83,7 @@ Each entity's data module typically exports:
 | `toSummary(...)` | Minimal version for list views |
 | `toInternal(...)` | Map external input to canonical internal shape |
 
-Keys not provided (`undefined`) are simply **not added** to the resulting object. See [DTO Philosophy (JavaScript)](../philosophy/dto-philosophy-js.md) for the rationale.
+Keys not provided (`undefined`) are simply **not added** to the resulting object. See [DTO Philosophy (JavaScript)](../../philosophy/dto-philosophy-js.md) for the rationale.
 
 ### `[entity].validation.js` Cross-Module Validation
 
@@ -231,8 +231,8 @@ Same as server model - the client-side loader merges base + client extension key
 
 ## Further Reading
 
-- [DTO Philosophy (JavaScript)](../philosophy/dto-philosophy-js.md) - the one-shape rule for data transfer objects
-- [Validation Approach](validation-approach.md) - how `[entity].validation.js` produces user-facing errors
-- [Module Structure (JavaScript)](module-structure-js.mdx#model-package-index) - the index file template and the merge pattern in detail
+- [DTO Philosophy (JavaScript)](../../philosophy/dto-philosophy-js.md) - the one-shape rule for data transfer objects
+- [Validation Approach](../foundations/validation-approach.md) - how `[entity].validation.js` produces user-facing errors
+- [Module Structure (JavaScript)](../modules/module-structure-js#model-package-index) - the index file template and the merge pattern in detail
 - [Server Loader](server-loader.md) - where the merge actually happens at runtime
-- [Entity Creation Guide (JavaScript)](entity-creation-guide-js.mdx) - end-to-end walkthrough for adding a new entity
+- [Entity Creation Guide (JavaScript)](entity-creation-guide-js) - end-to-end walkthrough for adding a new entity

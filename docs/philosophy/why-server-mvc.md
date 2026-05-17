@@ -92,7 +92,7 @@ Client request
   <- Interface converts standard response back into transport-specific format
 ```
 
-The standardized request and response shapes are documented in [`server-interfaces.mdx`](../architecture/server-interfaces.mdx).
+The standardized request and response shapes are documented in [`server-interfaces.mdx`](../architecture/server/server-interfaces).
 
 ---
 
@@ -108,6 +108,6 @@ The standardized request and response shapes are documented in [`server-interfac
 ## Further Reading
 
 - [DTO Philosophy (JavaScript)](dto-philosophy-js.md) - the one-shape rule for data transfer objects
-- [Architectural Philosophy](../architecture/architectural-philosophy.md) - the high-level rules and directory layout
-- [Server Interfaces](../architecture/server-interfaces.mdx) - how Express and Lambda adapters share the same controllers
-- [Server Loader](../architecture/server-loader.md) - how the `Lib` container wires everything together
+- [Architectural Philosophy](../architecture/foundations/architectural-philosophy.md) - the high-level rules and directory layout
+- [Server Interfaces](../architecture/server/server-interfaces) - how Express and Lambda adapters share the same controllers
+- [Server Loader](../architecture/server/server-loader.md) - how the `Lib` container wires everything together

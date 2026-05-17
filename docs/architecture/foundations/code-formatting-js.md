@@ -1,6 +1,6 @@
 # JavaScript Coding Standards
 
-The complete style guide for JavaScript code in Superloom modules. ESLint enforces most of these rules automatically; the rest are conventions every contributor and AI agent is expected to follow. The compressed mirror of this guide lives in [`AGENTS.md`](../../AGENTS.md).
+The complete style guide for JavaScript code in Superloom modules. ESLint enforces most of these rules automatically; the rest are conventions every contributor and AI agent is expected to follow. The compressed mirror of this guide lives in [`AGENTS.md`](../../../AGENTS.md).
 
 ## On This Page
 
@@ -33,7 +33,7 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
 |---|---|---|
 | **ESLint v9+** | Lint and auto-fix | `npm run lint`, `npm run lint:fix` |
 | **Flat config** | Required by ESLint v9 | Every module ships an `eslint.config.js` |
-| **Editor integration** | Auto-fix on save | See [`docs/guide/ide-setup.md`](../guide/ide-setup.md) |
+| **Editor integration** | Auto-fix on save | See [`docs/guide/ide-setup.md`](../../guide/ide-setup.md) |
 
 ESLint catches `no-var`, `prefer-const`, `no-unused-vars`, `no-useless-assignment`, and the formatting rules below. CI runs `npm run lint` on every push - fix locally before pushing.
 
@@ -434,7 +434,7 @@ Three categories, three disposal mechanisms. Never mix them.
 | **Operational / state error from a helper module** | Return envelope `{ success: false, error: { type, message } }` |
 | **Domain / user-facing validation error** | Return `{ success: false, error: <DomainError> }` where `<DomainError>` is `{ code, message, status }` from `[entity].errors.js` |
 
-Full rule with rationale and worked examples: [`error-handling.mdx`](error-handling.mdx).
+Full rule with rationale and worked examples: [`error-handling.mdx`](error-handling).
 
 ---
 
@@ -573,7 +573,7 @@ These rules apply to **every file** the AI or human writes - `.js` comments and 
 | **Declare `engines.node`** | Every module's `package.json` declares the minimum Node.js version it supports |
 | **No `keywords` field** | Omit `keywords` from `package.json` entirely |
 
-Full publishing pipeline: [`module-publishing.md`](module-publishing.md). Peer dependency strategy: [`peer-dependencies.md`](peer-dependencies.md).
+Full publishing pipeline: [`module-publishing.md`](../modules/module-publishing.md). Peer dependency strategy: [`peer-dependencies.md`](../modules/peer-dependencies.md).
 
 ---
 
@@ -594,4 +594,4 @@ When writing helper modules that wrap AWS or other cloud SDKs:
 | **Batch API limits** | Cloud APIs impose batch size limits. Handle large batches with recursive chunking - split, process sequentially, combine results |
 | **Service-specific options** | Configure marshalling, serialization, and retry behavior appropriate to the cloud service (e.g., removing undefined values, retry config) |
 
-Full module structure templates (Pattern 1 Singleton vs Pattern 2 Factory) live in [`module-structure-js.mdx`](module-structure-js.mdx) under "Helper Module Configuration Patterns".
+Full module structure templates (Pattern 1 Singleton vs Pattern 2 Factory) live in [`module-structure-js.mdx`](../modules/module-structure-js) under "Helper Module Configuration Patterns".

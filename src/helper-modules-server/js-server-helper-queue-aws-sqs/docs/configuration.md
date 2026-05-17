@@ -281,4 +281,4 @@ The integration tier connects to a real AWS SQS queue using credentials from `__
 
 Full setup guide: [AWS SQS Integration Setup](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-queue-aws-sqs/_test/ops/01-integration-testing/aws-sqs-integration-setup.md).
 
-For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md).
+For the framework-wide testing architecture see [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md).

@@ -25,12 +25,12 @@ This is the most important step. `AGENTS.md` contains a compressed summary of al
 
 1. Read the changed file(s) in `docs/`
 2. Update the corresponding section in `AGENTS.md`:
-   - `docs/architecture/code-formatting-js.md` → "Coding Standards (Mandatory)" section
-   - `docs/architecture/module-structure.md` → "Module Patterns" section
-   - `docs/architecture/module-publishing.md` → "Publishing" section
-   - `docs/architecture/peer-dependencies.md` → "Dependency Hierarchy" section
-   - `docs/architecture/testing-strategy.md` or `unit-test-authoring.md` → "Testing" section
-   - `docs/architecture/architectural-philosophy.md` → "Core Philosophy" section
+   - `docs/architecture/foundations/code-formatting-js.md` → "Coding Standards (Mandatory)" section
+   - `docs/architecture/modules/module-structure-js.mdx` → "Module Patterns" section
+   - `docs/architecture/modules/module-publishing.md` → "Publishing" section
+   - `docs/architecture/modules/peer-dependencies.md` → "Dependency Hierarchy" section
+   - `docs/architecture/testing/testing-strategy.md` or `docs/architecture/testing/unit-test-authoring-js.md` → "Testing" section
+   - `docs/architecture/foundations/architectural-philosophy.md` → "Core Philosophy" section
    - `docs/dev/*` → "Publishing" or relevant operational section
 3. Keep the `AGENTS.md` version compressed (tables, bullets, no prose)
 
@@ -59,8 +59,8 @@ This is the most important step. `AGENTS.md` contains a compressed summary of al
 ## When Directory Structure Changes
 
 1. Update `AGENTS.md` → "Directory Map"
-2. Update `docs/architecture/module-structure.md`
-3. Update `docs/architecture/architectural-philosophy.md` directory locations
+2. Update `docs/architecture/modules/module-structure-js.mdx`
+3. Update `docs/architecture/foundations/architectural-philosophy.md` directory locations
 4. Update `.windsurf/workflows/` if paths changed
 
 ## Verification Checklist

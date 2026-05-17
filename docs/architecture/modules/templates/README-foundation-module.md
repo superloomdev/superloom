@@ -57,4 +57,4 @@ cd _test
 npm install && npm test
 ```
 
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/module-testing.md) for the full testing architecture.
+See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/architecture/testing/module-testing.md) for the full testing architecture.

@@ -94,7 +94,7 @@ Helpers may support configuration **optionally**, only via **explicit parameters
 
 Core helper modules must be **platform-agnostic**. They must NOT:
 
-- Reference any [platform identifier](architectural-philosophy.md#platform-identifiers) (`web`, `rw`, `rn`, `ios`, `and`)
+- Reference any [platform identifier](../foundations/architectural-philosophy.md#platform-identifiers) (`web`, `rw`, `rn`, `ios`, `and`)
 - Import browser APIs (DOM, `window`, `document`)
 - Import mobile-specific APIs (Android, iOS, React Native)
 - Depend on client runtime assumptions (screen, touch, lifecycle, navigation)
@@ -180,6 +180,6 @@ If something is not domain-specific, give it its own helper module instead of pu
 ## Further Reading
 
 - [Server Helper Modules](server-helper-modules.md) - server-only helpers (DB drivers, cloud SDKs)
-- [Module Structure (JavaScript)](module-structure-js.mdx) - the factory pattern every helper module follows
+- [Module Structure (JavaScript)](module-structure-js) - the factory pattern every helper module follows
 - [Peer Dependencies](peer-dependencies.md) - how foundation modules stay self-contained
-- [Module Testing](module-testing.md) - tiers, badges, and CI/CD for helper modules
+- [Module Testing](../testing/module-testing.md) - tiers, badges, and CI/CD for helper modules
