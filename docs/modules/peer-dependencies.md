@@ -9,10 +9,7 @@ The layered dependency model that Superloom helper modules follow. Two foundatio
 - [Module Structure](#module-structure)
 - [Consumer Installation](#consumer-installation)
 - [Benefits](#benefits)
-- [Module Dependencies](#module-dependencies)
 - [Development Guidelines](#development-guidelines)
-- [Migration Strategy](#migration-strategy)
-- [CI/CD Impact](#cicd-impact)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -101,20 +98,9 @@ npm install @your-org/js-helper-debug  # Error: Missing peer dependency
 
 ---
 
-## Module Dependencies
+## Per-Module Inventory
 
-### Foundation Modules (zero dependencies, self-contained)
-- `@your-org/js-helper-utils` - Base utilities, no dependencies
-- `@your-org/js-helper-debug` - Structured logging, no dependencies
-
-### Core Modules (depend on foundation)
-- `@your-org/js-helper-time` → peer: `@your-org/js-helper-utils`
-
-### Client Modules (browser-optimized, no dependencies)
-- `@your-org/js-client-helper-crypto` - UUID, random strings, base64 (self-contained)
-
-### Server Modules (self-contained, use Node.js APIs)
-- `@your-org/js-server-helper-crypto` - Hashing, encryption, UUID, base conversion (self-contained)
+Which specific modules depend on which is tracked in [`module-categorization.md`](module-categorization.md). The rule is simple and lives in this file: foundation modules (`js-helper-utils`, `js-helper-debug`) are zero-dep; every other module depends on them via peer dependencies.
 
 ---
 
@@ -146,24 +132,6 @@ npm install @your-org/js-helper-debug  # Error: Missing peer dependency
 
 ---
 
-## Migration Strategy
-
-1. **Convert devDependencies to peerDependencies** for inter-module dependencies
-2. **Keep devDependencies** for development tools (eslint, etc.)
-3. **Update tests** to use published packages
-4. **Bump versions** for breaking changes
-5. **Publish** modules in dependency order (utils → debug → others)
-
----
-
-## CI/CD Impact
-
-- **Test matrix**: Each module tested with published peer dependencies
-- **Publish order**: Dependencies must be published first
-- **Version coordination**: Careful version management required
-
----
-
 ## Troubleshooting
 
 ### Common Issues
@@ -173,51 +141,9 @@ npm install @your-org/js-helper-debug  # Error: Missing peer dependency
 3. **Development errors**: Ensure devDependencies match peerDependencies
 4. **Authentication errors**: GitHub Packages requires proper token setup
 
-### GitHub Packages Authentication
+### Authentication Errors When Installing
 
-Local development requires authentication to access published packages:
-
-**Recommended Setup (Global npmrc):**
-```bash
-# One-time setup
-npm config set @your-org:registry https://npm.pkg.github.com
-npm config set //npm.pkg.github.com/:_authToken '${GITHUB_READ_PACKAGES_TOKEN}'
-
-# Initialize development environment (each terminal session)
-source init-env.sh
-# Select: 1) dev
-
-# Verify authentication
-npm view @your-org/js-helper-utils --registry=https://npm.pkg.github.com
-```
-
-**Complete setup guide:** See `docs/dev/npmrc-setup.md`
-
-**Common authentication issues:**
-- Token expired or lacks `read:packages` scope
-- Environment variable not set (`echo $GITHUB_READ_PACKAGES_TOKEN`)
-- Global npmrc not configured (`npm config get @your-org:registry`)
-
-### Debug Commands
-
-```bash
-# Check installed peer dependencies
-npm ls @your-org/js-helper-utils
-
-# Install missing peer dependencies
-npm install @your-org/js-helper-utils
-
-# Check for peer dependency conflicts
-npm install --dry-run @your-org/js-helper-debug
-
-# Test package availability
-npm view @your-org/js-helper-utils --registry=https://npm.pkg.github.com
-```
-
-### Development vs Production
-
-**Development**: Tests may use local file references until packages are published
-**Production**: Always use published versions from GitHub Packages
+If `npm install` fails with `401 Unauthorized` or cannot resolve `@your-org/*` packages, the GitHub Packages authentication is not configured. The full setup procedure is in [`../dev/onboarding-github-packages.md`](../dev/onboarding-github-packages.md) (token side) and [`../dev/npmrc-setup.md`](../dev/npmrc-setup.md) (npmrc side). This page does not duplicate those steps.
 
 ## Further Reading
 

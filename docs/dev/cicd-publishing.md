@@ -112,22 +112,7 @@ This pattern (registry-existence check + version-bump-by-implication + per-job s
 
 ## Publishing a New Version
 
-1. Bump the `version` in the module's `package.json`:
-   ```json
-   "version": "1.0.2" -> "version": "1.0.3"
-   ```
-
-2. Commit and push to `main`:
-   ```bash
-   git add src/helper-modules-core/js-helper-utils/package.json
-   git commit -m "chore(release): bump js-helper-utils to v1.0.3"
-   git push origin main
-   ```
-
-3. The workflow triggers automatically. Check progress at:
-   ```
-   https://github.com/superloomdev/superloom/actions
-   ```
+The step-by-step bump procedure (SemVer classification, commit format, multi-module bumps, post-publish verification) lives in [`../versioning/bump-checklist.md`](../versioning/bump-checklist.md). This page covers the **pipeline mechanics**; the checklist covers **the contributor's procedure**.
 
 ## GITHUB_TOKEN Permissions
 
