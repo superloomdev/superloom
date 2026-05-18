@@ -143,9 +143,7 @@ Each adapter then converts this into its transport-specific response format.
 
 ## Express Adapter Pattern
 
-::: code-group
-
-```javascript [JavaScript]
+```javascript
 // src/server/interfaces/api/express/routes.js
 const express = require('express');
 const router = express.Router();
@@ -177,36 +175,6 @@ router.post('/user/create', function (req, res) {
 
 });
 ```
-```python [Python]
-# TODO: Python implementation (e.g. Flask/FastAPI adapter)
-# @app.post('/user/create')
-# async def create_user(request: Request):
-#     standard_request = {
-#         'method': 'POST',
-#         'path': '/user/create',
-#         'body': await request.json(),
-#         'headers': dict(request.headers),
-#         'meta': {'source': 'fastapi'}
-#     }
-#     result = Lib.User.controller.create(standard_request)
-#     return JSONResponse(content=result, status_code=result['status'])
-```
-```java [Java]
-// TODO: Java implementation (e.g. Spring Boot adapter)
-// @PostMapping("/user/create")
-// public ResponseEntity<Map> createUser(@RequestBody Map body, HttpServletRequest req) {
-//     Map standardRequest = Map.of(
-//         "method", "POST",
-//         "path", "/user/create",
-//         "body", body,
-//         "meta", Map.of("source", "spring")
-//     );
-//     Map result = Lib.User.controller.create(standardRequest);
-//     return ResponseEntity.status((int) result.get("status")).body(result);
-// }
-```
-
-:::
 
 ---
 

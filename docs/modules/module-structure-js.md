@@ -72,9 +72,7 @@ All application modules (models, services, controllers) follow a **strict, ident
 
 ### Standard Module Template
 
-::: code-group
-
-```javascript [JavaScript]
+```javascript
 // [Module purpose - 1 line]
 // [What it does - 1 line]
 // [Pattern indicator - 1 line]
@@ -140,37 +138,6 @@ const ModuleName = {
 
 };////////////////////////////Public Functions END///////////////////////////////
 ```
-```python [Python]
-# TODO: Python module template
-# class ModuleName:
-#     def __init__(self, shared_libs, config, errors):
-#         self.Lib = shared_libs
-#         self.CONFIG = config
-#         self.ERRORS = errors
-#
-#     def function_name(self, params):
-#         # Implementation
-#         return result
-```
-```java [Java]
-// TODO: Java module template
-// public class ModuleName {
-//     private final Lib lib;
-//     private final Config config;
-//
-//     public ModuleName(Lib sharedLibs, Config config) {
-//         this.lib = sharedLibs;
-//         this.config = config;
-//     }
-//
-//     public Result functionName(Params params) {
-//         // Implementation
-//         return result;
-//     }
-// }
-```
-
-:::
 
 ---
 

@@ -154,9 +154,7 @@ When a helper module catches a driver / SDK exception:
 - **Public envelope** carries the frozen catalog object **and nothing else**.
 - **Debug log** carries everything needed for diagnostics - driver message, driver code, stack, plus the catalog `type` for log↔envelope correlation.
 
-::: code-group
-
-```javascript [JavaScript]
+```javascript
 // Inside the catch block
 catch (error) {
 
@@ -178,31 +176,6 @@ catch (error) {
 
 }
 ```
-```python [Python]
-# TODO: Python implementation
-# except Exception as error:
-#     Lib.Debug.debug('Postgres query failed', {
-#         'type': ERRORS['DATABASE_QUERY_FAILED']['type'],
-#         'message': str(error),
-#     })
-#     return {
-#         'success': False,
-#         'rows': [],
-#         'error': ERRORS['DATABASE_QUERY_FAILED']
-#     }
-```
-```java [Java]
-// TODO: Java implementation
-// catch (Exception error) {
-//     Lib.Debug.debug("Postgres query failed", Map.of(
-//         "type", ERRORS.DATABASE_QUERY_FAILED.type,
-//         "message", error.getMessage()
-//     ));
-//     return new Result(false, ERRORS.DATABASE_QUERY_FAILED);
-// }
-```
-
-:::
 
 The same shape applies to every backend in the SQL / NoSQL family, every storage adapter, every HTTP wrapper, and every queue helper. The driver and the wrapper change; the public contract does not.
 
@@ -227,9 +200,7 @@ If a finer-grained distinction is genuinely needed at the helper boundary (e.g.,
 
 Any service that calls a helper module **must** translate the helper's error envelope into a domain error from its own `[entity].errors.js` before returning to the controller.
 
-::: code-group
-
-```javascript [JavaScript]
+```javascript
 // user.service.js (illustrative)
 const result = await Lib.MongoDB.findOne(instance, 'users', { email: email });
 
@@ -246,36 +217,6 @@ if (result.document === null) {
 
 return { success: true, data: result.document };
 ```
-```python [Python]
-# TODO: Python implementation
-# result = await Lib.MongoDB.find_one(instance, 'users', {'email': email})
-#
-# if result['success'] is False:
-#     Lib.Debug.error('user.find_one storage failure', result['error'])
-#     return {'success': False, 'error': Lib.User.errors.SERVICE_UNAVAILABLE}
-#
-# if result['document'] is None:
-#     return {'success': False, 'error': Lib.User.errors.NOT_FOUND}
-#
-# return {'success': True, 'data': result['document']}
-```
-```java [Java]
-// TODO: Java implementation
-// Result result = Lib.MongoDB.findOne(instance, "users", Map.of("email", email));
-//
-// if (!result.isSuccess()) {
-//     Lib.Debug.error("user.findOne storage failure", result.getError());
-//     return Result.failure(Lib.User.errors.SERVICE_UNAVAILABLE);
-// }
-//
-// if (result.getDocument() == null) {
-//     return Result.failure(Lib.User.errors.NOT_FOUND);
-// }
-//
-// return Result.success(result.getDocument());
-```
-
-:::
 
 The bad-argument case (`TypeError` from the helper) is intentionally not handled - it bubbles up as an uncaught exception so the bug is visible.
 
@@ -285,9 +226,7 @@ The bad-argument case (`TypeError` from the helper) is intentionally not handled
 
 Every helper module maintains its own frozen error catalog in `[module].errors.js`. This is the standard pattern for all framework modules. The catalog contains operational errors that can be returned via `{success: false, error}` envelopes. Errors are frozen to prevent accidental mutation.
 
-::: code-group
-
-```javascript [JavaScript]
+```javascript
 // verify.errors.js - the module's internal error catalog
 module.exports = Object.freeze({
   COOLDOWN_ACTIVE: Object.freeze({
@@ -301,28 +240,6 @@ module.exports = Object.freeze({
   // ... more errors
 });
 ```
-```python [Python]
-# TODO: Python implementation
-# ERRORS = {
-#     'COOLDOWN_ACTIVE': {
-#         'type': 'COOLDOWN_ACTIVE',
-#         'message': 'Rate limit active - wait before requesting another code'
-#     },
-#     'STORE_READ_FAILED': {
-#         'type': 'STORE_READ_FAILED',
-#         'message': 'Storage read operation failed'
-#     }
-# }
-```
-```java [Java]
-// TODO: Java implementation
-// public enum VerifyError {
-//     COOLDOWN_ACTIVE("COOLDOWN_ACTIVE", "Rate limit active - wait before requesting another code"),
-//     STORE_READ_FAILED("STORE_READ_FAILED", "Storage read operation failed");
-// }
-```
-
-:::
 
 The service layer translates these errors to domain errors:
 
