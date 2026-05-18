@@ -101,23 +101,7 @@ describe('Config', function () {
 
 ## Test `package.json` Pattern
 
-```json
-{
-  "name": "[module-name]-test",
-  "description": "Test Cases for [module-name]",
-  "version": "1.0.0",
-  "main": "test.js",
-  "private": true,
-  "license": "MIT",
-  "dependencies": {
-    "@your-org/js-helper-utils": "^1.0.0",
-    "[module-name]": "file:../"
-  },
-  "scripts": {
-    "test": "node --test test.js"
-  }
-}
-```
+The shape of `_test/package.json` (private flag, `file:../` self-reference, registry semver for shared helpers, required scripts) is documented in [`../modules/module-publishing.md` → Test Directory Structure](../modules/module-publishing.md#test-directory-structure). That is the canonical home; do not duplicate the example here.
 
 ---
 
@@ -275,24 +259,11 @@ For complex layers like Models, we use a single global test runner that executes
 
 ---
 
-## Module README as Context
-
-Each module's `README.md` serves as both documentation and **human reading material**. It must contain:
-
-1. **Module name and purpose** (1-2 sentences)
-2. **All exported functions** with signatures:
-   - Function name
-   - Parameters (name, type, description)
-   - Return value (type, description)
-3. **Dependencies** (what this module requires from `Lib`)
-4. **Configuration** (what config keys this module accepts, if any)
-5. **Example usage** (minimal code snippet)
-
-The AI-facing companion is `ROBOTS.md` - a compact, machine-readable function listing that every module ships alongside `README.md`.
-
 ## Further Reading
 
 - [Unit Test Authoring (JavaScript)](unit-test-authoring-js.md) - how to write a single unit test
 - [Module Testing](module-testing.md) - testing tiers, badges, and CI/CD
 - [Integration Testing](integration-testing.md) - testing against real cloud services
+- [Module README Structure](../modules/module-readme-structure.md) - what every README must contain (Universal Sections, class-specific sections, three-tier model with `ROBOTS.md`)
+- [Module Publishing](../modules/module-publishing.md) - `_test/` layout and the `package.json` shape it requires
 - [Module Structure (JavaScript)](../modules/module-structure-js) - the factory pattern that test loaders mirror

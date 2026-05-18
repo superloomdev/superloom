@@ -200,36 +200,17 @@ js-server-helper-aws-dynamodb/
 
 ## Naming Conventions
 
-**Directory Names (vendor-agnostic), listed in canonical dependency order:**
+**Directory Names** are vendor-agnostic and listed in canonical dependency order in the [Layer 2 dependency table](#layer-2---project-runbook-ops) above. That table is the single source of truth - do not duplicate the category list elsewhere.
 
-| Category | Directory Name | What It Covers |
-|---|---|---|
-| Domain registration | `domain` | Domain purchase, MX records |
-| DNS management | `dns` | Route 53, Cloudflare DNS |
-| TLS/SSL | `ssl-certificates` | ACM, Let's Encrypt, Cloudflare |
-| Cloud account | `cloud-provider` | AWS, GCP, Azure account setup |
-| Cost management | `billing` | Budget alerts, cost tracking |
-| Dev tools | `development-environment` | Virtual workspaces, local tools |
-| Repository hosting | `source-control` | GitHub, GitLab, Bitbucket |
-| Authentication | `identity-access` | IAM, service accounts, roles |
-| Network config | `networking` | VPC, security groups, firewalls |
-| File storage | `object-storage` | S3, GCS, Azure Blob |
-| Config/secrets | `parameter-management` | SSM, Vault, Secret Manager |
-| SQL databases | `relational-database` | RDS, Cloud SQL, Aurora |
-| NoSQL databases | `nosql-database` | DynamoDB, MongoDB, Firestore |
-| Notifications | `messaging` | SES, SNS, SendGrid, Twilio |
-| Content delivery | `cdn` | CloudFront, Cloudflare, Fastly |
-| App deployment | `deployment` | Serverless, ECS, Kubernetes |
-| Timed jobs | `scheduled-tasks` | EventBridge, Cloud Scheduler |
+**File Names** are vendor-prefixed using the pattern `{vendor}-{service}-setup.md`:
 
-**File Names (vendor-prefixed):**
 - `aws-s3-setup.md` - AWS S3 setup guide
 - `aws-rds-postgres-setup.md` - AWS RDS Postgres setup
 - `mongodb-atlas-setup.md` - MongoDB Atlas setup
 - `cloudflare-setup.md` - Cloudflare CDN setup
 - `serverless-setup.md` - Serverless Framework setup
 
-This ensures top-level directories remain stable even when switching vendors.
+The vendor-agnostic directory + vendor-prefixed file split ensures top-level directories remain stable even when switching vendors (e.g. `relational-database/aws-rds-mysql-setup.md` becomes `relational-database/gcp-cloudsql-mysql-setup.md` without renaming the parent folder).
 
 ---
 
