@@ -132,8 +132,8 @@ Implement `createSchema` in `js-server-helper-nosql-mongodb` (currently returns 
 
 **Header fields** (required on every item):
 
-- `Added` — date captured (YYYY-MM-DD)
-- `Tag` — short module or area name (`mongodb`, `dynamodb`, `auth`, `verify`, `docs`, `ci`, `tests`). Use existing tags before inventing new ones.
+- `Added`: date captured (YYYY-MM-DD)
+- `Tag`: short module or area name (`mongodb`, `dynamodb`, `auth`, `verify`, `docs`, `ci`, `tests`). Use existing tags before inventing new ones.
 
 Everything after the header line is freeform. More context is better; a future session should be able to act on an item without re-discovering the original motivation.
 
@@ -172,7 +172,7 @@ Steps are the unit of forward progress. Each one should be completable in a sing
 
 - **Too big:** "Implement adapter pattern" → split into design, scaffold, implement, test, document.
 - **Too small:** "Add one import statement" → fold into the surrounding step.
-- **Right size:** "Rewrite `auth.js` loader to inject store adapter via `Lib`" — concrete, single-session, verifiable.
+- **Right size:** "Rewrite `auth.js` loader to inject store adapter via `Lib`". Concrete, single-session, verifiable.
 
 Write all the steps you can see *before* starting, but expect to add more as you go. New steps that emerge mid-plan get appended to `## Steps`; surprises belong in `## Discoveries`.
 

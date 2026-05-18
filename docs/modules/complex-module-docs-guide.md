@@ -29,7 +29,7 @@ module-name/
     data-model.md           # Record fields, data types, design rationale
     configuration.md        # Deep config reference
     runtime.md              # Persistent-server vs serverless-function runtime differences
-    {feature}-guide.md       # Feature-specific deep dive
+    <FEATURE>-guide.md        # Feature-specific deep dive
 ```
 
 ---

@@ -1,5 +1,7 @@
 # Server Interfaces
 
+> **Language:** JavaScript
+
 `server-interfaces` are the **entry points** into the server application. They handle protocol translation - converting transport-specific requests (HTTP, Lambda event, webhook payload) into a **standardized internal format** before passing to `server-controller`, then converting controller responses back into transport-specific responses.
 
 The key design goal: **the entire application logic is transport-agnostic**. Only the interface layer knows whether the request came from Express, AWS Lambda, or any other gateway. Add a new transport (Fastify, Hapi, message queue) by writing a new adapter - the controller, service, and model layers do not change.
@@ -221,10 +223,10 @@ Each entity gets its own per-endpoint handler files under `src/server/interfaces
 
 ### Server interface responsibilities
 
-- **Protocol translation only** — convert transport-specific requests to the standardized format, and convert controller responses back
-- **Auth extraction** — API key, JWT parsing
-- **Rate limiting** — transport-level throttling
-- **Request/response logging** — metadata and performance
+- **Protocol translation only.** Convert transport-specific requests to the standardized format, and convert controller responses back
+- **Auth extraction.** API key, JWT parsing
+- **Rate limiting.** Transport-level throttling
+- **Request/response logging.** Metadata and performance
 - **CORS and transport-level concerns**
 
 Business logic, database access, and domain validation belong in the controller, service, and model layers respectively. Each adapter is self-contained and unaware of other transport types.

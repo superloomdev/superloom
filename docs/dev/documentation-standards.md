@@ -1,7 +1,5 @@
 # Documentation Writing Guide
 
-> **Language:** JavaScript
-
 The writing-style guide every Superloom doc, README, and `ROBOTS.md` follows. Defines voice, prose mechanics, terminology, em-dash ban, table-cell rules, spelling, and placeholder syntax.
 
 **Companion docs.** This file is the **writing-style** half of the documentation standards. The **structural** rules live in:

@@ -383,9 +383,9 @@ This convention keeps the parent loader free of part-ordering knowledge. If the 
 
 ## Singleton Module Pattern
 
-Some modules are **stateless, pure, and globally shared** — they need no per-instance state, no per-caller config variation, and no lifecycle management. These modules use the singleton pattern: one object, one `let Lib;` injection, same reference everywhere.
+Some modules are **stateless, pure, and globally shared**. They need no per-instance state, no per-caller config variation, and no lifecycle management. These modules use the singleton pattern: one object, one `let Lib;` injection, same reference everywhere.
 
-> **Not the same as Legacy Pattern 1.** The old pattern (preserved in the appendix) also used module-level `let` variables but mutated them on every loader call, meaning the last caller's config won. The singleton pattern here injects `Lib` exactly once and never changes it. Node.js `require` caching guarantees the same module object is returned on every subsequent `require` call — the singleton is free.
+> **Not the same as Legacy Pattern 1.** The old pattern (preserved in the appendix) also used module-level `let` variables but mutated them on every loader call, meaning the last caller's config won. The singleton pattern here injects `Lib` exactly once and never changes it. Node.js `require` caching guarantees the same module object is returned on every subsequent `require` call; the singleton is free.
 
 ### When To Use
 
@@ -394,9 +394,9 @@ Use the singleton pattern when **all four** of these are true:
 | Criterion | Detail |
 |---|---|
 | **Stateless** | No per-instance resource, pool, client, connection, or mutable state |
-| **Pure** | Every method takes inputs, returns a result or throws — no I/O, no side effects |
-| **Shared identity** | One instance is always correct — there is no architectural reason for two callers to have different instances |
-| **No per-caller CONFIG** | All callers need the same behavior — `CONFIG` does not vary at runtime between callers |
+| **Pure** | Every method takes inputs, returns a result or throws (no I/O, no side effects) |
+| **Shared identity** | One instance is always correct. There is no architectural reason for two callers to have different instances |
+| **No per-caller CONFIG** | All callers need the same behavior. `CONFIG` does not vary at runtime between callers |
 
 **Do not use the singleton pattern when:**
 
@@ -409,11 +409,11 @@ Use the singleton pattern when **all four** of these are true:
 
 | Subtype | Shape | Examples |
 |---|---|---|
-| **Data-only** | Pure `module.exports = Object.freeze({...})` — no loader, no `let` variables | `[module].errors.js`, `[module].config.js` |
+| **Data-only** | Pure `module.exports = Object.freeze({...})`, no loader, no `let` variables | `[module].errors.js`, `[module].config.js` |
 | **Lib-injected** | `let Lib;` at module scope, loader sets it once, public/private objects at module scope | `[module].validators.js` |
-| **No-dep** | No `let` variables at all, no loader needed — pure functions with zero external dependencies | `js-helper-utils` (upgrade candidate) |
+| **No-dep** | No `let` variables at all, no loader needed. Pure functions with zero external dependencies | `js-helper-utils` (upgrade candidate) |
 
-### Canonical Shape — Lib-Injected Singleton
+### Canonical Shape: Lib-Injected Singleton
 
 This is the shape for modules that need `Lib.Utils` (or other shared libs) but no `CONFIG` and no `ERRORS`.
 
@@ -430,7 +430,7 @@ This is the shape for modules that need `Lib.Utils` (or other shared libs) but n
 // Shared dependency injected by loader
 let Lib;
 
-// [Any module-scope constants — e.g. allowed enum values]
+// [Any module-scope constants, e.g. allowed enum values]
 const SOME_VALUES = ['a', 'b', 'c'];
 
 
@@ -509,8 +509,8 @@ The same 3/2/1 spacing and banner rules from [`code-formatting-js.md`](../founda
 
 | Element | Factory shape | Singleton shape |
 |---|---|---|
-| **Module-Loader body** | Builds `Lib`, `CONFIG`, `state` — calls `createInterface` | Sets `let Lib = shared_libs` — returns the module-scope public object directly |
-| **`createInterface`** | Present — closes over `Lib`, `CONFIG`, `state` | **Absent** — not needed; closures are replaced by module-scope `let Lib` |
+| **Module-Loader body** | Builds `Lib`, `CONFIG`, `state`; calls `createInterface` | Sets `let Lib = shared_libs`; returns the module-scope public object directly |
+| **`createInterface`** | Present (closes over `Lib`, `CONFIG`, `state`) | **Absent** (not needed; closures are replaced by module-scope `let Lib`) |
 | **Public object** | Declared inside `createInterface` | Declared at **module scope**, after the loader section |
 | **Private object** | Declared inside `createInterface` | Declared at **module scope**, after the public object |
 | **3 blank lines** | Before `createInterface START` banner | Before `Public Functions START` banner (replaces `createInterface`) |
@@ -519,36 +519,36 @@ The same 3/2/1 spacing and banner rules from [`code-formatting-js.md`](../founda
 
 | Rule | Detail |
 |---|---|
-| **`let Lib;` at module scope** | Declared above the loader with a one-line comment. No initializer — `undefined` until the loader runs |
+| **`let Lib;` at module scope** | Declared above the loader with a one-line comment. No initializer (`undefined` until the loader runs) |
 | **Loader sets `Lib` once** | `Lib = shared_libs;` is the only assignment. Never reassigned after the first call |
-| **Loader returns the public object directly** | `return [Name];` — not `return createInterface(Lib)` |
+| **Loader returns the public object directly** | `return [Name];`, not `return createInterface(Lib)` |
 | **No `createInterface`** | Singletons have no factory wrapper. Public and private objects are declared at module scope |
-| **Public before private, both at module scope** | Same order as inside `createInterface` in a factory — public first, private second |
-| **Private helpers use module-scope `Lib`** | `_[Name].helper()` closes over `let Lib` directly — same as factory pattern closes over the `Lib` const inside `createInterface` |
+| **Public before private, both at module scope** | Same order as inside `createInterface` in a factory: public first, private second |
+| **Private helpers use module-scope `Lib`** | `_[Name].helper()` closes over `let Lib` directly, same as factory pattern closes over the `Lib` const inside `createInterface` |
 | **File named `[module].[concern].js`** | Sits at the module root alongside `[module].config.js` and `[module].errors.js` |
 | **Never in `parts/`** | Singletons are module-root files. Parts always use the uniform `(Lib, CONFIG, ERRORS)` factory signature |
-| **Not part of the main module** | `[module].validators.js` is a separate file — not inlined into `[module].js` or tucked into `_Auth`/`_Verify`. The main module's loader calls it and passes `Validators` in |
+| **Not part of the main module** | `[module].validators.js` is a separate file. Not inlined into `[module].js` or tucked into `_Auth`/`_Verify`. The main module's loader calls it and passes `Validators` in |
 
 ### Standard Files Using This Pattern
 
 | File | Subtype | Notes |
 |---|---|---|
-| `[module].errors.js` | Data-only | Pure `Object.freeze({...})` — no loader |
-| `[module].config.js` | Data-only | Pure `Object.assign({}, defaults)` export — no loader |
+| `[module].errors.js` | Data-only | Pure `Object.freeze({...})`, no loader |
+| `[module].config.js` | Data-only | Pure `Object.assign({}, defaults)` export, no loader |
 | `[module].validators.js` | Lib-injected | Config + options validators; `Lib.Utils` for type checks |
 
 ### Upgrade Candidates (Currently Factory, Should Become Singleton)
 
-These modules are currently written as factories but meet all four singleton criteria. Each is a **breaking change** when converted — treat each as its own versioned migration step, not a bulk change.
+These modules are currently written as factories but meet all four singleton criteria. Each is a **breaking change** when converted. Treat each as its own versioned migration step, not a bulk change.
 
 | Module | Why it qualifies | Migration notes |
 |---|---|---|
-| `js-helper-utils` | Zero dependencies, zero state, pure type-check functions. No valid reason for two separate instances. | No-dep singleton subtype — no `let Lib` needed at all |
-| `js-helper-debug` | Pure structured logging. Config (`log_level`, `output_format`) is set once at app startup and never varies between callers at runtime. | Lib-injected singleton; `CONFIG` injected once via loader |
-| `js-helper-time` | Pure date math + formatting. Uses only `Lib.Utils` and timezone config that is the same for all callers. | Lib-injected singleton; `CONFIG` injected once via loader |
+| `js-helper-utils` | Zero dependencies, zero state, pure type-check functions. No valid reason for two separate instances. | No-dep singleton subtype; no `let Lib` needed at all |
+| `js-helper-debug` | Pure structured logging. Config (`log_level`, `output_format`) is set once at app startup and never varies between callers at runtime. | Lib-injected singleton. `CONFIG` injected once via loader |
+| `js-helper-time` | Pure date math + formatting. Uses only `Lib.Utils` and timezone config that is the same for all callers. | Lib-injected singleton. `CONFIG` injected once via loader |
 | `js-server-helper-crypto` | Pure hashing/UUID/encoding functions. Uses `Lib.Utils` + config defaults that never vary per-caller. | Lib-injected singleton |
-| `js-server-helper-instance` | Pure request lifecycle management. No held state — the per-request object is returned to the caller, never stored inside the module. | Lib-injected singleton |
-| `js-server-helper-http` | `CONFIG` only holds `TIMEOUT` and `USER_AGENT` — both are app-wide constants. All per-call variation (auth headers, per-request timeout) is already passed via `options` params, not baked into `CONFIG`. No held state. | Lib-injected singleton |
+| `js-server-helper-instance` | Pure request lifecycle management. No held state; the per-request object is returned to the caller, never stored inside the module. | Lib-injected singleton |
+| `js-server-helper-http` | `CONFIG` only holds `TIMEOUT` and `USER_AGENT`, both are app-wide constants. All per-call variation (auth headers, per-request timeout) is already passed via `options` params, not baked into `CONFIG`. No held state. | Lib-injected singleton |
 
 **Do not convert:** all DB modules (`sql-*`, `nosql-*`), all cloud SDK modules (`storage-aws-*`, `queue-aws-*`), `js-server-helper-auth`, `js-server-helper-verify`, `js-server-helper-logger`, and all `*-store-*` adapters. These legitimately have per-caller `CONFIG` or per-instance state.
 
@@ -623,7 +623,7 @@ When the parent module evolves the contract (adds a method, changes a return sha
 The store is instantiated in the **loader**, not inside `createInterface`. This keeps `createInterface` a pure factory that only builds an interface from what it is given:
 
 ```javascript
-// In the loader — after Validators.validateConfig(CONFIG)
+// In the loader, after Validators.validateConfig(CONFIG)
 const store = CONFIG.STORE(Lib, CONFIG, ERRORS);
 
 // store is then threaded into createInterface as an explicit parameter
@@ -1002,4 +1002,4 @@ const loader = function (shared_libs, config) {
 - Public functions (`const [ModuleName] = { ... }`) declared at module level
 - `module.exports` calls `loader(shared_libs, config)` once and returns the module-level public interface
 
-When migrating a Pattern 1 module to Pattern 2, treat it as a breaking change for that module - see [Reference Implementations](#reference-implementations) above.
+When migrating a Pattern 1 module to Pattern 2, treat it as a breaking change for that module. See [Reference Implementations](#reference-implementations) above.

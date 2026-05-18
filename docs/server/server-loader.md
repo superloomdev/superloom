@@ -51,7 +51,7 @@ The full merged configuration (static + env). Modules should not read `process.e
 
 ## Why Dependency Injection
 
-The alternative is direct `require()` calls scattered across modules. The problem with direct imports is coupling: if a service hard-codes `require('../helpers/db')`, you cannot test that service without a real database. With `Lib`, you can replace any dependency by swapping what the loader puts in the container — a real DB connection in production, a lightweight stub in tests.
+The alternative is direct `require()` calls scattered across modules. The problem with direct imports is coupling: if a service hard-codes `require('../helpers/db')`, you cannot test that service without a real database. With `Lib`, you can replace any dependency by swapping what the loader puts in the container: a real DB connection in production, a lightweight stub in tests.
 
 The loader also controls initialization order. Helpers load first (they have no dependencies on entity code), then models (they depend on helpers), then services (they depend on both), then controllers (they depend on everything). Nothing reads `process.env` or loads a config file outside this sequence. The entire dependency graph is visible in one file.
 

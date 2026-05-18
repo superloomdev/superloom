@@ -126,8 +126,8 @@ The compressed, AI-facing mirror of these documents lives in [`AGENTS.md`](https
 
 Every `docs/<section>/` folder that accumulates enough "real failures we fixed" gets a single `pitfalls.md` file alongside the philosophy docs:
 
-- [`dev/pitfalls.md`](dev/pitfalls.md) — AI terminal, CI/CD publishing, local module testing.
-- [`testing/migration-pitfalls.md`](testing/migration-pitfalls.md) — module-migration failures (kept under its current filename).
+- [`dev/pitfalls.md`](dev/pitfalls.md) - AI terminal, CI/CD publishing, local module testing.
+- [`testing/migration-pitfalls.md`](testing/migration-pitfalls.md) - module-migration failures (kept under its current filename).
 
 Rules:
 
@@ -135,7 +135,7 @@ Rules:
 - Every entry is **Symptom → Cause → Lesson/Fix**.
 - Philosophy docs keep only the *positive* rules. Symptoms and root causes always live in the pitfall file.
 - Pitfall files are **AI-oriented**, not first-read material. Humans jump to them only when a specific failure needs a confirmed fix.
-- Anchors in pitfall files are stable — `AGENTS.md` and other cross-references rely on them. Never rename an H2 or H3 after it is published.
+- Anchors in pitfall files are stable. `AGENTS.md` and other cross-references rely on them. Never rename an H2 or H3 after it is published.
 
 ## Local Preview (Future)
 

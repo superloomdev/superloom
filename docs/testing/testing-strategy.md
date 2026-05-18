@@ -183,7 +183,7 @@ The suite is **not exported** through the parent module's `package.json` `export
 **Verify (second example, same pattern):**
 - **Parent + in-memory fixture:** `src/helper-modules-server/js-server-helper-verify/_test/memory-store.js` + `_test/shared-store-suite.js`
 - **Five adapter copies:** each `js-server-helper-verify-store-*/_test/shared-store-suite.js`
-- **Tier wiring:** same — each adapter's `_test/test.js` imports the local copy and runs it against the real backend
+- **Tier wiring:** same. Each adapter’s `_test/test.js` imports the local copy and runs it against the real backend
 
 > **Note:** The in-memory fixture for verify is currently defined inline in `_test/test.js`. It must be extracted to `_test/memory-store.js` before the adapter `_test/` directories can be created (they need to import it). This extraction is tracked in the verify adapter work plan.
 

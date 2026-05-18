@@ -91,7 +91,7 @@ See [`module-structure-js.md`](../modules/module-structure-js#helper-module-patt
 
 **Symptom:** After renaming variables, restructuring blocks, or moving functions, the file has correct logic but: missing or stale inline step comments, incorrect vertical spacing around modified blocks, and comment text still referencing old names.
 
-**Root cause:** The edit tools apply changes surgically, one block at a time. Each edit focuses on the structural change. Comment coverage of new/moved blocks, spacing around modified sections, and stale wording in nearby comments are not re-evaluated during the logic pass — they only surface on a dedicated formatting read.
+**Root cause:** The edit tools apply changes surgically, one block at a time. Each edit focuses on the structural change. Comment coverage of new/moved blocks, spacing around modified sections, and stale wording in nearby comments are not re-evaluated during the logic pass. They only surface on a dedicated formatting read.
 
 **Fix:** Any refactor that touches 3+ functions or renames variables/parameters requires a mandatory two-pass check before the task is complete:
 
@@ -101,9 +101,9 @@ See [`module-structure-js.md`](../modules/module-structure-js#helper-module-patt
   - (b) Correct 3/2/1 vertical spacing
   - (c) No stale comment text referencing old names
   - (d) Consistent banner widths
-  - (e) **No single-line `return { ... }` objects** — all object returns must be multi-line (see [Return Objects](../foundations/code-formatting-js.md#return-objects))
-  - (f) **Private helpers in `_Name` enclosure** — no bare `Name.method = function(...)` assignments; all private helpers live inside `const _Name = { ... }` (see [Private Functions Enclosure](../foundations/code-formatting-js.md#private-functions-enclosure))
-  - (g) **`};` combined with END banner** — no standalone `};` line before `///...END...///` banners (see [Section Closing Banners](../foundations/code-formatting-js.md#section-closing-banners))
+  - (e) **No single-line `return { ... }` objects.** All object returns must be multi-line (see [Return Objects](../foundations/code-formatting-js.md#return-objects))
+  - (f) **Private helpers in `_Name` enclosure.** No bare `Name.method = function(...)` assignments; all private helpers live inside `const _Name = { ... }` (see [Private Functions Enclosure](../foundations/code-formatting-js.md#private-functions-enclosure))
+  - (g) **`};` combined with END banner.** No standalone `};` line before `///...END...///` banners (see [Section Closing Banners](../foundations/code-formatting-js.md#section-closing-banners))
   - Run `npm run lint` again.
 
 ### Patching when complete rewrite is needed

@@ -23,8 +23,8 @@ module.exports = {
 ```
 
 - Returns `false` on success (no errors)
-- Returns an array of error objects on failure — each shaped `{ code, message, status }` from `[entity].errors.js`
-- The caller checks `if (validation_errors)` — truthy means errors exist
+- Returns an array of error objects on failure. Each shaped `{ code, message, status }` from `[entity].errors.js`
+- The caller checks `if (validation_errors)`; truthy means errors exist
 
 ## On This Page
 

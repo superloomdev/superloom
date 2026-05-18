@@ -30,9 +30,9 @@ Each category has exactly one correct disposal mechanism.
 
 | Layer | Throws programmer errors | Returns operational errors | Returns domain errors |
 |---|---|---|---|
-| **Helper module** | Yes — bad arguments, misconfiguration | Yes — I/O failures, SDK errors | No — helpers have no domain knowledge |
-| **Service** | Yes — bad arguments to the service | No — wraps operational errors into domain errors | Yes — the primary source of domain errors |
-| **Controller** | Yes — bad arguments | No | Yes — passes through from service |
+| **Helper module** | Yes (bad arguments, misconfiguration) | Yes (I/O failures, SDK errors) | No (helpers have no domain knowledge) |
+| **Service** | Yes (bad arguments to the service) | No (wraps operational errors into domain errors) | Yes (the primary source of domain errors) |
+| **Controller** | Yes (bad arguments) | No | Yes (passes through from service) |
 | **Interface** | No | No | Maps domain error `status` to HTTP status code |
 
 ---
@@ -317,7 +317,7 @@ return { success: false, error: Lib.User.errors.EMAIL_ALREADY_EXISTS };
 return Lib.Functions.errorResponse(result.error, result.error.status);
 ```
 
-The envelope pattern is deliberate: every function that can fail returns `{ success: true, data }` or `{ success: false, error }`. The caller checks `result.success` before accessing data. This is more verbose than throwing, but it makes the error path explicit — you cannot accidentally ignore a failure because you forgot a `try/catch`.
+The envelope pattern is deliberate: every function that can fail returns `{ success: true, data }` or `{ success: false, error }`. The caller checks `result.success` before accessing data. This is more verbose than throwing, but it makes the error path explicit. You cannot accidentally ignore a failure because you forgot a `try/catch`.
 
 ---
 
@@ -331,8 +331,8 @@ The `type` field of a catalog error is the stable identifier that service-layer 
 
 A mechanical rule like "always prefix with the module name" produces types that look authoritative but are often misleading:
 
-- `POSTGRES_DATABASE_QUERY_FAILED` — the module is `js-server-helper-sql-postgres`, but what does "Postgres" mean to a service receiving this? The service doesn't care which vendor threw the error; it cares that a **database query failed**. The vendor is irrelevant to the service and will change when you swap backends.
-- `VERIFY_COOLDOWN_ACTIVE` — `VERIFY_` tells you the module, but `COOLDOWN_ACTIVE` already has zero ambiguity. There is no other module that would emit a `COOLDOWN_ACTIVE` type. The prefix adds noise without adding signal.
+- `POSTGRES_DATABASE_QUERY_FAILED`. The module is `js-server-helper-sql-postgres`, but what does "Postgres" mean to a service receiving this? The service doesn't care which vendor threw the error; it cares that a **database query failed**. The vendor is irrelevant to the service and will change when you swap backends.
+- `VERIFY_COOLDOWN_ACTIVE`. `VERIFY_` tells you the module, but `COOLDOWN_ACTIVE` already has zero ambiguity. There is no other module that would emit a `COOLDOWN_ACTIVE` type. The prefix adds noise without adding signal.
 
 The real question to ask before naming a type is: **what piece of information is genuinely missing from the name without a prefix?**
 
@@ -340,7 +340,7 @@ The real question to ask before naming a type is: **what piece of information is
 
 ### Three Classes of Error Types
 
-#### Class 1 — Functional namespace (infrastructure drivers)
+#### Class 1: Functional namespace (infrastructure drivers)
 
 Used by: `js-server-helper-sql-postgres`, `js-server-helper-sql-mysql`, `js-server-helper-sql-sqlite`, `js-server-helper-nosql-aws-dynamodb`, `js-server-helper-nosql-mongodb`, and any future infrastructure wrapper.
 
@@ -348,7 +348,7 @@ These modules describe **what kind of operation failed**, not which module. The 
 
 1. Services branch on the operation kind, not the vendor. `DATABASE_QUERY_FAILED` means the same thing regardless of whether Postgres or MySQL is underneath.
 2. Vendor names in type strings create coupling. A service that sees `POSTGRES_QUERY_FAILED` has implicitly learned which backend is running. That defeats the point of the adapter pattern.
-3. The operation family is the stable identity — it survives backend swaps.
+3. The operation family is the stable identity. It survives backend swaps.
 
 ```javascript
 // Correct: functional namespace
@@ -359,15 +359,15 @@ STORAGE_PUT_FAILED
 QUEUE_SEND_FAILED
 ```
 
-#### Class 2 — Module prefix (domain/behavioral helpers)
+#### Class 2: Module prefix (domain/behavioral helpers)
 
 Used by: `js-server-helper-verify`, `js-server-helper-auth`, and any future domain helper that manages application-level state.
 
-These modules return errors that describe **outcomes of business logic**, not infrastructure failures. `SERVICE_UNAVAILABLE` and `NOT_FOUND` are examples where the name alone is dangerously generic — multiple domain helpers could emit them, and a log line showing only `type: 'SERVICE_UNAVAILABLE'` tells you nothing about origin.
+These modules return errors that describe **outcomes of business logic**, not infrastructure failures. `SERVICE_UNAVAILABLE` and `NOT_FOUND` are examples where the name alone is dangerously generic. Multiple domain helpers could emit them, and a log line showing only `type: 'SERVICE_UNAVAILABLE'` tells you nothing about origin.
 
 The decision process for each error in a domain helper:
 
-1. **Is the name self-evidently unique to this module?** `COOLDOWN_ACTIVE` only makes sense in the context of verify. `ACTOR_TYPE_MISMATCH` only makes sense in auth. These have low collision risk. However, mixing prefixed and bare names in the same catalog is confusing — it implies some errors matter more than others. So the rule that follows applies to the whole catalog.
+1. **Is the name self-evidently unique to this module?** `COOLDOWN_ACTIVE` only makes sense in the context of verify. `ACTOR_TYPE_MISMATCH` only makes sense in auth. These have low collision risk. However, mixing prefixed and bare names in the same catalog is confusing; it implies some errors matter more than others. So the rule that follows applies to the whole catalog.
 
 2. **Could any other helper ever emit the same name?** `SERVICE_UNAVAILABLE`, `NOT_FOUND`, `EXPIRED` are common English words. Any module could plausibly produce them. Without a prefix, `error.type === 'NOT_FOUND'` in a log is unattributable.
 
@@ -392,9 +392,9 @@ AUTH_SESSION_EXPIRED
 AUTH_ACTOR_TYPE_MISMATCH
 ```
 
-#### Class 3 — Future modules
+#### Class 3: Future modules
 
-Apply the same decision process. Ask: is this module an infrastructure adapter (use functional namespace), or a domain/behavioral helper (use module short-name prefix)? When genuinely uncertain, lean toward the module prefix — it is always safe to add attribution, but removing it later is a breaking change for any code that branches on the type string.
+Apply the same decision process. Ask: is this module an infrastructure adapter (use functional namespace), or a domain/behavioral helper (use module short-name prefix)? When genuinely uncertain, lean toward the module prefix. It is always safe to add attribution, but removing it later is a breaking change for any code that branches on the type string.
 
 ---
 
@@ -408,7 +408,7 @@ Use the short logical name (`VERIFY_`, `AUTH_`), not the full package name (`JS_
 
 ### Intentionally Shared Semantics
 
-`SERVICE_UNAVAILABLE` means the same thing in every module: "storage is down, try again." That semantic sameness is real and should be preserved — at the **service-layer translation step**, not in the type string. A service receiving both `VERIFY_SERVICE_UNAVAILABLE` and `AUTH_SERVICE_UNAVAILABLE` maps both to the same domain error (`Lib.User.errors.SERVICE_UNAVAILABLE`). The prefixed type strings communicate origin in logs; the domain error communicates the outcome to the caller.
+`SERVICE_UNAVAILABLE` means the same thing in every module: "storage is down, try again." That semantic sameness is real and should be preserved at the **service-layer translation step**, not in the type string. A service receiving both `VERIFY_SERVICE_UNAVAILABLE` and `AUTH_SERVICE_UNAVAILABLE` maps both to the same domain error (`Lib.User.errors.SERVICE_UNAVAILABLE`). The prefixed type strings communicate origin in logs; the domain error communicates the outcome to the caller.
 
 ```javascript
 // service.js - both prefixed types map to the same domain error

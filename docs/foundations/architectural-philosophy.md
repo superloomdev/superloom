@@ -1,6 +1,6 @@
 # Architectural Philosophy
 
-The high-level rules that shape every project. Covers the reasoning behind the directory layout, the conventions that hold the codebase together, and the contract between framework code and application code. Specific patterns and templates are in the other `architecture/` documents — see [Further Reading](#further-reading).
+The high-level rules that shape every project. Covers the reasoning behind the directory layout, the conventions that hold the codebase together, and the contract between framework code and application code. Specific patterns and templates are in the other `architecture/` documents; see [Further Reading](#further-reading).
 
 ## On This Page
 
@@ -37,7 +37,7 @@ The architecture serves four non-negotiable goals. Every other rule in `architec
 |---|---|
 | **Docker (self-hosted)** | Single container with the full Express server |
 | **AWS Lambda (Serverless)** | Per-entity Lambda functions behind API Gateway, with DynamoDB / Aurora / S3 |
-| **Future** | The architecture is designed so that adding a new deployment target (e.g., Cloud Run, Azure Functions) requires only a new interface adapter — no changes to business logic |
+| **Future** | The architecture is designed so that adding a new deployment target (e.g., Cloud Run, Azure Functions) requires only a new interface adapter. No changes to business logic |
 
 ---
 
@@ -155,7 +155,7 @@ src/client/
   and/                # Native Android (Kotlin/Java)
 ```
 
-The client side is largely a future expansion. The framework's foundations — helper modules, shared model layer, and interface-separated server — are already structured to support it.
+The client side is largely a future expansion. The framework's foundations (helper modules, shared model layer, and interface-separated server) are already structured to support it.
 
 ---
 

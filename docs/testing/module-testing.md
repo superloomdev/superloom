@@ -110,7 +110,7 @@ See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/te
 cd _test && npm install && npm test
 ```
 
-Docker lifecycle is automatic: `pretest` starts the [emulator] container, `posttest` stops and removes it (containers and volumes only — images are cached). No manual `docker compose up` needed.
+Docker lifecycle is automatic: `pretest` starts the [emulator] container, `posttest` stops and removes it (containers and volumes only; images are cached). No manual `docker compose up` needed.
 
 Full guide: `_test/ops/00-local-testing/[module]-setup.md`
 

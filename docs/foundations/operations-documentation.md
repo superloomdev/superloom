@@ -106,36 +106,36 @@ my-project/
 
 **Rules:**
 - Top-level entries are always numbered directories: `00-domain/`, `01-dns/`, etc.
-- Numbers define both **setup sequence and dependency order** — a step is numbered after everything it depends on. DNS comes before SSL because ACM validation requires a live hosted zone; SSL comes before CDN because CloudFront requires a certificate.
+- Numbers define both **setup sequence and dependency order**. A step is numbered after everything it depends on. DNS comes before SSL because ACM validation requires a live hosted zone; SSL comes before CDN because CloudFront requires a certificate.
 - Vendor-agnostic directory names, vendor-prefixed file names.
 - Files are named `{vendor}-{service}-setup.md`. A bare `setup.md` with no prefix is not acceptable.
 - Multiple services in the same category each get their own file (e.g. `aws-dynamodb-setup.md`, `mongodb-atlas-setup.md`).
 - Policy JSON files, SQL scripts, and other supporting artifacts live alongside their setup doc in the same directory.
-- Secret values are never written inline — see the Secrets section for the correct reference format.
-- Projects using only a subset of categories renumber from `00` in their own dependency order. Never carry over numbers from this reference example — the numbers here are illustrative, not fixed.
+- Secret values are never written inline. See the Secrets section for the correct reference format.
+- Projects using only a subset of categories renumber from `00` in their own dependency order. Never carry over numbers from this reference example. The numbers here are illustrative, not fixed.
 
 **Numbering Convention:**
 The number prefix ensures the runbook is followed in order. A developer setting up a new environment starts at `00` and works through each folder sequentially. The canonical dependency order is:
 
 | # | Category | Depends On |
 |---|---|---|
-| 00 | `domain` | — |
-| 01 | `dns` | 00 — nameservers must be set before DNS validation |
-| 02 | `ssl-certificates` | 01 — DNS must be live for ACM validation |
-| 03 | `cloud-provider` | — |
+| 00 | `domain` | none |
+| 01 | `dns` | 00 (nameservers must be set before DNS validation) |
+| 02 | `ssl-certificates` | 01 (DNS must be live for ACM validation) |
+| 03 | `cloud-provider` | none |
 | 04 | `billing` | 03 |
 | 05 | `development-environment` | 03 |
-| 06 | `source-control` | — |
-| 07 | `identity-access` | 03 — IAM lives inside the cloud account |
-| 08 | `networking` | 07 — VPCs need IAM roles to attach |
-| 09 | `object-storage` | 07 — buckets need IAM policies |
-| 10 | `parameter-management` | 07 — SSM needs IAM access |
-| 11 | `relational-database` | 08, 10 — needs VPC and config |
+| 06 | `source-control` | none |
+| 07 | `identity-access` | 03 (IAM lives inside the cloud account) |
+| 08 | `networking` | 07 (VPCs need IAM roles to attach) |
+| 09 | `object-storage` | 07 (buckets need IAM policies) |
+| 10 | `parameter-management` | 07 (SSM needs IAM access) |
+| 11 | `relational-database` | 08, 10 (needs VPC and config) |
 | 12 | `nosql-database` | 07, 10 |
 | 13 | `messaging` | 07 |
-| 14 | `cdn` | 02, 09 — needs cert and origin bucket |
-| 15 | `deployment` | 07, 14 — needs IAM and CDN live |
-| 16 | `scheduled-tasks` | 15 — triggers deployed functions |
+| 14 | `cdn` | 02, 09 (needs cert and origin bucket) |
+| 15 | `deployment` | 07, 14 (needs IAM and CDN live) |
+| 16 | `scheduled-tasks` | 15 (triggers deployed functions) |
 
 ---
 
@@ -149,19 +149,19 @@ Secret values are never written into runbook files. Where a value goes depends o
 | Runtime config (DB passwords, encryption keys) | `__dev__/secrets/production.md` | `[SECRET → __dev__/secrets/production.md]` |
 
 **Rules:**
-- `__dev__/` is fully gitignored — no partial exceptions
-- `.env.*` files are gitignored — never commit them
+- `__dev__/` is fully gitignored. No partial exceptions
+- `.env.*` files are gitignored. Never commit them
 - Runbook files always use a reference, never the actual value
 - Handover of secrets happens through secure channels, not git
 
-**Example — CI/CD credentials (`ops/05-identity-access/aws-iam-setup.md`):**
+**Example: CI/CD credentials (`ops/05-identity-access/aws-iam-setup.md`):**
 
 ```markdown
-* Copy the Access Key ID and Secret Access Key immediately — shown only once
+* Copy the Access Key ID and Secret Access Key immediately. Shown only once
 * Store both in `.env.production`
 ```
 
-**Example — runtime config (`ops/10-parameter-management/aws-ssm-setup.md`):**
+**Example: runtime config (`ops/10-parameter-management/aws-ssm-setup.md`):**
 
 ```markdown
 | Key | Description | Type | Value |
@@ -235,11 +235,11 @@ Every setup file follows this structure:
 
 ## Notes
 
-- [Non-obvious gotcha, cost implication, or important constraint — omit if nothing meaningful to say]
+- [Non-obvious gotcha, cost implication, or important constraint. Omit if nothing meaningful to say]
 ```
 
 **Rules:**
-- Start Prerequisites with a plain sentence — describe what must be ready, not which folder number to complete first. Folder numbers change; concepts don't.
+- Start Prerequisites with a plain sentence. Describe what must be ready, not which folder number to complete first. Folder numbers change; concepts don't.
 - Use `## Notes` only when there is something genuinely non-obvious. Omit it entirely if there is nothing to say.
 - No `## Verification` section. Ops runbooks record configuration, not test scripts. If something needs confirming, note it inline within the step.
 - No `> Reference:` line. The reader can consult `docs/ops/` directly if they need background.

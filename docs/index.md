@@ -2,19 +2,19 @@
 
 > A modular Node.js framework for backend applications. Consistent. Modular. Ready for AI-assisted development.
 
-Modern backends face a familiar pressure: AI agents can now generate code faster than humans can review it. Without structure, the result is architectural drift — every new feature adds a slightly different way of doing the same thing.
+Modern backends face a familiar pressure: AI agents can now generate code faster than humans can review it. Without structure, the result is architectural drift. Every new feature adds a slightly different way of doing the same thing.
 
-Superloom is an opinionated frame for backend applications: one way to structure data, one way to inject dependencies, one way to handle errors, and a catalog of pre-tested helper modules so the same plumbing never gets rewritten twice. The same business logic runs unchanged on **Docker (Express)** and **AWS Lambda** — only the transport adapter at the edge changes. Currently implemented in JavaScript.
+Superloom is an opinionated frame for backend applications: one way to structure data, one way to inject dependencies, one way to handle errors, and a catalog of pre-tested helper modules so the same plumbing never gets rewritten twice. The same business logic runs unchanged on **Docker (Express)** and **AWS Lambda**; only the transport adapter at the edge changes. Currently implemented in JavaScript.
 
 ---
 
 ## Why Superloom
 
-- **Build once. Reuse on every new project.** Every module ships pre-tested with a stable contract, so the next codebase — and the AI agent helping build it — relies on the wrapper instead of re-discovering the plumbing each time.
+- **Build once. Reuse on every new project.** Every module ships pre-tested with a stable contract, so the next codebase (and the AI agent helping build it) relies on the wrapper instead of re-discovering the plumbing each time.
 
 - **Designed for human review of AI output.** Section banners, short functions, scoped comments, and a single response envelope let a reviewer read any module top-to-bottom and spot what an AI got wrong, without getting lost in dense logic.
 
-- **Opinionated enough that AI can't drift.** One loader shape, one validation contract, one error envelope — every contributor stays on the same rails, human or AI, so a six-month-old codebase still looks like a six-day-old one.
+- **Opinionated enough that AI can't drift.** One loader shape, one validation contract, one error envelope. Every contributor stays on the same rails, human or AI, so a six-month-old codebase still looks like a six-day-old one.
 
 - **Real modules, not an abstraction layer.** Each helper wraps one production library (Postgres, S3, MongoDB, …) so when an upstream driver changes, only the wrapper updates. Your application code stays exactly as it is.
 
@@ -39,7 +39,7 @@ const loader = function (shared_libs, config) {
 //////////////////////////// Module-Loader END /////////////////////////////////
 ```
 
-A reviewer uses these as anchor points — *"I've read the loader, now onto the public functions."* Sections are large and few (loader, exports, public functions, private functions), so a file never has more than four or five banners. The shape is identical across every module, so navigating a new module costs you zero learning.
+A reviewer uses these as anchor points. *"I've read the loader, now onto the public functions."* Sections are large and few (loader, exports, public functions, private functions), so a file never has more than four or five banners. The shape is identical across every module, so navigating a new module costs you zero learning.
 
 ### JSDoc on every public function
 
@@ -88,13 +88,13 @@ Module files use a strict vertical-spacing hierarchy so a reviewer can tell from
 | **2 blank lines** | Between function definitions |
 | **1 blank line** | Inside functions, between logical blocks; after `if`/`else`, after `return` |
 
-Look back at the two code blocks above — the spacing is not accidental. It is a structural reading aid.
+Look back at the two code blocks above; the spacing is not accidental. It is a structural reading aid.
 
 The full rules (naming, comments, banner widths, section header hierarchy) live in [Code Formatting](foundations/code-formatting-js).
 
 ### AI configuration sits next to the code
 
-Every Superloom project ships with an `AGENTS.md` at the repo root and every module ships with a `ROBOTS.md` alongside its source. They are compact, machine-readable rule files an AI agent reads first — so when you ask an AI assistant to add a new entity or change a helper, it starts with the rules, not a guess.
+Every Superloom project ships with an `AGENTS.md` at the repo root and every module ships with a `ROBOTS.md` alongside its source. They are compact, machine-readable rule files an AI agent reads first, so when you ask an AI assistant to add a new entity or change a helper, it starts with the rules, not a guess.
 
 ---
 
@@ -124,10 +124,10 @@ Interface (transport adapter)
   <- response envelope { success, data | error }
 ```
 
-- **Interfaces** handle protocol translation only — Express vs Lambda
-- **Controllers** stay thin (10–30 lines per action)
-- **Services** hold all business logic
-- **Models** are shared between server and (future) client
+- **Interfaces** - protocol translation only (Express vs Lambda)
+- **Controllers** - stay thin (10–30 lines per action)
+- **Services** - hold all business logic
+- **Models** - shared between server and (future) client
 
 For the full picture see [Architectural Philosophy](foundations/architectural-philosophy).
 
@@ -139,39 +139,39 @@ Every module is published independently to GitHub Packages under `@superloomdev/
 
 ### Core helpers (platform-agnostic)
 
-- **`@superloomdev/js-helper-utils`** — Type checks, validation, sanitization, data manipulation. Zero external dependencies; safe to share between server and client.
-- **`@superloomdev/js-helper-debug`** — Structured logging with levels (debug, info, warn, error). Routes to console, JSON, or your own sink.
-- **`@superloomdev/js-helper-time`** — Date/time math, timezone handling, formatting — without pulling in a heavy library.
+- **`@superloomdev/js-helper-utils`** - type checks, validation, sanitization, data manipulation. Zero external dependencies; safe to share between server and client.
+- **`@superloomdev/js-helper-debug`** - structured logging with levels (debug, info, warn, error). Routes to console, JSON, or your own sink.
+- **`@superloomdev/js-helper-time`** - date/time math, timezone handling, and formatting, without pulling in a heavy library.
 
 ### Databases (hot-swappable, same calling shape)
 
-- **`@superloomdev/js-server-helper-sql-postgres`** — PostgreSQL with pooling, automatic placeholder translation, request-level timing.
-- **`@superloomdev/js-server-helper-sql-mysql`** — MySQL with pooling and the same query API as the Postgres helper.
-- **`@superloomdev/js-server-helper-sql-sqlite`** — SQLite via Node's built-in `node:sqlite`. Zero external dependency; ideal for offline or embedded use.
-- **`@superloomdev/js-server-helper-nosql-mongodb`** — MongoDB with lazy-loaded native driver and connection pooling.
-- **`@superloomdev/js-server-helper-nosql-aws-dynamodb`** — DynamoDB CRUD, batch, query, scan; lazy-loaded SDK v3.
+- **`@superloomdev/js-server-helper-sql-postgres`** - PostgreSQL with pooling, automatic placeholder translation, request-level timing.
+- **`@superloomdev/js-server-helper-sql-mysql`** - MySQL with pooling and the same query API as the Postgres helper.
+- **`@superloomdev/js-server-helper-sql-sqlite`** - SQLite via Node's built-in `node:sqlite`. Zero external dependency; ideal for offline or embedded use.
+- **`@superloomdev/js-server-helper-nosql-mongodb`** - MongoDB with lazy-loaded native driver and connection pooling.
+- **`@superloomdev/js-server-helper-nosql-aws-dynamodb`** - DynamoDB CRUD, batch, query, scan; lazy-loaded SDK v3.
 
 ### Storage and queues
 
-- **`@superloomdev/js-server-helper-storage-aws-s3`** — S3 file operations with the same response envelope as every other helper.
-- **`@superloomdev/js-server-helper-storage-aws-s3-url-signer`** — S3 presigned URL generation, isolated so credentials never need to leave the signer.
-- **`@superloomdev/js-server-helper-queue-aws-sqs`** — SQS message queue: send, receive, delete, with structured logging built in.
+- **`@superloomdev/js-server-helper-storage-aws-s3`** - S3 file operations with the same response envelope as every other helper.
+- **`@superloomdev/js-server-helper-storage-aws-s3-url-signer`** - S3 presigned URL generation, isolated so credentials never need to leave the signer.
+- **`@superloomdev/js-server-helper-queue-aws-sqs`** - SQS message queue: send, receive, delete, with structured logging built in.
 
 ### Auth, verification, and logging
 
-- **`@superloomdev/js-server-helper-auth`** — Session lifecycle plus JWT auth with refresh-token rotation. Storage-agnostic adapter pattern (SQLite, Postgres, MySQL, MongoDB, DynamoDB).
-- **`@superloomdev/js-server-helper-verify`** — One-time verification codes (pin / code / token) with hot-swappable store adapters per backend.
-- **`@superloomdev/js-server-helper-logger`** — Compliance-friendly action log: per-row retention (persistent or TTL), optional IP encryption, multi-backend stores.
+- **`@superloomdev/js-server-helper-auth`** - session lifecycle plus JWT auth with refresh-token rotation. Storage-agnostic adapter pattern (SQLite, Postgres, MySQL, MongoDB, DynamoDB).
+- **`@superloomdev/js-server-helper-verify`** - one-time verification codes (pin / code / token) with hot-swappable store adapters per backend.
+- **`@superloomdev/js-server-helper-logger`** - compliance-friendly action log: per-row retention (persistent or TTL), optional IP encryption, multi-backend stores.
 
 ### Cross-cutting helpers
 
-- **`@superloomdev/js-server-helper-instance`** — Request lifecycle, cleanup, background tasks. Lambda-aware.
-- **`@superloomdev/js-server-helper-crypto`** — Hashing, encryption, UUID, random strings. Standard Node crypto with opinionated defaults.
-- **`@superloomdev/js-server-helper-http`** — Outgoing HTTP client wrapping native fetch; includes multipart upload.
+- **`@superloomdev/js-server-helper-instance`** - request lifecycle, cleanup, background tasks. Lambda-aware.
+- **`@superloomdev/js-server-helper-crypto`** - hashing, encryption, UUID, random strings. Standard Node crypto with opinionated defaults.
+- **`@superloomdev/js-server-helper-http`** - outgoing HTTP client wrapping native fetch; includes multipart upload.
 
 ### Client (browser-only)
 
-- **`@superloomdev/js-client-helper-crypto`** — UUID, random strings, base64 via the Web Crypto API. Same naming as the server crypto helper.
+- **`@superloomdev/js-client-helper-crypto`** - UUID, random strings, base64 via the Web Crypto API. Same naming as the server crypto helper.
 
 ---
 

@@ -84,7 +84,7 @@ The detect job will list every module whose `<name>@<version>` is not yet on the
 
 ### Important guidelines
 
-- **Publishing is CI-only.** Always use the pipeline rather than `npm publish` directly — the pipeline ensures tests pass before publishing and keeps version-vs-source tracking consistent.
+- **Publishing is CI-only.** Always use the pipeline rather than `npm publish` directly. The pipeline ensures tests pass before publishing and keeps version-vs-source tracking consistent.
 - **Version numbers move forward only.** Even when restoring an old build, bump the version forward. Downstream consumers rely on `^x.y.z` resolution working predictably.
 
 ## Why a Single Workflow
@@ -152,7 +152,7 @@ This allows `GITHUB_TOKEN` to be granted write permissions by individual jobs.
 
 Every CI symptom, root cause, and durable fix this pipeline has ever uncovered is journaled in [`pitfalls.md` → CI/CD Publishing](pitfalls.md#cicd-publishing). Eleven entries as of the last sweep, covering port-allocation races, `PROTOCOL_CONNECTION_LOST`, detect-job version comparisons, `403 Forbidden`, `ETARGET`, `MODULE_NOT_FOUND` for `file:` deps, YAML block-scalar newlines, and the transitively-skipped `publish-*` chain.
 
-When you hit a new CI failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *CI/CD Publishing* (Symptom → Cause → Lesson). Do **not** add it here — this file is for positive rules only. Propagate a compact one-liner into `AGENTS.md` via `/propagate-changes` if the rule is small enough to live there.
+When you hit a new CI failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *CI/CD Publishing* (Symptom → Cause → Lesson). Do **not** add it here. This file is for positive rules only. Propagate a compact one-liner into `AGENTS.md` via `/propagate-changes` if the rule is small enough to live there.
 
 ---
 

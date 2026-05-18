@@ -55,9 +55,9 @@ That is all. For modules with Docker dependencies, `npm test` manages the full c
 
 ## Pre-Publish Checklist
 
-Before bumping the version in `package.json` and pushing to `main`, **both gates must pass locally**. CI always runs lint before tests — skipping lint locally means a broken push, a second fix commit, and wasted pipeline time.
+Before bumping the version in `package.json` and pushing to `main`, **both gates must pass locally**. CI always runs lint before tests; skipping lint locally means a broken push, a second fix commit, and wasted pipeline time.
 
-### Gate 1 — Lint (run from module root)
+### Gate 1: Lint (run from module root)
 
 ```bash
 # From the module root, e.g. src/helper-modules-server/js-server-helper-auth/
@@ -72,7 +72,7 @@ Must exit `0` with no errors and no warnings. Common failures that only show up 
 
 Fix all lint issues before proceeding.
 
-### Gate 2 — Tests (run from `_test/`)
+### Gate 2: Tests (run from `_test/`)
 
 ```bash
 # From the module's _test/ directory
@@ -87,9 +87,9 @@ Only after both gates pass:
 
 1. Bump `version` in the module root `package.json` (patch / minor / major as appropriate)
 2. `git add` only the files belonging to the module being published
-3. Commit and push — CI will detect the version change and publish
+3. Commit and push - CI will detect the version change and publish
 
-**Never push a version bump with a lint failure** — it wastes pipeline time and pollutes the git log with a follow-up fix commit.
+**Never push a version bump with a lint failure.** It wastes pipeline time and pollutes the git log with a follow-up fix commit.
 
 The failure mode that produced this rule is journaled in [`pitfalls.md` → CI/CD Publishing entry 13](pitfalls.md#13-ci-fails-on-lint-after-local-tests-pass--pre-publish-checklist-not-followed).
 
@@ -182,7 +182,7 @@ Stateless modules (pure functions, no shared resources) do not need this wrapper
 
 Every symptom, root cause, and durable fix this testing setup has ever produced is journaled in [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing). Thirteen entries as of the last sweep, covering `ETARGET` from wrong `Cwd`, `MODULE_NOT_FOUND` from wrong scoped names, manually-started-Docker conflicts, the MySQL two-phase-init false positive, transient-ready windows, concurrent-describe race, `sleep` anti-pattern, AWS SDK metadata-chain timeouts, MongoDB replica-set PRIMARY-election race, and the `verify.generateAndStore` cooldown-zero concurrency bug.
 
-When you hit a new testing failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *Local Module Testing* (Symptom → Cause → Lesson). Do **not** add it here — this file is for positive rules only. Propagate a compact one-liner into `AGENTS.md` via `/propagate-changes` if the rule is small enough to live there.
+When you hit a new testing failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *Local Module Testing* (Symptom → Cause → Lesson). Do **not** add it here. This file is for positive rules only. Propagate a compact one-liner into `AGENTS.md` via `/propagate-changes` if the rule is small enough to live there.
 
 ---
 

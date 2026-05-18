@@ -1,4 +1,6 @@
-# JavaScript Coding Standards
+# JavaScript Code Formatting and Style
+
+> **Language:** JavaScript
 
 The complete style guide for JavaScript code in Superloom modules. ESLint enforces most of these rules automatically; the rest are conventions every contributor and AI agent is expected to follow. The compressed mirror of this guide lives in [`AGENTS.md`](https://github.com/superloomdev/superloom/blob/main/AGENTS.md).
 
@@ -211,7 +213,7 @@ const ModuleName = {
 
 ## Private Functions Enclosure
 
-Private helpers inside `createInterface` must always be declared as a `const _Name = { ... }` object literal — never as bare `Name.method = function(...)` property assignments on the public object.
+Private helpers inside `createInterface` must always be declared as a `const _Name = { ... }` object literal. Never use bare `Name.method = function(...)` property assignments on the public object.
 
 ```javascript
 ///////////////////////////Private Functions START/////////////////////////////
@@ -239,7 +241,7 @@ const _Validators = {
 
 ## Section Closing Banners
 
-The closing `};` of every named section must be combined on the same line as the `///...END...///` banner — never on a separate line.
+The closing `};` of every named section must be combined on the same line as the `///...END...///` banner. Never place it on a separate line.
 
 The closing `};` combined with the END banner:
 
@@ -330,9 +332,9 @@ const createInterface = function (Lib, CONFIG, ERRORS) { // eslint-disable-line 
 
 ### Uniform Factory Signatures
 
-When a module family (e.g. `parts/`) uses a **uniform factory signature** for consistency so the parent can call all parts identically, some parts will not consume every parameter. This is expected and correct — do not change the signature to match only what is consumed today.
+When a module family (e.g. `parts/`) uses a **uniform factory signature** for consistency so the parent can call all parts identically, some parts will not consume every parameter. This is expected and correct. Do not change the signature to match only what is consumed today.
 
-The signature is uniform across all parts: `(Lib, CONFIG, ERRORS)`. When a part only uses `Lib` today, `CONFIG` and `ERRORS` are suppressed with `eslint-disable-line`. The directive is **optional** — add it only when there is an unused parameter; remove it when all parameters are consumed.
+The signature is uniform across all parts: `(Lib, CONFIG, ERRORS)`. When a part only uses `Lib` today, `CONFIG` and `ERRORS` are suppressed with `eslint-disable-line`. The directive is **optional**. Add it only when there is an unused parameter; remove it when all parameters are consumed.
 
 ```javascript
 const createInterface = function (Lib, CONFIG, ERRORS) { // eslint-disable-line no-unused-vars
@@ -353,7 +355,7 @@ Use this decision rule for every function signature:
 
 **Never use `args` as a parameter name.** Use `options` for named-property bundles and plain descriptive names for positional params.
 
-7+ fields — use an options object:
+7+ fields, use an options object:
 
 ```javascript
 applyLimits: function (options) {

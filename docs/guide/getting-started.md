@@ -156,7 +156,7 @@ cd src/model-server && npm test   # Server model extension tests
 cd src/server && npm run test:all # Controller and service tests
 ```
 
-All JavaScript tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict` — no external test framework. See [`testing/testing-strategy.md`](../testing/testing-strategy.md) and [`testing/unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md) for the conventions.
+All JavaScript tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict`. No external test framework. See [`testing/testing-strategy.md`](../testing/testing-strategy.md) and [`testing/unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md) for the conventions.
 
 ---
 
