@@ -84,7 +84,7 @@ Helpers may support configuration **optionally**, only via **explicit parameters
 | `[js\|py]-helper-utils` | `isNull`, `isBoolean`, `inArray`, `validateString`, `getUnixTime`, `safeParseJson` |
 | `[js\|py]-helper-debug` | `info`, `error`, `performanceAuditLog` |
 | `[js\|py]-helper-time` | Date/time math, timezone conversion, formatting |
-| `[js\|py]-helper-money` | `sumMoney`, `formatMoney`, `roundMoney`, `compareMoney` |
+| `[js\|py]-helper-money` | `getCurrencySymbol`, `roundAmount`, `formatAmount`, `sum`, `toFractionalUnits` |
 
 ---
 

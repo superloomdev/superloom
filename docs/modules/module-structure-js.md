@@ -845,6 +845,8 @@ Most modules follow a consistent file structure:
 | `[name].js` | Main implementation |
 | `[name].config.js` | Module-specific constants and defaults (optional) |
 | `[name].errors.js` | **Required** - frozen error catalog for operational errors (see [Module Error File Policy](#module-error-file-policy)) |
+| `[name].validators.js` | (Optional) Singleton validators module - see [Singleton Module Pattern](#singleton-module-pattern) |
+| `data/` | (Optional) Static intrinsic reference data shipped with the module - see [Static Data Files](#static-data-files) |
 | `package.json` | Module metadata and dependencies |
 | `README.md` | Human documentation (badges, usage examples, testing guides) |
 | `ROBOTS.md` | AI agent reference (compact, token-efficient) |
@@ -909,6 +911,41 @@ module.exports = Object.freeze({
 ```
 
 See [error-handling.md](../foundations/error-handling) for full error handling patterns.
+
+### Static Data Files
+
+Some modules ship with **intrinsic reference data** - facts that are immutable, language-independent, and part of what the module *is*. Examples: ISO 4217 currency tables, ISO 3166 country codes, character-set tables, unit-conversion factors. When a module needs this kind of data, it lives in a `data/` directory at the module root.
+
+```
+src/helper-modules-core/js-helper-[module]/
+  [module].js
+  [module].config.js
+  [module].errors.js
+  [module].validators.js
+  data/
+    [name].json
+  _test/
+```
+
+**Rules:**
+
+| Rule | Detail |
+|---|---|
+| **Intrinsic facts only** | Data files contain immutable, framework-neutral facts that ship as part of the module (e.g. `iso_alpha`, `iso_numeric`, `decimals` for a currency). Locale-specific names, country-to-language mappings, project-specific labels, or anything a consuming application might reasonably override do **not** belong here |
+| **Required at module top-level** | `const DATA = require('./data/[name].json');` near the top of `[module].js` or `[module].validators.js`. Never injected through the loader signature - the data is part of the module's identity, not a per-instance dependency |
+| **One concern per file** | Split independent data sets into separate files (`data/currencies.json`, `data/regions.json`) rather than one mega-file. Each file should answer one question |
+| **Lowercase keys, snake_case fields** | Match the JavaScript convention used elsewhere in the framework. Keys are normalized (lowercased) currency / country / locale codes; field names use snake_case |
+| **No code in `data/`** | Pure JSON only. Any transformation logic belongs in the module body or validators, not in the data file |
+| **Plain JSON, no comments** | JSON files are loaded verbatim. If a fact needs explaining, document it in the module README under "Data Sources" or "Reference Data" |
+
+**When to use a static data file vs. a separate helper module:**
+
+- **Static data file** when the data is *small, intrinsic, and changes only when the underlying standard changes* (e.g. ISO 4217 revisions every few years). Ships with the module, versioned with the module.
+- **Separate helper module** when the data is *large, dynamic, or has its own update cadence* (e.g. timezone database, IP-to-country mapping). Lives in its own module so it can be updated independently.
+
+**Reference Implementation**
+
+`src/helper-modules-core/js-helper-money/data/currencies.json` - 18 currencies with ISO codes, English names, symbols, decimals, transactional units, and denominations. Required inside `money.validators.js` at module load time.
 
 ---
 

@@ -11,36 +11,37 @@
 #   2. test-utils → publish-utils
 #   3. test-debug → publish-debug
 #   4. test-time → publish-time
-#   5. test-client-crypto → publish-client-crypto
-#   6. test-server-crypto → publish-server-crypto
-#   7. test-instance → publish-instance
-#   8. test-http → publish-http
-#   9. test-storage-aws-s3-url-signer → publish-storage-aws-s3-url-signer
-#   10. test-sql-sqlite → publish-sql-sqlite
-#   11. test-storage-aws-s3 → publish-storage-aws-s3
-#   12. test-nosql-aws-dynamodb → publish-nosql-aws-dynamodb
-#   13. test-nosql-mongodb → publish-nosql-mongodb
-#   14. test-queue-aws-sqs → publish-queue-aws-sqs
-#   15. test-sql-mysql → publish-sql-mysql
-#   16. test-sql-postgres → publish-sql-postgres
-#   17. test-verify → publish-verify
-#   18. test-verify-store-sqlite → publish-verify-store-sqlite
-#   19. test-verify-store-postgres → publish-verify-store-postgres
-#   20. test-verify-store-mysql → publish-verify-store-mysql
-#   21. test-verify-store-mongodb → publish-verify-store-mongodb
-#   22. test-verify-store-dynamodb → publish-verify-store-dynamodb
-#   23. test-logger → publish-logger
-#   24. test-logger-store-sqlite → publish-logger-store-sqlite
-#   25. test-logger-store-postgres → publish-logger-store-postgres
-#   26. test-logger-store-mysql → publish-logger-store-mysql
-#   27. test-logger-store-dynamodb → publish-logger-store-dynamodb
-#   28. test-logger-store-mongodb → publish-logger-store-mongodb
-#   29. test-auth → publish-auth
-#   30. test-auth-store-sqlite → publish-auth-store-sqlite
-#   31. test-auth-store-postgres → publish-auth-store-postgres
-#   32. test-auth-store-mysql → publish-auth-store-mysql
-#   33. test-auth-store-mongodb → publish-auth-store-mongodb
-#   34. test-auth-store-dynamodb → publish-auth-store-dynamodb
+#   5. test-money → publish-money
+#   6. test-client-crypto → publish-client-crypto
+#   7. test-server-crypto → publish-server-crypto
+#   8. test-instance → publish-instance
+#   9. test-http → publish-http
+#   10. test-storage-aws-s3-url-signer → publish-storage-aws-s3-url-signer
+#   11. test-sql-sqlite → publish-sql-sqlite
+#   12. test-storage-aws-s3 → publish-storage-aws-s3
+#   13. test-nosql-aws-dynamodb → publish-nosql-aws-dynamodb
+#   14. test-nosql-mongodb → publish-nosql-mongodb
+#   15. test-queue-aws-sqs → publish-queue-aws-sqs
+#   16. test-sql-mysql → publish-sql-mysql
+#   17. test-sql-postgres → publish-sql-postgres
+#   18. test-verify → publish-verify
+#   19. test-verify-store-sqlite → publish-verify-store-sqlite
+#   20. test-verify-store-postgres → publish-verify-store-postgres
+#   21. test-verify-store-mysql → publish-verify-store-mysql
+#   22. test-verify-store-mongodb → publish-verify-store-mongodb
+#   23. test-verify-store-dynamodb → publish-verify-store-dynamodb
+#   24. test-logger → publish-logger
+#   25. test-logger-store-sqlite → publish-logger-store-sqlite
+#   26. test-logger-store-postgres → publish-logger-store-postgres
+#   27. test-logger-store-mysql → publish-logger-store-mysql
+#   28. test-logger-store-dynamodb → publish-logger-store-dynamodb
+#   29. test-logger-store-mongodb → publish-logger-store-mongodb
+#   30. test-auth → publish-auth
+#   31. test-auth-store-sqlite → publish-auth-store-sqlite
+#   32. test-auth-store-postgres → publish-auth-store-postgres
+#   33. test-auth-store-mysql → publish-auth-store-mysql
+#   34. test-auth-store-mongodb → publish-auth-store-mongodb
+#   35. test-auth-store-dynamodb → publish-auth-store-dynamodb
 #
 # Workflow behavior:
 #   - Commit "wip: small fix"           → tests run sequentially, no publish
@@ -361,11 +362,75 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 4: js-client-helper-crypto (needs utils, debug)
+  #   MODULE 4: js-helper-money (needs utils, debug)
+  # ###########################################################################
+
+  test-money:
+    needs: [detect, publish-time]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-helper-money')
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Install and test
+        working-directory: src/helper-modules-core/js-helper-money
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
+
+  publish-money:
+    needs: [detect, test-money]
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-money'].result == 'success' &&
+      needs.detect.outputs.publish_modules != '[]' &&
+      needs.detect.outputs.publish_modules != '' &&
+      contains(needs.detect.outputs.publish_modules, 'js-helper-money')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
+      - name: Publish
+        working-directory: src/helper-modules-core/js-helper-money
+        run: |
+          npm install
+          PKG_NAME=$(jq -r '.name' package.json)
+          PKG_VERSION=$(jq -r '.version' package.json)
+          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
+          else
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
+          fi
+
+
+  # ###########################################################################
+  #   MODULE 5: js-client-helper-crypto (needs utils, debug)
   # ###########################################################################
 
   test-client-crypto:
-    needs: [detect, publish-time]
+    needs: [detect, publish-money]
     if: |
       always() &&
       !cancelled() &&
@@ -425,7 +490,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 5: js-server-helper-crypto (needs utils, debug)
+  #   MODULE 6: js-server-helper-crypto (needs utils, debug)
   # ###########################################################################
 
   test-server-crypto:
@@ -489,7 +554,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 6: js-server-helper-instance (needs utils, debug)
+  #   MODULE 7: js-server-helper-instance (needs utils, debug)
   # ###########################################################################
 
   test-instance:
@@ -553,7 +618,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 7: js-server-helper-http (needs utils, debug)
+  #   MODULE 8: js-server-helper-http (needs utils, debug)
   # ###########################################################################
 
   test-http:
@@ -617,7 +682,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 8: js-server-helper-storage-aws-s3-url-signer (needs utils, debug)
+  #   MODULE 9: js-server-helper-storage-aws-s3-url-signer (needs utils, debug)
   # ###########################################################################
 
   test-storage-aws-s3-url-signer:
@@ -681,7 +746,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 9: js-server-helper-sql-sqlite (needs utils, debug, instance)
+  #   MODULE 10: js-server-helper-sql-sqlite (needs utils, debug, instance)
   # ###########################################################################
 
   test-sql-sqlite:
@@ -745,7 +810,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 10: js-server-helper-storage-aws-s3 (needs utils, debug, instance)
+  #   MODULE 11: js-server-helper-storage-aws-s3 (needs utils, debug, instance)
   # ###########################################################################
 
   test-storage-aws-s3:
@@ -814,7 +879,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 11: js-server-helper-nosql-aws-dynamodb (needs utils, debug, instance)
+  #   MODULE 12: js-server-helper-nosql-aws-dynamodb (needs utils, debug, instance)
   # ###########################################################################
 
   test-nosql-aws-dynamodb:
@@ -882,7 +947,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 12: js-server-helper-nosql-mongodb (needs utils, debug, instance)
+  #   MODULE 13: js-server-helper-nosql-mongodb (needs utils, debug, instance)
   # ###########################################################################
 
   test-nosql-mongodb:
@@ -948,7 +1013,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 13: js-server-helper-queue-aws-sqs (needs utils, debug, instance)
+  #   MODULE 14: js-server-helper-queue-aws-sqs (needs utils, debug, instance)
   # ###########################################################################
 
   test-queue-aws-sqs:
@@ -1016,7 +1081,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 14: js-server-helper-sql-mysql (needs utils, debug, instance)
+  #   MODULE 15: js-server-helper-sql-mysql (needs utils, debug, instance)
   # ###########################################################################
 
   test-sql-mysql:
@@ -1086,7 +1151,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 15: js-server-helper-sql-postgres (needs utils, debug, instance)
+  #   MODULE 16: js-server-helper-sql-postgres (needs utils, debug, instance)
   # ###########################################################################
 
   test-sql-postgres:
@@ -1483,7 +1548,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 16: js-server-helper-verify (needs utils, debug, instance, crypto)
+  #   MODULE 17: js-server-helper-verify (needs utils, debug, instance, crypto)
   #   NOTE: must run BEFORE verify-store-* jobs so publish-verify puts v2.x on
   #   the registry before any adapter _test installs it via semver range.
   # ###########################################################################
@@ -1549,7 +1614,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 18: js-server-helper-logger
+  #   MODULE 22: js-server-helper-logger
   #   (needs utils, debug, instance, crypto + every storage helper for tests)
   # ###########################################################################
 
@@ -1614,7 +1679,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 24: js-server-helper-logger-store-sqlite
+  #   MODULE 23: js-server-helper-logger-store-sqlite
   #   (needs publish-logger; runs in-memory SQLite, no Docker needed)
   # ###########################################################################
 
@@ -1679,7 +1744,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 25: js-server-helper-logger-store-postgres
+  #   MODULE 24: js-server-helper-logger-store-postgres
   #   (needs publish-logger-store-sqlite; real Postgres via Docker)
   # ###########################################################################
 
@@ -1744,7 +1809,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 26: js-server-helper-logger-store-mysql
+  #   MODULE 25: js-server-helper-logger-store-mysql
   #   (needs publish-logger-store-postgres; real MySQL via Docker)
   # ###########################################################################
 
@@ -1809,7 +1874,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 27: js-server-helper-logger-store-dynamodb
+  #   MODULE 26: js-server-helper-logger-store-dynamodb
   #   (needs publish-logger-store-mysql; DynamoDB Local via Docker)
   # ###########################################################################
 
@@ -1877,7 +1942,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 28: js-server-helper-logger-store-mongodb
+  #   MODULE 27: js-server-helper-logger-store-mongodb
   #   (needs publish-logger-store-dynamodb; real MongoDB via Docker)
   # ###########################################################################
 
@@ -1942,7 +2007,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 29: js-server-helper-auth
+  #   MODULE 28: js-server-helper-auth
   #   (needs utils, debug, crypto, instance + every storage helper for tests)
   # ###########################################################################
 
@@ -2007,7 +2072,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 20: js-server-helper-auth-store-sqlite
+  #   MODULE 29: js-server-helper-auth-store-sqlite
   #   (offline - no Docker, needs auth published)
   # ###########################################################################
 
@@ -2072,7 +2137,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 21: js-server-helper-auth-store-postgres
+  #   MODULE 30: js-server-helper-auth-store-postgres
   #   (needs auth-store-sqlite published, Postgres via Docker)
   # ###########################################################################
 
@@ -2137,7 +2202,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 22: js-server-helper-auth-store-mysql
+  #   MODULE 31: js-server-helper-auth-store-mysql
   #   (needs auth-store-postgres published, MySQL via Docker)
   # ###########################################################################
 
@@ -2202,7 +2267,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 23: js-server-helper-auth-store-mongodb
+  #   MODULE 32: js-server-helper-auth-store-mongodb
   #   (needs auth-store-mysql published, MongoDB via Docker)
   # ###########################################################################
 
@@ -2267,7 +2332,7 @@ jobs:
 
 
   # ###########################################################################
-  #   MODULE 24: js-server-helper-auth-store-dynamodb
+  #   MODULE 33: js-server-helper-auth-store-dynamodb
   #   (needs auth-store-mongodb published, DynamoDB local emulator via Docker)
   # ###########################################################################
 

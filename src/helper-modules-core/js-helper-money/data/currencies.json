@@ -1,0 +1,569 @@
+{
+  "inr": {
+    "iso_alpha": "INR",
+    "iso_numeric": "356",
+    "name_en": "Indian Rupee",
+    "symbol": {
+      "native": "₹",
+      "standard": "INR"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "INR"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 1,
+    "denominations": {
+      "minor": [
+        "50"
+      ],
+      "major": [
+        "1",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50",
+        "100",
+        "200",
+        "500",
+        "2000"
+      ]
+    }
+  },
+  "usd": {
+    "iso_alpha": "USD",
+    "iso_numeric": "840",
+    "name_en": "United States Dollar",
+    "symbol": {
+      "native": "$",
+      "standard": "USD"
+    },
+    "symbol_minor": {
+      "native": "¢",
+      "standard": "USD"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "1",
+        "5",
+        "10",
+        "25",
+        "50"
+      ],
+      "major": [
+        "1",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50",
+        "100"
+      ]
+    }
+  },
+  "sar": {
+    "iso_alpha": "SAR",
+    "iso_numeric": "682",
+    "name_en": "Saudi Riyal",
+    "symbol": {
+      "native": "﷼",
+      "standard": "SAR"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "SAR"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "1",
+        "5",
+        "10",
+        "25",
+        "50"
+      ],
+      "major": [
+        "1",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50",
+        "100",
+        "200",
+        "500"
+      ]
+    }
+  },
+  "thb": {
+    "iso_alpha": "THB",
+    "iso_numeric": "764",
+    "name_en": "Thai Baht",
+    "symbol": {
+      "native": "฿",
+      "standard": "THB"
+    },
+    "symbol_minor": {
+      "native": "ส",
+      "standard": null
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "1",
+        "5",
+        "10",
+        "25",
+        "50"
+      ],
+      "major": [
+        "1",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50",
+        "100",
+        "500",
+        "1000"
+      ]
+    }
+  },
+  "eur": {
+    "iso_alpha": "EUR",
+    "iso_numeric": "978",
+    "name_en": "Euro",
+    "symbol": {
+      "native": "€",
+      "standard": "EUR"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "EUR"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "1",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50"
+      ],
+      "major": [
+        "1",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50",
+        "100",
+        "200",
+        "500"
+      ]
+    }
+  },
+  "cny": {
+    "iso_alpha": "CNY",
+    "iso_numeric": "156",
+    "name_en": "Chinese Yuan Renminbi",
+    "symbol": {
+      "native": "¥",
+      "standard": "CNY"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "CNY"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 1
+  },
+  "aed": {
+    "iso_alpha": "AED",
+    "iso_numeric": "784",
+    "name_en": "UAE Dirham",
+    "symbol": {
+      "native": "د.إ",
+      "standard": "AED"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "AED"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "1",
+        "5",
+        "10",
+        "25",
+        "50"
+      ],
+      "major": [
+        "1",
+        "5",
+        "10",
+        "20",
+        "50",
+        "100",
+        "200",
+        "500",
+        "1000"
+      ]
+    }
+  },
+  "cad": {
+    "iso_alpha": "CAD",
+    "iso_numeric": "124",
+    "name_en": "Canadian Dollar",
+    "symbol": {
+      "native": "$",
+      "standard": "CAD"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "CAD"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "1",
+        "5",
+        "10",
+        "25"
+      ],
+      "major": [
+        "5",
+        "10",
+        "20",
+        "50",
+        "100"
+      ]
+    }
+  },
+  "gbp": {
+    "iso_alpha": "GBP",
+    "iso_numeric": "826",
+    "name_en": "British Pound Sterling",
+    "symbol": {
+      "native": "£",
+      "standard": "GBP"
+    },
+    "symbol_minor": {
+      "native": "p",
+      "standard": "GBP"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "1",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50"
+      ],
+      "major": [
+        "1",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50"
+      ]
+    }
+  },
+  "jpy": {
+    "iso_alpha": "JPY",
+    "iso_numeric": "392",
+    "name_en": "Japanese Yen",
+    "symbol": {
+      "native": "¥",
+      "standard": "JPY"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "JPY"
+    },
+    "decimals": 0,
+    "min_transactional_unit": 1,
+    "denominations": {
+      "minor": [
+        "1",
+        "5",
+        "10",
+        "50",
+        "100",
+        "500"
+      ],
+      "major": [
+        "1000",
+        "2000",
+        "5000",
+        "10000"
+      ]
+    }
+  },
+  "aud": {
+    "iso_alpha": "AUD",
+    "iso_numeric": "036",
+    "name_en": "Australian Dollar",
+    "symbol": {
+      "native": "$",
+      "standard": "AUD"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "AUD"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "5",
+        "10",
+        "20",
+        "50"
+      ],
+      "major": [
+        "5",
+        "10",
+        "20",
+        "50",
+        "100"
+      ]
+    }
+  },
+  "mxn": {
+    "iso_alpha": "MXN",
+    "iso_numeric": "484",
+    "name_en": "Mexican Peso",
+    "symbol": {
+      "native": "$",
+      "standard": "MXN"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "MXN"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "10",
+        "20",
+        "50"
+      ],
+      "major": [
+        "20",
+        "50",
+        "100",
+        "200",
+        "500",
+        "1000"
+      ]
+    }
+  },
+  "brl": {
+    "iso_alpha": "BRL",
+    "iso_numeric": "986",
+    "name_en": "Brazilian Real",
+    "symbol": {
+      "native": "R$",
+      "standard": "BRL"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "BRL"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "1",
+        "5",
+        "10",
+        "25",
+        "50"
+      ],
+      "major": [
+        "2",
+        "5",
+        "10",
+        "20",
+        "50",
+        "100",
+        "200"
+      ]
+    }
+  },
+  "kwd": {
+    "iso_alpha": "KWD",
+    "iso_numeric": "414",
+    "name_en": "Kuwaiti Dinar",
+    "symbol": {
+      "native": "د.ك",
+      "standard": "KWD"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "KWD"
+    },
+    "decimals": 3,
+    "min_transactional_unit": 0.001,
+    "denominations": {
+      "minor": [
+        "5",
+        "10",
+        "20",
+        "50",
+        "100"
+      ],
+      "major": [
+        "1/4",
+        "1/2",
+        "1",
+        "5",
+        "10",
+        "20"
+      ]
+    }
+  },
+  "qar": {
+    "iso_alpha": "QAR",
+    "iso_numeric": "634",
+    "name_en": "Qatari Riyal",
+    "symbol": {
+      "native": "ر.ق",
+      "standard": "QAR"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "QAR"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "1",
+        "5",
+        "10",
+        "25",
+        "50"
+      ],
+      "major": [
+        "1",
+        "5",
+        "10",
+        "50",
+        "100",
+        "500"
+      ]
+    }
+  },
+  "bhd": {
+    "iso_alpha": "BHD",
+    "iso_numeric": "048",
+    "name_en": "Bahraini Dinar",
+    "symbol": {
+      "native": "د.ب",
+      "standard": "BHD"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "BHD"
+    },
+    "decimals": 3,
+    "min_transactional_unit": 0.001,
+    "denominations": {
+      "minor": [
+        "5",
+        "10",
+        "25",
+        "50",
+        "100"
+      ],
+      "major": [
+        "1/2",
+        "1",
+        "5",
+        "10",
+        "20"
+      ]
+    }
+  },
+  "omr": {
+    "iso_alpha": "OMR",
+    "iso_numeric": "512",
+    "name_en": "Omani Rial",
+    "symbol": {
+      "native": "ر.ع.",
+      "standard": "OMR"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "OMR"
+    },
+    "decimals": 3,
+    "min_transactional_unit": 0.001,
+    "denominations": {
+      "minor": [
+        "5",
+        "10",
+        "25",
+        "50",
+        "100",
+        "200"
+      ],
+      "major": [
+        "1/2",
+        "1",
+        "5",
+        "10",
+        "20",
+        "50"
+      ]
+    }
+  },
+  "sgd": {
+    "iso_alpha": "SGD",
+    "iso_numeric": "702",
+    "name_en": "Singapore Dollar",
+    "symbol": {
+      "native": "$",
+      "standard": "SGD"
+    },
+    "symbol_minor": {
+      "native": null,
+      "standard": "SGD"
+    },
+    "decimals": 2,
+    "min_transactional_unit": 0.01,
+    "denominations": {
+      "minor": [
+        "5",
+        "10",
+        "20",
+        "50"
+      ],
+      "major": [
+        "2",
+        "5",
+        "10",
+        "50",
+        "100",
+        "1000"
+      ]
+    }
+  }
+}

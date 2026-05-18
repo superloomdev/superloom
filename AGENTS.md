@@ -562,19 +562,24 @@ Every module has a `ROBOTS.md` alongside `README.md`. It is the compact AI refer
 
 The following items are mandatory for every helper module. These caught real issues in past migrations:
 
-- **`eslint.config.js` present at module root** - ESLint v9+ requires a flat config file; without it lint silently fails
-- **`engines.node` in `package.json`** - declares minimum Node.js version; prevents silent runtime incompatibilities
-- **`publishConfig.registry`** is exactly `https://npm.pkg.github.com` (no trailing `/@superloomdev` scope suffix - that breaks auth)
-- **No `.npmrc` in the module directory** - global `~/.npmrc` is the only source of truth
-- **Package name is `@superloomdev/<module>`** - scoped; must match directory name
-- **Test `_test/loader.js` exists** for any module that accepts dependency injection (all non-foundation modules)
-- **Test `_test/package.json` uses scoped dep names** (`@superloomdev/js-helper-utils`, never bare `js-helper-utils`) and `file:../` for the module under test
-- **Test dependency versions track the latest published version** - when bumping a published module, update every test `package.json` that depends on it
-- **`package.json` is multi-line JSON, not compressed single-line** - keeps diffs readable
-- **No `exports` field in single-entrypoint packages** - omit `exports` when `main` already covers the only entry file. Only add `exports` for multi-entrypoint packages or explicit subpath maps
-- **American English in all strings** - `Initialize` not `Initialise`, `standardize` not `standardise` (even in descriptions)
-- **`ROBOTS.md` covers every exported function** - exact signatures, types, async flag, and one-line purpose
-- **Commit code AND docs together** - never push ROBOTS.md referencing a function that isn't in the committed source
+| File/Rule | Requirement |
+|---|---|
+| `eslint.config.js` | ESLint v9+ requires a flat config file; without it lint silently fails |
+| `engines.node` in `package.json` | Declares minimum Node.js version; prevents silent runtime incompatibilities |
+| `publishConfig.registry` | Exactly `https://npm.pkg.github.com` (no trailing `/@superloomdev` scope suffix) |
+| No `.npmrc` in module dir | Global `~/.npmrc` is the only source of truth |
+| Package name | `@superloomdev/<module>` - scoped; must match directory name |
+| `[module].errors.js` | **Required** - frozen error catalog for operational errors |
+| `[module].validators.js` | (Optional) Singleton validators module if module has validation logic. Loader takes only `(shared_libs)`; static data is `require`d internally per Singleton Module Pattern |
+| `data/` | (Optional) Static intrinsic reference data. `require`d at module top-level, never injected. Intrinsic facts only (ISO standards, character sets); no locale-specific or project-specific data |
+| Test `_test/loader.js` | Required for any module using dependency injection |
+| Test `_test/package.json` | Uses scoped dep names (`@superloomdev/js-helper-utils`, never bare) and `file:../` for module under test |
+| Test dependency versions | Track latest published version; bump all consuming `_test/package.json` files when publishing |
+| `package.json` format | Multi-line JSON, not compressed single-line |
+| No `exports` field | Omit when `main` covers the only entry file; only add for multi-entrypoint packages |
+| American English | `Initialize` not `Initialise`, `standardize` not `standardise` |
+| `ROBOTS.md` | Covers every exported function with exact signatures, types, async flag, one-line purpose |
+| Commit discipline | Code AND docs together; never push ROBOTS.md referencing non-existent functions |
 
 ### Common Mistakes to Avoid (Observed in Prior Migrations)
 
@@ -585,6 +590,8 @@ The following items are mandatory for every helper module. These caught real iss
 - ❌ Pinning dev deps to old major versions (e.g., `eslint ^9` when `^10` is current)
 - ❌ Leaving tests with inline DI instead of a `loader.js` file
 - ❌ Leaving `process.env` access outside `loader.js` (env reading MUST be centralized)
+- ❌ Injecting static data (`currencies.json`, config, errors) into validators loader - singleton validators `require` their static dependencies directly; only `shared_libs` is injected
+- ❌ Putting locale-specific or project-specific data in `data/` folder - `data/` is for intrinsic, framework-neutral facts only
 - ❌ Leaving `var x = '';` initializers that are immediately reassigned (ESLint 10 `no-useless-assignment`)
 - ❌ British spelling in strings, comments, or package descriptions
 - ❌ Forgetting to bump dependent test `package.json` files when publishing a new version
