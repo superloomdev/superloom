@@ -1,0 +1,40 @@
+{
+  "name": "@superloomdev/js-server-helper-http-gateway",
+  "description": "Incoming HTTP gateway for Node.js. Normalizes raw runtime request data (API Gateway, Express) into a per-request instance and writes responses back. Runtime adapters are separate packages.",
+  "version": "1.0.0",
+  "main": "http-gateway.js",
+  "private": false,
+  "license": "MIT",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "cookie": "1.x",
+    "tldts": "5.x"
+  },
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": ">=1.0.0",
+    "@superloomdev/js-helper-debug": ">=1.0.0",
+    "@superloomdev/js-server-helper-instance": ">=1.0.0"
+  },
+  "optionalPeerDependencies": {
+    "@superloomdev/js-server-helper-http-gateway-adapter-aws-apigateway": "^1.0.0",
+    "@superloomdev/js-server-helper-http-gateway-adapter-express": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --test _test/test.js"
+  }
+}
