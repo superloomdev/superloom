@@ -119,21 +119,10 @@ const Validators = {
   *********************************************************************/
   assertCurrencyCode: function (code, fn_name) {
 
-    // Fallback path: caller passed null/undefined and a default exists
+    // Required check
     if (Lib.Utils.isNullOrUndefined(code)) {
-      if (CONFIG.DEFAULT_CURRENCY_CODE) {
-        return CONFIG.DEFAULT_CURRENCY_CODE.toLowerCase();
-      }
       throw new TypeError(
         '[js-helper-money] ' + fn_name + ': currency_code is required'
-      );
-    }
-
-    // Check length before further processing
-    if (code.length !== CONFIG.CURRENCY_CODE_MIN_LENGTH) {
-      throw new TypeError(
-        '[js-helper-money] ' + fn_name + ': currency_code must be exactly ' +
-        CONFIG.CURRENCY_CODE_MIN_LENGTH + ' letters'
       );
     }
 
@@ -141,6 +130,14 @@ const Validators = {
     if (!Lib.Utils.isString(code)) {
       throw new TypeError(
         '[js-helper-money] ' + fn_name + ': currency_code must be a string'
+      );
+    }
+
+    // Check length
+    if (code.length !== CONFIG.CURRENCY_CODE_MIN_LENGTH) {
+      throw new TypeError(
+        '[js-helper-money] ' + fn_name + ': currency_code must be exactly ' +
+        CONFIG.CURRENCY_CODE_MIN_LENGTH + ' letters'
       );
     }
 
@@ -260,6 +257,40 @@ const Validators = {
 
   // ~~~~~~~~~~~~~~~~~~~~ Pure Normalizers ~~~~~~~~~~~~~~~~~~~~
   // No throws. Return cleaned value or null.
+
+  /********************************************************************
+  Normalize a currency code to lowercase if it is a known currency.
+  Returns null for null/undefined, non-string, wrong length, or unknown
+  currency. Used by metadata-lookup functions that return null instead
+  of throwing.
+
+  @param {*} code - The currency code to normalize
+
+  @return {String|null} - Normalized lowercase code or null
+  *********************************************************************/
+  normalizeCurrencyCode: function (code) {
+
+    // Reject null/undefined or non-string
+    if (Lib.Utils.isNullOrUndefined(code) || !Lib.Utils.isString(code)) {
+      return null;
+    }
+
+    // Check length
+    if (code.length !== CONFIG.CURRENCY_CODE_MIN_LENGTH) {
+      return null;
+    }
+
+    // Normalize and check membership
+    const normalized = code.toLowerCase();
+
+    if (!(normalized in CURRENCIES)) {
+      return null;
+    }
+
+    return normalized;
+
+  },
+
 
   /********************************************************************
   Sanitize a currency code: lowercase, strip non-letters.

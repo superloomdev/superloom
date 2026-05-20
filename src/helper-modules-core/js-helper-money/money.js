@@ -117,6 +117,7 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     sanitizeCurrencyCode: function (code) {
 
+      // Delegate to the validators module
       return Validators.sanitizeCurrencyCode(code);
 
     },
@@ -132,6 +133,7 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     validateCurrencyCode: function (code) {
 
+      // Delegate to the validators module
       return Validators.validateCurrencyCode(code);
 
     },
@@ -142,14 +144,50 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
 
     @param {String} currency_code - Currency code
 
-    @return {String} - Native symbol
-    @throws {TypeError} - If currency_code is invalid or unknown
+    @return {String|null} - Native symbol, or null if unknown
     *********************************************************************/
     getCurrencySymbol: function (currency_code) {
 
-      const code = Validators.assertCurrencyCode(currency_code, 'getCurrencySymbol');
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
+
+      if (code === null) { return null; }
 
       return CURRENCIES[code]['symbol']['native'];
+
+    },
+
+
+    /********************************************************************
+    Get the locale-aware currency symbol. Returns the native symbol
+    when the country_code matches the first two characters of the
+    currency code (e.g., 'inr' in 'in'). Otherwise returns the
+    standard (ISO alpha) symbol.
+
+    @param {String} currency_code - Currency code
+    @param {String} country_code  - ISO 3166-1 alpha-2 country code
+    @param {String} language_code - Locale identifier (e.g., 'hi_in')
+
+    @return {String|null} - Locale-aware symbol, or null if unknown
+    *********************************************************************/
+    getCurrencySymbolForLocale: function (currency_code, country_code, language_code) { // eslint-disable-line no-unused-vars
+
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
+
+      if (code === null) { return null; }
+
+      // Normalize the country code for comparison
+      const country = Lib.Utils.isString(country_code)
+        ? country_code.toLowerCase()
+        : '';
+
+      // Return native symbol when country matches currency's home country
+      if (code.substring(0, 2) === country) {
+        return CURRENCIES[code]['symbol']['native'];
+      }
+
+      return CURRENCIES[code]['symbol']['standard'];
 
     },
 
@@ -159,12 +197,14 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
 
     @param {String} currency_code - Currency code
 
-    @return {String} - ISO alpha code
-    @throws {TypeError} - If currency_code is invalid or unknown
+    @return {String|null} - ISO alpha code, or null if unknown
     *********************************************************************/
     getCurrencyIsoAlpha: function (currency_code) {
 
-      const code = Validators.assertCurrencyCode(currency_code, 'getCurrencyIsoAlpha');
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
+
+      if (code === null) { return null; }
 
       return CURRENCIES[code]['iso_alpha'];
 
@@ -176,12 +216,14 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
 
     @param {String} currency_code - Currency code
 
-    @return {String} - ISO numeric code
-    @throws {TypeError} - If currency_code is invalid or unknown
+    @return {String|null} - ISO numeric code, or null if unknown
     *********************************************************************/
     getCurrencyIsoNumeric: function (currency_code) {
 
-      const code = Validators.assertCurrencyCode(currency_code, 'getCurrencyIsoNumeric');
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
+
+      if (code === null) { return null; }
 
       return CURRENCIES[code]['iso_numeric'];
 
@@ -193,12 +235,14 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
 
     @param {String} currency_code - Currency code
 
-    @return {String} - English name
-    @throws {TypeError} - If currency_code is invalid or unknown
+    @return {String|null} - English name, or null if unknown
     *********************************************************************/
     getCurrencyName: function (currency_code) {
 
-      const code = Validators.assertCurrencyCode(currency_code, 'getCurrencyName');
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
+
+      if (code === null) { return null; }
 
       return CURRENCIES[code]['name_en'];
 
@@ -210,14 +254,59 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
 
     @param {String} currency_code - Currency code
 
-    @return {String|null} - Native minor symbol, or null if currency has none
-    @throws {TypeError} - If currency_code is invalid or unknown
+    @return {String|null} - Native minor symbol, or null if currency
+                            has none or is unknown
     *********************************************************************/
     getCurrencySymbolMinor: function (currency_code) {
 
-      const code = Validators.assertCurrencyCode(currency_code, 'getCurrencySymbolMinor');
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
+
+      if (code === null) { return null; }
 
       return CURRENCIES[code]['symbol_minor']['native'];
+
+    },
+
+
+    /********************************************************************
+    Get the locale-aware minor currency symbol. Returns the native minor
+    symbol when the country_code matches the first two characters of the
+    currency code. Otherwise returns the standard (ISO alpha) symbol.
+    Returns null if the currency's native minor symbol is null (e.g., INR
+    has no minor symbol).
+
+    @param {String} currency_code - Currency code
+    @param {String} country_code  - ISO 3166-1 alpha-2 country code
+    @param {String} language_code - Locale identifier (e.g., 'en_us')
+
+    @return {String|null} - Locale-aware minor symbol, or null if
+                            currency has no minor symbol or is unknown
+    *********************************************************************/
+    getCurrencySymbolMinorForLocale: function (currency_code, country_code, language_code) { // eslint-disable-line no-unused-vars
+
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
+
+      if (code === null) { return null; }
+
+      // Check if the currency has a native minor symbol at all
+      const native_minor = CURRENCIES[code]['symbol_minor']['native'];
+
+      // If no native minor symbol exists, return null regardless of locale
+      if (native_minor === null) { return null; }
+
+      // Normalize the country code for comparison
+      const country = Lib.Utils.isString(country_code)
+        ? country_code.toLowerCase()
+        : '';
+
+      // Return native minor symbol when country matches currency's home country
+      if (code.substring(0, 2) === country) {
+        return native_minor;
+      }
+
+      return CURRENCIES[code]['symbol_minor']['standard'];
 
     },
 
@@ -227,12 +316,14 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
 
     @param {String} currency_code - Currency code
 
-    @return {Integer} - Decimal places (e.g., 2)
-    @throws {TypeError} - If currency_code is invalid or unknown
+    @return {Integer|null} - Decimal places (e.g., 2), or null if unknown
     *********************************************************************/
     getCurrencyDecimals: function (currency_code) {
 
-      const code = Validators.assertCurrencyCode(currency_code, 'getCurrencyDecimals');
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
+
+      if (code === null) { return null; }
 
       return CURRENCIES[code]['decimals'];
 
@@ -246,12 +337,14 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
 
     @param {String} currency_code - Currency code
 
-    @return {Number} - Minimum transactional unit
-    @throws {TypeError} - If currency_code is invalid or unknown
+    @return {Number|null} - Minimum transactional unit, or null if unknown
     *********************************************************************/
     getCurrencyMinTransactionalUnit: function (currency_code) {
 
-      const code = Validators.assertCurrencyCode(currency_code, 'getCurrencyMinTransactionalUnit');
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
+
+      if (code === null) { return null; }
 
       return CURRENCIES[code]['min_transactional_unit'];
 
@@ -264,13 +357,16 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     @param {String} currency_code - Currency code
 
     @return {Object|null} - { minor: [...], major: [...] } or null if
-                            currency has no denominations (e.g., CNY)
-    @throws {TypeError} - If currency_code is invalid or unknown
+                            currency has no denominations or is unknown
     *********************************************************************/
     getCurrencyDenominations: function (currency_code) {
 
-      const code = Validators.assertCurrencyCode(currency_code, 'getCurrencyDenominations');
+      // Normalize and verify the currency code is known
+      const code = Validators.normalizeCurrencyCode(currency_code);
 
+      if (code === null) { return null; }
+
+      // Check if this currency defines denominations
       const currency = CURRENCIES[code];
 
       if (!('denominations' in currency)) {
@@ -297,14 +393,17 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     roundAmount: function (amount, currency_code, decimals) {
 
+      // Validate currency code and amount
       const code = Validators.assertCurrencyCode(currency_code, 'roundAmount');
       Validators.assertNumber(amount, 'amount', 'roundAmount');
 
+      // Resolve decimal places (caller override or currency default)
       const currency_decimals = CURRENCIES[code]['decimals'];
       const resolved = Lib.Utils.fallback(decimals, currency_decimals);
 
       Validators.assertOptionalInteger(resolved, 'decimals', 'roundAmount');
 
+      // Round and return
       return Lib.Utils.round(amount, resolved);
 
     },
@@ -323,15 +422,18 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     formatAmount: function (amount, currency_code, decimals, no_pad = false) {
 
+      // Validate currency code and amount
       const code = Validators.assertCurrencyCode(currency_code, 'formatAmount');
       Validators.assertNumber(amount, 'amount', 'formatAmount');
 
+      // Round first, then resolve decimal places for formatting
       const rounded = Money.roundAmount(amount, currency_code, decimals);
       const currency_decimals = CURRENCIES[code]['decimals'];
       const resolved = Lib.Utils.fallback(decimals, currency_decimals);
 
       Validators.assertOptionalInteger(resolved, 'decimals', 'formatAmount');
 
+      // Pad with trailing zeros unless no_pad is true and result is whole
       if (!no_pad || !Lib.Utils.isInteger(rounded)) {
         return rounded.toFixed(resolved);
       }
@@ -357,20 +459,25 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     getTransactionalAmount: function (amount, currency_code, decimals, apply_min_unit) {
 
+      // Validate currency code and amount
       const code = Validators.assertCurrencyCode(currency_code, 'getTransactionalAmount');
       Validators.assertNumber(amount, 'amount', 'getTransactionalAmount');
 
+      // Resolve decimal places (caller override or currency default)
       const currency_decimals = CURRENCIES[code]['decimals'];
       const resolved_decimals = Lib.Utils.fallback(decimals, currency_decimals);
 
       Validators.assertOptionalInteger(resolved_decimals, 'decimals', 'getTransactionalAmount');
 
+      // Convert to integer representation for float-safe arithmetic
       const integer_amount = _Money.toIntegerAmount(amount, code, resolved_decimals);
 
+      // Return standard rounding when min-unit rounding is not requested
       if (!apply_min_unit) {
         return _Money.fromIntegerAmount(integer_amount, code, resolved_decimals);
       }
 
+      // Round to the nearest minimum transactional unit
       const min_unit = CURRENCIES[code]['min_transactional_unit'];
       const integer_min_unit = _Money.toIntegerAmount(min_unit, code, resolved_decimals);
 
@@ -393,9 +500,11 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     toFractionalUnits: function (amount, currency_code, decimals) {
 
+      // Validate currency code and amount
       const code = Validators.assertCurrencyCode(currency_code, 'toFractionalUnits');
       Validators.assertNumber(amount, 'amount', 'toFractionalUnits');
 
+      // Resolve decimal places (caller override or currency default)
       const currency_decimals = CURRENCIES[code]['decimals'];
       const resolved = Lib.Utils.fallback(decimals, currency_decimals);
 
@@ -420,14 +529,17 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     fromFractionalUnits: function (amount, currency_code, decimals) {
 
+      // Validate currency code and amount
       const code = Validators.assertCurrencyCode(currency_code, 'fromFractionalUnits');
       Validators.assertNumber(amount, 'amount', 'fromFractionalUnits');
 
+      // Resolve decimal places (caller override or currency default)
       const currency_decimals = CURRENCIES[code]['decimals'];
       const resolved = Lib.Utils.fallback(decimals, currency_decimals);
 
       Validators.assertOptionalInteger(resolved, 'decimals', 'fromFractionalUnits');
 
+      // Convert integer units back to large currency
       return _Money.fromIntegerAmount(amount, code, resolved);
 
     },
@@ -448,18 +560,22 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     sum: function (amounts, currency_code, decimals) {
 
+      // Validate currency code and optional decimals override
       const code = Validators.assertCurrencyCode(currency_code, 'sum');
 
       Validators.assertOptionalInteger(decimals, 'decimals', 'sum');
 
+      // Resolve decimal places (caller override or currency default)
       const currency_decimals = CURRENCIES[code]['decimals'];
       const resolved = Lib.Utils.fallback(decimals, currency_decimals);
 
+      // Sum in integer space to avoid floating-point errors
       const total = amounts.reduce(function (sum, current) {
         Validators.assertNumber(current, 'amount item', 'sum');
         return sum + _Money.toIntegerAmount(current, code, resolved);
       }, 0);
 
+      // Convert back to large currency
       return _Money.fromIntegerAmount(total, code, resolved);
 
     },
@@ -478,10 +594,12 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     calculateTotalFromDenominations: function (majors, minors, currency_code, decimals, apply_min_unit) {
 
+      // Validate currency code and optional decimals override
       const code = Validators.assertCurrencyCode(currency_code, 'calculateTotalFromDenominations');
 
       Validators.assertOptionalInteger(decimals, 'decimals', 'calculateTotalFromDenominations');
 
+      // Resolve decimal places (caller override or currency default)
       const currency_decimals = CURRENCIES[code]['decimals'];
       const resolved = Lib.Utils.fallback(decimals, currency_decimals);
 
@@ -513,6 +631,7 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
         });
       }
 
+      // Apply min transactional unit rounding if requested
       if (apply_min_unit) {
         return Money.getTransactionalAmount(total, currency_code, resolved, true);
       }
@@ -541,6 +660,7 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     toIntegerAmount: function (amount, code, decimals) {
 
+      // Multiply by 10^decimals and round to nearest integer
       return Math.round(
         amount * Number(`1e${decimals}`)
       );
@@ -560,6 +680,7 @@ const createInterface = function (Lib, CONFIG, CURRENCIES, Validators) {
     *********************************************************************/
     fromIntegerAmount: function (integer_amount, code, decimals) {
 
+      // Divide by 10^decimals and round to avoid floating-point drift
       const float_amount = integer_amount / Number(`1e${decimals}`);
 
       return Lib.Utils.round(float_amount, decimals);

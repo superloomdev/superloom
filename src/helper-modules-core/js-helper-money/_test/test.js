@@ -702,10 +702,6 @@ describe('Validation and new functions', function () {
       Money.roundAmount(10, 123);
     }, /currency_code must be a string/);
 
-    assert.throws(function () {
-      Money.getCurrencySymbol({});
-    }, /currency_code must be a string/);
-
   });
 
 
@@ -717,18 +713,6 @@ describe('Validation and new functions', function () {
 
     assert.throws(function () {
       Money.sum([1, 2], 'abc');
-    }, /unknown currency_code/);
-
-    assert.throws(function () {
-      Money.getCurrencySymbol('xyz');
-    }, /unknown currency_code/);
-
-    assert.throws(function () {
-      Money.getCurrencyDecimals('xyz');
-    }, /unknown currency_code/);
-
-    assert.throws(function () {
-      Money.getCurrencyName('xyz');
     }, /unknown currency_code/);
 
   });
