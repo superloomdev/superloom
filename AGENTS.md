@@ -142,6 +142,7 @@ superloom/
       js-helper-utils/            #   Type checks, validation, sanitization, data manipulation
       js-helper-debug/            #   Structured logging: levels (debug/info/warn/error), text + JSON
       js-helper-time/             #   Date/time math, timezone, formatting
+      js-helper-money/            #   Currency metadata, float-safe rounding, formatting, aggregation
     helper-modules-server/        # Server-only helpers (Node.js runtime required)
       js-server-helper-crypto/    #   Hashing, encryption, UUID, random strings, base conversion
       js-server-helper-sql-postgres/  #   Postgres with connection pooling
@@ -172,6 +173,9 @@ superloom/
         js-server-helper-logger-store-mysql/    #     Logger store: MySQL / MariaDB (production SQL)
         js-server-helper-logger-store-mongodb/  #     Logger store: MongoDB (native TTL, data as embedded doc, compound pk/actor keys)
         js-server-helper-logger-store-dynamodb/ #     Logger store: DynamoDB (entity_pk base table + actor_gsi, native TTL on expires_at)
+      js-server-helper-http-gateway/  #   Runtime-agnostic HTTP gateway; normalizes Lambda/Express requests into uniform instance shape via adapter pattern
+        js-server-helper-http-gateway-adapter-aws-apigateway/ #   API Gateway adapter (payload v1 + v2); extracts CloudFront-Viewer-Country
+        js-server-helper-http-gateway-adapter-express/        #   Express adapter; always returns null country code
     helper-modules-client/        # Client-specific helpers (browser, mobile)
       js-client-helper-crypto/    #   UUID, random strings, base64 (Web Crypto API). Delegates to core crypto when available.
   demo-project/                   # Seed project - copy this to start
@@ -366,11 +370,9 @@ The framework recognises **three** error categories. Each has one correct dispos
 
 **Why two return shapes (`{type,message}` vs `{code,message,status}`):** they have different audiences. The helper-module shape is for service-layer branching and logs; the domain shape is for HTTP response bodies and end users. **Service-layer translation is mandatory** - a service that calls a helper module branches on `error.type` and returns a domain error from its own `[entity].errors.js`. Never forward `helper.error.message` to the controller - if a service forwards it, `Lib.Functions.errorResponse` will leak that diagnostic string verbatim into the HTTP response.
 
-**Approach B (refinement for application-coupled helpers):** a helper that is tightly coupled to one application's domain may accept a `CONFIG.ERRORS` catalog at construction and return domain errors directly. Service-layer translation collapses to a single pass-through line: `if (result.success === false) return { success: false, error: result.error }`. `js-server-helper-verify` is the first helper to use this pattern. The default for shared helpers (storage, network, crypto, etc.) remains `{ type, message }` envelopes plus mandatory translation.
-
 **This applies to every helper module** (dynamodb, mongodb, s3, sql-*, verify, http, etc.) and every entity service. When in doubt: programmer errors throw, everything else returns an envelope, and the service translates before the controller sees it.
 
-Full rule with rationale, anti-patterns, Approach B details, and worked examples: `docs/foundations/error-handling.md`.
+Full rule with rationale, anti-patterns, type-string naming, and worked examples: `docs/foundations/error-handling.md`.
 
 ### Section Header Hierarchy
 
@@ -460,6 +462,15 @@ Applies to every section closer: `Public Functions END`, `Private Functions END`
 - **Nested object params/returns:** Use dot-notation - one `@param`/`@return` per nested field
   - `@param {Set} options[key].error - Error object for this key`
   - `@return {String} .name - Name of the item`
+
+### Third-Party Library Policy
+
+Default position: **self-contained code**. Every npm dependency is a long-term supply-chain liability. Source: `docs/foundations/third-party-libraries.md`.
+
+- A new helper module ships with **zero `dependencies`** unless ALL eight criteria are met: specialized domain knowledge, zero transitive deps, de-facto standard (top-1% weekly downloads, 1000+ reverse-deps), recognized org with multiple maintainers, MIT/ISC/BSD/Apache-2.0 license, <10 KB bundle, cannot be reasonably re-implemented in-house, narrow and stable surface wrapped behind one helper
+- **Third-party `require()` is confined to `parts/*.js` inside a helper module** (or an adapter package's own runtime SDK). Never in loaders, validators, config, errors, or application layers
+- **Every module with a runtime `dependency` must document it** in a `## Third-Party Dependencies` section in its README (after config reference, before Testing). Cover: what it does, why not in-house, which criteria it satisfied
+- Accepted dependencies are re-evaluated when a new module adds a dep (required in the PR) and annually (CVE checks, newer Node.js native alternatives)
 
 ### Dependencies
 
@@ -597,16 +608,17 @@ The following items are mandatory for every helper module. These caught real iss
 - ❌ Forgetting to bump dependent test `package.json` files when publishing a new version
 - ❌ Adding a redundant `exports` field to single-entrypoint packages that already have `main`
 
-### Helper Module Structure (Two Patterns)
+### Helper Module Structure (Three Patterns)
 
-All helper modules use **Pattern 2 (Multi-Instance / Factory)** - each loader call returns an independent interface with its own `Lib`, `CONFIG`, and (for stateful modules) `state`. Pattern 1 (Singleton Config) is legacy and no longer used in this framework; the Pattern 1 template below is preserved for historical reference only. Full rules: `docs/modules/module-structure-js.md` -> "Helper Module Configuration Patterns".
+Helper modules use one of three patterns. **Singleton** for stateless, pure, shared-identity modules with no per-caller CONFIG variation. **Factory (Pattern 2)** for everything else (stateful or needing per-instance closure). **Pattern 1 (Singleton Config)** is legacy and preserved for historical reference only. Full rules: `docs/modules/module-structure-js.md`.
 
 **Quick decision:**
 
 | Pattern | Use when | Examples |
 |---|---|---|
-| Singleton Config | *Legacy - no longer used. All helper modules have migrated to Pattern 2.* | - |
-| Multi-Instance (Factory) | All helper modules. Stateful (pool, persistent client, session) or stateless (uniform factory shape). | All `@superloomdev/*` helper modules |
+| Singleton | Stateless, pure, shared identity, no per-caller CONFIG. `let Lib;` at module scope, no `createInterface` | `js-helper-money`, `js-helper-utils` (upgrade candidate) |
+| Multi-Instance (Factory) | Stateful (pool, persistent client, session) or per-caller CONFIG variation | DB modules, cloud SDK modules, auth, verify, logger |
+| Singleton Config | *Legacy - no longer used.* | - |
 
 **`createInterface` signature - pick the minimal shape that fits:**
 
@@ -617,9 +629,12 @@ All helper modules use **Pattern 2 (Multi-Instance / Factory)** - each loader ca
 | `createInterface(Lib, CONFIG)` | Stateless helper - peer deps + config, no per-instance resource | `js-helper-time`, `js-server-helper-crypto`, `js-server-helper-http`, `js-server-helper-instance`, `js-client-helper-crypto` |
 | `createInterface(Lib, CONFIG, state)` | Stateful helper - holds a per-instance resource | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern. Validators + store injected from loader | `js-server-helper-verify` |
-| `createInterface(Lib, CONFIG, ERRORS, Validators, store, Parts)` | Domain helper with adapter pattern + decomposed parts | `js-server-helper-auth` |
+| `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied runtime adapter, no Validators | `js-server-helper-http-gateway` |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators + decomposed parts (fullest shape) | `js-server-helper-auth` (target; currently `Validators, store, Parts` - corrected when next touched) |
 
 The loader body mirrors the signature: build only the parameters `createInterface` will receive. Stateless helpers never declare a `state` object.
+
+**Parameter ordering (internal-before-external):** `createInterface(Lib, CONFIG, ERRORS, [Validators,] [Parts,] [store | adapter | state])`. Everything the module built for itself (Lib, CONFIG, ERRORS, Validators, Parts) comes before the one thing handed to it from outside (store/adapter/state). **Parameter casing:** PascalCase for internally-assembled namespaced containers (`Lib`, `CONFIG`, `ERRORS`, `Parts`, `Validators`); camelCase for externally-supplied resolved dependencies (`store`, `adapter`, `state`). Source: `docs/modules/module-structure-js.md` -> "Parameter Ordering Convention" and "Parameter Casing Convention".
 
 #### Pattern 1: Singleton Config
 
@@ -758,12 +773,38 @@ const createInterface = function (Lib, CONFIG, state) {
 - Low-level primitives that well-architected apps rarely call directly (manual resource checkout, raw connection access) go in the **last** public subsection, labelled with the `(Escape Hatch)` suffix and a compact copy-paste usage example in the subsection comment
 - Header must describe factory pattern, lazy-load behavior, and version compatibility
 
+### Singleton Module Pattern
+
+Modules that are stateless, pure, globally shared, and have no per-caller CONFIG variation use the singleton pattern: no `createInterface`, all variables at module scope, loader sets them once and returns the public object directly. Node.js `require` cache guarantees the same object on every subsequent `require`. Source: `docs/modules/module-structure-js.md` -> "Singleton Module Pattern".
+
+**When to use (all four must be true):** stateless (no pool/client/connection), pure (no I/O), shared identity (one instance always correct), no per-caller CONFIG.
+
+**When NOT to use:** DB modules, cloud SDK modules, auth, verify, logger, any `*-store-*` adapter.
+
+**Module-scope declaration ordering (fixed sequence):**
+
+| Position | Declaration | Mutability | Present in |
+|---|---|---|---|
+| 1 | `let Lib` | Set once by loader | All except no-dep singletons |
+| 2 | `let CONFIG` | Set once by loader | Main modules with config |
+| 3 | `const ERRORS` | Loaded at require time | Main modules with error catalogs |
+| 4 | `let Validators` | Initialized by loader (needs Lib) | Main modules with validators |
+| 5 | Module-specific data (`const [DATA]`) | Loaded at require time | Only modules with static reference data |
+
+Omit positions that do not apply. Preserve relative order of those that remain. Common infrastructure (1-4) before module-specific data (5).
+
+**Module-root singletons (`[module].validators.js`) are a special case:** accept only `Lib`, no CONFIG/ERRORS/Validators. They run before config is validated. Stripped-down shape — do not conflate with the main-module singleton.
+
+**Reference implementations:** `js-helper-money/money.js` (main module singleton), `js-server-helper-auth/auth.validators.js` (module-root singleton, special case).
+
 ### Parts Pattern (Complex Helper Modules)
 
 When a helper module's `createInterface` body grows beyond ~500 lines and decomposes into bounded **stateless** responsibilities, split each responsibility into a co-located factory under `parts/`. Source: `docs/modules/module-structure-js.md` -> "Parts Pattern".
 
 - **Folder:** `[module]/parts/[name].js` - one factory per part
-- **Uniform signature:** every part is `module.exports = function loader (Lib, CONFIG, ERRORS) { return createInterface(Lib, CONFIG, ERRORS); }` - parts that don't consume `CONFIG` or `ERRORS` still accept and ignore them
+- **Uniform loader signature `(shared_libs, config, errors)`:** every part always accepts all three parameters regardless of which it uses. Hard rule - no exceptions. Ensures the parent can instantiate all parts with identical call sites. Unused params suppressed with `// eslint-disable-line no-unused-vars` on the signature line
+- **Part shape - singleton or factory:** the loader signature is identical; what differs is the body. **Singleton:** assigns to module-scope `let` vars and returns the module-scope public object directly (no `createInterface`). **Factory:** calls `createInterface(Lib, CONFIG, ERRORS)` and returns the result. Use singleton when the part needs no per-instance closure; use factory when it does. Source: `docs/modules/module-structure-js.md` -> "Part Shape: Singleton or Factory"
+- **Module-root vs parts singleton shape differ:** module-root singletons (`[module].validators.js`) inject only `Lib` (run before config is validated, so `CONFIG`/`ERRORS` not accepted). Parts singletons always accept all three for call-site uniformity. Do not conflate the two shapes
 - **Parent loader builds `Parts` once:** `const Parts = { Foo: require('./parts/foo')(Lib, CONFIG, ERRORS), Bar: ... };` - no part-ordering knowledge in the parent
 - **Inter-part deps self-resolve:** if part A needs part B, A `require`s B with the same `(Lib, CONFIG, ERRORS)` signature. No registry, no dispatch
 - **Never exported:** parts are an internal organization technique. `package.json` `exports` lists only the parent module's main entry. External consumers see only the parent's public interface
@@ -847,6 +888,17 @@ module.exports = function (shared_libs, config_override) {
 - `strictEqual` for primitives, `deepStrictEqual` for objects
 - No `console.log` in tests - assertions only
 - Test inputs and expected outputs must be explicit (no hidden variables)
+
+### Test Double Patterns (memory-store vs stub-adapter)
+
+When a module under test depends on an external contract, use a named test double in `_test/`. Source: `docs/testing/unit-test-authoring-js.md` -> "Test Double Patterns".
+
+| Pattern | File | Industry term | Use when | State |
+|---|---|---|---|---|
+| `memory-store` | `_test/memory-store.js` | Fake | Storage backend (SQL, NoSQL, cache); stateful - writes must be visible to subsequent reads | Persists within test |
+| `stub-adapter` | `_test/stub-adapter.js` | Stub | Runtime/transport adapter (HTTP gateway, queue, cloud SDK); stateless delivery channel | No cross-call state |
+
+The two patterns are not exclusive - a module with both a storage backend and a runtime adapter uses both. Identify each external dependency, classify as "stateful storage" or "transport/runtime", and create the appropriate double. Reference: `js-server-helper-auth/_test/memory-store.js` (memory-store); `js-server-helper-http-gateway/_test/stub-adapter.js` (stub-adapter).
 
 ### Testing Tiers (Industry Standard - 4 Tiers)
 
