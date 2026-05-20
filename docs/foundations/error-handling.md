@@ -12,6 +12,8 @@ The framework recognizes **three** error categories. Each has exactly one correc
 - [Service-Layer Translation Is Mandatory](#service-layer-translation-is-mandatory)
 - [Domain Validation (Model Layer)](#domain-validation-model-layer)
 - [Return Object Shapes (Quick Reference)](#return-object-shapes-quick-reference)
+- [Type String Naming](#type-string-naming)
+- [Programmer Error Message Format](#programmer-error-message-format)
 - [Scope](#scope)
 
 ---
@@ -419,6 +421,103 @@ if (result.error.type === 'AUTH_SERVICE_UNAVAILABLE') {
   return { success: false, error: Lib.User.errors.SERVICE_UNAVAILABLE };
 }
 ```
+
+---
+
+## Programmer Error Message Format
+
+The previous section (`Type String Naming`) governs the `type` field of catalog errors returned in envelopes. This section governs the **string passed to `throw new Error(...)` and `throw new TypeError(...)`** — the programmer-error channel.
+
+Programmer-error messages have exactly one audience: **a developer reading a stack trace.** They are not parsed by any runtime code, not seen by end users, not forwarded to monitoring as structured data. The only job of the string is to tell the developer two things in the fewest possible characters: *which module raised this* and *what their code did wrong*.
+
+### The Rule
+
+A programmer-error message MUST follow this shape:
+
+```text
+[<module-short-name>] <field-path> <expected-shape>[. (e.g. <bare-example>)]
+```
+
+| Slot | Required | Format | Example |
+|---|---|---|---|
+| **Module prefix** | Yes | `[js-server-helper-<name>]` in square brackets, lowercase, exactly the module's package short-name without any scope | `[js-server-helper-auth]`, `[js-server-helper-http-gateway]` |
+| **Field path** | Yes | Dotted path that names the exact CONFIG key, options key, or argument that is wrong | `CONFIG.STORE`, `options.scope`, `createSession options.tenant_id` |
+| **Expected shape** | Yes | Declarative statement of the constraint the value failed to meet. Phrased as "must be …" or "is required …" | `must be a store factory function`, `is required (non-empty string)`, `must be a positive integer` |
+| **Concrete example** | Optional | One bare example inside `(e.g. …)`. Used only when the expected shape needs disambiguation (e.g., showing which package satisfies a factory contract) | `(e.g. require("js-server-helper-auth-store-sqlite"))` |
+
+### Hard Prohibitions
+
+The following MUST NOT appear in any programmer-error message string:
+
+1. **No URLs of any kind.** No `https://`, no GitHub links, no npm registry URLs, no documentation links. The stack trace shows the file and line — the developer can read the source. URLs in error strings become stale, leak deployment details, and clutter logs.
+
+2. **No scoped package names.** Use the bare short-name (`js-server-helper-auth-store-sqlite`), not the scoped publish name (`@superloomdev/js-server-helper-auth-store-sqlite`). The scope is a registry concern, not a contract concern, and it changes when the project is forked or re-scoped. The bare name is stable.
+
+3. **No multi-line concatenation for prose.** Long messages stitched together with `+ ' ... ' +` across multiple lines are a smell. If the message is too long for a single line, the message is too long. Trim it.
+
+4. **No marketing or apologetic language.** No "Please", no "Sorry", no exclamation marks, no emoji. The developer is debugging — they want the fact, not a tone.
+
+5. **No "click here" or "see docs" pointers.** If a constraint genuinely needs documentation context, the right answer is a tighter `expected-shape` slot, not a URL. Documentation lives in `docs/` and `README.md` — not in stack traces.
+
+6. **No driver wording or vendor names.** A `TypeError` raised by `js-server-helper-sql-postgres` says `[js-server-helper-sql-postgres]`, not `[Postgres]` or `[pg]`. (Note: this overlaps with the wrapper-purity rule for envelope errors — both channels keep vendor wording out of consumer-visible strings.)
+
+### Correct Examples
+
+```javascript
+// From js-server-helper-auth/auth.validators.js
+throw new Error('[js-server-helper-auth] CONFIG.STORE must be a store factory function (e.g. require("js-server-helper-auth-store-sqlite"))');
+throw new Error('[js-server-helper-auth] CONFIG.STORE_CONFIG is required (object)');
+throw new Error('[js-server-helper-auth] CONFIG.JWT.signing_key must be a string of at least 32 chars when ENABLE_JWT is true');
+throw new TypeError('[js-server-helper-auth] createSession options.tenant_id must be a non-empty string');
+
+// From js-server-helper-http-gateway/http-gateway.validators.js
+throw new Error('[js-server-helper-http-gateway] CONFIG.ADAPTER must be an adapter factory function (e.g. require("js-server-helper-http-gateway-adapter-aws-apigateway"))');
+```
+
+### Incorrect Examples
+
+```javascript
+// WRONG: scoped package names + URL-shaped example + multi-line concatenation
+throw new Error(
+  'js-server-helper-http-gateway: CONFIG.ADAPTER must be an adapter factory function. ' +
+  'Pass require("@superloomdev/js-server-helper-http-gateway-adapter-aws-apigateway") ' +
+  'or require("@superloomdev/js-server-helper-http-gateway-adapter-express").'
+);
+
+// WRONG: no module prefix, vague field path
+throw new TypeError('options is invalid');
+
+// WRONG: "Please" + URL
+throw new Error('Please configure CONFIG.STORE. See https://example.com/docs/auth');
+
+// WRONG: vendor wording in the prefix
+throw new Error('[Postgres] connection_string is required');
+```
+
+### Why These Rules Exist
+
+1. **The module prefix lets a developer grep logs.** A stack trace shows the file path, but a Sentry/CloudWatch search box wants a substring. `[js-server-helper-auth]` is unambiguous and grep-friendly across the whole codebase.
+
+2. **The field path is the entire fix.** Almost every programmer error is "you didn't pass X correctly". Naming X precisely (`CONFIG.JWT.signing_key`, not "the JWT config") points the developer directly at the line they need to change.
+
+3. **The expected shape closes the loop.** "Is required" alone doesn't tell the developer what to type; "is required (non-empty string)" does. The parenthetical is part of the value, not a footnote.
+
+4. **No URLs because URLs lie.** Today the URL works. Six months from now it 404s, the docs site moved, the project was re-scoped, or the deployment doesn't have internet access. The stack trace is the only thing guaranteed to still be true.
+
+5. **No scoped names because the scope is mutable.** Bare names are how the framework refers to itself in code, in commits, and in directory layout. The publish scope (`@superloomdev`) is one concern of one CI pipeline.
+
+### Scope of This Rule
+
+Applies to every `throw new Error(...)` and `throw new TypeError(...)` in:
+
+- Every helper module (`src/helper-modules-*/`).
+- Every entity service, controller, and validator in `demo-project/src/server/` and projects derived from it.
+
+Does NOT apply to:
+
+- The `message` field of catalog errors returned via envelopes — that goes through the [Wrapper Purity](#wrapper-purity-the-catalog-owns-the-envelope) rule.
+- The `message` field of domain errors in `[entity].errors.js` — that is user-facing copy and follows the [validation approach](validation-approach.md).
+- Inline source-code comments showing usage examples (these can use any format that aids the human reader).
 
 ---
 

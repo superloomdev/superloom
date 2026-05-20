@@ -297,6 +297,8 @@ See `js-server-helper-aws-dynamodb/_test/loader.js` for the reference implementa
 
 ## Adding Tests to a New Module
 
+Before writing tests, identify each external dependency the module has (storage backend, runtime adapter, cloud SDK) and decide which test double pattern to use for each. See [Test Double Patterns](unit-test-authoring-js.md#test-double-patterns-memory-store-vs-stub-adapter) in the unit-test authoring guide — the two patterns (`memory-store` and `stub-adapter`) are not mutually exclusive and a module may need both.
+
 1. Create `_test/` directory in the module
 2. Create `_test/loader.js` - reads env vars, builds `Lib` container
 3. Create `_test/test.js` - imports from loader, uses `Lib.ModuleName`

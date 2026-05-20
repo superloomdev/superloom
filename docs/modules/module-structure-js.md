@@ -262,7 +262,7 @@ const createInterface = function (Lib, CONFIG, state) {
 
 ### createInterface Signature Variants
 
-`createInterface` takes only the parameters the module actually needs. Four canonical shapes exist - use the minimal one that fits.
+`createInterface` takes only the parameters the module actually needs. Use the minimal shape that fits — do not add parameters a module does not use.
 
 | Signature | Use when | Reference |
 |---|---|---|
@@ -270,10 +270,61 @@ const createInterface = function (Lib, CONFIG, state) {
 | `createInterface(CONFIG)` | Foundation module with config but no peer deps (structured logging primitives) | `js-helper-debug` |
 | `createInterface(Lib, CONFIG)` | Stateless helper - uses peer deps and config but holds no per-instance resource | `js-helper-time`, `js-server-helper-crypto`, `js-server-helper-http`, `js-server-helper-instance` |
 | `createInterface(Lib, CONFIG, state)` | Stateful helper - holds a per-instance resource (pool, persistent client, authenticated session) | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
-| `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern - Validators singleton + store injected from loader | `js-server-helper-verify` |
-| `createInterface(Lib, CONFIG, ERRORS, Validators, store, Parts)` | Domain helper with adapter pattern + decomposed parts | `js-server-helper-auth` |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern - Validators singleton + externally-supplied store, no parts | `js-server-helper-verify` |
+| `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied adapter, no Validators singleton | `js-server-helper-http-gateway` |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators singleton + decomposed parts (fullest shape) | `js-server-helper-auth` (target; see ordering note below) |
 
 The loader body mirrors the signature: it builds only the parameters it will pass. A stateless helper's loader ends with `return createInterface(Lib, CONFIG);` and never declares a `state` object.
+
+### Parameter Casing Convention
+
+Parameters passed to `createInterface` (and to module loaders in general) follow a strict casing rule based on what the parameter represents:
+
+| Parameter kind | Casing | Rationale | Examples |
+|---|---|---|---|
+| **Internally-assembled namespaced containers** — bags of named keys built by this module's own loader | `PascalCase` | These are namespaces, not scalars. PascalCase signals "look inside for named sub-things" | `Lib`, `CONFIG`, `ERRORS`, `Parts`, `Validators` |
+| **Externally-supplied resolved dependencies** — a single instance of a contract, obtained by calling a factory that arrived from outside (via `CONFIG.STORE`, `CONFIG.ADAPTER`, etc.) | `camelCase` | These are resolved objects, not namespaces. `camelCase` signals "this is one specific thing that implements a contract" | `store`, `adapter`, `state` |
+
+**Why `store` and `adapter` are lowercase — and why that is intentional:**
+
+`store` (in auth/verify) and `adapter` (in http-gateway) are the result of calling an externally-supplied factory function: `CONFIG.STORE(Lib, CONFIG, ERRORS)`. The module did not build this object from its own parts; the caller chose it and injected it through config. It is the module's external boundary — the one thing it cannot reason about internally. Lowercase signals: *"this came from outside; we hold it but we did not build it."*
+
+This is the same reason `state` is lowercase in simpler stateful modules: `state` is a mutable container, not a named namespace.
+
+### Parameter Ordering Convention
+
+Parameters follow **internal-before-external** ordering. The full ordering rule:
+
+```
+createInterface(Lib, CONFIG, ERRORS, [Validators,] [Parts,] [store | adapter | state])
+```
+
+1. **`Lib`** — always first; the shared dependency container, present in almost every module
+2. **`CONFIG`** — always second when present; merged runtime configuration
+3. **`ERRORS`** — always third when present; frozen error catalog
+4. **`Validators`** — fourth when present; internally-built singleton from `[module].validators.js`
+5. **`Parts`** — fifth when present; internally-built container of `parts/` sub-modules
+6. **`store` / `adapter` / `state`** — always last; the externally-supplied or mutable resource
+
+The rule is: **everything the module built for itself comes before the one thing that was handed to it from outside.** This makes the signature self-documenting — a reader scanning the parameter list sees the module's own infrastructure first and the external dependency at the end.
+
+Modules without all roles stay minimal:
+
+```javascript
+// No Parts, no external dependency — just the base three
+createInterface(Lib, CONFIG, ERRORS)
+
+// With store but no Parts (verify)
+createInterface(Lib, CONFIG, ERRORS, Validators, store)
+
+// With Parts and adapter (http-gateway)
+createInterface(Lib, CONFIG, ERRORS, Parts, adapter)
+
+// With Parts, Validators, and store (auth — fullest shape)
+createInterface(Lib, CONFIG, ERRORS, Validators, store, Parts)
+```
+
+> **Note on auth's current shape:** `auth.js` currently passes `store` before `Parts` (`Validators, store, Parts`). This pre-dates the documented rule. It will be corrected to `Validators, Parts, store` when auth is next touched for a substantive change (see plan 0013).
 
 ### Required Rules
 
@@ -332,20 +383,63 @@ src/helper-modules-server/js-server-helper-[module]/
   _test/
 ```
 
-### Uniform Parts-Factory Signature
+### Uniform Loader Signature
 
-Every part is a factory with the same signature, regardless of which arguments it actually consumes:
+**Every part loader — singleton or factory — always accepts `(shared_libs, config, errors)`.** This is a hard rule with no exceptions. It ensures the parent module can instantiate all parts with identical call sites and a new part can be added without touching existing call sites.
+
+### Part Shape: Singleton or Factory
+
+The loader signature is always the same. What differs is what happens inside:
+
+| Shape | When to use | What the loader does |
+|---|---|---|
+| **Singleton** | Part needs no per-instance closure — all state is module-scope | Assigns to module-scope `let` vars, returns the module-scope public object directly |
+| **Factory** | Part needs a per-instance closure (e.g. over per-call `CONFIG` slice, per-instance resource) | Calls `createInterface(Lib, CONFIG, ERRORS)` and returns the result |
+
+### Singleton Part Shape
+
+All three variables are declared at module scope and assigned in the loader, regardless of which are consumed today. Unused variables get `// eslint-disable-line no-unused-vars` inline. Remove the directive when a variable is first used.
+
+> **This is different from the module-root singleton shape** (`[module].validators.js`). Module-root singletons inject only `Lib` and take no `CONFIG`/`ERRORS` because validators run before config is validated. Parts always accept all three for call-site uniformity.
 
 ```javascript
-module.exports = function loader (Lib, CONFIG, ERRORS) {
+// Shared dependencies injected by loader (uniform parts signature)
+let Lib;               // remove eslint comment when first used
+let CONFIG;            // eslint-disable-line no-unused-vars
+let ERRORS;            // eslint-disable-line no-unused-vars
 
-  // No per-instance state to validate for pure parts; delegate to createInterface.
-  return createInterface(Lib, CONFIG, ERRORS);
+module.exports = function loader (shared_libs, config, errors) {
 
+  // Assign to module-scope vars so public and private objects can close over them
+  Lib = shared_libs;
+  CONFIG = config;
+  ERRORS = errors;
+
+  return PartName;
+
+};
+
+const PartName = {
+  // ... methods close over module-scope Lib, CONFIG, ERRORS
 };
 ```
 
-Parts that do not need `CONFIG` or `ERRORS` still accept the parameters and ignore them. The uniformity matters: it lets the parent loader instantiate every part with one line each, and a new part can be added without modifying the call sites of existing parts.
+### Factory Part Shape
+
+When a part needs a per-instance closure:
+
+```javascript
+module.exports = function loader (shared_libs, config, errors) {
+  return createInterface(shared_libs, config, errors);
+};
+
+const createInterface = function (Lib, CONFIG, ERRORS) {
+  const PartName = {
+    // ... methods close over Lib, CONFIG, ERRORS from this call
+  };
+  return PartName;
+};
+```
 
 ### Parent Loader Body
 
@@ -403,7 +497,7 @@ Use the singleton pattern when **all four** of these are true:
 - The module holds a DB connection pool, persistent client, or any per-instance resource → use the **factory pattern** with `state`
 - Different callers legitimately need different `CONFIG` at runtime (different DB, different bucket, different queue) → use the **factory pattern**
 - The module wraps a vendor SDK or driver → use the **factory pattern** with `ensureAdapter`
-- The module is a `parts/` sub-module → parts always use the **uniform `(Lib, CONFIG, ERRORS)` factory signature**
+- The module is a `parts/` sub-module **and has at least one factory dependency** → use the factory `createInterface` shape (see [Part Shape: Singleton or Factory](#part-shape-singleton-or-factory))
 
 ### Three Singleton Subtypes
 
@@ -522,11 +616,12 @@ The same 3/2/1 spacing and banner rules from [`code-formatting-js.md`](../founda
 | **`let Lib;` at module scope** | Declared above the loader with a one-line comment. No initializer (`undefined` until the loader runs) |
 | **Loader sets `Lib` once** | `Lib = shared_libs;` is the only assignment. Never reassigned after the first call |
 | **Loader returns the public object directly** | `return [Name];`, not `return createInterface(Lib)` |
+| **Module-root vs parts singleton shape** | Module-root singletons (`[module].validators.js`) inject only `Lib` — they run before config is validated so `CONFIG`/`ERRORS` are not accepted. Parts singletons always accept all three `(shared_libs, config, errors)` for call-site uniformity. Do not conflate the two shapes. |
 | **No `createInterface`** | Singletons have no factory wrapper. Public and private objects are declared at module scope |
 | **Public before private, both at module scope** | Same order as inside `createInterface` in a factory: public first, private second |
 | **Private helpers use module-scope `Lib`** | `_[Name].helper()` closes over `let Lib` directly, same as factory pattern closes over the `Lib` const inside `createInterface` |
 | **File named `[module].[concern].js`** | Sits at the module root alongside `[module].config.js` and `[module].errors.js` |
-| **Never in `parts/`** | Singletons are module-root files. Parts always use the uniform `(Lib, CONFIG, ERRORS)` factory signature |
+| **Module-root singletons live at module root** | `[module].validators.js`, `[module].errors.js`, `[module].config.js` are module-root files. `parts/` sub-modules may also be singletons when their dependencies are singleton-eligible — see [Part Shape: Singleton or Factory](#part-shape-singleton-or-factory) |
 | **Not part of the main module** | `[module].validators.js` is a separate file. Not inlined into `[module].js` or tucked into `_Auth`/`_Verify`. The main module's loader calls it and passes `Validators` in |
 
 ### Standard Files Using This Pattern
@@ -626,8 +721,10 @@ The store is instantiated in the **loader**, not inside `createInterface`. This 
 // In the loader, after Validators.validateConfig(CONFIG)
 const store = CONFIG.STORE(Lib, CONFIG, ERRORS);
 
-// store is then threaded into createInterface as an explicit parameter
-return createInterface(Lib, CONFIG, ERRORS, Validators, store);
+// store is threaded into createInterface last — external dependency goes after
+// all internally-assembled containers (Lib, CONFIG, ERRORS, Validators, Parts).
+// See Parameter Ordering Convention above.
+return createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store);
 ```
 
 Instantiating `store` inside `createInterface` instead is a structural error: `createInterface` would have a hidden side effect and could no longer be tested by passing a mock store directly.

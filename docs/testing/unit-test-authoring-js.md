@@ -13,6 +13,7 @@ The complete rule set for writing unit tests. Follow it exactly and any reviewer
 - [How to Write Tests for a New Module](#how-to-write-tests-for-a-new-module-step-by-step)
 - [Reference - Assertion Methods](#reference-assertion-methods)
 - [Reference - Test Output](#reference-test-output)
+- [Test Double Patterns: memory-store vs stub-adapter](#test-double-patterns-memory-store-vs-stub-adapter)
 
 ---
 
@@ -213,6 +214,147 @@ Running `npm test` produces output like:
 ```
 
 Each function is a suite. Each `it()` is a test. All results are visible in the terminal.
+
+---
+
+## Test Double Patterns: memory-store vs stub-adapter
+
+When a module under test depends on an external contract (a storage backend, a runtime adapter, a third-party driver), its own tests must not hit the real thing. Instead, a **test double** is placed in `_test/` that satisfies the contract interface with minimal in-process code. Two named patterns exist in this project. They are **not mutually exclusive** — a module can use both if it has two different kinds of dependency.
+
+---
+
+### Pattern 1: `memory-store` (a Fake)
+
+**File name:** `_test/memory-store.js`
+
+**What it is:** A full working implementation of a storage contract, backed by RAM (`Map`, `Array`, plain objects) instead of a real database. It has real logic: records are stored, read back, deleted, and expired. The only thing missing is persistence and a network round-trip.
+
+**Industry term:** *Fake* — a test double with working logic, just a simpler or faster implementation of the real thing.
+
+**When to use it:**
+
+- The module under test depends on a **storage backend** (database, key-value store, cache).
+- The contract being implemented is stateful — writes made in one call must be visible in a subsequent read call.
+- The module's own logic (session policy, token rotation, eviction, TTL) is what is being tested, and the store is just the persistence layer underneath it.
+- The real backend can be swapped for an in-process `Map` without changing the observable behavior of the module.
+
+**Real examples in this project:**
+
+| Module | File | What it fakes |
+|---|---|---|
+| `js-server-helper-auth` | `_test/memory-store.js` | Full 8-method session store contract (get, set, list, delete, cleanup) |
+| `js-server-helper-verify` | `_test/memory-store.js` | Verification code store contract |
+| `js-server-helper-logger` | `_test/memory-store.js` | Log record store contract |
+
+**What a memory-store looks like:**
+
+```js
+// _test/memory-store.js
+module.exports = function createMemoryStore () {
+  const _map = new Map();
+  return {
+    getSession: async function (instance, t, a, k) { ... },
+    setSession: async function (instance, record) { ... },
+    deleteSession: async function (instance, t, a, k) { ... },
+    // ... all 8 methods, all with real Map-backed logic
+  };
+};
+```
+
+The key property: **state persists across calls within the same test**. A `setSession` followed by a `getSession` in the same test returns the record that was set.
+
+---
+
+### Pattern 2: `stub-adapter` (a Stub)
+
+**File name:** `_test/stub-adapter.js`
+
+**What it is:** A minimal, stateless implementation of an adapter contract that returns valid-shaped dummy output for every call. It does not simulate any real system's internal behavior — it exists purely to satisfy the function signatures so the module under test can execute its own code paths.
+
+**Industry term:** *Stub* — a test double that satisfies an interface with hardcoded or trivially computed responses, with no real logic.
+
+**When to use it:**
+
+- The module under test depends on a **runtime adapter** or **driver** (an HTTP runtime like API Gateway or Express, a queue client, a cloud SDK).
+- The adapter contract is not stateful in the way a database is — there are no reads that must see prior writes.
+- The module's own logic (request normalization, response building, header merging, cookie handling) is what is being tested, and the adapter is just the delivery channel underneath it.
+- The real adapter cannot be replicated in memory without reimplementing the actual runtime (Lambda event parsing, Express middleware), which is out of scope.
+
+**Real examples in this project:**
+
+| Module | File | What it stubs |
+|---|---|---|
+| `js-server-helper-http-gateway` | `_test/stub-adapter.js` | 3-method adapter contract (loadHttpDataToInstance, buildHttpResponseObject, getHttpRequestCountryCode) |
+
+**What a stub-adapter looks like:**
+
+```js
+// _test/stub-adapter.js
+module.exports = function createStubAdapter () {
+  const sent = [];
+  return {
+    adapter: {
+      loadHttpDataToInstance: function (instance, raw_request, _ctx, cb) {
+        instance.http_request = raw_request || {};
+        instance.gateway_response_callback = cb;
+      },
+      buildHttpResponseObject: function (status, headers, body) {
+        const r = { status, headers, body };
+        sent.push(r);
+        return r;
+      },
+      getHttpRequestCountryCode: function () { return null; }
+    },
+    sent: sent   // test assertions inspect this
+  };
+};
+```
+
+The key property: **no state persists across calls**. The stub just returns a valid-shaped value so the module's own code can run. Tests then inspect `sent[]` or the returned object to assert on the module's behavior — not the adapter's.
+
+---
+
+### Decision Table
+
+| Question | Answer → use |
+|---|---|
+| Does the contract involve stored state (write then read)? | `memory-store` |
+| Is the contract a storage backend (SQL, NoSQL, cache)? | `memory-store` |
+| Is the contract a runtime/transport adapter (HTTP, queue, cloud SDK)? | `stub-adapter` |
+| Can the real thing be replicated in RAM with working logic? | `memory-store` |
+| Is the real thing a runtime environment that cannot be replicated without reimplementing it? | `stub-adapter` |
+| Does the test need to assert on what was stored and read back? | `memory-store` |
+| Does the test need to assert on what was sent out (response, message, event shape)? | `stub-adapter` |
+
+---
+
+### Using Both in the Same Module
+
+These patterns are **not exclusive**. A module can require both if it has two different kinds of dependency. For example, a hypothetical `js-server-helper-notifications` module might:
+
+- Depend on a **storage backend** (to persist notification records) → `_test/memory-store.js`
+- Depend on a **runtime adapter** (to dispatch notifications via email, SMS, push) → `_test/stub-adapter.js`
+
+The tests then build both, pass the memory-store where a store is expected, and pass the stub-adapter where a dispatch adapter is expected. The module's own logic runs fully in-process with no external dependencies.
+
+```js
+// _test/test.js - module with both patterns
+const { Lib }    = require('./loader')();
+const MemStore   = require('./memory-store');
+const StubAdapt  = require('./stub-adapter');
+
+const { adapter, sent } = StubAdapt();
+const store = MemStore();
+
+const Module = require('../module.js')(Lib, {
+  STORE:   store,
+  ADAPTER: function () { return adapter; }
+});
+```
+
+When adding a new module, identify each external dependency, classify it as "stateful storage" or "transport/runtime", and create the appropriate test double (or both).
+
+---
 
 ## Further Reading
 
