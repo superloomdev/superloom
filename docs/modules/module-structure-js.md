@@ -16,6 +16,9 @@ A reference for how every module in Superloom is shaped: the standard applicatio
   - [Reference Implementations](#reference-implementations)
 - [Parts Pattern (Complex Helper Modules)](#parts-pattern-complex-helper-modules)
 - [Singleton Module Pattern](#singleton-module-pattern)
+  - [Canonical Shape: Main Module Singleton](#canonical-shape-main-module-singleton)
+  - [Canonical Shape: Module-Root Singleton (Validators)](#canonical-shape-module-root-singleton-validators)
+  - [Module-Scope Declaration Ordering](#module-scope-declaration-ordering)
 - [Adapter Pattern (Multi-Backend Helper Modules)](#adapter-pattern-multi-backend-helper-modules)
 - [Model Package Index](#model-package-index)
 - [Server Extension Merge Pattern](#server-extension-merge-pattern)
@@ -507,41 +510,69 @@ Use the singleton pattern when **all four** of these are true:
 | **Lib-injected** | `let Lib;` at module scope, loader sets it once, public/private objects at module scope | `[module].validators.js` |
 | **No-dep** | No `let` variables at all, no loader needed. Pure functions with zero external dependencies | `js-helper-utils` (upgrade candidate) |
 
-### Canonical Shape: Lib-Injected Singleton
+### Canonical Shape: Main Module Singleton
 
-This is the shape for modules that need `Lib.Utils` (or other shared libs) but no `CONFIG` and no `ERRORS`.
+This is the full shape for a main module file (`[module].js`) converted to singleton. It shows the complete declaration ordering and loader body.
 
 ```javascript
 // Info: [What this singleton provides - 1 line]
-// [Second line: what the two concerns are, if applicable]
+// [Second line if needed]
 //
-// Singleton: Lib is injected once by the loader. Public and private objects
-// are declared at module scope - Node.js require cache guarantees the same
-// reference is returned on every subsequent require. No factory needed.
+// Singleton: Lib and CONFIG are injected once by the loader. Public and
+// private objects are declared at module scope - Node.js require cache
+// guarantees the same reference is returned on every subsequent require.
+// No factory needed.
 'use strict';
 
 
 // Shared dependency injected by loader
 let Lib;
 
-// [Any module-scope constants, e.g. allowed enum values]
-const SOME_VALUES = ['a', 'b', 'c'];
+// Domain config injected by loader
+let CONFIG;
+
+// Error catalog (frozen)
+const ERRORS = require('./[module].errors'); // eslint-disable-line no-unused-vars
+
+// Validators module (singleton, set by loader after Lib is available)
+let Validators;
+
+// [Module-specific data - loaded once at require time]
+const [DATA] = require('./data/[name].json');
 
 
 /////////////////////////// Module-Loader START ////////////////////////////////
 
 /********************************************************************
-Singleton loader. Injects Lib and returns the module-scope [Name]
-object. Takes only Lib - no CONFIG or ERRORS.
+Singleton loader. Injects Lib and CONFIG, initializes Validators,
+and returns the module-scope [Name] object directly. Node.js require
+cache guarantees a single instance across the process.
 
-@param {Object} shared_libs - Dependency container (Utils)
+@param {Object} shared_libs - Lib container with Utils, Debug
+@param {Object} config - Overrides merged over module config defaults
 
 @return {Object} - Public [Name] interface
 *********************************************************************/
-module.exports = function loader (shared_libs) {
+module.exports = function loader (shared_libs, config) {
 
-  // Inject shared dependency
-  Lib = shared_libs;
+  // Inject shared dependencies
+  Lib = {
+    Utils: shared_libs.Utils,
+    Debug: shared_libs.Debug
+  };
+
+  // Merge overrides over defaults
+  CONFIG = Object.assign(
+    {},
+    require('./[module].config'),
+    config || {}
+  );
+
+  // Initialize validators (needs Lib to be set first)
+  Validators = require('./[module].validators')(Lib);
+
+  // Validate config immediately so misconfiguration fails at startup
+  Validators.validateConfig(CONFIG);
 
   return [Name];
 
@@ -549,9 +580,8 @@ module.exports = function loader (shared_libs) {
 
 
 
-////////////////////////////// Public Functions START ////////////////////////
+///////////////////////////Public Functions START//////////////////////////////
 const [Name] = {
-
 
   // ~~~~~~~~~~~~~~~~~~~~ [Subsection Name] ~~~~~~~~~~~~~~~~~~~~
   // One-line purpose of this subsection.
@@ -570,13 +600,12 @@ const [Name] = {
 
   }
 
-};////////////////////////////// Public Functions END ////////////////////////
+};///////////////////////////Public Functions END//////////////////////////////
 
 
 
-///////////////////////////// Private Functions START ////////////////////////
+///////////////////////////Private Functions START/////////////////////////////
 const _[Name] = {
-
 
   /********************************************************************
   Private helper description.
@@ -594,8 +623,114 @@ const _[Name] = {
 
   }
 
-};///////////////////////////// Private Functions END ////////////////////////
+};//////////////////////////Private Functions END///////////////////////////////
 ```
+
+Not every module uses every declaration. Omit any that do not apply — but preserve the relative order of those that remain. A module with no validators and no data files would declare only `Lib`, `CONFIG`, and `ERRORS`.
+
+### Canonical Shape: Module-Root Singleton (Validators)
+
+Module-root singletons (`[module].validators.js`) are a **special case** of the singleton pattern. They are singletons, but they do not follow the full main-module singleton shape. Key differences:
+
+- **Accept only `Lib`** — no `CONFIG`, no `ERRORS`. Validators run before config is validated, so they cannot depend on a merged config object.
+- **No config merging in the loader** — the loader is a single assignment (`Lib = shared_libs`) and a return.
+- **No `validateConfig` call** — validators *are* the config validation; they cannot validate themselves.
+- **No error catalog** — validators throw `TypeError` for programmer errors. They do not return operational error envelopes.
+
+This shape should not be confused with the main-module singleton. It is a stripped-down, single-purpose pattern for config and input validation only.
+
+```javascript
+// Info: [What this singleton provides - 1 line]
+//
+// Singleton: Lib is injected once by the loader. No factory needed.
+'use strict';
+
+
+// Shared dependency injected by loader
+let Lib;
+
+
+/////////////////////////// Module-Loader START ////////////////////////////////
+
+/********************************************************************
+Singleton loader. Injects Lib and returns the module-scope [Name]
+object. Takes only Lib — no CONFIG or ERRORS.
+
+@param {Object} shared_libs - Dependency container (Utils)
+
+@return {Object} - Public [Name] interface
+*********************************************************************/
+module.exports = function loader (shared_libs) {
+
+  // Inject shared dependency
+  Lib = shared_libs;
+
+  return [Name];
+
+};///////////////////////////// Module-Loader END ///////////////////////////////
+
+
+
+///////////////////////////Public Functions START//////////////////////////////
+const [Name] = {
+
+  /********************************************************************
+  Function description.
+
+  @param {Type} param - Description
+
+  @return {void}
+  *********************************************************************/
+  methodName: function (param) {
+
+    // Step comment
+    _[Name].helperName(param);
+
+  }
+
+};///////////////////////////Public Functions END//////////////////////////////
+
+
+
+///////////////////////////Private Functions START/////////////////////////////
+const _[Name] = {
+
+  /********************************************************************
+  Private helper description.
+
+  @param {Type} param - Description
+
+  @return {void}
+  *********************************************************************/
+  helperName: function (param) {
+
+    // Step comment
+    if (Lib.Utils.isNullOrUndefined(param)) {
+      throw new TypeError('[module-name] methodName param is required');
+    }
+
+  }
+
+};//////////////////////////Private Functions END///////////////////////////////
+```
+
+### Module-Scope Declaration Ordering
+
+Module-scope declarations above the loader follow a fixed sequence. This mirrors the `createInterface` parameter ordering convention (internal-before-external) and ensures every module reads top-to-bottom in the same predictable order.
+
+| Position | Declaration | Mutability | Present in |
+|---|---|---|---|
+| 1 | `let Lib` | Set once by loader | All modules except no-dep singletons |
+| 2 | `let CONFIG` | Set once by loader | Main modules with config |
+| 3 | `const ERRORS` | Loaded at require time, never reassigned | Main modules with error catalogs |
+| 4 | `let Validators` | Initialized once by loader (needs Lib) | Main modules with validators |
+| 5 | Module-specific data (`const [DATA]`) | Loaded at require time, never reassigned | Only modules that ship static reference data |
+
+**Rules:**
+
+- **Omit positions that do not apply** — a simple Lib-only singleton declares only position 1. A main module without data files declares positions 1-4. The relative order of those that remain is always preserved.
+- **Common infrastructure before module-specific data** — positions 1-4 are the same across all modules. A developer scanning any singleton knows exactly where to find `Lib`, `CONFIG`, `ERRORS`, and `Validators`. Module-specific items (data files, cached adapter refs, etc.) come last because they vary per module.
+- **Each declaration gets a one-line comment above it** — the comment describes what it is and how it is populated (injected by loader, loaded at require time, set by loader after Lib).
 
 ### Section Header Rules for Singletons
 
@@ -647,9 +782,10 @@ These modules are currently written as factories but meet all four singleton cri
 
 **Do not convert:** all DB modules (`sql-*`, `nosql-*`), all cloud SDK modules (`storage-aws-*`, `queue-aws-*`), `js-server-helper-auth`, `js-server-helper-verify`, `js-server-helper-logger`, and all `*-store-*` adapters. These legitimately have per-caller `CONFIG` or per-instance state.
 
-### Reference Implementation
+### Reference Implementations
 
-`src/helper-modules-server/js-server-helper-auth/auth.validators.js`
+- **Main module singleton (full shape):** `src/helper-modules-core/js-helper-money/money.js`
+- **Module-root singleton (validators, special case):** `src/helper-modules-server/js-server-helper-auth/auth.validators.js`
 
 ---
 
