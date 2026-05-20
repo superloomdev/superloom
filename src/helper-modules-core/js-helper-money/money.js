@@ -39,7 +39,7 @@ module.exports = function loader (shared_libs, config) {
   const CURRENCIES = require('./data/currencies.json');
 
   // Error catalog (frozen)
-  const ERRORS = require('./money.errors');
+  const ERRORS = require('./money.errors'); // eslint-disable-line no-unused-vars
 
   // Validators module (singleton, injected with Lib only)
   const Validators = require('./money.validators')(Lib);
