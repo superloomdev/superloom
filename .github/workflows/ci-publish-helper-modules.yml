@@ -42,6 +42,9 @@
 #   33. test-auth-store-mysql → publish-auth-store-mysql
 #   34. test-auth-store-mongodb → publish-auth-store-mongodb
 #   35. test-auth-store-dynamodb → publish-auth-store-dynamodb
+#   36. test-http-gateway → publish-http-gateway
+#   37. test-http-gateway-adapter-aws-apigateway → publish-http-gateway-adapter-aws-apigateway
+#   38. test-http-gateway-adapter-express → publish-http-gateway-adapter-express
 #
 # Workflow behavior:
 #   - Commit "wip: small fix"           → tests run sequentially, no publish
@@ -2387,6 +2390,201 @@ jobs:
         run: npm install -g npm@10
       - name: Publish
         working-directory: src/helper-modules-server/js-server-helper-auth-store-dynamodb
+        run: |
+          npm install
+          PKG_NAME=$(jq -r '.name' package.json)
+          PKG_VERSION=$(jq -r '.version' package.json)
+          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
+          else
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
+          fi
+
+
+  # ###########################################################################
+  #   MODULE 36: js-server-helper-http-gateway
+  #   (needs utils, debug, instance; no Docker required)
+  # ###########################################################################
+
+  test-http-gateway:
+    needs: [detect, publish-auth-store-dynamodb]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-http-gateway')
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Install and test
+        working-directory: src/helper-modules-server/js-server-helper-http-gateway
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
+
+  publish-http-gateway:
+    needs: [detect, test-http-gateway]
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-http-gateway'].result == 'success' &&
+      needs.detect.outputs.publish_modules != '[]' &&
+      needs.detect.outputs.publish_modules != '' &&
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-http-gateway')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
+      - name: Publish
+        working-directory: src/helper-modules-server/js-server-helper-http-gateway
+        run: |
+          npm install
+          PKG_NAME=$(jq -r '.name' package.json)
+          PKG_VERSION=$(jq -r '.version' package.json)
+          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
+          else
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
+          fi
+
+
+  # ###########################################################################
+  #   MODULE 37: js-server-helper-http-gateway-adapter-aws-apigateway
+  #   (no runtime deps; no Docker required)
+  # ###########################################################################
+
+  test-http-gateway-adapter-aws-apigateway:
+    needs: [detect, publish-http-gateway]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-http-gateway-adapter-aws-apigateway')
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Install and test
+        working-directory: src/helper-modules-server/js-server-helper-http-gateway-adapter-aws-apigateway
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
+
+  publish-http-gateway-adapter-aws-apigateway:
+    needs: [detect, test-http-gateway-adapter-aws-apigateway]
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-http-gateway-adapter-aws-apigateway'].result == 'success' &&
+      needs.detect.outputs.publish_modules != '[]' &&
+      needs.detect.outputs.publish_modules != '' &&
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-http-gateway-adapter-aws-apigateway')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
+      - name: Publish
+        working-directory: src/helper-modules-server/js-server-helper-http-gateway-adapter-aws-apigateway
+        run: |
+          npm install
+          PKG_NAME=$(jq -r '.name' package.json)
+          PKG_VERSION=$(jq -r '.version' package.json)
+          if npm view "$PKG_NAME@$PKG_VERSION" version 2>/dev/null; then
+            echo "⚠️ $PKG_NAME@$PKG_VERSION already published - skipping"
+          else
+            echo "Publishing $PKG_NAME@$PKG_VERSION..."
+            npm publish
+          fi
+
+
+  # ###########################################################################
+  #   MODULE 38: js-server-helper-http-gateway-adapter-express
+  #   (no runtime deps; no Docker required)
+  # ###########################################################################
+
+  test-http-gateway-adapter-express:
+    needs: [detect, publish-http-gateway-adapter-aws-apigateway]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-http-gateway-adapter-express')
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Install and test
+        working-directory: src/helper-modules-server/js-server-helper-http-gateway-adapter-express
+        run: |
+          npm install
+          npm run lint --if-present
+          cd _test && npm install && npm test
+
+  publish-http-gateway-adapter-express:
+    needs: [detect, test-http-gateway-adapter-express]
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs['test-http-gateway-adapter-express'].result == 'success' &&
+      needs.detect.outputs.publish_modules != '[]' &&
+      needs.detect.outputs.publish_modules != '' &&
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-http-gateway-adapter-express')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
+      - name: Publish
+        working-directory: src/helper-modules-server/js-server-helper-http-gateway-adapter-express
         run: |
           npm install
           PKG_NAME=$(jq -r '.name' package.json)

@@ -1,0 +1,30 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /greet",
+  "rawPath": "/greet",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json",
+    "host": "api.example.com",
+    "user-agent": "Mozilla/5.0"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "api-id",
+    "domainName": "api.example.com",
+    "http": {
+      "method": "POST",
+      "path": "/greet",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "203.0.113.10",
+      "userAgent": "Mozilla/5.0"
+    },
+    "requestId": "req-015",
+    "routeKey": "POST /greet",
+    "stage": "$default",
+    "time": "12/Mar/2020:19:03:58 +0000",
+    "timeEpoch": 1583348638390
+  },
+  "body": "{\"greeting\":\"hello 世界 🚀\",\"name\":\"日本語\"}",
+  "isBase64Encoded": false
+}

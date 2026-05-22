@@ -1,0 +1,30 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /api/v1/data",
+  "rawPath": "/api/v1/data",
+  "rawQueryString": "",
+  "headers": {
+    "x-api-key": "sk_live_abc123def456",
+    "x-correlation-id": "7f4e9a2b-1234-5678-9abc-def012345678",
+    "host": "api.example.com",
+    "user-agent": "Mozilla/5.0"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "api-id",
+    "domainName": "api.example.com",
+    "http": {
+      "method": "GET",
+      "path": "/api/v1/data",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "203.0.113.10",
+      "userAgent": "Mozilla/5.0"
+    },
+    "requestId": "req-008",
+    "routeKey": "GET /api/v1/data",
+    "stage": "$default",
+    "time": "12/Mar/2020:19:03:58 +0000",
+    "timeEpoch": 1583348638390
+  },
+  "isBase64Encoded": false
+}

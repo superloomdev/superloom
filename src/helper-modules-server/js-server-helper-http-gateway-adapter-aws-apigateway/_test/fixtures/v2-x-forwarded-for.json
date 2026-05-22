@@ -1,0 +1,29 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /ip",
+  "rawPath": "/ip",
+  "rawQueryString": "",
+  "headers": {
+    "x-forwarded-for": "203.0.113.42, 70.41.3.18, 150.172.238.178",
+    "host": "api.example.com",
+    "user-agent": "Mozilla/5.0"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "api-id",
+    "domainName": "api.example.com",
+    "http": {
+      "method": "GET",
+      "path": "/ip",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "150.172.238.178",
+      "userAgent": "Mozilla/5.0"
+    },
+    "requestId": "req-016",
+    "routeKey": "GET /ip",
+    "stage": "$default",
+    "time": "12/Mar/2020:19:03:58 +0000",
+    "timeEpoch": 1583348638390
+  },
+  "isBase64Encoded": false
+}

@@ -1,0 +1,29 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /protected",
+  "rawPath": "/protected",
+  "rawQueryString": "",
+  "headers": {
+    "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature",
+    "host": "api.example.com",
+    "user-agent": "Mozilla/5.0"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "api-id",
+    "domainName": "api.example.com",
+    "http": {
+      "method": "GET",
+      "path": "/protected",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "203.0.113.10",
+      "userAgent": "Mozilla/5.0"
+    },
+    "requestId": "req-006",
+    "routeKey": "GET /protected",
+    "stage": "$default",
+    "time": "12/Mar/2020:19:03:58 +0000",
+    "timeEpoch": 1583348638390
+  },
+  "isBase64Encoded": false
+}

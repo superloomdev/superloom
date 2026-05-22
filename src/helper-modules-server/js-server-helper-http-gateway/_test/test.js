@@ -12,6 +12,16 @@
 //   - getUrlParts
 //   - parts/cookies.js - isSameSiteNoneIncompatible directly
 //   - parts/params.js - setArgsFromRequest directly
+//
+// Phase 1 additions (plan 0017):
+//   - Auth header extraction (Bearer / Basic / API-key patterns)
+//   - Mixed-source param extraction (GET + POST + HEADER + PATH + FIXED in one call)
+//   - setCookie behavioral edge cases (overwrite, value with reserved chars)
+//   - parts/cookies.serialize with all RFC 6265 attributes
+//
+// NOTE: Body parsing edge cases (malformed JSON, wrong content-type, etc.) are
+// the adapter's responsibility (parts/params reads pre-parsed instance.http_request.post).
+// Those tests live in each adapter's _test/test.js, not here.
 'use strict';
 
 const assert = require('node:assert/strict');
@@ -734,6 +744,428 @@ describe('parts/url-parts - getUrlParts', function () {
     expected_keys.forEach(function (key) {
       assert.ok(key in parts, 'missing key: ' + key);
     });
+  });
+
+});
+
+
+// ============================================================================
+// PHASE 1 ADDITIONS (plan 0017)
+// ============================================================================
+
+
+// ============================================================================
+// parts/params - auth header extraction patterns
+// ============================================================================
+
+describe('parts/params - auth header extraction', function () {
+
+  const Params = ParamsFactory(Lib);
+
+  function makeInstance (overrides) {
+    return {
+      http_request: Object.assign(
+        { headers: {}, get: {}, post: {}, path: {}, cookies: {}, method: 'GET' },
+        overrides
+      )
+    };
+  }
+
+  it('extracts a Bearer token from Authorization header', function () {
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature';
+    const instance = makeInstance({
+      headers: { 'authorization': 'Bearer ' + token }
+    });
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'authorization', rename: 'auth', required: true }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args.auth, 'Bearer ' + token);
+  });
+
+  it('extracts a Basic credential from Authorization header', function () {
+    const cred = Buffer.from('user:pass').toString('base64');
+    const instance = makeInstance({
+      headers: { 'authorization': 'Basic ' + cred }
+    });
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'authorization', rename: 'auth', required: true }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args.auth, 'Basic ' + cred);
+  });
+
+  it('extracts an API key from a custom header (X-API-Key)', function () {
+    const instance = makeInstance({
+      headers: { 'x-api-key': 'sk_live_abc123' }
+    });
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'x-api-key', rename: 'api_key', required: true }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args.api_key, 'sk_live_abc123');
+  });
+
+  it('extracts a correlation id (X-Correlation-Id)', function () {
+    const instance = makeInstance({
+      headers: { 'x-correlation-id': '7f4e9a2b-1234-5678-9abc-def012345678' }
+    });
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'x-correlation-id', rename: 'corr_id', required: false }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args.corr_id, '7f4e9a2b-1234-5678-9abc-def012345678');
+  });
+
+  it('returns [null, false] when required Authorization header is missing', function () {
+    const instance = makeInstance({ headers: {} });
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'authorization', rename: 'auth', required: true }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args, false);
+  });
+
+  it('returns default value when optional auth header is missing', function () {
+    const instance = makeInstance({ headers: {} });
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'authorization', rename: 'auth', required: false, default: null }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args.auth, null);
+  });
+
+  it('preserves empty-value Bearer prefix (trim disabled)', function () {
+    // Documents current behavior: 'Bearer ' with trailing space is forwarded as-is
+    const instance = makeInstance({
+      headers: { 'authorization': 'Bearer ' }
+    });
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'authorization', rename: 'auth', required: true }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args.auth, 'Bearer ');
+  });
+
+  it('trims Authorization header value when trim=true', function () {
+    const instance = makeInstance({
+      headers: { 'authorization': '  Bearer token123  ' }
+    });
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'authorization', rename: 'auth', required: true, trim: true }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args.auth, 'Bearer token123');
+  });
+
+  it('lookup is case-sensitive against normalized lowercase header keys', function () {
+    // Adapters normalize all incoming header keys to lowercase. Param lookup
+    // uses the lowercase key. Document this contract explicitly.
+    const instance = makeInstance({
+      headers: { 'authorization': 'Bearer xyz' }
+    });
+    const [err1, args1] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'authorization', rename: 'auth', required: true }
+    ]);
+    assert.equal(err1, null);
+    assert.equal(args1.auth, 'Bearer xyz');
+
+    const [err2, args2] = Params.setArgsFromRequest(instance, [
+      { method: 'HEADER', name: 'Authorization', rename: 'auth', required: true }
+    ]);
+    assert.equal(err2, null);
+    // Mixed-case lookup fails because keys were lowercased by the adapter
+    assert.equal(args2, false);
+  });
+
+});
+
+
+// ============================================================================
+// parts/params - mixed-source extraction
+// ============================================================================
+
+describe('parts/params - mixed source extraction', function () {
+
+  const Params = ParamsFactory(Lib);
+
+  function makeFullInstance () {
+    return {
+      http_request: {
+        headers: { 'authorization': 'Bearer abc123', 'x-api-key': 'k1' },
+        get    : { page: '2', sort: 'name' },
+        post   : { email: 'a@b.com', age: '30' },
+        path   : { user_id: '42' },
+        cookies: { session: 'sess123' },
+        method : 'POST'
+      }
+    };
+  }
+
+  it('extracts from GET + POST + HEADER + PATH + FIXED in a single call', function () {
+    const instance = makeFullInstance();
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'PATH',   name: 'user_id',       rename: 'user_id', required: true, is_number: true },
+      { method: 'HEADER', name: 'authorization', rename: 'auth',    required: true },
+      { method: 'HEADER', name: 'x-api-key',     rename: 'api_key', required: true },
+      { method: 'GET',    name: 'page',          rename: 'page',    required: true, is_number: true },
+      { method: 'GET',    name: 'sort',          rename: 'sort',    required: false, default: 'created_at' },
+      { method: 'POST',   name: 'email',         rename: 'email',   required: true },
+      { method: 'POST',   name: 'age',           rename: 'age',     required: true, is_number: true },
+      { method: 'FIXED',  name: 'source',        rename: 'source',  required: true, value: 'api' }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args.user_id, 42);
+    assert.equal(args.auth, 'Bearer abc123');
+    assert.equal(args.api_key, 'k1');
+    assert.equal(args.page, 2);
+    assert.equal(args.sort, 'name');
+    assert.equal(args.email, 'a@b.com');
+    assert.equal(args.age, 30);
+    assert.equal(args.source, 'api');
+  });
+
+  it('aborts at the first missing required param across mixed sources', function () {
+    const instance = makeFullInstance();
+    delete instance.http_request.post.email;
+
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'PATH',   name: 'user_id',       rename: 'user_id', required: true, is_number: true },
+      { method: 'HEADER', name: 'authorization', rename: 'auth',    required: true },
+      { method: 'POST',   name: 'email',         rename: 'email',   required: true },
+      { method: 'GET',    name: 'page',          rename: 'page',    required: true, is_number: true }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args, false);
+  });
+
+  it('each param descriptor has exactly one source - no precedence concept', function () {
+    // Same NAME in different sources is allowed; each descriptor names its own source.
+    // The two values land under different `rename` keys; one source does not
+    // shadow the other.
+    const instance = {
+      http_request: {
+        headers: { 'id': 'header-id' },
+        get    : { id: 'get-id' },
+        post   : {},
+        path   : { id: 'path-id' },
+        cookies: {},
+        method : 'GET'
+      }
+    };
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'GET',    name: 'id', rename: 'id_from_get',    required: true },
+      { method: 'HEADER', name: 'id', rename: 'id_from_header', required: true },
+      { method: 'PATH',   name: 'id', rename: 'id_from_path',   required: true }
+    ]);
+    assert.equal(err, null);
+    assert.equal(args.id_from_get,    'get-id');
+    assert.equal(args.id_from_header, 'header-id');
+    assert.equal(args.id_from_path,   'path-id');
+  });
+
+  it('mixed sources with validators and invalidators short-circuit correctly', function () {
+    const MY_ERR = { type: 'AGE_TOO_LOW', message: 'must be 18+' };
+    const instance = makeFullInstance();
+    instance.http_request.post.age = '15';
+
+    const [err, args] = Params.setArgsFromRequest(instance, [
+      { method: 'PATH', name: 'user_id', rename: 'user_id', required: true, is_number: true },
+      {
+        method: 'POST', name: 'age', rename: 'age', required: true, is_number: true,
+        invalidate_func: function (v) { return v < 18 ? MY_ERR : null; }
+      },
+      { method: 'GET', name: 'page', rename: 'page', required: true, is_number: true }
+    ]);
+    assert.deepEqual(err, MY_ERR);
+    assert.equal(args, false);
+  });
+
+});
+
+
+// ============================================================================
+// setCookie - behavioral edge cases
+// ============================================================================
+
+describe('setCookie - behavioral edge cases', function () {
+
+  const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36';
+
+  it('second setCookie call overwrites the first (single Set-Cookie key)', function () {
+    // Current contract: instance.http_response.cookies stores ONE Set-Cookie
+    // string. A second setCookie call replaces the first. This test documents
+    // the behavior so adapters and consumers do not rely on multi-cookie output
+    // from a single instance.
+    const { gateway } = buildGatewayWithMemory();
+    const { instance } = initInstance(gateway, { headers: { 'user-agent': CHROME_UA } });
+    gateway.setCookie(instance, 'sid', 'first', 3600);
+    gateway.setCookie(instance, 'sid', 'second', 3600);
+    const set_cookie = instance.http_response.cookies['Set-Cookie'];
+    assert.ok(set_cookie.includes('sid=second'));
+    assert.ok(!set_cookie.includes('sid=first'));
+  });
+
+  it('URL-encodes a value that contains a comma', function () {
+    const { gateway } = buildGatewayWithMemory();
+    const { instance } = initInstance(gateway, { headers: { 'user-agent': CHROME_UA } });
+    gateway.setCookie(instance, 'tags', 'red,green,blue', 3600);
+    const set_cookie = instance.http_response.cookies['Set-Cookie'];
+    assert.ok(set_cookie.startsWith('tags=' + encodeURIComponent('red,green,blue')));
+  });
+
+  it('URL-encodes a value that contains a semicolon', function () {
+    const { gateway } = buildGatewayWithMemory();
+    const { instance } = initInstance(gateway, { headers: { 'user-agent': CHROME_UA } });
+    gateway.setCookie(instance, 'note', 'a;b', 3600);
+    const set_cookie = instance.http_response.cookies['Set-Cookie'];
+    assert.ok(set_cookie.startsWith('note=' + encodeURIComponent('a;b')));
+  });
+
+  it('accepts an empty string value', function () {
+    const { gateway } = buildGatewayWithMemory();
+    const { instance } = initInstance(gateway, { headers: { 'user-agent': CHROME_UA } });
+    gateway.setCookie(instance, 'sid', '', 0);
+    const set_cookie = instance.http_response.cookies['Set-Cookie'];
+    assert.ok(set_cookie.startsWith('sid=;'));
+    assert.ok(set_cookie.toLowerCase().includes('max-age=0'));
+  });
+
+  it('includes Path=/ from default cookie options', function () {
+    const { gateway } = buildGatewayWithMemory();
+    const { instance } = initInstance(gateway, { headers: { 'user-agent': CHROME_UA } });
+    gateway.setCookie(instance, 'sid', 'xyz', 3600);
+    const set_cookie = instance.http_response.cookies['Set-Cookie'];
+    assert.ok(set_cookie.toLowerCase().includes('path=/'));
+  });
+
+  it('includes Secure from default cookie options', function () {
+    const { gateway } = buildGatewayWithMemory();
+    const { instance } = initInstance(gateway, { headers: { 'user-agent': CHROME_UA } });
+    gateway.setCookie(instance, 'sid', 'xyz', 3600);
+    const set_cookie = instance.http_response.cookies['Set-Cookie'];
+    assert.ok(set_cookie.toLowerCase().includes('secure'));
+  });
+
+  it('does NOT include HttpOnly (default is false)', function () {
+    const { gateway } = buildGatewayWithMemory();
+    const { instance } = initInstance(gateway, { headers: { 'user-agent': CHROME_UA } });
+    gateway.setCookie(instance, 'sid', 'xyz', 3600);
+    const set_cookie = instance.http_response.cookies['Set-Cookie'];
+    assert.ok(!set_cookie.toLowerCase().includes('httponly'));
+  });
+
+});
+
+
+// ============================================================================
+// parts/cookies - serialize with all RFC 6265 attributes
+// ============================================================================
+
+describe('parts/cookies - serialize with all RFC 6265 attributes', function () {
+
+  const Cookies = CookiesFactory(Lib);
+
+  it('serializes all standard attributes together', function () {
+    const out = Cookies.serialize('sid', 'abc', {
+      maxAge  : 3600,
+      path    : '/api',
+      domain  : 'example.com',
+      secure  : true,
+      httpOnly: true,
+      sameSite: 'lax'
+    });
+    assert.ok(out.startsWith('sid=abc'));
+    assert.ok(out.toLowerCase().includes('max-age=3600'));
+    assert.ok(out.includes('Path=/api') || out.includes('path=/api'));
+    assert.ok(out.toLowerCase().includes('domain=example.com'));
+    assert.ok(out.toLowerCase().includes('secure'));
+    assert.ok(out.toLowerCase().includes('httponly'));
+    assert.ok(out.toLowerCase().includes('samesite=lax'));
+  });
+
+  it('serializes a clearing cookie (maxAge=0, empty value)', function () {
+    const out = Cookies.serialize('sid', '', { maxAge: 0, path: '/' });
+    assert.equal(out, 'sid=; Max-Age=0; Path=/');
+  });
+
+  it('serializes SameSite=strict correctly', function () {
+    const out = Cookies.serialize('sid', 'abc', { maxAge: 3600, sameSite: 'strict' });
+    assert.ok(out.toLowerCase().includes('samesite=strict'));
+  });
+
+  it('serializes SameSite=none correctly', function () {
+    const out = Cookies.serialize('sid', 'abc', { maxAge: 3600, sameSite: 'none' });
+    assert.ok(out.toLowerCase().includes('samesite=none'));
+  });
+
+  it('omits Secure when secure=false', function () {
+    const out = Cookies.serialize('sid', 'abc', { maxAge: 3600, secure: false });
+    assert.ok(!out.toLowerCase().includes('secure'));
+  });
+
+  it('omits HttpOnly when httpOnly=false', function () {
+    const out = Cookies.serialize('sid', 'abc', { maxAge: 3600, httpOnly: false });
+    assert.ok(!out.toLowerCase().includes('httponly'));
+  });
+
+  it('omits Max-Age when not provided', function () {
+    const out = Cookies.serialize('sid', 'abc', { path: '/' });
+    assert.ok(!out.toLowerCase().includes('max-age'));
+  });
+
+});
+
+
+// ============================================================================
+// parts/cookies - parse edge cases
+// ============================================================================
+
+describe('parts/cookies - parse edge cases', function () {
+
+  const Cookies = CookiesFactory(Lib);
+
+  it('parses a quoted cookie value with spaces', function () {
+    // Per RFC 6265 a quoted-string value is valid; the cookie lib preserves
+    // the surrounding quotes in the parsed value.
+    const out = Cookies.parse('greeting="hello world"');
+    assert.equal(out.greeting, '"hello world"');
+  });
+
+  it('handles an empty cookie value', function () {
+    const out = Cookies.parse('session=');
+    assert.equal(out.session, '');
+  });
+
+  it('returns first value when same name appears twice (first-wins)', function () {
+    // Document first-wins precedence so adapters and callers can rely on it.
+    // This is the jshttp `cookie` library default; subsequent declarations of
+    // the same name are ignored.
+    const out = Cookies.parse('id=first; id=second');
+    assert.equal(out.id, 'first');
+  });
+
+  it('parses a Bearer-style token stored in a cookie', function () {
+    const token = 'eyJhbGciOiJIUzI1NiJ9';
+    const out = Cookies.parse('auth=' + encodeURIComponent('Bearer ' + token));
+    assert.equal(out.auth, 'Bearer ' + token);
+  });
+
+  it('parses cookies with leading and trailing whitespace around separators', function () {
+    const out = Cookies.parse('  a=1 ;  b=2  ;  c=3  ');
+    assert.equal(out.a, '1');
+    assert.equal(out.b, '2');
+    assert.equal(out.c, '3');
+  });
+
+  it('returns empty object for null header', function () {
+    const out = Cookies.parse(null);
+    assert.equal(Object.keys(out).length, 0);
+  });
+
+  it('returns empty object for non-string header', function () {
+    const out = Cookies.parse(123);
+    assert.equal(Object.keys(out).length, 0);
   });
 
 });
