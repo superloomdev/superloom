@@ -16,7 +16,10 @@
   "engines": {
     "node": ">=24"
   },
-  "dependencies": {},
+  "peerDependencies": {
+    "@superloomdev/js-helper-utils": "^1.0.0",
+    "@superloomdev/js-helper-debug": "^1.0.0"
+  },
   "devDependencies": {
     "eslint": "^10.2.0",
     "@eslint/js": "^10.0.1"

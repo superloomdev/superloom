@@ -55,6 +55,14 @@ Install this module as a peer dependency in your project's `package.json` and in
 
 The peer-dependency / loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/server/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
 
+## Dependencies
+
+This module bundles one runtime npm package:
+
+- **`pg`** (node-postgres). PostgreSQL client with connection pooling. Used because the PostgreSQL frontend/backend protocol is proprietary and the driver encodes SSL handling and auth negotiation that cannot be reimplemented in-house
+
+It expects two peer modules in the `Lib` container (Utils, Debug). For the full dependency breakdown, see [`docs/configuration.md`](docs/configuration.md).
+
 ## Testing Status
 
 | Tier | Runtime | Status |

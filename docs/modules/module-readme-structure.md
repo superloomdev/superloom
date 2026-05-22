@@ -76,8 +76,9 @@ Every module README follows this section order, regardless of class. Two section
 | 7 | **Aligned with Superloom Philosophy** | One short paragraph explaining that the module follows Superloom conventions, so adopting it preserves consistency for projects already on Superloom. |
 | 8 | **Extended Documentation** | Links to extended documentation in `docs/` and to Superloom. Does NOT link to `ROBOTS.md`. That file is for AI assistants, not human readers. |
 | 9 | **Adding to Your Project** | Recommends installation as a peer dependency through the project's loader pattern. Does NOT include a copy-paste `npm install` snippet. Links to the loader-pattern doc instead. |
-| 10 | **Testing Status** | Status table showing which test tiers have passed (Emulated / Integration). Test runtime details (Docker lifecycle, env vars) live in `docs/configuration.md` under "Testing Tiers", not here. |
-| 11 | **License** | MIT |
+| 10 | **Dependencies** | Every bundled npm package with a one-sentence rationale. Must explicitly state whether the module has external service dependencies (database, message queue, network service) or none at all. Points to `docs/configuration.md` for peer dependencies and full version constraints. |
+| 11 | **Testing Status** | Status table showing which test tiers have passed (Emulated / Integration). Test runtime details (Docker lifecycle, env vars) live in `docs/configuration.md` under "Testing Tiers", not here. |
+| 12 | **License** | MIT |
 
 ### Section 4. Why Use This Module
 
@@ -121,7 +122,43 @@ Frame the integration as **package peer-dependency through the loader pattern**,
 - [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/server/server-loader.md) - the loader pattern doc on GitHub
 - [npmrc setup](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md) - one-time GitHub Packages registry setup
 
-### Section 10. Testing Status
+### Section 10. Dependencies
+
+Every module documents its runtime dependencies and peer dependencies. The format is consistent across all modules:
+
+**With third-party runtime dependencies:**
+
+```markdown
+## Dependencies
+
+This module bundles {N} runtime npm package(s):
+
+- **`{package}`** ({org}). {What it does}. {Why used — rationale}
+- ...
+
+It expects {N} peer module(s) in the `Lib` container ({list}). For the full dependency breakdown, see [`docs/configuration.md`](docs/configuration.md).
+```
+
+**With no third-party runtime dependencies:**
+
+```markdown
+## Dependencies
+
+This module has no external dependencies.
+
+This module expects {peer info}.
+```
+
+Examples:
+
+- `js-server-helper-http-gateway` (with deps): "This module bundles two runtime npm packages... It expects three peer modules..."
+- `js-helper-utils` (zero deps): "This module has no external dependencies. This module expects no peer modules in the `Lib` container. It is a foundation utility module."
+
+List every bundled npm package with a short rationale for why it is used rather than building in-house. The peer dependency line explains which modules must be injected through the loader pattern.
+
+For optional adapters, version constraints, and full configuration details, point to `docs/configuration.md`.
+
+### Section 11. Testing Status
 
 A status table showing which tiers have passed:
 
@@ -543,7 +580,7 @@ The universal section order serves four reading paths simultaneously:
 
 The "Why use this module" section at position 4 (before any code, before installation, before configuration) is the single biggest structural choice. It serves the manager/evaluator before they bounce.
 
-"Adding to Your Project" at position 9 (just before testing status) is intentional. An npm package's job is to be installed via `package.json`, not via copy-paste. The readers who need to install it want a pointer to the loader pattern, not a `npm install` line that bypasses the project's existing peer-dependency conventions.
+"Adding to Your Project" at position 9 is intentional. An npm package's job is to be installed via `package.json`, not via copy-paste. The readers who need to install it want a pointer to the loader pattern, not a `npm install` line that bypasses the project's existing peer-dependency conventions.
 
 ---
 
@@ -622,6 +659,7 @@ These were the failure modes surfaced when the rubric was first applied to the P
 - **Quick Start in the README.** Pilot showed Quick Start adds noise without serving any persona well. The layman skips it, the integrator wants real examples in `docs/api.md`. Drop it. If a class genuinely needs an example block, it goes in `docs/api.md`.
 - **"What this module is NOT" section.** Pilot showed boundary clarity is better served by precise wording in "What this is" than by a separate negative-list section. Drop it.
 - **"Installation" with `npm install` snippet.** Wrong framing for a module published as a peer dependency. The reader who would copy-paste an install command is the wrong reader; the right reader follows the loader pattern. Replace with peer-dependency / loader pointer.
+- **Missing or vague Dependencies section.** "See package.json" is not documentation. Every README must list bundled packages with a short rationale. If the module has no bundled packages, state that explicitly. Do not add sentences about service dependencies; the module's class and tagline already make that clear.
 - **Test instructions in the README.** Test runtime detail (Docker lifecycle, env vars) is reference material; it lives in `docs/configuration.md`. README has only the testing **status** at the bottom.
 - **Relative links in the README.** npm strips relative paths. Always use full `https://github.com/superloomdev/superloom/blob/main/...` URLs in `README.md`.
 - **CI / test status badges at the top of the README.** They distract from identity. Identity badges (license, runtime) at top; test status badges in the testing-status block at the bottom.
@@ -643,7 +681,8 @@ When writing or revising a module README:
 - [ ] Sibling backends (if any) are listed in the Hot-Swappable section, not in the tagline or Why bullets
 - [ ] "Aligned with Superloom" sits in its own section, not in the Why bullets
 - [ ] No `npm install` snippet. Section 9 points to the loader pattern instead
-- [ ] No detailed test instructions. Section 10 shows status only; details live in `docs/configuration.md`
+- [ ] Section 10 (Dependencies) lists every bundled npm package with a short rationale. If there are no bundled packages, states that explicitly
+- [ ] No detailed test instructions. Section 11 shows status only; details live in `docs/configuration.md`
 - [ ] Test status badges sit in the testing block at the bottom; only license + runtime badges sit at the top
 - [ ] Every link in the README is a full `https://github.com/...` URL (no relative paths)
 - [ ] No configuration tables in the README. They live in `docs/configuration.md`

@@ -49,6 +49,14 @@ Install this module as a peer dependency in your project's `package.json` and in
 
 The peer-dependency / loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/server/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
 
+## Dependencies
+
+This module bundles one runtime npm package:
+
+- **`@aws-sdk/client-s3`** (AWS). S3 API client for list, upload, download, delete, copy, move. Used because the AWS SDK is the only supported mechanism for communicating with S3; no alternative exists
+
+It expects two peer modules in the `Lib` container (Utils, Debug). For the full dependency breakdown, see [`docs/configuration.md`](docs/configuration.md).
+
 ## Testing Status
 
 | Tier | Runtime | Status |

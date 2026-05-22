@@ -50,6 +50,12 @@ This adapter is installed alongside the Verify parent module and the `sql-sqlite
 
 Do not vendor the source or use it as a local file dependency. The published package is the supported integration path.
 
+## Dependencies
+
+This module has no external dependencies.
+
+It expects three peer modules in the `Lib` container (Utils, Debug, SQLite). For the full dependency breakdown, see [`docs/configuration.md`](docs/configuration.md).
+
 ## Testing Status
 
 | Tier | Runtime | Status |

@@ -107,8 +107,33 @@ The failure mode that produced this rule is journaled in [`pitfalls.md` → CI/C
 | `js-server-helper-queue-aws-sqs` | ElasticMQ | HTTP probe on the API port |
 | `js-server-helper-storage-aws-s3` | MinIO | HTTP probe on `/minio/health/live` |
 | `js-server-helper-storage-aws-s3-url-signer` | None (URL signing only) | N/A |
+| `js-server-helper-http-gateway` | None (in-process stub adapter) | N/A |
+| `js-server-helper-http-gateway-adapter-express` | None (real Express server on random port) | N/A |
+| `js-server-helper-http-gateway-adapter-aws-apigateway` | None (JSON event fixtures) | N/A |
 
 Each module's `_test/docker-compose.yml` uses a healthcheck designed around the principles in the next section. `docker compose up --wait` only returns once the healthcheck passes, which guarantees the service is ready for real traffic before any test code runs.
+
+---
+
+## Test Patterns You'll Encounter
+
+Most modules follow the Docker-backed pattern above. A few use other patterns that are equally valid -- knowing which is which prevents wasted debugging time.
+
+### Pattern: Real in-process server (Express adapter)
+
+`js-server-helper-http-gateway-adapter-express` boots a real Express 5 server on a random free port (`app.listen(0)`) inside each `describe` block's `before` hook, exercises it with native `fetch`, and shuts it down in `after`. No Docker, no mocked `req`/`res` objects.
+
+Why this matters: it caught **Express 5 dropping the `?` optional-parameter route syntax** that would never surface against a mocked Express. When you see `server-helper.js` with `startTestServer` / `makeRequest` in an `_test/` directory, this is the pattern.
+
+### Pattern: JSON event fixtures (AWS adapter)
+
+`js-server-helper-http-gateway-adapter-aws-apigateway` runs against 23 real API Gateway v2.0 event JSONs stored in `_test/fixtures/`. Six are copied verbatim from `aws/aws-lambda-go events/testdata` (the AWS SDK's own test inputs); 17 are hand-written for scenarios AWS does not publish.
+
+No Docker, no AWS SDK, no SAM, no LocalStack. Each fixture is loaded via `fs.readFileSync` and piped through the adapter. When you see `_test/fixtures/*.json`, this is the pattern. Adding a new scenario means adding a new JSON file -- no extra test boilerplate.
+
+### Pattern: In-process stub adapter (gateway module itself)
+
+`js-server-helper-http-gateway` ships with an in-process stub adapter (`_test/stub-adapter.js`) that satisfies the 3-method adapter contract with fixed outputs. The stub is not a simulation of any real runtime -- it exists only to let the gateway exercise its own logic in isolation. Real-runtime coverage lives in the two adapter packages above.
 
 ---
 

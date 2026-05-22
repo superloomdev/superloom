@@ -511,52 +511,61 @@ Default position: **self-contained code**. Every npm dependency is a long-term s
 
 Every module documents itself across three files, each with one audience. Full rubric: `docs/modules/module-readme-structure.md`. Module-to-class enumeration: `docs/modules/module-categorization.md`.
 
-| File | Audience | Tone | Length |
+| File | Audience | Tone | Length budget |
 |---|---|---|---|
-| `README.md` | Non-technical evaluator, dev evaluating, dev integrating (first read) | Plain language, value-first | ~70-120 lines (pilot landed at 72) |
-| `docs/*.md` | Dev integrating (deep), maintainer, code reviewer | Reference-grade, exhaustive | No fixed limit |
-| `ROBOTS.md` | AI assistant (Cascade, Cursor, Copilot) | Compact, dense, machine-friendly | ~100-150 lines |
+| `README.md` | Non-technical evaluator, developer evaluating, developer integrating (first read) | Plain language, value-first | ~150 lines |
+| `docs/*.md` | Developer integrating (deep), maintainer, code reviewer | Reference-grade, exhaustive | No fixed limit |
+| `ROBOTS.md` | AI assistant generating or reviewing code | Compact, dense, machine-friendly | ~100-150 lines |
+
+**Five personas guide README authoring:** Manager (identity/value), Developer evaluating (what it does/doesn't do), Developer integrating (install/API), Code reviewer (confidence), AI assistant (signatures). **Single most important rule:** persona 1 must understand what the module is and why it exists from README alone.
 
 **Universal README section order** (every class):
 
-1. Title + identity badges (license, runtime version only. Test status badges go to the testing block at the bottom, not here)
-2. Tagline (one sentence; no sibling-backend mentions; ends "Part of [Superloom](https://superloom.dev)")
-3. What this is (plain language; may show response-shape illustration; never a full code example)
-4. Why use this module (5-7 value bullets. Jargon-free, vendor-neutral)
-5. Hot-Swappable with Other Backends *(class-conditional. Modules with siblings)*
-6. Class-specific section *(class-conditional. See class table below)*
-7. Aligned with Superloom Philosophy (separate section, NOT a Why bullet)
-8. Extended Documentation (`docs/*.md` + Superloom; NEVER link `ROBOTS.md` here)
-9. Adding to Your Project (peer-dependency via loader pattern; NO `npm install` snippet)
-10. Testing Status (which tiers passed; test runtime details live in `docs/configuration.md`)
-11. License
+1. **Title + Identity Badges** - Visual identity. License + runtime version only. Test status badges at bottom, not here.
+2. **Tagline** - One sentence; plain English; ends with "Part of [Superloom](https://superloom.dev)". No sibling backends or competitors in tagline.
+3. **What this is** - 1-2 short paragraphs plain English. May include tiny response-shape illustration. Never full code example.
+4. **Why use this module** - Value bullets (5-7 points). Jargon-free, vendor-neutral. Each bullet: one sentence + at most one supporting sentence.
+5. **Hot-Swappable with Other Backends** *(class-conditional)* - Bullet list of sibling modules with same API. Present when module has at least one sibling.
+6. **Class-Specific Section** *(class-conditional)* - One section per class (e.g. "Architecture overview" for Class E, "Credentials & Permissions" for Class D).
+7. **Aligned with Superloom Philosophy** - One short paragraph. Frames as consistency for projects already using Superloom, NOT as a Why bullet.
+8. **Extended Documentation** - Links to `docs/api.md`, `docs/configuration.md`, Superloom. NEVER link `ROBOTS.md` here (AI-only).
+9. **Adding to Your Project** - Peer dependency through loader pattern. NO `npm install` snippet. Links to loader-pattern doc.
+10. **Dependencies** - Every bundled npm package with one-sentence rationale. Explicitly states external service dependencies or none.
+11. **Testing Status** - Status table (Emulated/Integration tiers). Test runtime details live in `docs/configuration.md`.
+12. **License** - MIT
 
 **Critical README rules:**
 
-- **All README links use full `https://github.com/superloomdev/superloom/blob/main/...` URLs.** Npm renders the README without resolving relative paths, so `docs/api.md` and `../foo` silently break.
-- **No jargon** (no *metaprogramming*, *idempotent*, *cargo cult*) - frame reviewability around what a reviewer can SEE in the code.
-- **No vendor product names as headline categories** (Lambda, EC2, RDS, Aurora at category column headings reads as AWS-only) - use industry-neutral terms (*serverless*, *persistent infrastructure*, *auto-scaling managed databases*) with vendor names only as illustrative examples in parentheses.
-- **No function names in marketing prose.** `getRow / getRows / write` belong in `docs/api.md` and `ROBOTS.md`, not in Why bullets.
-- **No Quick Start, "What this module is NOT", or `npm install` snippet sections.** The pilot proved they don't serve any persona. Examples live in `docs/api.md`; integration goes through the loader pattern.
+- **All README links use full `https://github.com/superloomdev/superloom/blob/main/...` URLs.** npm renders without resolving relative paths.
+- **No em dashes (`—`) anywhere** - use hyphens, parentheses, or split sentences. Tell-tale AI-generated prose sign.
+- **No jargon** (no *metaprogramming*, *idempotent*, *cargo cult*) - frame reviewability around what reviewer can SEE.
+- **No vendor product names as headline categories** - use industry-neutral terms (*serverless*, *persistent infrastructure*) with vendor names only as illustrative examples.
+- **No function names in marketing prose** - they belong in `docs/api.md` and `ROBOTS.md`.
+- **No Quick Start, "What this module is NOT", or `npm install` snippet** - pilot proved they don't serve any persona.
+- **Table cells do not end with periods** - cells are not sentences.
+- **Sentences 30 words or fewer** - split at conjunctions when longer.
 
-**`docs/configuration.md` internal ordering:** Reference block (Loader Pattern → Configuration Keys → Environment Variables → Peer Deps → Direct Deps) precedes Patterns block (Multi-instance Setup → SSL → Pool Tuning → Testing Tiers). An example needs the reader to have absorbed the keys first.
+**Six module classes** (determines class-specific extras + `docs/` footprint):
 
-**Six module classes** (determines class-specific extras + which `docs/` files to ship):
+| Class | Trait | Class-specific README section | `docs/` files |
+|---|---|---|---|
+| **A. Foundation utility** | Zero deps, pure functions, platform-agnostic | "API Categories" (grouped function overview) | `api.md`, `configuration.md` |
+| **B. Extended utility** | Node.js runtime only, no third-party packages | "Behavior" (lifecycle semantics, cleanup) | `api.md`, `configuration.md` |
+| **C. Driver wrapper** | Wraps third-party DB driver (Postgres, MySQL, MongoDB, SQLite) | (none - Hot-Swappable section serves this) | `api.md`, `configuration.md` |
+| **D. Cloud service wrapper** | Wraps cloud/network SDK (AWS S3, DynamoDB, SQS) | "Credentials & Permissions" | `api.md`, `configuration.md`, optional `iam.md` |
+| **E. Feature module with adapters** | Business logic + pluggable storage (auth, verify, logger) | "Architecture Overview" + "Storage Adapters" | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md` |
+| **F. Storage adapter** | Implements parent's store contract for single backend | (none) | `api.md`, `configuration.md`, `schema.md`, `cleanup.md` |
 
-| Class | Trait | `docs/` |
-|---|---|---|
-| A. Foundation utility | Zero deps, pure functions, platform-agnostic | None |
-| B. Driver wrapper | Wraps third-party DB driver | `api.md`, `configuration.md` |
-| C. Cloud service wrapper | Wraps cloud/network SDK | `api.md`, `configuration.md`, optional `iam.md` |
-| D. Extended utility | Per-request plumbing or server utilities | None usually |
-| E. Feature module with adapters | Business logic + pluggable storage | `data-model.md`, `configuration.md`, `storage-adapters.md` |
-| F. Storage adapter | Implements parent's store contract | None |
+**Universal value bullets 1-4** copy-pasteable across classes (insulation, pre-tested, human review, observability). Only bullet 5 is class-specific. See full templates in `docs/modules/module-readme-structure.md`.
 
-**Class-specific templates** for each module class (tagline, value bullet 5 variants, `docs/api.md` and `docs/configuration.md` structure variants, pilot-to-copy reference) live in `docs/modules/module-readme-structure.md` under "Class-Specific Templates and Reusable Wording". **Cross-cutting patterns** (AWS-family Credentials+IAM section shared by DynamoDB / S3 / future SQS; Hot-Swap family chore. Adding a sibling requires updating every existing sibling's README; "Required (override)" pattern in config tables; response envelope illustration; lazy-init convention) live under "Cross-Cutting Patterns" in the same doc.
+**Cross-cutting patterns:**
+- **AWS Family:** Shared "Explicit credentials" bullet, "Credentials and IAM Permissions" section with minimum-IAM table, local emulator vs real service, multi-region setup
+- **Hot-Swap Families:** SQL drivers, NoSQL drivers, auth storage adapters, crypto (server↔client). Adding sibling requires updating every existing sibling's README
+- **"Required (override)"** in config tables for defaults that must be changed (HOST, DATABASE, KEY, SECRET)
+- **Response envelope illustration** in "What this is" section
+- **Lazy initialization** note in `docs/configuration.md`
 
-**Universal value bullets 1–4** are copy-pasteable across Class C + Class D. Only bullet 5 is class-specific. See [Universal "Why Use This Module" Bullets](docs/modules/module-readme-structure.md#universal-why-use-this-module-bullets).
-
-**Status:** v2 rubric applied to 6 modules (`sql-postgres`, `sql-mysql`, `sql-sqlite`, `nosql-mongodb`, `nosql-aws-dynamodb`, `storage-aws-s3`) across 4 commit waves on 2026-05-16. 14 modules pending. Prioritized backlog (simple foundation → complex feature) in `__dev__/plans/0008-module-readme-pilot.md`.
+**Status:** v2 rubric applied to 6 modules (`sql-postgres`, `sql-mysql`, `sql-sqlite`, `nosql-mongodb`, `nosql-aws-dynamodb`, `storage-aws-s3`) across 4 commit waves on 2026-05-16. 14 modules pending. Prioritized backlog in `__dev__/plans/0008-module-readme-pilot.md`.
 
 ### ROBOTS.md - AI Agent Reference (Every Module)
 

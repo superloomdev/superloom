@@ -80,6 +80,12 @@ Substitute `logger-store-postgres` with the adapter for your database. The full 
 
 The loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/server/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
 
+## Dependencies
+
+This module has no external dependencies.
+
+It expects four peer modules in the `Lib` container (Utils, Debug, Crypto, Instance) and one optional peer adapter package for your storage backend. For the full dependency breakdown, see [`docs/configuration.md`](docs/configuration.md).
+
 ## Testing Status
 
 | Tier | Runtime | Status |

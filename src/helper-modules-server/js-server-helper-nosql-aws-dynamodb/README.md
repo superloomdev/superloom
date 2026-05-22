@@ -54,6 +54,14 @@ Install this module as a peer dependency in your project's `package.json` and in
 
 The peer-dependency / loader pattern, including the full `Lib` container shape, is documented in [Server Loader Architecture](https://github.com/superloomdev/superloom/blob/main/docs/server/server-loader.md). For one-time GitHub Packages registry setup, see the [npmrc setup guide](https://github.com/superloomdev/superloom/blob/main/docs/dev/npmrc-setup.md).
 
+## Dependencies
+
+This module bundles two runtime npm packages:
+
+- **`@aws-sdk/client-dynamodb`** and **`@aws-sdk/lib-dynamodb`** (AWS). DynamoDB API client and document client. Used because the AWS SDK is the only supported mechanism for communicating with DynamoDB; there is no alternative and no in-house implementation is possible
+
+It expects three peer modules in the `Lib` container (Utils, Debug, Instance). For the full dependency breakdown, see [`docs/configuration.md`](docs/configuration.md).
+
 ## Testing Status
 
 | Tier | Runtime | Status |
