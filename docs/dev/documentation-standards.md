@@ -169,6 +169,26 @@ For the **structural** README checklist (Universal Sections present, class-speci
 
 ---
 
+## Code Comment Standards
+
+Source files must never contain paths or links to internal `docs/` files. Explain the reason inline. Documentation cross-references belong in documentation, not in code.
+
+**Rationale:** Code comments should be self-contained and explain the *what* and *why* directly. External documentation links create drift - documentation moves but comments don't update. Inline explanations keep the code comprehensible in isolation.
+
+**Prohibited patterns:**
+- `// See docs/foundations/third-party-libraries.md`
+- `// See: docs/dev/testing-local-modules.md`
+- `// Documentation: ../docs/architecture.md`
+- Any comment containing `docs/` as a reference to project documentation
+
+**Allowed patterns:**
+- `// Reference: https://docs.aws.amazon.com/...` (external API documentation)
+- `// RFC 6749 section 4.1` (public specification references)
+- `// Node.js v24+ requirement for node:sqlite` (version requirements)
+- Self-contained explanations: `// SQLite has no native boolean; stored as INTEGER 0/1`
+
+---
+
 ## Brand Usage in Documentation and Comments
 
 The project brand name "Superloom" and the npm scope `@superloomdev/` are first-class identifiers in `package.json` only. Everywhere else - documentation prose, code comments, examples, JSDoc, error messages - prefer the **alias short-name** (e.g. `helper-utils`, `helper-sql-sqlite`) defined in [`code-formatting-js.md` → NPM Aliases](../foundations/code-formatting-js.md#npm-package-aliases).

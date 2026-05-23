@@ -281,6 +281,20 @@ These rules apply to **every file the AI writes or edits** - `.js` comments/stri
 
 - **Consistent terms:** `Lib` (shared container), `CONFIG` (entity config), `loader` (DI function), `shared_libs` (param name)
 
+### Code Comment Standards
+
+Source files must never reference internal `docs/` paths in comments. Explain the *what* and *why* inline.
+
+| Pattern | Status | Example |
+|---|---|---|
+| `// See docs/...` | **Prohibited** | Never link to internal documentation |
+| `// See: docs/dev/...` | **Prohibited** | No doc path references |
+| External API URLs | **Allowed** | `// Reference: https://docs.aws.amazon.com/...` |
+| RFC/spec references | **Allowed** | `// RFC 6749 section 4.1` |
+| Self-contained explanations | **Required** | `// SQLite has no native boolean; stored as INTEGER 0/1` |
+
+Full rule: `docs/dev/documentation-standards.md` -> "Code Comment Standards".
+
 ### Parameter Naming
 
 - **No underscore prefix on parameters** - never use `_param` to suppress ESLint `no-unused-vars` on function params
