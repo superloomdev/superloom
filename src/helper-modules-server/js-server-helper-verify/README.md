@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-One-time verification code lifecycle for Superloom applications. Three create interfaces (numeric pin, alphanumeric code, URL-safe token) over one shared flow, plus one `verify` function that consumes any of them. The storage backend is chosen at construction time through a pluggable Class F adapter. Part of the [Superloom](https://github.com/superloomdev/superloom) framework.
+One-time verification code lifecycle for Superloom applications. Three create interfaces (numeric pin, alphanumeric code, URL-safe token) over one shared flow, plus one `verify` function that consumes any of them. The storage backend is chosen at construction time through a pluggable Class F adapter. Part of the [Superloom](https://github.com/superloomdev/superloom) framework. 
 
 ## What It Does
 

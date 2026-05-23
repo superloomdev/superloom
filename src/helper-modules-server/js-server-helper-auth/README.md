@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-A session-lifecycle and authentication module for Node.js servers that ships pre-tested, runs on any of five storage backends, and offers an optional stateless-JWT mode. Part of [Superloom](https://superloom.dev).
+A session-lifecycle and authentication module for Node.js servers that ships pre-tested, runs on any of five storage backends, and offers an optional stateless-JWT mode. Part of [Superloom](https://superloom.dev). 
 
 ## What This Is
 

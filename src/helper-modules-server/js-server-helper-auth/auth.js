@@ -18,7 +18,6 @@
 // (sqlite, postgres, mysql) - it issues idempotent CREATE TABLE +
 // CREATE INDEX. NoSQL backends (mongodb, dynamodb) return NOT_IMPLEMENTED;
 // provision those out-of-band until the underlying helpers gain schema APIs.
-//
 // Storage backends are provided by standalone adapter packages. The caller
 // passes the chosen store factory directly as CONFIG.STORE - no string
 // dispatch inside this module. Require only the adapter you need:

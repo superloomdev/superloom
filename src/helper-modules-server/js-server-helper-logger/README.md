@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 
-Compliance-friendly action log for Superloom applications. One immutable row per log-worthy event records *who* acted (`actor_type` / `actor_id`), *on what* (`entity_type` / `entity_id`), doing *which* action (dot-notation string), with structured per-action `data` and optional IP / user-agent capture for regulator-facing audit trails. The storage backend is chosen at construction time through a pluggable Class F adapter. Part of the [Superloom](https://github.com/superloomdev/superloom) framework.
+Compliance-friendly action log for Superloom applications. One immutable row per log-worthy event records *who* acted (`actor_type` / `actor_id`), *on what* (`entity_type` / `entity_id`), doing *which* action (dot-notation string), with structured per-action `data` and optional IP / user-agent capture for regulator-facing audit trails. The storage backend is chosen at construction time through a pluggable Class F adapter. Part of the [Superloom](https://github.com/superloomdev/superloom) framework. 
 
 ## What It Does
 
