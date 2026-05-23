@@ -655,7 +655,7 @@ jobs:
       needs['test-http'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-http')
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-http"')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -852,7 +852,7 @@ jobs:
       needs['test-storage-aws-s3'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-storage-aws-s3')
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-storage-aws-s3"')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1587,7 +1587,7 @@ jobs:
       needs['test-verify'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-verify')
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-verify"')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1652,7 +1652,7 @@ jobs:
       needs['test-logger'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-logger')
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-logger"')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -2045,7 +2045,7 @@ jobs:
       needs['test-auth'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-auth')
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-auth"')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -2413,7 +2413,7 @@ jobs:
       always() &&
       !cancelled() &&
       needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-http-gateway')
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-http-gateway"')
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -2438,7 +2438,7 @@ jobs:
       needs['test-http-gateway'].result == 'success' &&
       needs.detect.outputs.publish_modules != '[]' &&
       needs.detect.outputs.publish_modules != '' &&
-      contains(needs.detect.outputs.publish_modules, 'js-server-helper-http-gateway')
+      contains(needs.detect.outputs.publish_modules, 'js-server-helper-http-gateway"')
     runs-on: ubuntu-latest
     permissions:
       contents: read
