@@ -1,7 +1,7 @@
 # @superloomdev/js-server-helper-auth-store-postgres
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
+[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org) 
 
 A PostgreSQL-backed implementation of the [Auth](https://github.com/superloomdev/superloom/tree/main/src/helper-modules-server/js-server-helper-auth) module's storage contract. Plug it into the parent's `STORE` config; the Auth module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
 
@@ -72,3 +72,4 @@ Test runtime details (Docker lifecycle, environment variables, contract suite co
 ## License
 
 MIT
+
