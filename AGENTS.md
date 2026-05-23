@@ -47,7 +47,7 @@ Assist developers working on **Superloom**, a modular application framework buil
 - Use workflows in `.windsurf/workflows/` for new modules
 - Use `/learn` to capture new knowledge (enforces GOD.md Directive 12)
 - When docs change, run `/propagate-changes`
-- **At session start:** list `__dev__/plans/` by mtime, read most recent plan, state plan + in-progress step, confirm with user. Use `/plan` for transitions. Full rules: `docs/dev/planning.md`
+- **At session start:** list `__dev__/plans/` by mtime at the workspace root (e.g. `project-superloom/__dev__/plans/`), read most recent plan, state plan + in-progress step, confirm with user. Use `/plan` for transitions. Full rules: `docs/dev/planning.md`
 
 ### Safe Terminal Patterns (AI-Specific)
 
@@ -55,7 +55,7 @@ Assist developers working on **Superloom**, a modular application framework buil
 
 **File tools vs terminal:**
 - Normal files: use `read_file`, `edit`, `write_to_file` directly
-- Gitignored files (`__dev__/`, `.env*`): write to `/tmp/...`, then `cat /tmp/file >> /path/to/target`
+- `__dev__/` is at the workspace root (outside any repo) — use file tools directly. `.env*` files: write to `/tmp/...`, then `cat /tmp/file >> /path/to/target`
 
 **Never make shell parse multi-line strings.** zsh enters `dquote>` / `heredoc>` mode; bridge cannot send closing token:
 - **Heredocs** (`cat <<'EOF'`): use `write_to_file` instead
@@ -110,11 +110,11 @@ publish-foo:
 
 ### Always (do without asking)
 - Read any file in the project
-- Modify files in `demo-project/src/`, `src/`, `docs/`, `__dev__/`
+- Modify files in `docs/`
 - Run test and lint commands
 - Create test files
 - Fix linting errors automatically
-- Write to `__dev__/` freely (gitignored, personal workspace)
+- Write to `__dev__/` freely (at workspace root, outside any repo, never committed)
 
 ### Ask First
 - Add new dependencies to any `package.json`
@@ -123,7 +123,7 @@ publish-foo:
 - Restructure directory layout
 
 ### Never
-- Modify `.env` files or secrets (except `__dev__/.env`)
+- Modify `.env` files or secrets (except `__dev__/.env` at workspace root)
 - Modify files in `_cleanup/` (legacy)
 - Force push to git
 - Expose sensitive information in logs or code
@@ -135,10 +135,32 @@ publish-foo:
 
 ## Directory Map
 
+The project spans multiple repositories under `superloomdev`. See `docs/dev/org-structure.md` for the full workspace and org layout.
+
+### superloom (this repo — framework constitution)
+
 ```
 superloom/
+  docs/                           # Framework docs, conventions, architecture
+  website/                        # VitePress documentation website
+  public/                         # Static assets
+  AGENTS.md                       # AI assistant configuration (this file)
+  ROADMAP.md
+  README.md
+  .windsurf/                      # AI workflows and automation
+  __dev__/                        # Personal workspace at WORKSPACE ROOT (project-superloom/__dev__/)
+    plans/                        #   Long-horizon plans and backlog
+    secrets/                      #   Project secrets (never committed)
+```
+
+### js-helper-modules (superloomdev/js-helper-modules)
+
+All JS helper modules live in this separate repo. Path prefix `src/`.
+
+```
+js-helper-modules/
   src/
-    helper-modules-core/          # Platform-agnostic utilities (@superloom npm scope)
+    helper-modules-core/          # Platform-agnostic utilities (@superloomdev npm scope)
       js-helper-utils/            #   Type checks, validation, sanitization, data manipulation
       js-helper-debug/            #   Structured logging: levels (debug/info/warn/error), text + JSON
       js-helper-time/             #   Date/time math, timezone, formatting
@@ -178,30 +200,21 @@ superloom/
         js-server-helper-http-gateway-adapter-express/        #   Express adapter; always returns null country code
     helper-modules-client/        # Client-specific helpers (browser, mobile)
       js-client-helper-crypto/    #   UUID, random strings, base64 (Web Crypto API). Delegates to core crypto when available.
-  demo-project/                   # Seed project - copy this to start
-    ops/                          #   Operations runbook (numbered, sequential)
-    src/model/                    #   Base models (pure, IO-free)
-    src/model-server/             #   Server-only model extensions
-    src/server/common/            #   Bootstrap, config, loader, shared functions
-    src/server/controller/        #   Thin adapters (validate + DTO + delegate)
-    src/server/service/           #   Business logic and orchestration
-    src/server/interfaces/api/express/      # Express routes
-    src/server/interfaces/api/lambda-aws/   # Per-entity AWS Lambda handlers
-    _deploy/                      #   Per-entity Serverless Framework configs
-  docs/index.md                   # Documentation landing page
-  docs/philosophy/                # Why this way (MVC philosophy, DTO philosophy)
-  docs/guide/                     # Step-by-step guides (getting started, entities, IDE setup)
-  docs/foundations/               # Cross-cutting rules (architectural philosophy, code formatting, error handling, validation, ops-doc strategy)
-  docs/modules/                   # Module authoring (structure, README rubric, categorization, publishing, peer-deps)
-    templates/                    #   Copy-paste README templates per module class
-  docs/server/                    # Server architecture (loader, controllers, services, models, entity guide)
-  docs/testing/                   # Testing approach (strategy, module testing, unit-test authoring, integration, migration pitfalls)
-  docs/dev/                       # Developer setup docs (git, npm, docker, env, pitfalls)
-  docs/versioning/                # Release management (semver, dep mgmt, CI dep graph, bump checklist, changelog, API stability)
-  docs/ops/                       # Cloud infrastructure ops (one folder per service: dns, cdn, s3, ...)
-  .windsurf/                      # AI workflows and automation
-  __dev__/                           # Personal workspace (gitignored)
-    secrets/                      #   Project secrets (never committed)
+```
+
+### js-demo-project (superloomdev/js-demo-project)
+
+```
+js-demo-project/
+  ops/                          # Operations runbook (numbered, sequential)
+  src/model/                    # Base models (pure, IO-free)
+  src/model-server/             # Server-only model extensions
+  src/server/common/            # Bootstrap, config, loader, shared functions
+  src/server/controller/        # Thin adapters (validate + DTO + delegate)
+  src/server/service/           # Business logic and orchestration
+  src/server/interfaces/api/express/      # Express routes
+  src/server/interfaces/api/lambda-aws/   # Per-entity AWS Lambda handlers
+  _deploy/                      # Per-entity Serverless Framework configs
 ```
 
 ## Dependency Hierarchy
