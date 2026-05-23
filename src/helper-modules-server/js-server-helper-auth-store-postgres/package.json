@@ -14,15 +14,14 @@
   "engines": {
     "node": ">=24"
   },
-  "dependencies": {},
   "peerDependencies": {
-    "@superloomdev/js-helper-utils": ">=1.0.0",
-    "@superloomdev/js-helper-debug": ">=1.0.0",
-    "@superloomdev/js-server-helper-sql-postgres": ">=1.0.0"
+    "helper-debug": "npm:@superloomdev/js-helper-debug@>=1.0.0",
+    "helper-sql-postgres": "npm:@superloomdev/js-server-helper-sql-postgres@>=1.0.0",
+    "helper-utils": "npm:@superloomdev/js-helper-utils@>=1.0.0"
   },
   "devDependencies": {
-    "eslint": "^9.0.0",
-    "@eslint/js": "^9.0.0"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.0"
   },
   "scripts": {
     "lint": "eslint .",

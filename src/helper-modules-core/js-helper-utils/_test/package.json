@@ -9,7 +9,7 @@
     "name": "sj00"
   },
   "dependencies": {
-    "@superloomdev/js-helper-utils": "file:../"
+    "helper-utils": "file:../"
   },
   "scripts": {
     "test": "node --test test.js"

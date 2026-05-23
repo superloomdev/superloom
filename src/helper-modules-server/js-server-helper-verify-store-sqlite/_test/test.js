@@ -12,8 +12,8 @@ const assert = require('node:assert/strict');
 const { describe, it, before, after } = require('node:test');
 
 const { Lib, ERRORS } = require('./loader')();
-const StoreLoader = require('@superloomdev/js-server-helper-verify-store-sqlite');
-const VerifyLoader = require('@superloomdev/js-server-helper-verify');
+const StoreLoader = require('helper-verify-store-sqlite');
+const VerifyLoader = require('helper-verify');
 const runSharedStoreSuite = require('./store-contract-suite');
 
 

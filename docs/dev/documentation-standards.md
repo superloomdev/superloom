@@ -169,6 +169,25 @@ For the **structural** README checklist (Universal Sections present, class-speci
 
 ---
 
+## Brand Usage in Documentation and Comments
+
+The project brand name "Superloom" and the npm scope `@superloomdev/` are first-class identifiers in `package.json` only. Everywhere else - documentation prose, code comments, examples, JSDoc, error messages - prefer the **alias short-name** (e.g. `helper-utils`, `helper-sql-sqlite`) defined in [`code-formatting-js.md` → NPM Aliases](../foundations/code-formatting-js.md#npm-package-aliases).
+
+This keeps the codebase forkable. A consumer who renames the scope only edits `package.json` aliases; nothing else moves.
+
+| Where | Use the brand? |
+|---|---|
+| `package.json` (`name`, `repository`, `peerDependencies` target) | **Yes** - the published identity |
+| Top-level project `README.md` and `docs/index.md` | **Yes** - introducing the project |
+| Module `README.md` intro line | **Yes, once** - "Part of Superloom" or equivalent |
+| Module `docs/` API reference, examples, code blocks | **No** - use alias short-names |
+| Source code: `require()`, error prefixes, JSDoc, comments | **No** - alias short-names only |
+| `ROBOTS.md` | **No** - alias short-names only |
+
+The alias derivation rule itself (strip `js-` and `server`/`client`, keep everything else) is the single source of truth in [`code-formatting-js.md`](../foundations/code-formatting-js.md#npm-package-aliases) and is not duplicated here.
+
+---
+
 ## Related Documentation
 
 - [`module-categorization.md`](../modules/module-categorization.md) - the six module classes

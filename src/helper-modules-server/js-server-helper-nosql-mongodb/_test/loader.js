@@ -40,9 +40,9 @@ module.exports = function loader () {
 
   // ==================== HELPER MODULES ============================= //
 
-  Lib.Utils = require('@superloomdev/js-helper-utils')(Lib, {});
-  Lib.Debug = require('@superloomdev/js-helper-debug')(Lib, config_debug);
-  Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
+  Lib.Utils = require('helper-utils')(Lib, {});
+  Lib.Debug = require('helper-debug')(Lib, config_debug);
+  Lib.Instance = require('helper-instance')(Lib, {});
 
 
   // ==================== SERVER HELPER MODULES ====================== //

@@ -33,13 +33,13 @@ module.exports = function loader () {
 
   // ==================== HELPER MODULES ============================= //
 
-  Lib.Utils = require('@superloomdev/js-helper-utils')();
-  Lib.Debug = require('@superloomdev/js-helper-debug')(Lib, config_debug);
+  Lib.Utils = require('helper-utils')();
+  Lib.Debug = require('helper-debug')(Lib, config_debug);
 
 
   // ==================== CORE HELPER MODULES ======================== //
 
-  Lib.Time = require('@superloomdev/js-helper-time')(Lib, {});
+  Lib.Time = require('helper-time')(Lib, {});
 
 
   // Return runtime objects

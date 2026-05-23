@@ -29,7 +29,7 @@ module.exports = function loader () {
 
 
   // Load Debug instance
-  Lib.Debug = require('@superloomdev/js-helper-debug')(Lib, Config);
+  Lib.Debug = require('helper-debug')(Lib, Config);
 
 
   // Return runtime objects

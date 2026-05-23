@@ -9,13 +9,13 @@
     "name": "sj00"
   },
   "dependencies": {
-    "@superloomdev/js-helper-utils": "^1.0.0",
-    "@superloomdev/js-helper-debug": "^1.0.0",
-    "@superloomdev/js-server-helper-crypto": "^1.0.0",
-    "@superloomdev/js-server-helper-instance": "^1.0.0",
-    "@superloomdev/js-server-helper-sql-mysql": "^1.0.0",
-    "@superloomdev/js-server-helper-logger": "^1.0.0",
-    "@superloomdev/js-server-helper-logger-store-mysql": "file:../"
+    "helper-utils": "npm:@superloomdev/js-helper-utils@^1.0.0",
+    "helper-debug": "npm:@superloomdev/js-helper-debug@^1.0.0",
+    "helper-crypto": "npm:@superloomdev/js-server-helper-crypto@^1.0.0",
+    "helper-instance": "npm:@superloomdev/js-server-helper-instance@^1.0.0",
+    "helper-sql-mysql": "npm:@superloomdev/js-server-helper-sql-mysql@^1.0.0",
+    "helper-logger": "file:../../js-server-helper-logger",
+    "helper-logger-store-mysql": "file:../"
   },
   "scripts": {
     "pretest": "docker compose down -v --remove-orphans 2>/dev/null; docker compose up -d --wait",

@@ -10,7 +10,7 @@ module.exports = function loader () {
   const Lib = {};
 
   // Load Utils instance
-  Lib.Utils = require('@superloomdev/js-helper-utils')(Lib, {});
+  Lib.Utils = require('helper-utils')(Lib, {});
 
   // Return runtime objects
   return { Lib };

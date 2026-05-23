@@ -25,6 +25,7 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
 - [Comment Style](#comment-style)
 - [Spelling and Prose Quality](#spelling-and-prose-quality)
 - [Dependencies](#dependencies)
+- [NPM Aliases in require() and Error Prefixes](#npm-aliases-in-require-and-error-prefixes)
 - [AWS and Cloud SDK Modules](#aws-and-cloud-sdk-modules)
 
 ---
@@ -576,6 +577,59 @@ These rules apply to **every file** the AI or human writes - `.js` comments and 
 | **No `keywords` field** | Omit `keywords` from `package.json` entirely |
 
 Full publishing pipeline: [`module-publishing.md`](../modules/module-publishing.md). Peer dependency strategy: [`peer-dependencies.md`](../modules/peer-dependencies.md).
+
+---
+
+## NPM Aliases in require() and Error Prefixes
+
+### NPM Package Aliases
+
+All internal cross-module references use **npm aliases** in `package.json` so source code stays free of the `@superloomdev/` scope. This applies to **both** `_test/package.json` dependencies and the main `package.json` `peerDependencies`.
+
+**Alias derivation rule.** Take the full package short-name and strip only two things:
+
+1. The leading `js-` (the language is obvious - everything in this project is JavaScript).
+2. The platform qualifier `server-` or `client-` that follows it (the directory under `src/helper-modules-*/` already makes the platform obvious).
+
+Everything else stays in the alias - family segments (`sql-`, `nosql-`), cloud-vendor segments (`aws-`), and adapter parents (`auth-store-`, `verify-store-`, `logger-store-`). These segments carry real information and would create collisions or ambiguity if dropped. Module nomenclature itself lives in [`module-categorization.md`](../modules/module-categorization.md).
+
+| Full package name | Alias |
+|---|---|
+| `js-helper-utils` | `helper-utils` |
+| `js-server-helper-sql-sqlite` | `helper-sql-sqlite` |
+| `js-server-helper-nosql-aws-dynamodb` | `helper-nosql-aws-dynamodb` |
+| `js-server-helper-storage-aws-s3` | `helper-storage-aws-s3` |
+| `js-server-helper-auth-store-postgres` | `helper-auth-store-postgres` |
+| `js-server-helper-crypto` | `helper-crypto` |
+| `js-client-helper-crypto` | `helper-crypto` (same alias) |
+
+Server and client variants of the same module share **one alias** - `package.json` decides which version installs and the calling code never branches on platform.
+
+```json
+{
+  "peerDependencies": {
+    "helper-utils": "npm:@superloomdev/js-helper-utils@^1.0.0",
+    "helper-sql-sqlite": "npm:@superloomdev/js-server-helper-sql-sqlite@^1.0.0",
+    "helper-crypto": "npm:@superloomdev/js-server-helper-crypto@^1.0.0"
+  }
+}
+```
+
+```javascript
+Lib.Utils = require('helper-utils')();
+Lib.SQLite = require('helper-sql-sqlite')(Lib, config);
+Lib.Crypto = require('helper-crypto')(Lib, config);
+```
+
+### Error Message Prefixes
+
+Error messages start with the **same short name** used in the alias, in square brackets. The derivation rule is identical - strip `js-` and the `server-`/`client-` qualifier, keep every other segment.
+
+```javascript
+throw new Error('[helper-money] CONFIG.DEFAULT_CURRENCY_CODE is not a known currency');
+throw new TypeError('[helper-auth] verifySession requires options.tenant_id');
+throw new Error('[helper-nosql-aws-dynamodb] table_name is required');
+```
 
 ---
 

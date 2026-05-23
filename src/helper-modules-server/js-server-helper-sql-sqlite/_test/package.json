@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@superloomdev/js-helper-utils": "^1.0.0",
-    "@superloomdev/js-helper-debug": "^1.0.0",
-    "@superloomdev/js-server-helper-instance": "^1.0.0",
-    "@superloomdev/js-server-helper-sql-sqlite": "file:../"
+    "helper-utils": "npm:@superloomdev/js-helper-utils@^1.0.0",
+    "helper-debug": "npm:@superloomdev/js-helper-debug@^1.0.0",
+    "helper-instance": "npm:@superloomdev/js-server-helper-instance@^1.0.0",
+    "helper-sql-sqlite": "file:../"
   },
   "scripts": {
     "test": "node --test test.js"

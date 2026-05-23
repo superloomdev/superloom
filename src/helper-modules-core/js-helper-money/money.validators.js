@@ -64,7 +64,7 @@ const Validators = {
       !(config.DEFAULT_CURRENCY_CODE.toLowerCase() in CURRENCIES)
     ) {
       throw new Error(
-        '[js-helper-money] CONFIG.DEFAULT_CURRENCY_CODE "' +
+        '[helper-money] CONFIG.DEFAULT_CURRENCY_CODE "' +
         config.DEFAULT_CURRENCY_CODE +
         '" is not a known currency'
       );
@@ -77,7 +77,7 @@ const Validators = {
       config.CURRENCY_CODE_MIN_LENGTH <= 0
     ) {
       throw new Error(
-        '[js-helper-money] CONFIG.CURRENCY_CODE_MIN_LENGTH must be a positive integer'
+        '[helper-money] CONFIG.CURRENCY_CODE_MIN_LENGTH must be a positive integer'
       );
     }
 
@@ -88,14 +88,14 @@ const Validators = {
       config.CURRENCY_CODE_MAX_LENGTH <= 0
     ) {
       throw new Error(
-        '[js-helper-money] CONFIG.CURRENCY_CODE_MAX_LENGTH must be a positive integer'
+        '[helper-money] CONFIG.CURRENCY_CODE_MAX_LENGTH must be a positive integer'
       );
     }
 
     // CURRENCY_CODE_SANITIZE_REGEX must be a RegExp
     if (!(config.CURRENCY_CODE_SANITIZE_REGEX instanceof RegExp)) {
       throw new Error(
-        '[js-helper-money] CONFIG.CURRENCY_CODE_SANITIZE_REGEX must be a RegExp'
+        '[helper-money] CONFIG.CURRENCY_CODE_SANITIZE_REGEX must be a RegExp'
       );
     }
 
@@ -122,21 +122,21 @@ const Validators = {
     // Required check
     if (Lib.Utils.isNullOrUndefined(code)) {
       throw new TypeError(
-        '[js-helper-money] ' + fn_name + ': currency_code is required'
+        '[helper-money] ' + fn_name + ': currency_code is required'
       );
     }
 
     // Must be a string
     if (!Lib.Utils.isString(code)) {
       throw new TypeError(
-        '[js-helper-money] ' + fn_name + ': currency_code must be a string'
+        '[helper-money] ' + fn_name + ': currency_code must be a string'
       );
     }
 
     // Check length
     if (code.length !== CONFIG.CURRENCY_CODE_MIN_LENGTH) {
       throw new TypeError(
-        '[js-helper-money] ' + fn_name + ': currency_code must be exactly ' +
+        '[helper-money] ' + fn_name + ': currency_code must be exactly ' +
         CONFIG.CURRENCY_CODE_MIN_LENGTH + ' letters'
       );
     }
@@ -147,7 +147,7 @@ const Validators = {
     // Always check membership - throw if unknown
     if (!(normalized in CURRENCIES)) {
       throw new TypeError(
-        '[js-helper-money] ' + fn_name + ': unknown currency_code "' + code + '"'
+        '[helper-money] ' + fn_name + ': unknown currency_code "' + code + '"'
       );
     }
 
@@ -169,13 +169,13 @@ const Validators = {
 
     if (Lib.Utils.isNullOrUndefined(value)) {
       throw new TypeError(
-        '[js-helper-money] ' + fn_name + ': ' + field + ' is required'
+        '[helper-money] ' + fn_name + ': ' + field + ' is required'
       );
     }
 
     if (!Lib.Utils.isNumber(value) || !Number.isFinite(value)) {
       throw new TypeError(
-        '[js-helper-money] ' + fn_name + ': ' + field + ' must be a finite number'
+        '[helper-money] ' + fn_name + ': ' + field + ' must be a finite number'
       );
     }
 
@@ -202,7 +202,7 @@ const Validators = {
     // Throw if a non-null value is not an integer
     if (!Lib.Utils.isNumber(value) || !Lib.Utils.isInteger(value)) {
       throw new TypeError(
-        '[js-helper-money] ' + fn_name + ': ' + field + ' must be an integer when provided'
+        '[helper-money] ' + fn_name + ': ' + field + ' must be an integer when provided'
       );
     }
 

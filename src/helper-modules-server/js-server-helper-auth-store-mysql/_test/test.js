@@ -24,8 +24,8 @@ const assert = require('node:assert/strict');
 const { describe, it, before, after } = require('node:test');
 
 const { Lib, ERRORS } = require('./loader')();
-const StoreLoader = require('@superloomdev/js-server-helper-auth-store-mysql');
-const AuthLoader = require('@superloomdev/js-server-helper-auth');
+const StoreLoader = require('helper-auth-store-mysql');
+const AuthLoader = require('helper-auth');
 const runSharedStoreSuite = require('./store-contract-suite');
 
 

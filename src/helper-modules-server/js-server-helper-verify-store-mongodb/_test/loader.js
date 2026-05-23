@@ -36,15 +36,15 @@ module.exports = function loader () {
 
   // ==================== FOUNDATION MODULES ========================= //
 
-  Lib.Utils = require('@superloomdev/js-helper-utils')(Lib, {});
-  Lib.Debug = require('@superloomdev/js-helper-debug')(Lib, config_debug);
+  Lib.Utils = require('helper-utils')(Lib, {});
+  Lib.Debug = require('helper-debug')(Lib, config_debug);
 
 
   // ==================== SERVER HELPER MODULES ====================== //
 
-  Lib.Crypto = require('@superloomdev/js-server-helper-crypto')(Lib, {});
-  Lib.Instance = require('@superloomdev/js-server-helper-instance')(Lib, {});
-  Lib.MongoDB = require('@superloomdev/js-server-helper-nosql-mongodb')(Lib, config_mongodb);
+  Lib.Crypto = require('helper-crypto')(Lib, {});
+  Lib.Instance = require('helper-instance')(Lib, {});
+  Lib.MongoDB = require('helper-nosql-mongodb')(Lib, config_mongodb);
 
 
   // ==================== MINIMAL ERRORS CATALOG ===================== //

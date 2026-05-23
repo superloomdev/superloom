@@ -20,8 +20,8 @@ const assert = require('node:assert/strict');
 const { describe, it, before, after, beforeEach } = require('node:test');
 
 const { Lib, ERRORS } = require('./loader')();
-const StoreLoader = require('@superloomdev/js-server-helper-logger-store-dynamodb');
-const LoggerLoader = require('@superloomdev/js-server-helper-logger');
+const StoreLoader = require('helper-logger-store-dynamodb');
+const LoggerLoader = require('helper-logger');
 const runSharedStoreSuite = require('./store-contract-suite');
 
 
