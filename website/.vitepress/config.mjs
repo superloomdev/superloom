@@ -35,6 +35,8 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Docs', link: '/docs/', activeMatch: '^/docs/' },
       { text: 'Guide', link: '/docs/guide/getting-started', activeMatch: '^/docs/guide/' },
+      { text: 'JS Modules', link: 'https://github.com/superloomdev/js-helper-modules' },
+      { text: 'JS Demo', link: 'https://github.com/superloomdev/js-demo-project' },
       { text: 'GitHub', link: 'https://github.com/superloomdev/superloom' },
     ],
 
