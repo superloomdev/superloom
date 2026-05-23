@@ -6,8 +6,8 @@
     </picture>
   </a>
   <h1>Superloom</h1>
-  <p><strong>A modular Node.js framework for backends that survive AI-paced change. Build once, deploy anywhere, review anything.</strong></p>
-  <p><em>Built on patterns proven across two decades of production systems, distilled into a thin opinionated frame around real, pre-tested helper modules.</em></p>
+  <p><strong>A modular Node.js framework for backends. Build once, deploy anywhere, review anything.</strong></p>
+  <p><em>Built on patterns from two decades of production systems, wrapped around tested helper modules.</em></p>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
   [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
@@ -27,19 +27,19 @@
 
 ## What's in the Box
 
-30+ JavaScript helper modules across **databases** (Postgres, MySQL, SQLite, MongoDB, DynamoDB), **storage and queues** (S3, SQS), **auth and verification** (sessions, JWT, one-time codes — with hot-swappable store adapters per backend), **observability** (structured logging, compliance-friendly action logs), and **utilities** (crypto, HTTP, time, instance lifecycle). Each module is independently versioned, independently testable, and ships with its own README, `ROBOTS.md`, and CI pipeline. Full catalog in the [docs](https://superloom.dev/docs/).
+Helper modules for databases, storage, queues, auth, verification, logging, and utilities. Each module wraps one production library so when the upstream driver changes, only the module updates. Your application code stays exactly as it is.
 
-A reference demo application shows how the layers fit together: model → controller → service → interfaces (Express + Lambda), with the same business logic running unchanged on both.
+A demo application shows how the layers fit together: model → controller → service → interfaces (Express + Lambda), with the same business logic running unchanged on both.
 
-## Repository Structure
+## Finding Modules
 
-The project is split across focused repositories under the `superloomdev` org:
+Helper modules live in the [js-helper-modules](https://github.com/superloomdev/js-helper-modules) repository. They are organized into three categories:
 
-| Repository | Purpose |
-|---|---|
-| [`superloom`](https://github.com/superloomdev/superloom) | This repo — framework docs, conventions, architecture, website |
-| [`js-helper-modules`](https://github.com/superloomdev/js-helper-modules) | All JavaScript helper modules, published as `@superloomdev/*` |
-| [`js-demo-project`](https://github.com/superloomdev/js-demo-project) | JavaScript reference demo application |
+- **Core** (`js-helper-*`) — Utilities that run in any JavaScript environment
+- **Server** (`js-server-helper-*`) — Modules that need Node.js (databases, HTTP, file system)
+- **Client** (`js-client-helper-*`) — Browser and mobile environments
+
+Each module has its own README and `ROBOTS.md` (AI reference). Browse the `src/` directory or check the module READMEs for details.
 
 ## Documentation
 
@@ -55,13 +55,13 @@ Full documentation at **[superloom.dev](https://superloom.dev)**.
 ## Quick Start
 
 ```bash
-# Framework docs and conventions
+# To read documentation and understand the framework
 git clone https://github.com/superloomdev/superloom.git
 
-# JavaScript helper modules
+# To use helper modules in your project
 git clone https://github.com/superloomdev/js-helper-modules.git
 
-# JavaScript reference demo application
+# To start a new application from a working example
 git clone https://github.com/superloomdev/js-demo-project.git
 ```
 
@@ -74,5 +74,5 @@ Then follow [Getting Started](https://superloom.dev/docs/guide/getting-started) 
 ---
 
 <div align="center">
-  <a href="https://superloom.dev">Website</a> · <a href="https://superloom.dev/docs/">Docs</a> · <a href="https://aiwonderland.co">By AI Wonderland</a>
+  <a href="https://superloom.dev">Website</a> · <a href="https://superloom.dev/docs/">Docs</a> · <a href="https://github.com/superloomdev">GitHub</a> · <a href="https://aiwonderland.co">By AI Wonderland</a>
 </div>

@@ -17,7 +17,7 @@ hero:
       link: /docs/
     - theme: alt
       text: GitHub
-      link: https://github.com/superloomdev/superloom
+      link: https://github.com/superloomdev
 
 features:
   - icon:
