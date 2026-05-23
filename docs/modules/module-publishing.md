@@ -17,6 +17,8 @@ This page scopes **package-configuration rules**; the companion docs scope **how
 - [Package Identity](#package-identity)
 - [Dependency Rules](#dependency-rules)
 - [npmrc Configuration](#npmrc-configuration)
+- [Registry Ignore File](#registry-ignore-file-npmignore)
+- [Linter Configuration](#linter-configuration)
 - [Required Scripts](#required-scripts)
 - [Test Directory Structure](#test-directory-structure)
 
@@ -59,6 +61,34 @@ source init-env.sh
 ```
 
 See [`../dev/npmrc-setup.md`](../dev/npmrc-setup.md) for the complete setup guide and [`../dev/onboarding-github-packages.md`](../dev/onboarding-github-packages.md) for the GitHub token side.
+
+## Registry Ignore File (`.npmignore`)
+
+Every published JS module **must** have a `.npmignore` file at its root.
+
+Without it, `npm pack` includes everything that is not in `.gitignore` — meaning `_test/`, `eslint.config.js`, `.github/`, and other dev-only files all land in the published tarball. This bloats the package and exposes internal structure that consumers have no use for.
+
+**Rules:**
+
+- Place `.npmignore` at the module root (alongside `package.json`).
+- It must exclude at minimum: `_test/`, `eslint.config.js`, `.github/`.
+- It must include (i.e. not accidentally exclude): the main entry file, `README.md`, `ROBOTS.md`, `docs/`, `package.json`, and any `parts/` or `src/` subdirectories that contain production code.
+- `README.md`, `ROBOTS.md`, and `docs/` ship intentionally — `README.md` links to both, and those links must resolve for anyone reading the package page or consuming the package.
+- Verify with `npm pack --dry-run` from the module root before publishing. The output lists every file that would be included.
+
+**Canonical reference:** For the exact file contents and the complete exclusion list, refer to `js-helper-utils` — it is the simplest base module and serves as the reference implementation for all JS helper modules. Copy its `.npmignore` as your starting point and adjust only for module-specific additions (e.g. `parts/` subdirectory modules need no adjustment; adapter modules with a `schema/` folder may need to verify it is included).
+
+Note: other languages have their own equivalent mechanisms (Python: `MANIFEST.in` or `pyproject.toml` exclude patterns; Java: Maven/Gradle publish configuration). Each language's publishing documentation covers its own convention. The principle is the same: every published package must explicitly control what ships.
+
+## Linter Configuration
+
+Every JS module **must** have an `eslint.config.js` file at its root (ESLint flat config, required for ESLint v9+).
+
+Linter config is per-module because each module is published and lintable independently — there is no shared workspace-level config that consumers can rely on. The config must be present for `npm run lint` to work as part of the pre-publish gate.
+
+**Canonical reference:** For the exact config shape, refer to `js-helper-utils`. Copy its `eslint.config.js` as your starting point. Do not reproduce or embed the config contents in documentation — the module is the living reference and will stay current as ESLint evolves.
+
+Note: other languages have their own linter conventions (Python: `ruff` or `pylint` config; etc.). Each language's module structure documentation covers its own convention.
 
 ## Required Scripts
 

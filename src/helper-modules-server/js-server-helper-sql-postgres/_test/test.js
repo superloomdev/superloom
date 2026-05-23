@@ -518,7 +518,7 @@ describe('multiple instances', function () {
 
   it('should allow independent pools via multiple loader calls', async function () {
 
-    const ModuleFactory = require('@superloomdev/js-server-helper-sql-postgres');
+    const ModuleFactory = require('helper-sql-postgres');
 
     const A = ModuleFactory(Lib, {
       HOST: Config.postgres_host,

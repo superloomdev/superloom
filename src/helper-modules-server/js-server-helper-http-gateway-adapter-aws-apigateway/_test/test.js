@@ -31,7 +31,7 @@ const { describe, it } = require('node:test');
 
 
 const { Lib, gateway } = require('./loader')();
-const AdapterFactory   = require('@superloomdev/js-server-helper-http-gateway-adapter-aws-apigateway');
+const AdapterFactory   = require('helper-http-gateway-adapter-aws-apigateway');
 
 
 // ============================================================================

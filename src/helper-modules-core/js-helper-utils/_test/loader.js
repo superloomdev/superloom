@@ -9,8 +9,8 @@ module.exports = function loader () {
   // Build Lib container
   const Lib = {};
 
-  // Load Utils instance
-  Lib.Utils = require('helper-utils')(Lib, {});
+  // Load Utils instance (scoped name for module under test)
+  Lib.Utils = require('@superloomdev/js-helper-utils')(Lib, {});
 
   // Return runtime objects
   return { Lib };

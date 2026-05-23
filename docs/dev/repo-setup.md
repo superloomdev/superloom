@@ -62,3 +62,19 @@ After the first push, configure the following under **Settings**:
   - Require at least 1 approval
   - Disallow force pushes
 - **Actions → General:** Allow GitHub Actions for CI/CD
+
+---
+
+## Repository `.gitignore` Convention
+
+Every repository in the `superloomdev` org has **exactly one `.gitignore` file, at the repository root.** No per-module or per-subdirectory `.gitignore` files.
+
+Git reads `.gitignore` files at every directory level and cascades rules down automatically. A root-level file already covers all subdirectories. Per-module files are therefore redundant, and worse, they imply intentional deviation from the root rules when there is none. This causes confusion and encourages drift.
+
+**Rules:**
+
+- The root `.gitignore` governs the entire repository — all modules, all subdirectories.
+- Do not create a `.gitignore` inside any module, helper, or subdirectory.
+- If a new pattern is needed (e.g. a new type of generated artefact), add it to the root `.gitignore` with a comment explaining what it covers.
+
+**When creating a new repository** (e.g. a language-specific module repo such as `js-helper-modules`), that repo gets its own root `.gitignore` scoped to its purpose. It will typically extend the general patterns with language-specific ones (for example, a JS repo adds `node_modules/`, `package-lock.json`; a Python repo adds `__pycache__/`, `.venv/`). The same rule applies: one file per repo, at the root, no per-module copies.

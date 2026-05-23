@@ -511,7 +511,7 @@ describe('multiple instances', function () {
 
   it('should allow independent handles via multiple loader calls', async function () {
 
-    const ModuleFactory = require('@superloomdev/js-server-helper-sql-sqlite');
+    const ModuleFactory = require('helper-sql-sqlite');
 
     // Two separate in-memory databases — truly independent state
     const A = ModuleFactory(Lib, {
@@ -1250,7 +1250,7 @@ describe('close — edge cases', function () {
 
   it('should be safe to call close() on an already closed instance', async function () {
 
-    const ModuleFactory = require('@superloomdev/js-server-helper-sql-sqlite');
+    const ModuleFactory = require('helper-sql-sqlite');
     const temp = ModuleFactory(Lib, { FILE: ':memory:' });
 
     // Open the handle by running a query
@@ -1264,7 +1264,7 @@ describe('close — edge cases', function () {
 
   it('should be safe to call close() without ever opening', async function () {
 
-    const ModuleFactory = require('@superloomdev/js-server-helper-sql-sqlite');
+    const ModuleFactory = require('helper-sql-sqlite');
     const temp = ModuleFactory(Lib, { FILE: ':memory:' });
 
     // Never ran a query — handle is null

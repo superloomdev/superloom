@@ -14,7 +14,7 @@ function createDebug (config_override) {
 
   const Lib = {};
 
-  return require('@superloomdev/js-helper-debug')(Lib, config_override || {});
+  return require('helper-debug')(Lib, config_override || {});
 
 }
 

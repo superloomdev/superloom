@@ -149,6 +149,10 @@ Create `package.json`:
 
 Copy `eslint.config.js` from `src/helper-modules-core/js-helper-utils/eslint.config.js`
 
+## 7a. Create `.npmignore`
+
+Copy `.npmignore` from `src/helper-modules-core/js-helper-utils/.npmignore`. The file is identical for all modules — do not modify it. Verify with `npm pack --dry-run` from the module root before publishing: only source files, `README.md`, `ROBOTS.md`, `docs/`, and `package.json` should appear. `_test/`, `eslint.config.js`, and `.github/` must not appear.
+
 ## 8. Create Test Directory and Files
 
 Create `_test/` directory with:

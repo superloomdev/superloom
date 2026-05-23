@@ -504,7 +504,7 @@ describe('multiple instances', function () {
 
   it('should allow independent pools via multiple loader calls', async function () {
 
-    const ModuleFactory = require('@superloomdev/js-server-helper-sql-mysql');
+    const ModuleFactory = require('helper-sql-mysql');
 
     // Two instances pointing at the same DB with different pool sizes
     const A = ModuleFactory(Lib, {

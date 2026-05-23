@@ -139,6 +139,8 @@ grep "js-server-helper-<old-suffix>[^-]" .github/workflows/ci-helper-modules.yml
 // turbo
 - [ ] `eslint.config.js` exists at module root - without it, ESLint v9+ silently fails
 // turbo
+- [ ] `.npmignore` exists at module root - without it, `npm pack` ships `_test/`, `eslint.config.js`, `.github/` and other dev files. Copy from `js-helper-utils`. Verify with `npm pack --dry-run`.
+// turbo
 - [ ] `README.md` exists (human documentation)
 // turbo
 - [ ] `ROBOTS.md` exists (AI agent reference)
