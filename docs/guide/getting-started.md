@@ -35,12 +35,10 @@ Before creating your project, decide how you want to integrate helper modules:
 
 ### Approach 1: Fork and Publish (Recommended for teams)
 ```bash
-# Fork this repository to your GitHub account
+# Fork superloomdev/js-helper-modules to your GitHub account
 # Clone your fork
-git clone https://github.com/YOUR-USERNAME/superloom.git
-cd superloom
+git clone https://github.com/YOUR-USERNAME/js-helper-modules.git
 
-# Create your organization's packages
 # Modify helper modules as needed
 # Set up CI/CD to publish as @your-org/*
 ```
@@ -49,32 +47,29 @@ cd superloom
 
 ### Approach 2: Local Copy (Zero dependencies)
 ```bash
-# Clone the framework
-git clone https://github.com/superloomdev/superloom.git
-cd superloom
+# Clone the helper modules repo
+git clone https://github.com/superloomdev/js-helper-modules.git
+
+# Clone the demo project repo
+git clone https://github.com/superloomdev/js-demo-project.git
 
 # Copy helper modules into your project
-cp -r src/helper-modules-* ../my-project/src/
-cp -r demo-project/ ../my-project/
-cd ../my-project
+cp -r js-helper-modules/src/helper-modules-* my-project/src/
+cp -r js-demo-project/ my-project/
 
-# Initialize git
-git init
+# Initialize git in your project
+git init my-project
 ```
 **Pros**: Zero external dependencies, complete control, offline development  
 **Cons**: Manual updates, larger repository size
 
 ### Approach 3: Direct Usage (Quick start)
 ```bash
-# Clone the demo project only
-git clone https://github.com/superloomdev/superloom.git
-cd superloom
+# Clone the demo project
+git clone https://github.com/superloomdev/js-demo-project.git my-project
 
-cp -r demo-project/ ../my-project/
-cd ../my-project
-
-# Initialize git
-git init
+# Initialize git in your project
+git init my-project
 ```
 **Pros**: Quick setup, automatic updates, no maintenance  
 **Cons**: External dependency, limited customization
@@ -199,7 +194,7 @@ my-project/
     client/                         # Reserved for future client applications
 ```
 
-All personal secrets, environment files, and AI session notes live in `__dev__/` at the repository root - never committed.
+All personal secrets, environment files, and AI session notes live in `__dev__/` at the workspace root (the parent directory that contains all your repo clones) - never committed to any repository.
 
 ---
 

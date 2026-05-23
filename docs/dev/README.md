@@ -74,10 +74,10 @@ npm config set //npm.pkg.github.com/:_authToken '${GITHUB_READ_PACKAGES_TOKEN}'
 
 ### 2. Environment Files
 
-1. Copy the templates to `__dev__/`:
+1. Copy the templates to `__dev__/` at your workspace root:
 ```bash
-cp docs/dev/.env.dev.example __dev__/.env.dev
-cp docs/dev/.env.integration.example __dev__/.env.integration
+cp codebase-superloom/docs/dev/.env.dev.example ../__dev__/.env.dev
+cp codebase-superloom/docs/dev/.env.integration.example ../__dev__/.env.integration
 ```
 
 2. Fill in your values in each file (GitHub token, DB credentials, etc.)
@@ -99,7 +99,7 @@ This prompts you to select `dev` or `integration` and loads the corresponding `_
 
 ## Personal Dev Workspace
 
-The `__dev__/` folder at the repository root is your personal workspace. It is listed in `.gitignore` and never committed. Use it for:
+The `__dev__/` folder lives at the **workspace root** (the parent directory that contains all your repository clones, e.g. `project-superloom/__dev__/`). It is outside any git repository and is never committed. Use it for:
 
 - `me.md` - your GitHub username, SSH key name, local aliases
 - `.env.dev` - dev environment values (copied from [`.env.dev.example`](https://github.com/superloomdev/superloom/blob/main/docs/dev/.env.dev.example))
@@ -109,5 +109,5 @@ The `__dev__/` folder at the repository root is your personal workspace. It is l
 - `migration-changelog.md` - personal log of module migration changes
 - `secrets/` - real credentials, API keys, sandbox passwords (never copied anywhere committed)
 
-See [Architectural Philosophy](../foundations/architectural-philosophy.md#personal-workspace-dev) for the full convention.
+See [Architectural Philosophy](../foundations/architectural-philosophy.md#personal-workspace-dev) for the full convention and [Organisation Structure](org-structure.md) for the workspace layout.
 

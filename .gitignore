@@ -2,9 +2,6 @@
 node_modules/
 package-lock.json
 
-# Personal dev workspace (machine-specific, never committed)
-__dev__/
-
 # Legacy cleanup folder (never committed)
 _cleanup/
 

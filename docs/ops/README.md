@@ -1,6 +1,6 @@
 # Infrastructure Reference Guides
 
-Generic, project-agnostic guides for setting up infrastructure services used by projects. These are framework-level **knowledge** - they explain *how* to set up each service. Project-specific values, ARNs, and configuration belong in your project's own `ops/` runbook (numbered `00-domain/`, `01-cloud-provider/`, ...). Real secrets belong in `__dev__/secrets/` and never in git.
+Generic, project-agnostic guides for setting up infrastructure services used by projects. These are framework-level **knowledge** - they explain *how* to set up each service. Project-specific values, ARNs, and configuration belong in your project's own `ops/` runbook (numbered `00-domain/`, `01-cloud-provider/`, ...). Real secrets belong in `__dev__/secrets/` at the workspace root and never in git.
 
 ## On This Page
 
@@ -45,7 +45,7 @@ Each directory represents a vendor-agnostic infrastructure category. Inside each
 
 1. Read the relevant guide here to understand the service and approach
 2. Create the corresponding entry in your project's `ops/` runbook with project-specific values
-3. Store any actual secret values in `__dev__/secrets/`
+3. Store any actual secret values in `__dev__/secrets/` at the workspace root
 
 The three-layer split keeps generic knowledge here, project values in the project repo, and secrets on each developer's machine - never in git.
 

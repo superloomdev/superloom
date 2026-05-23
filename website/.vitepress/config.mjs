@@ -117,6 +117,7 @@ export default defineConfig({
           collapsed: true,
           items: [
             { text: 'Overview',                link: '/docs/dev/README' },
+            { text: 'Organisation Structure',  link: '/docs/dev/org-structure' },
             { text: 'Git Account Setup',       link: '/docs/dev/onboarding-git-account' },
             { text: 'GitHub Packages',         link: '/docs/dev/onboarding-github-packages' },
             { text: 'npmrc Setup',             link: '/docs/dev/npmrc-setup' },

@@ -86,11 +86,9 @@ Helper modules provide reusable utilities and can be integrated into your projec
 
 #### Framework Structure (Reference)
 
-**In this framework repository:**
-- Helper modules live at the **repository root** and are published under `@superloomdev/*`
-- They are framework-level, not project-specific
+Helper modules live in the [`js-helper-modules`](https://github.com/superloomdev/js-helper-modules) repository and are published under `@superloomdev/*`. They are framework-level, not project-specific. See [`docs/dev/org-structure.md`](../dev/org-structure.md) for the full multi-repo layout.
 
-| Path | Purpose |
+| Path (in `js-helper-modules`) | Purpose |
 |---|---|
 | `src/helper-modules-core/[js\|py]-helper-[name]/` | Platform-agnostic, server-safe helpers (validation, time math, structured logging) |
 | `src/helper-modules-server/[js\|py]-server-helper-[name]/` | Server-only helpers (DB drivers, cloud SDKs, filesystem) |
@@ -163,7 +161,7 @@ The client side is largely a future expansion. The framework's foundations (help
 
 ### Personal Workspace (`__dev__/`)
 
-Every contributor has a personal workspace folder at the repository root called `__dev__/`. It is gitignored - **never committed**.
+Every contributor has a personal workspace folder called `__dev__/`. It lives at the **workspace root** (the parent directory that contains all repository clones, e.g. `project-superloom/__dev__/`). It is outside any git repository and is never committed.
 
 | File | Purpose |
 |---|---|
@@ -175,7 +173,9 @@ Every contributor has a personal workspace folder at the repository root called 
 | `migration-changelog.md` | Personal log of module migrations (see [`migration-pitfalls.md`](../testing/migration-pitfalls.md)) |
 | `secrets/` | Real credentials, API keys, sandbox passwords (never copied anywhere committed) |
 
-The `__dev__/` convention guarantees that no developer's personal configuration or credentials ever accidentally reach the repository, while still giving each contributor a well-defined place to keep local context organized.
+The `__dev__/` convention guarantees that no developer's personal configuration or credentials ever accidentally reach any repository, while still giving each contributor a well-defined place to keep local context organized. Its workspace-level location means plans, secrets, and notes span all repos rather than being tied to one.
+
+See [`docs/dev/org-structure.md`](../dev/org-structure.md) for the full workspace layout.
 
 ### Developer Documentation (`docs/dev/`)
 
@@ -189,8 +189,8 @@ Modules in this framework support two environments:
 
 | Environment | Purpose | Configuration source |
 |---|---|---|
-| **dev** | Local machine, Docker emulators (databases, S3-compatible store, message queue) defined in [`docs/dev/docker-compose.yml`](../dev/docker-compose.yml) | `__dev__/.env.dev`, loaded via `source init-env.sh` |
-| **integration** (sandbox) | Real cloud services with isolated test data. Mirrors the production configuration | Cloud provider's parameter store (e.g., AWS SSM); credentials in `__dev__/secrets/` |
+| **dev** | Local machine, Docker emulators (databases, S3-compatible store, message queue) defined in [`docs/dev/docker-compose.yml`](../dev/docker-compose.yml) | `__dev__/.env.dev` at workspace root, loaded via `source init-env.sh` |
+| **integration** (sandbox) | Real cloud services with isolated test data. Mirrors the production configuration | Cloud provider's parameter store (e.g., AWS SSM); credentials in `__dev__/secrets/` at workspace root |
 
 Production testing is the responsibility of the **application project** consuming these modules, not the modules themselves.
 

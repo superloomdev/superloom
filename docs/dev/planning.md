@@ -51,7 +51,7 @@ __dev__/plans/
     NNNN-<slug>.md     Completed or discarded plans, kept for reference
 ```
 
-The folder lives at `__dev__/plans/` because it is **personal**: each developer has their own plans, and PR diffs should not be polluted with plan churn. The folder template described here is what the developer sets up locally; the **rules** (this file) and the **slash command** (`.windsurf/workflows/plan.md`) are tracked.
+The folder lives at `__dev__/plans/` at the **workspace root** (the parent directory containing all repo clones, e.g. `project-superloom/__dev__/plans/`). It is outside any git repository and is never committed. Plans span all repos in the workspace — not just one. The **rules** (this file) and the **slash command** (`.windsurf/workflows/plan.md`) are tracked in `superloom`; the plan files themselves are personal and local only.
 
 **There is no index file.** Any number of plans can coexist in `plans/` - this explicitly supports multiple agents or work streams running in parallel. The plan file's own `**Status:**` field is the source of truth. At session start, the AI picks up the most recently modified plan file (by mtime) and confirms it with the user before proceeding.
 
@@ -255,7 +255,7 @@ Never silently abandon an in-progress plan. Drift detection is the single most i
 | Skipping the `## Out of scope` section | Drift is a near-certainty | Always write it, even if "(none)" |
 | Moving to `history/` without updating `**Status:**` | Status and location become inconsistent | Always edit the file before moving |
 | Using this system for an entire-product roadmap | Roadmap belongs in `ROADMAP.md` (tracked, shared) | Plans are working artifacts; roadmap is shared intent |
-| Committing `__dev__/plans/` | Folder is gitignored on purpose; PRs would drown in noise | Push only changes to `docs/dev/planning.md` and `.windsurf/workflows/plan.md` |
+| Committing `__dev__/plans/` | Folder lives outside any git repo on purpose; it cannot be accidentally committed | Push only changes to `docs/dev/planning.md` and `.windsurf/workflows/plan.md` |
 
 ---
 

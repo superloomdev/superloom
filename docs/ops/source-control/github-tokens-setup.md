@@ -32,8 +32,8 @@ Used by developers locally and servers in deployment for reading packages.
 ## Storage
 
 - **Publishing token**: Stored as a GitHub Actions repository secret
-- **Read token**: Stored in each developer's `__dev__/.env` as `GITHUB_READ_PACKAGES_TOKEN`
-- **Both tokens**: Documented in `__dev__/secrets/` for the project owner
+- **Read token**: Stored in each developer's `__dev__/.env` at the workspace root as `GITHUB_READ_PACKAGES_TOKEN`
+- **Both tokens**: Documented in `__dev__/secrets/` at the workspace root for the project owner
 
 ## NPM Configuration
 

@@ -27,9 +27,19 @@
 
 ## What's in the Box
 
-30+ helper modules across **databases** (Postgres, MySQL, SQLite, MongoDB, DynamoDB), **storage and queues** (S3, SQS), **auth and verification** (sessions, JWT, one-time codes — with hot-swappable store adapters per backend), **observability** (structured logging, compliance-friendly action logs), and **utilities** (crypto, HTTP, time, instance lifecycle). Each module is independently versioned, independently testable, and ships with its own README, `ROBOTS.md`, and CI pipeline. Full catalog in the [docs](https://superloom.dev/docs/).
+30+ JavaScript helper modules across **databases** (Postgres, MySQL, SQLite, MongoDB, DynamoDB), **storage and queues** (S3, SQS), **auth and verification** (sessions, JWT, one-time codes — with hot-swappable store adapters per backend), **observability** (structured logging, compliance-friendly action logs), and **utilities** (crypto, HTTP, time, instance lifecycle). Each module is independently versioned, independently testable, and ships with its own README, `ROBOTS.md`, and CI pipeline. Full catalog in the [docs](https://superloom.dev/docs/).
 
-A reference demo project (`demo-project/`) shows how the layers fit together: model → controller → service → interfaces (Express + Lambda), with the same business logic running unchanged on both.
+A reference demo application shows how the layers fit together: model → controller → service → interfaces (Express + Lambda), with the same business logic running unchanged on both.
+
+## Repository Structure
+
+The project is split across focused repositories under the `superloomdev` org:
+
+| Repository | Purpose |
+|---|---|
+| [`superloom`](https://github.com/superloomdev/superloom) | This repo — framework docs, conventions, architecture, website |
+| [`js-helper-modules`](https://github.com/superloomdev/js-helper-modules) | All JavaScript helper modules, published as `@superloomdev/*` |
+| [`js-demo-project`](https://github.com/superloomdev/js-demo-project) | JavaScript reference demo application |
 
 ## Documentation
 
@@ -45,7 +55,14 @@ Full documentation at **[superloom.dev](https://superloom.dev)**.
 ## Quick Start
 
 ```bash
+# Framework docs and conventions
 git clone https://github.com/superloomdev/superloom.git
+
+# JavaScript helper modules
+git clone https://github.com/superloomdev/js-helper-modules.git
+
+# JavaScript reference demo application
+git clone https://github.com/superloomdev/js-demo-project.git
 ```
 
 Then follow [Getting Started](https://superloom.dev/docs/guide/getting-started) to pick one of the three integration approaches and run the demo project. The demo is a multi-package layout — each layer (`model`, `model-server`, `server`, …) is its own package, so the install steps live with the guide rather than here.
