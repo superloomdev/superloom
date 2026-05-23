@@ -40,7 +40,9 @@ DIST/
 build/
 
 # npmrc files (never commit registry credentials anywhere)
+# Exception: root .npmrc contains only scope routing, no tokens — safe to commit
 **/.npmrc
+!/.npmrc
 
 # Log files
 *.log
