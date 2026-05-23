@@ -11,7 +11,7 @@
   "dependencies": {
     "helper-utils": "npm:@superloomdev/js-helper-utils@^1.0.0",
     "helper-debug": "npm:@superloomdev/js-helper-debug@^1.0.0",
-    "helper-crypto": "file:../../js-server-helper-crypto",
+    "helper-crypto": "npm:@superloomdev/js-server-helper-crypto@^1.0.0",
     "helper-instance": "npm:@superloomdev/js-server-helper-instance@^1.0.0",
     "helper-sql-sqlite": "npm:@superloomdev/js-server-helper-sql-sqlite@^1.0.0",
     "helper-auth": "file:../../js-server-helper-auth",
