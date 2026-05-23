@@ -100,6 +100,18 @@ publish-foo:
 
 `!cancelled() &&` disables implicit transitive `success()`; explicit `needs.<job>.result == 'success'` restores safety scoped to direct needs. Hyphenated job ids use bracket notation (`needs['test-foo']`). See `docs/dev/pitfalls.md` entry 11.
 
+**`contains()` in CI workflow conditions must use `fromJSON()` for exact matching.** GitHub Actions `contains()` does substring matching on strings. When checking if a module is in detect outputs (JSON arrays), parse them first:
+
+```yaml
+# WRONG: Substring matching (verify matches verify-store-sqlite)
+contains(needs.detect.outputs.test_modules, 'js-server-helper-verify')
+
+# CORRECT: Exact array element matching
+contains(fromJSON(needs.detect.outputs.test_modules), 'src/helper-modules-server/js-server-helper-verify')
+```
+
+See `docs/dev/pitfalls.md` entry 18.
+
 **AWS SDK calls need dummy credentials in tests.** No credentials = SDK walks EC2 metadata chain = 1-2s timeout per call. Set `AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local AWS_REGION=us-east-1` in `_test/package.json` `test` script even when no real AWS call happens.
 
 **Auto-run is for read-only or idempotent operations only.** Never set `SafeToAutoRun: true` for `rm -rf`, `git push --force`, `docker volume rm`, `npm publish`, or state mutation, even if user previously approved similar command.

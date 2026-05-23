@@ -707,6 +707,42 @@ find src/ -name "*.js" -not -path "*/node_modules/*" | \
 
 **Lesson:** When renaming any store-contract or module-public method, **grep all `_test/test.js` files across every adapter** before committing, not just the module source and its own tests. Pattern: `grep -rn "old_method_name" src/`. Adapter test files are not auto-updated by renaming the source. Also: a new major-bump on a core module will not reach adapters until it is both published and the adapter `_test/package.json` pin is bumped.
 
+### 18. `contains()` substring matching causes parent modules to trigger when only adapters need publishing
+
+**Symptom:** When only an adapter module (e.g., `js-server-helper-verify-store-sqlite`) needs to be published, the CI workflow also runs jobs for the parent module (`js-server-helper-verify`). The base module is detected as needing publish even though `npm view` shows it already exists on the registry. This causes unnecessary republishing of parent modules when only their adapters should be processed.
+
+**Cause:** GitHub Actions `contains()` function performs **substring matching**, not exact string matching. The `detect` job outputs JSON arrays like:
+
+```json
+["src/helper-modules-server/js-server-helper-verify-store-sqlite"]
+```
+
+The job condition `contains(needs.detect.outputs.test_modules, 'helper-modules-server/js-server-helper-verify')` returns `true` because `'helper-modules-server/js-server-helper-verify'` is a substring of `'src/helper-modules-server/js-server-helper-verify-store-sqlite'`.
+
+**Fix:** Parse the JSON array first, then check for exact element matching:
+
+```yaml
+# WRONG: Substring matching
+contains(needs.detect.outputs.test_modules, 'helper-modules-server/js-server-helper-verify')
+
+# CORRECT: Exact array element matching
+contains(fromJSON(needs.detect.outputs.test_modules), 'src/helper-modules-server/js-server-helper-verify')
+```
+
+**Lesson:** When a workflow outputs JSON arrays from the `detect` job and downstream jobs need to check if a specific value is in that array:
+
+1. Always wrap the output with `fromJSON()` to convert the JSON string back to an actual array
+2. Use the **full path** (including `src/` prefix) in the match string to ensure exact matching
+3. Never rely on `contains()` with a JSON string directly -- it performs substring matching on the serialized JSON, not element matching on the array
+
+This applies to any job condition checking against detect outputs:
+
+```yaml
+# Pattern for all module jobs
+if: contains(fromJSON(needs.detect.outputs.test_modules), 'src/helper-modules-category/js-module-name')
+if: contains(fromJSON(needs.detect.outputs.publish_modules), 'src/helper-modules-category/js-module-name')
+```
+
 ---
 
 ## Adding a New Entry
