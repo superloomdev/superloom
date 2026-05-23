@@ -630,7 +630,7 @@ jobs:
       always() &&
       !cancelled() &&
       needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-http')
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-http"')
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -822,7 +822,7 @@ jobs:
       always() &&
       !cancelled() &&
       needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-storage-aws-s3')
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-storage-aws-s3"')
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -1562,7 +1562,7 @@ jobs:
       always() &&
       !cancelled() &&
       needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-verify')
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-verify"')
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -1627,7 +1627,7 @@ jobs:
       always() &&
       !cancelled() &&
       needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-logger')
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-logger"')
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -2020,7 +2020,7 @@ jobs:
       always() &&
       !cancelled() &&
       needs.detect.result == 'success' &&
-      contains(needs.detect.outputs.test_modules, 'js-server-helper-auth')
+      contains(needs.detect.outputs.test_modules, 'js-server-helper-auth"')
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
