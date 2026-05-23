@@ -192,6 +192,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-core/js-helper-utils
         run: |
@@ -256,6 +258,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-core/js-helper-debug
         run: |
@@ -320,6 +324,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-core/js-helper-time
         run: |
@@ -384,6 +390,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-core/js-helper-money
         run: |
@@ -448,6 +456,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-client/js-client-helper-crypto
         run: |
@@ -512,6 +522,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-crypto
         run: |
@@ -576,6 +588,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-instance
         run: |
@@ -640,6 +654,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-http
         run: |
@@ -704,6 +720,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3-url-signer
         run: |
@@ -768,6 +786,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-sql-sqlite
         run: |
@@ -837,6 +857,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-storage-aws-s3
         run: |
@@ -905,6 +927,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-nosql-aws-dynamodb
         run: |
@@ -971,6 +995,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-nosql-mongodb
         run: |
@@ -1039,6 +1065,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-queue-aws-sqs
         run: |
@@ -1109,6 +1137,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-sql-mysql
         run: |
@@ -1178,6 +1208,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-sql-postgres
         run: |
@@ -1243,6 +1275,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-verify-store-sqlite
         run: |
@@ -1308,6 +1342,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-verify-store-postgres
         run: |
@@ -1373,6 +1409,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-verify-store-mysql
         run: |
@@ -1438,6 +1476,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-verify-store-mongodb
         run: |
@@ -1506,6 +1546,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-verify-store-dynamodb
         run: |
@@ -1572,6 +1614,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-verify
         run: |
@@ -1637,6 +1681,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-logger
         run: |
@@ -1702,6 +1748,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-logger-store-sqlite
         run: |
@@ -1767,6 +1815,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-logger-store-postgres
         run: |
@@ -1832,6 +1882,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-logger-store-mysql
         run: |
@@ -1900,6 +1952,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-logger-store-dynamodb
         run: |
@@ -1965,6 +2019,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-logger-store-mongodb
         run: |
@@ -2030,6 +2086,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-auth
         run: |
@@ -2095,6 +2153,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-auth-store-sqlite
         run: |
@@ -2160,6 +2220,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-auth-store-postgres
         run: |
@@ -2225,6 +2287,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-auth-store-mysql
         run: |
@@ -2290,6 +2354,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-auth-store-mongodb
         run: |
@@ -2358,6 +2424,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-auth-store-dynamodb
         run: |
@@ -2423,6 +2491,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-http-gateway
         run: |
@@ -2488,6 +2558,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-http-gateway-adapter-aws-apigateway
         run: |
@@ -2553,6 +2625,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://npm.pkg.github.com'
+      - name: Pin npm to v10
+        run: npm install -g npm@10
       - name: Install and test
         working-directory: src/helper-modules-server/js-server-helper-http-gateway-adapter-express
         run: |
