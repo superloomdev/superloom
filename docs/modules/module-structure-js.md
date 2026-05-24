@@ -266,7 +266,7 @@ const createInterface = function (Lib, CONFIG, state) {
 | `createInterface(Lib, CONFIG, state)` | Stateful helper - holds a per-instance resource (pool, persistent client, authenticated session) | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern - Validators singleton + externally-supplied store, no parts | `js-server-helper-verify` |
 | `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied adapter, no Validators singleton | `js-server-helper-http-gateway` |
-| `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators singleton + decomposed parts (fullest shape) | `js-server-helper-auth` (target; see ordering note below) |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators singleton + decomposed parts (fullest shape) | `js-server-helper-auth` |
 
 The loader body mirrors the signature: it builds only the parameters it will pass. A stateless helper's loader ends with `return createInterface(Lib, CONFIG);` and never declares a `state` object.
 
@@ -315,10 +315,9 @@ createInterface(Lib, CONFIG, ERRORS, Validators, store)
 createInterface(Lib, CONFIG, ERRORS, Parts, adapter)
 
 // With Parts, Validators, and store (auth — fullest shape)
-createInterface(Lib, CONFIG, ERRORS, Validators, store, Parts)
+createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)
 ```
 
-> **Note on auth's current shape:** `auth.js` currently passes `store` before `Parts` (`Validators, store, Parts`). This pre-dates the documented rule. It will be corrected to `Validators, Parts, store` when auth is next touched for a substantive change (see plan 0013).
 
 ### Required Rules
 
