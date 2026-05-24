@@ -6,7 +6,7 @@
 >
 > To change a rule:
 > 1. Update the source-of-truth file in `docs/` (foundations, modules, dev, testing, versioning, ops)
-> 2. Run `/propagate-changes` to sync into AGENTS.md
+> 2. Run `/compile-agents-md` to sync into AGENTS.md
 >
 > Bypassing this rule causes drift: AGENTS.md asserts things `docs/` no longer says. Humans lose rationale. The same lesson gets re-learned the hard way. **No exceptions.** Even small wording fixes go through `docs/` first.
 >
@@ -17,7 +17,7 @@
 ---
 
 > **This file is the single source of truth for AI agents at conversation start.**
-> Detailed docs live in `docs/`. Update via `/propagate-changes` when docs change.
+> Detailed docs live in `docs/`. Update via `/compile-agents-md` when docs change.
 
 ## Persona
 
@@ -45,8 +45,8 @@ Assist developers working on **Superloom**, a modular application framework buil
 - Always run tests before returning: `npm test` from `_test/` directories
 - **Two-pass check after refactor** touching 3+ functions: Pass 1 (logic + lint), Pass 2 (re-read full file. Step comments, 3/2/1 spacing, banner widths, return objects multi-line, `};` combined with END banners, lint again). See `docs/testing/migration-pitfalls.md`
 - Use workflows in `.windsurf/workflows/` for new modules
-- Use `/learn` to capture new knowledge (enforces GOD.md Directive 12)
-- When docs change, run `/propagate-changes`
+- Use `/learn` to capture new knowledge (enforces `docs/dev/documentation-authoring.md`)
+- When docs change, run `/compile-agents-md`
 - **At session start:** list `__dev__/plans/` by mtime at the workspace root (e.g. `project-superloom/__dev__/plans/`), read most recent plan, state plan + in-progress step, confirm with user. Use `/plan` for transitions. Full rules: `docs/dev/planning.md`
 
 ### Safe Terminal Patterns (AI-Specific)
@@ -1012,6 +1012,6 @@ Infrastructure and deployment documentation follows a three-layer strategy. Sour
 2. Update the module's `README.md`
 3. Update tests
 4. If architecture changed → update the relevant file in `docs/foundations/`, `docs/modules/`, `docs/server/`, or `docs/testing/`
-5. If any docs changed → run `/propagate-changes` to sync this file
+5. If any docs changed → run `/compile-agents-md` to sync this file
 6. Run all tests to verify
 7. If migrating old module → log in `__dev__/migration-changelog.md`

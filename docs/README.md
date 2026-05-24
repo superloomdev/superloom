@@ -112,7 +112,7 @@ docs/
 
 ## Documentation Principles
 
-Every file in this directory follows the rules in [`.windsurf/GOD.md`](https://github.com/superloomdev/superloom/blob/main/.windsurf/GOD.md) Directive 12:
+Every file in this directory follows the rules in [`docs/dev/documentation-authoring.md`](./dev/documentation-authoring.md):
 
 - **Prescriptive over prohibitive** - state what to do, not what to avoid
 - **Generic over specific** - use placeholders (`[module]`, `[entity]`) in framework rules
@@ -120,7 +120,7 @@ Every file in this directory follows the rules in [`.windsurf/GOD.md`](https://g
 - **Compact** - tables and bullets, never prose paragraphs for rules
 - **No preamble** - skip "This section explains..." and similar throat-clearing
 
-The compressed, AI-facing mirror of these documents lives in [`AGENTS.md`](https://github.com/superloomdev/superloom/blob/main/AGENTS.md). When a file in `docs/` changes, run the `/propagate-changes` workflow to keep the mirror in sync.
+The compressed, AI-facing mirror of these documents lives in [`AGENTS.md`](https://github.com/superloomdev/superloom/blob/main/AGENTS.md). When a file in `docs/` changes, run the `/compile-agents-md` workflow to keep the mirror in sync.
 
 ### Pitfall Journals (AI-Oriented)
 

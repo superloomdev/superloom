@@ -2,7 +2,7 @@
 
 > **Audience:** AI coding agents (Cascade, Copilot, Cursor) and humans debugging a specific CI, test, or terminal failure. **Not first-read material.** Start with the sibling philosophy docs; come here only when a concrete failure mode needs a confirmed fix.
 >
-> **Shape:** Every entry is **Symptom → Cause → Lesson/Fix**. When a new failure mode is discovered, add the entry here first (per the Golden Rule in `AGENTS.md`), then propagate a compact rule into `AGENTS.md` via `/propagate-changes`.
+> **Shape:** Every entry is **Symptom → Cause → Lesson/Fix**. When a new failure mode is discovered, add the entry here first (per the Golden Rule in `AGENTS.md`), then propagate a compact rule into `AGENTS.md` via `/compile-agents-md`.
 >
 > **Scope:** This file covers the `docs/dev/` domain: AI tool-bridge, CI/CD publishing, local module testing. Architecture-level pitfalls (module migration, refactors) live in [`docs/testing/migration-pitfalls.md`](../testing/migration-pitfalls.md).
 
@@ -747,7 +747,7 @@ Whenever a new failure mode is discovered:
 
 1. **Reproduce it once.** Confirm the root cause is what you think it is.
 2. **Add an entry to the right section above** with `Symptom`, `Cause`, `Fix/Lesson`. Keep the numbering continuous within a section.
-3. **If the rule is brief enough** to live in the `AGENTS.md` compact summaries (Safe Terminal Patterns, healthcheck rules, etc.), run `/propagate-changes` to update the compact mirror.
+3. **If the rule is brief enough** to live in the `AGENTS.md` compact summaries (Safe Terminal Patterns, healthcheck rules, etc.), run `/compile-agents-md` to update the compact mirror.
 4. **Commit the journal entry and the summary together** so they never drift.
 
 Doc drift is the slowest bug to find. **No exceptions.** Every new lesson goes here first, then propagates.

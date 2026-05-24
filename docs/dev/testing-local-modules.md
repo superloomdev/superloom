@@ -188,10 +188,10 @@ Stateless modules (pure functions, no shared resources) do not need this wrapper
 
 Every symptom, root cause, and durable fix this testing setup has ever produced is journaled in [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing). Thirteen entries as of the last sweep, covering `ETARGET` from wrong `Cwd`, `MODULE_NOT_FOUND` from wrong scoped names, manually-started-Docker conflicts, the MySQL two-phase-init false positive, transient-ready windows, concurrent-describe race, `sleep` anti-pattern, AWS SDK metadata-chain timeouts, MongoDB replica-set PRIMARY-election race, and the `verify.generateAndStore` cooldown-zero concurrency bug.
 
-When you hit a new testing failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *Local Module Testing* (Symptom → Cause → Lesson). Do **not** add it here. This file is for positive rules only. Propagate a compact one-liner into `AGENTS.md` via `/propagate-changes` if the rule is small enough to live there.
+When you hit a new testing failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *Local Module Testing* (Symptom → Cause → Lesson). Do **not** add it here. This file is for positive rules only. Propagate a compact one-liner into `AGENTS.md` via `/compile-agents-md` if the rule is small enough to live there.
 
 ---
 
 ## When something does not match this guide
 
-Doc drift is the slowest bug to find. If you encounter a failure mode that this guide does not cover, do not "just fix it once". Add the entry to [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing) in the same change that fixes the underlying problem, then run `/propagate-changes` so `AGENTS.md` reflects the new state.
+Doc drift is the slowest bug to find. If you encounter a failure mode that this guide does not cover, do not "just fix it once". Add the entry to [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing) in the same change that fixes the underlying problem, then run `/compile-agents-md` so `AGENTS.md` reflects the new state.
