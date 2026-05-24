@@ -66,7 +66,7 @@ For Class F adapters specifically, `docs/api.md` documents the store contract th
 
 **Characteristics:** **No external dependencies at all.** Pure JavaScript that uses only language built-ins (`Date`, `Intl`, `Math`, `Array`, etc.) and universal Web standards available across runtimes (Web Crypto API for randomness and hashing, `console`, etc.). Runs identically in Node.js, browsers, React Native, Cloudflare Workers, Deno, Bun, and any modern JavaScript environment.
 
-Lives under `src/helper-modules-core/` (universal modules) or `src/helper-modules-client/` (modules whose tagline targets the browser-side use case but which still run anywhere). Directory placement is for discovery; the dependency boundary is what defines the class.
+In the `js-helper-modules` repo, these live under `src/helper-modules-core/` (universal modules) or `src/helper-modules-client/` (modules whose tagline targets the browser-side use case but which still run anywhere). Directory placement is for discovery; the dependency boundary is what defines the class.
 
 **README extras** (on top of the universal set): none. The categorized function survey lives in `docs/api.md`.
 
@@ -87,7 +87,7 @@ Lives under `src/helper-modules-core/` (universal modules) or `src/helper-module
 
 Three very different-feeling utilities sit at this level: a per-request lifecycle manager (`instance`), a cryptography utility (`crypto`), and an outgoing HTTP client (`http`). What unites them is that none of them reach beyond Node itself. Each provides server-side plumbing built on the runtime's standard library.
 
-Lives under `src/helper-modules-server/`. The `server` prefix marks the runtime requirement: Class A modules run in any JS environment; Class B modules require Node-specific built-ins.
+In the `js-helper-modules` repo, these live under `src/helper-modules-server/`. The `server` prefix marks the runtime requirement: Class A modules run in any JS environment; Class B modules require Node-specific built-ins.
 
 **README extras:** "Behavior". Explains the lifecycle semantics (cleanup ordering, background tasks) or the categorized utility surface.
 

@@ -21,8 +21,7 @@ docker compose -f docs/dev/docker-compose.yml up -d
 # Load environment variables
 source init-env.sh    # Select 'dev'
 
-# Run tests for any module
-cd src/helper-modules-core/js-helper-utils/_test
+# Run tests for any module (from the module's _test/ directory)
 npm install
 npm test
 ```

@@ -589,7 +589,7 @@ All internal cross-module references use **npm aliases** in `package.json` so so
 **Alias derivation rule.** Take the full package short-name and strip only two things:
 
 1. The leading `js-` (the language is obvious - everything in this project is JavaScript).
-2. The platform qualifier `server-` or `client-` that follows it (the directory under `src/helper-modules-*/` already makes the platform obvious).
+2. The platform qualifier `server-` or `client-` that follows it (the directory category name (`helper-modules-server`, `helper-modules-client`) already makes the platform obvious).
 
 Everything else stays in the alias - family segments (`sql-`, `nosql-`), cloud-vendor segments (`aws-`), and adapter parents (`auth-store-`, `verify-store-`, `logger-store-`). These segments carry real information and would create collisions or ambiguity if dropped. Module nomenclature itself lives in [`module-categorization.md`](../modules/module-categorization.md).
 

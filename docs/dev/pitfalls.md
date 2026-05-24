@@ -353,8 +353,6 @@ Each entry below maps a CI symptom to its root cause and the durable fix. The si
 
 This works locally only because the helper was previously installed in its own directory during development. CI never does that.
 
-**Affected files (as of discovery):** `js-server-helper-verify/_test/package.json`, `js-server-helper-logger/_test/package.json`, `js-server-helper-auth/_test/package.json`. All used `file:` for `js-server-helper-nosql-mongodb` and `js-server-helper-nosql-aws-dynamodb`.
-
 **Lesson:** Never use `file:` paths in `_test/package.json` for helper modules that have their own npm dependencies. Use registry version ranges (`"^1.0.0"`) instead. The `file:../` self-reference (pointing to the module under test) is the one legitimate exception. npm installs it as a directory link and the module itself has no transitive runtime deps outside what the test loader provides. For every other shared helper (storage, database, cloud), always pin to the published registry version.
 
 Quick rule: `file:` is allowed **only** for `"[module-under-test]": "file:../"`. Everything else must be a registry semver range.
@@ -488,7 +486,7 @@ Additionally, the adapter `package.json` files had been (incorrectly) set to `pr
 **Lesson:** Before bumping the version in `package.json` and pushing to `main`, always run the **full pre-publish sequence** from the module root, not just from `_test/`:
 
 ```bash
-# From the module root (e.g. src/helper-modules-server/js-server-helper-auth/)
+# From the module root
 npm run lint          # must exit 0
 # From _test/
 npm install && npm test  # must exit 0
@@ -537,12 +535,10 @@ Each entry below maps a symptom to its root cause and the durable fix. The sibli
 **Lesson:** Always `cd` into `_test/` first. Tools that automate this (AI agents, scripts) must always pass `Cwd` explicitly to the `_test/` directory -- omitting it silently runs from the repo root.
 
 ```bash
-# Wrong
-cd src/helper-modules-server/js-server-helper-sql-postgres
+# Wrong: from the module root
 npm test
 
-# Correct
-cd src/helper-modules-server/js-server-helper-sql-postgres/_test
+# Correct: from _test/
 npm install && npm test
 ```
 

@@ -43,7 +43,7 @@ Developer Machine                        AWS Sandbox Account
 
 ### 1. AWS Sandbox Account
 
-Follow `demo-project/ops/01-cloud-provider/aws-account-setup.md` to create a sandbox AWS account. This should be a separate account from production (or at minimum, a separate region with resource isolation).
+Follow the AWS account setup runbook in `js-demo-project/ops/01-cloud-provider/aws-account-setup.md` (in the `js-demo-project` repo) to create a sandbox AWS account. This should be a separate account from production (or at minimum, a separate region with resource isolation).
 
 ### 2. IAM Unit-Tester User
 
@@ -79,7 +79,7 @@ Example IAM policy for DynamoDB testing:
 
 **Naming convention:** `unit-tester-{service}` (e.g., `unit-tester-dynamodb`)
 
-See `demo-project/ops/05-identity-access/aws-iam-setup.md` for detailed IAM setup.
+See the IAM setup runbook in `js-demo-project/ops/05-identity-access/aws-iam-setup.md` (in the `js-demo-project` repo) for detailed IAM setup.
 
 ### 3. Store Credentials
 
@@ -110,7 +110,7 @@ Do **not** set `DYNAMODB_ENDPOINT` - the SDK uses real AWS endpoints when no end
 
 ```bash
 source init-env.sh    # Select 'integration'
-cd src/helper-modules-server/js-server-helper-aws-dynamodb/_test
+# Then from the module's _test/ directory
 npm install
 npm test
 ```

@@ -42,22 +42,11 @@ Helper modules can be implemented in three different ways depending on your proj
 | **2. Local Copy** | Copy all helper modules into your project's source and use via `file:` references | Zero external dependencies, complete control, offline development | None - fully self-contained |
 | **3. Direct Usage** | Use the published `@superloomdev/*` packages directly | Quick start, no custom helper modifications needed | External: GitHub Packages |
 
-### Module Locations
-
-**In the Framework Repository:**
-- Helper modules live at the **repository root** under `src/helper-modules-*/` and publish under `@superloomdev/*`
-- Application modules live inside a project (e.g., `demo-project/`)
-
-**In Your Project (depends on approach):**
-- **Approach 1**: Same structure as framework, publish as `@your-org/*`
-- **Approach 2**: Helper modules copied to `your-project/src/helper-modules-*/` or `your-project/helpers/`
-- **Approach 3**: No local helper modules - use external packages
-
 | Module Type | AKA | Location | Purpose |
 |---|---|---|---|
-| Core Helper Modules | `core-helper-modules` | `src/helper-modules-core/[js\|py]-helper-[name]/` | Generic, reusable, platform-agnostic utilities |
-| Server Helper Modules | `server-helper-modules` | `src/helper-modules-server/[js\|py]-server-helper-[name]/` | Server-only helpers (DB, cloud SDKs, filesystem) |
-| Client Helper Modules | `client-helper-modules` | `src/helper-modules-client/[js]-[platform]-helper-[name]/` | Platform-specific client utilities |
+| Core Helper Modules | `core-helper-modules` | `helper-modules-core/[js\|py]-helper-[name]/` | Generic, reusable, platform-agnostic utilities |
+| Server Helper Modules | `server-helper-modules` | `helper-modules-server/[js\|py]-server-helper-[name]/` | Server-only helpers (DB, cloud SDKs, filesystem) |
+| Client Helper Modules | `client-helper-modules` | `helper-modules-client/[js]-[platform]-helper-[name]/` | Platform-specific client utilities |
 | Base Model Modules | `base-model` | `[project]/src/model/[entity]/` | Shared domain model: data, validations, DTOs, errors |
 | Server Model Modules | `server-model` | `[project]/src/model-server/[entity]/` | Server-only extensions over `base-model` |
 | Client Model Modules | `client-model` | `[project]/src/model-client/[entity]/` | Client-only extensions over `base-model` |
@@ -66,6 +55,8 @@ Helper modules can be implemented in three different ways depending on your proj
 | Server Common | `server-common` | `[project]/src/server/common/` | Bootstrap, config loaders, DI, shared infra |
 | Server Interfaces | `server-interfaces` | `[project]/src/server/interfaces/` | Entry points: API (Express + Lambda), Hook, Job |
 | Deploy Configs | `deploy` | `[project]/src/server/_deploy/[entity]/` | Per-entity Serverless Framework configs |
+
+Helper module directories live in their own implementation repo (for JavaScript: `js-helper-modules`). Model and project-side directories live inside each application project under `src/`.
 
 ---
 
@@ -347,8 +338,8 @@ createInterface(Lib, CONFIG, ERRORS, Validators, store, Parts)
 
 ### Reference Implementations
 
-- **Stateful (full shape):** `src/helper-modules-server/js-server-helper-sql-mysql/mysql.js`
-- **Stateless (no `state` param):** `src/helper-modules-server/js-server-helper-http/http.js`
+- **Stateful (full shape):** `js-server-helper-sql-mysql` in `js-helper-modules`
+- **Stateless (no `state` param):** `js-server-helper-http` in `js-helper-modules`
 
 When extending an existing Pattern 1 (Singleton) module to Pattern 2 (Factory), treat it as a breaking change for that module: update the header comment, move all functions into `createInterface`, switch `module.exports` to the loader assignment, and document the migration in `__dev__/migration-changelog.md`.
 
@@ -375,7 +366,7 @@ If a part would need to manage its own pool, persistent client, or other lifecyc
 ### Folder Layout
 
 ```
-src/helper-modules-server/js-server-helper-[module]/
+[module-root]/
   [module].js              Main loader + createInterface
   [module].config.js
   [module].errors.js       Internal error catalog
@@ -474,7 +465,7 @@ This convention keeps the parent loader free of part-ordering knowledge. If the 
 
 ### Reference Implementation
 
-`src/helper-modules-server/js-server-helper-auth/parts/` - six parts (auth-id, cookie, jwt, policy, record-shape, token-source) all consumed by `auth.js`. Validators live in the module-root singleton `auth.validators.js` - not in `parts/`.
+The canonical example is `js-server-helper-auth` in `js-helper-modules`: six parts (auth-id, cookie, jwt, policy, record-shape, token-source) all consumed by `auth.js`. Validators live in the module-root singleton `auth.validators.js`, not in `parts/`.
 
 ---
 
@@ -784,8 +775,8 @@ These modules are currently written as factories but meet all four singleton cri
 
 ### Reference Implementations
 
-- **Main module singleton (full shape):** `src/helper-modules-core/js-helper-money/money.js`
-- **Module-root singleton (validators, special case):** `src/helper-modules-server/js-server-helper-auth/auth.validators.js`
+- **Main module singleton (full shape):** `js-helper-money` in `js-helper-modules` (`money.js`)
+- **Module-root singleton (validators, special case):** `js-server-helper-auth` in `js-helper-modules` (`auth.validators.js`)
 
 ---
 
@@ -867,8 +858,10 @@ Instantiating `store` inside `createInterface` instead is a structural error: `c
 
 ### Reference Implementations
 
-- **Auth:** `src/helper-modules-server/js-server-helper-auth/auth.js` (8-method store contract) + `js-server-helper-auth-store-{sqlite,postgres,mysql,mongodb,dynamodb}`
-- **Verify:** `src/helper-modules-server/js-server-helper-verify/verify.js` (6-method store contract) + `js-server-helper-verify-store-{sqlite,postgres,mysql,mongodb,dynamodb}`
+Several modules in `js-helper-modules` implement the full adapter pattern, each for a different kind of adapter:
+
+- **Storage adapters** (`-store-[backend]`): `js-server-helper-auth` and `js-server-helper-verify` each ship a defined store contract and a matching set of storage adapters (one per backend: SQLite, Postgres, MySQL, MongoDB, DynamoDB). Refer to each module's `docs/api.md` for the current contract.
+- **Transport adapters** (`-adapter-[name]`): `js-server-helper-http-gateway` ships a defined adapter contract and separate adapter packages per HTTP runtime (e.g. Express, AWS API Gateway). The parent module is runtime-agnostic; only the adapter knows the transport.
 
 ---
 
@@ -1151,7 +1144,7 @@ See [error-handling.md](../foundations/error-handling) for full error handling p
 Some modules ship with **intrinsic reference data** - facts that are immutable, language-independent, and part of what the module *is*. Examples: ISO 4217 currency tables, ISO 3166 country codes, character-set tables, unit-conversion factors. When a module needs this kind of data, it lives in a `data/` directory at the module root.
 
 ```
-src/helper-modules-core/js-helper-[module]/
+[module-root]/
   [module].js
   [module].config.js
   [module].errors.js
@@ -1179,7 +1172,7 @@ src/helper-modules-core/js-helper-[module]/
 
 **Reference Implementation**
 
-`src/helper-modules-core/js-helper-money/data/currencies.json` - 18 currencies with ISO codes, English names, symbols, decimals, transactional units, and denominations. Required inside `money.validators.js` at module load time.
+The `js-helper-money` module in `js-helper-modules` ships `data/currencies.json` with ISO codes, English names, symbols, decimal precision, and transactional units for each supported currency. Required inside `money.validators.js` at module load time.
 
 ---
 

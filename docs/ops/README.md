@@ -59,4 +59,4 @@ See [`foundations/operations-documentation.md`](../foundations/operations-docume
 
 - [Operations Documentation](../foundations/operations-documentation.md) - the standard these guides follow
 - [Architectural Philosophy](../foundations/architectural-philosophy.md) - the broader directory layout
-- Project runbook example: `demo-project/ops/`
+- Project runbook example: see `js-demo-project/ops/` in the `js-demo-project` repo

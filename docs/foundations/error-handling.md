@@ -344,7 +344,7 @@ The real question to ask before naming a type is: **what piece of information is
 
 #### Class 1: Functional namespace (infrastructure drivers)
 
-Used by: `js-server-helper-sql-postgres`, `js-server-helper-sql-mysql`, `js-server-helper-sql-sqlite`, `js-server-helper-nosql-aws-dynamodb`, `js-server-helper-nosql-mongodb`, and any future infrastructure wrapper.
+Used by: SQL and NoSQL driver wrappers (`js-server-helper-sql-*`, `js-server-helper-nosql-*`), storage helpers, queue helpers, and any future infrastructure wrapper.
 
 These modules describe **what kind of operation failed**, not which module. The prefix is the operation family (`DATABASE_`, `STORAGE_`, `QUEUE_`), not the vendor name. This is correct because:
 
@@ -363,7 +363,7 @@ QUEUE_SEND_FAILED
 
 #### Class 2: Module prefix (domain/behavioral helpers)
 
-Used by: `js-server-helper-verify`, `js-server-helper-auth`, and any future domain helper that manages application-level state.
+Used by: `js-server-helper-verify`, `js-server-helper-auth`, and any future domain helper that manages application-level state (verification codes, auth sessions).
 
 These modules return errors that describe **outcomes of business logic**, not infrastructure failures. `SERVICE_UNAVAILABLE` and `NOT_FOUND` are examples where the name alone is dangerously generic. Multiple domain helpers could emit them, and a log line showing only `type: 'SERVICE_UNAVAILABLE'` tells you nothing about origin.
 
@@ -464,13 +464,11 @@ The following MUST NOT appear in any programmer-error message string:
 ### Correct Examples
 
 ```javascript
-// From js-server-helper-auth/auth.validators.js
 throw new Error('[js-server-helper-auth] CONFIG.STORE must be a store factory function (e.g. require("js-server-helper-auth-store-sqlite"))');
 throw new Error('[js-server-helper-auth] CONFIG.STORE_CONFIG is required (object)');
 throw new Error('[js-server-helper-auth] CONFIG.JWT.signing_key must be a string of at least 32 chars when ENABLE_JWT is true');
 throw new TypeError('[js-server-helper-auth] createSession options.tenant_id must be a non-empty string');
 
-// From js-server-helper-http-gateway/http-gateway.validators.js
 throw new Error('[js-server-helper-http-gateway] CONFIG.ADAPTER must be an adapter factory function (e.g. require("js-server-helper-http-gateway-adapter-aws-apigateway"))');
 ```
 
@@ -510,8 +508,8 @@ throw new Error('[Postgres] connection_string is required');
 
 Applies to every `throw new Error(...)` and `throw new TypeError(...)` in:
 
-- Every helper module (`src/helper-modules-*/`).
-- Every entity service, controller, and validator in `demo-project/src/server/` and projects derived from it.
+- Every helper module (core, server, and client).
+- Every entity service, controller, and validator in any project built on this framework.
 
 Does NOT apply to:
 
@@ -525,9 +523,9 @@ Does NOT apply to:
 
 This rule applies to:
 
-- **Every helper module** in `src/helper-modules-core/`, `src/helper-modules-server/`, `src/helper-modules-client/` (utils, debug, time, crypto, sql-*, nosql-*, storage-*, queue-*, http, instance, verify, etc.)
-- **Every entity service and controller** in `demo-project/src/server/` and any project derived from it
-- **Every entity validation module** in `demo-project/src/model/[entity]/[entity].validation.js`
+- **Every helper module** (core, server, and client: utils, debug, time, crypto, sql-*, nosql-*, storage-*, queue-*, http, instance, verify, etc.)
+- **Every entity service and controller** in `[project]/src/server/`
+- **Every entity validation module** in `[project]/src/model/[entity]/[entity].validation.js`
 
 When in doubt: programmer errors throw, everything else returns an envelope, and the service translates before the controller sees it.
 

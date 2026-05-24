@@ -43,7 +43,7 @@ The project follows the standard 4-tier testing model. **This framework handles 
 **Key principles:**
 - **Emulated tests** run in CI/CD automatically - they gate publishing
 - **Integration tests** can be automated in CI/CD once AWS credentials are provided via GitHub Secrets. Until then, they are developer-triggered locally
-- **Staging** (also called **sandbox** at the application level) is a full application deployment in a separate AWS account that mirrors production. Handled by the application project (e.g., `demo-project/`), not by individual modules
+- **Staging** (also called **sandbox** at the application level) is a full application deployment in a separate AWS account that mirrors production. Handled by the application project (e.g., `my-project/`), not by individual modules
 - **Production** is never a testing environment - it is the live system
 
 ### Module-Level Testing (Tiers 1 and 2)
@@ -250,7 +250,7 @@ _test/ops/01-integration-testing/
 ```
 
 Typical requirements:
-1. An AWS sandbox account (see `demo-project/ops/01-cloud-provider/`)
+1. An AWS sandbox account (see the cloud-provider runbook in `js-demo-project/ops/01-cloud-provider/`, in the `js-demo-project` repo)
 2. An IAM unit-tester user with restricted permissions (only `test_` prefixed resources)
 3. Credentials stored in `__dev__/secrets/sandbox.md` (never committed)
 4. Environment loaded via `source init-env.sh` (select `integration`)

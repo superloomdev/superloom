@@ -94,11 +94,6 @@ Helper modules live in the [`js-helper-modules`](https://github.com/superloomdev
 | `src/helper-modules-server/[js\|py]-server-helper-[name]/` | Server-only helpers (DB drivers, cloud SDKs, filesystem) |
 | `src/helper-modules-client/[js]-[platform]-helper-[name]/` | Platform-specific client helpers (browser, React Native, mobile) |
 
-**In Your Project:**
-- **Approach 1**: Same structure as framework, publish as `@your-org/*`
-- **Approach 2**: Copy to `your-project/src/helper-modules-*/` or `your-project/helpers/`
-- **Approach 3**: No local helper modules - use external packages
-
 **Naming convention:**
 
 - Core: `[js|py]-helper-[name]` (no platform prefix)
@@ -109,7 +104,7 @@ Module file structure and the configuration patterns for each helper type live i
 
 ### Server Application
 
-Project code lives inside a project directory (e.g., `demo-project/`). The server side is split into seven directories under `src/server/`, plus the model layers under `src/`.
+Project code lives inside a project directory (e.g., `my-project/`). The server side is split into seven directories under `src/server/`, plus the model layers under `src/`.
 
 | Path | AKA | Purpose |
 |---|---|---|

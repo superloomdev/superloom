@@ -259,8 +259,8 @@ For now: Manual changelog maintenance ensures accuracy.
 Each module has its own changelog:
 
 ```
-src/helper-modules-core/js-helper-utils/
-  ├── utils.js
+[module-root]/
+  ├── [module].js
   ├── package.json
   ├── README.md
   └── CHANGELOG.md  ← Here

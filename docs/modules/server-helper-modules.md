@@ -41,7 +41,7 @@ Unlike [`core-helper-modules`](core-helper-modules.md), server helpers are **not
 
 Module directory name: `[js|py]-server-helper-[module-name]`
 
-Modules live at `src/helper-modules-server/`. The `server-helper` prefix in the package name and the `helper-modules-server` directory both signal the server-only constraint at every level (file path, package name, npm scope).
+In the `js-helper-modules` repo, these live at `src/helper-modules-server/`. The `server-helper` prefix in the package name and the `helper-modules-server` directory both signal the server-only constraint at every level (file path, package name, npm scope).
 
 For category-based naming (`sql-`, `nosql-`, `nosql-aws-`, `storage-aws-`, `queue-aws-`, ...) see [`code-formatting-js.md`](../foundations/code-formatting-js.md#module-naming).
 

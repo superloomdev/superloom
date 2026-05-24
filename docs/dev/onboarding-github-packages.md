@@ -64,8 +64,8 @@ Since you copy helper modules directly into your project source:
 ```json
 {
   "dependencies": {
-    "js-helper-utils": "file:./src/helper-modules-core/js-helper-utils",
-    "js-helper-debug": "file:./src/helper-modules-core/js-helper-debug"
+    "js-helper-utils": "file:./helpers/js-helper-utils",
+    "js-helper-debug": "file:./helpers/js-helper-debug"
   }
 }
 ```

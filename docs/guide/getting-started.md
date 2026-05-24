@@ -54,8 +54,10 @@ git clone https://github.com/superloomdev/js-helper-modules.git
 git clone https://github.com/superloomdev/js-demo-project.git
 
 # Copy helper modules into your project
-cp -r js-helper-modules/src/helper-modules-* my-project/src/
-cp -r js-demo-project/ my-project/
+cp -r js-helper-modules/src/helper-modules-*/* my-project/helpers/
+
+# Copy the demo project source into your project
+cp -r js-demo-project/src/ my-project/src/
 
 # Initialize git in your project
 git init my-project
@@ -78,14 +80,17 @@ git init my-project
 
 ## Step 2 - Install Dependencies
 
-The demo project is a multi-package layout. Each top-level directory under `src/` is its own package with its own `package.json`. Install the ones you need:
+A Superloom project uses a multi-package layout. Each top-level directory under `src/` is its own package with its own dependency manifest. Install dependencies for each package you plan to use.
+
+In a JavaScript project this means running `npm install` from each package directory. For example:
 
 ```bash
-cd src/model && npm install         # Base domain models (shared)
-cd ../model-server && npm install   # Server-only model extensions
-cd ../model-client && npm install   # Client-only model extensions (optional)
-cd ../server && npm install         # Server runtime (Express + service + controller layers)
+npm install   # from src/model         (base domain models, shared)
+npm install   # from src/model-server  (server-only model extensions)
+npm install   # from src/server        (server runtime, Express + service + controller)
 ```
+
+Other language implementations follow the same per-package pattern with their own package manager (`pip install`, `bundle install`, etc.).
 
 Each `package.json` references the shared helper modules. The dependency approach varies by your chosen implementation:
 
@@ -104,8 +109,8 @@ Each `package.json` references the shared helper modules. The dependency approac
 ```json
 {
   "dependencies": {
-    "js-helper-utils": "file:./src/helper-modules-core/js-helper-utils",
-    "js-helper-debug": "file:./src/helper-modules-core/js-helper-debug",
+    "js-helper-utils": "file:./helpers/js-helper-utils",
+    "js-helper-debug": "file:./helpers/js-helper-debug",
     "express": "^4.21.0"
   }
 }
@@ -143,15 +148,17 @@ curl -X POST http://localhost:3000/user/create \
 
 ## Step 4 - Run the Tests
 
-Each package has its own test command:
+Each package runs its own test suite independently. Run the tests from each package directory.
+
+In a JavaScript project this means running `npm test` from each package directory. For example:
 
 ```bash
-cd src/model && npm test          # Base model tests
-cd src/model-server && npm test   # Server model extension tests
-cd src/server && npm run test:all # Controller and service tests
+npm test            # from src/model         (base model tests)
+npm test            # from src/model-server  (server model extension tests)
+npm run test:all    # from src/server        (controller and service tests)
 ```
 
-All JavaScript tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict`. No external test framework. See [`testing/testing-strategy.md`](../testing/testing-strategy.md) and [`testing/unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md) for the conventions.
+JavaScript tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict` with no external test framework. See [`testing/testing-strategy.md`](../testing/testing-strategy.md) and [`testing/unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md) for the conventions.
 
 ---
 

@@ -30,9 +30,10 @@ All module tests live in `_test/` inside the module directory. Always run comman
 
 ### Step 1: Install dependencies
 
+Navigate to the module's `_test/` directory and run:
+
 ```bash
-cd src/helper-modules-server/<module-name>/_test
-npm install
+npm install   # from <module>/_test
 ```
 
 Run this every time before testing. The module itself is linked via `file:../` so source changes are picked up automatically, but published peer dependencies may have been updated and `npm install` is the only safe way to refresh them. Skipping `npm install` is never worth the few seconds saved.
@@ -60,7 +61,7 @@ Before bumping the version in `package.json` and pushing to `main`, **both gates
 ### Gate 1: Lint (run from module root)
 
 ```bash
-# From the module root, e.g. src/helper-modules-server/js-server-helper-auth/
+# From the module root
 npm run lint
 ```
 
@@ -93,28 +94,6 @@ Only after both gates pass:
 
 The failure mode that produced this rule is journaled in [`pitfalls.md` → CI/CD Publishing entry 13](pitfalls.md#13-ci-fails-on-lint-after-local-tests-pass--pre-publish-checklist-not-followed).
 
----
-
-## Module Reference
-
-| Module | Docker dependency | Healthcheck probes |
-|---|---|---|
-| `js-server-helper-sql-sqlite` | None (uses `node:sqlite`) | N/A |
-| `js-server-helper-sql-postgres` | Postgres | `pg_isready -U test_user -d test_db` |
-| `js-server-helper-sql-mysql` | MySQL | `mysqladmin ping -u test_user -ptest_pw` |
-| `js-server-helper-nosql-mongodb` | MongoDB (replica set) | `mongosh rs.status()` |
-| `js-server-helper-nosql-aws-dynamodb` | DynamoDB Local | HTTP probe on the API port |
-| `js-server-helper-queue-aws-sqs` | ElasticMQ | HTTP probe on the API port |
-| `js-server-helper-storage-aws-s3` | MinIO | HTTP probe on `/minio/health/live` |
-| `js-server-helper-storage-aws-s3-url-signer` | None (URL signing only) | N/A |
-| `js-server-helper-http-gateway` | None (in-process stub adapter) | N/A |
-| `js-server-helper-http-gateway-adapter-express` | None (real Express server on random port) | N/A |
-| `js-server-helper-http-gateway-adapter-aws-apigateway` | None (JSON event fixtures) | N/A |
-
-Each module's `_test/docker-compose.yml` uses a healthcheck designed around the principles in the next section. `docker compose up --wait` only returns once the healthcheck passes, which guarantees the service is ready for real traffic before any test code runs.
-
----
-
 ## Test Patterns You'll Encounter
 
 Most modules follow the Docker-backed pattern above. A few use other patterns that are equally valid -- knowing which is which prevents wasted debugging time.
@@ -140,6 +119,8 @@ No Docker, no AWS SDK, no SAM, no LocalStack. Each fixture is loaded via `fs.rea
 ## Healthcheck Philosophy (Mandatory)
 
 A healthcheck must verify the same level of readiness that the test code requires. Probing the process is not enough. Probing a public port is rarely enough. The probe must exercise the application path the test will use.
+
+Each module's `_test/docker-compose.yml` defines its own healthcheck. `docker compose up --wait` only returns once the healthcheck passes, which guarantees the service is ready for real traffic before any test code runs.
 
 ### Principles
 

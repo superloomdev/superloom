@@ -5,14 +5,14 @@
 > **AGENTS.md is a derived, compact summary of `docs/`. Never edit AGENTS.md directly.**
 >
 > To change a rule:
-> 1. Update source-of-truth in `docs/` (architecture, dev, ops, philosophy, etc.)
+> 1. Update the source-of-truth file in `docs/` (foundations, modules, dev, testing, versioning, ops)
 > 2. Run `/propagate-changes` to sync into AGENTS.md
 >
-> Bypassing this rule causes drift: AGENTS.md asserts things `docs/` no longer says (or vice versa), humans lose rationale, lessons get re-learned the hard way. **No exceptions.** Even small fixes go through `docs/` first.
+> Bypassing this rule causes drift: AGENTS.md asserts things `docs/` no longer says. Humans lose rationale. The same lesson gets re-learned the hard way. **No exceptions.** Even small wording fixes go through `docs/` first.
 >
 > When discovering a new failure mode, document it in the correct pitfall file BEFORE fixing:
-> - `docs/dev/pitfalls.md`. Terminal/CI/testing failures
-> - `docs/testing/migration-pitfalls.md`. Module migration failures
+> - `docs/dev/pitfalls.md` — terminal, CI, and testing failures
+> - `docs/testing/migration-pitfalls.md` — module migration failures
 
 ---
 
@@ -21,7 +21,7 @@
 
 ## Persona
 
-Assist developers working on **Superloom**, a modular application framework built to run anywhere. Currently implemented in JavaScript. Backend runs on Docker (Express) and AWS Lambda; frontend planned.
+Assist developers working on **Superloom**, a modular application framework built to run anywhere. Currently implemented in JavaScript. Backend runs on Docker (Express) and AWS Lambda; frontend planned. The architecture is language-agnostic; Python and other runtimes are a future expansion.
 
 ## Tech Stack
 
@@ -149,25 +149,33 @@ See `docs/dev/pitfalls.md` entry 18.
 
 The project spans multiple repositories under `superloomdev`. See `docs/dev/org-structure.md` for the full workspace and org layout.
 
+### Local workspace layout
+
+```
+project-superloom/
+  codebase-superloom/          — clone of superloomdev/superloom
+  codebase-js-helper-modules/  — clone of superloomdev/js-helper-modules
+  codebase-js-demo-project/    — clone of superloomdev/js-demo-project
+  __dev__/                     — personal workspace (never committed)
+    plans/                     —   Long-horizon plans and backlog
+    secrets/                   —   Real credentials, API keys (never copied anywhere committed)
+  superloom.code-workspace     — multi-root workspace file
+```
+
 ### superloom (this repo — framework constitution)
 
 ```
 superloom/
-  docs/                           # Framework docs, conventions, architecture
-  website/                        # VitePress documentation website
-  public/                         # Static assets
-  AGENTS.md                       # AI assistant configuration (this file)
-  ROADMAP.md
-  README.md
-  .windsurf/                      # AI workflows and automation
-  __dev__/                        # Personal workspace at WORKSPACE ROOT (project-superloom/__dev__/)
-    plans/                        #   Long-horizon plans and backlog
-    secrets/                      #   Project secrets (never committed)
+  docs/                        # Framework docs, conventions, architecture
+  website/                     # VitePress documentation website
+  public/                      # Static assets
+  AGENTS.md                    # AI assistant configuration (this file)
+  .windsurf/                   # AI workflows and automation
 ```
 
 ### js-helper-modules (superloomdev/js-helper-modules)
 
-All JS helper modules live in this separate repo. Path prefix `src/`.
+All JS helper modules live in this separate repo under `src/`.
 
 ```
 js-helper-modules/
@@ -186,47 +194,48 @@ js-helper-modules/
       js-server-helper-nosql-aws-dynamodb/  # DynamoDB CRUD, batch, query
       js-server-helper-instance/  #   Request lifecycle, cleanup, background tasks
       js-server-helper-http/      #   Outgoing HTTP client (native fetch wrapper, includes multipart)
-      js-server-helper-storage-aws-s3/    #   S3 file operations
+      js-server-helper-storage-aws-s3/         #   S3 file operations
       js-server-helper-storage-aws-s3-url-signer/  #   S3 presigned URLs
-      js-server-helper-queue-aws-sqs/#   SQS message queue wrapper
+      js-server-helper-queue-aws-sqs/          #   SQS message queue wrapper
       js-server-helper-auth/       #   Session lifecycle + JWT auth with refresh-token rotation; storage-agnostic adapter
-        js-server-helper-auth-store-sqlite/   #     Auth store: SQLite (embedded, zero-network, dev/test)
-        js-server-helper-auth-store-postgres/ #     Auth store: PostgreSQL (production SQL)
-        js-server-helper-auth-store-mysql/    #     Auth store: MySQL / MariaDB (production SQL)
-        js-server-helper-auth-store-mongodb/  #     Auth store: MongoDB (document store)
-        js-server-helper-auth-store-dynamodb/ #     Auth store: DynamoDB (single-table, native TTL)
+        js-server-helper-auth-store-sqlite/    #     Auth store: SQLite (embedded, zero-network, dev/test)
+        js-server-helper-auth-store-postgres/  #     Auth store: PostgreSQL (production SQL)
+        js-server-helper-auth-store-mysql/     #     Auth store: MySQL / MariaDB (production SQL)
+        js-server-helper-auth-store-mongodb/   #     Auth store: MongoDB (document store)
+        js-server-helper-auth-store-dynamodb/  #     Auth store: DynamoDB (single-table, native TTL)
       js-server-helper-verify/    #   One-time verification codes (pin/code/token), storage-agnostic adapter
-        js-server-helper-verify-store-sqlite/   #     Verify store: SQLite (embedded, zero-network, dev/test)
-        js-server-helper-verify-store-postgres/ #     Verify store: PostgreSQL (production SQL)
-        js-server-helper-verify-store-mysql/    #     Verify store: MySQL / MariaDB (production SQL)
-        js-server-helper-verify-store-mongodb/  #     Verify store: MongoDB (native TTL via sparse _ttl index)
-        js-server-helper-verify-store-dynamodb/ #     Verify store: DynamoDB (single-table, native TTL on expires_at)
-      js-server-helper-logger/    #   Compliance-friendly action log: per-row retention (persistent | TTL) + optional IP encryption, multi-backend
-        js-server-helper-logger-store-sqlite/   #     Logger store: SQLite (embedded, zero-network, dev/test)
-        js-server-helper-logger-store-postgres/ #     Logger store: PostgreSQL (production SQL)
-        js-server-helper-logger-store-mysql/    #     Logger store: MySQL / MariaDB (production SQL)
-        js-server-helper-logger-store-mongodb/  #     Logger store: MongoDB (native TTL, data as embedded doc, compound pk/actor keys)
-        js-server-helper-logger-store-dynamodb/ #     Logger store: DynamoDB (entity_pk base table + actor_gsi, native TTL on expires_at)
-      js-server-helper-http-gateway/  #   Runtime-agnostic HTTP gateway; normalizes Lambda/Express requests into uniform instance shape via adapter pattern
-        js-server-helper-http-gateway-adapter-aws-apigateway/ #   API Gateway adapter (payload v1 + v2); extracts CloudFront-Viewer-Country
-        js-server-helper-http-gateway-adapter-express/        #   Express adapter; always returns null country code
+        js-server-helper-verify-store-sqlite/    #   Verify store: SQLite (embedded, zero-network, dev/test)
+        js-server-helper-verify-store-postgres/  #   Verify store: PostgreSQL (production SQL)
+        js-server-helper-verify-store-mysql/     #   Verify store: MySQL / MariaDB (production SQL)
+        js-server-helper-verify-store-mongodb/   #   Verify store: MongoDB (native TTL via sparse _ttl index)
+        js-server-helper-verify-store-dynamodb/  #   Verify store: DynamoDB (single-table, native TTL on expires_at)
+      js-server-helper-logger/    #   Compliance-friendly action log: per-row retention (persistent | TTL) + optional IP encryption
+        js-server-helper-logger-store-sqlite/    #   Logger store: SQLite
+        js-server-helper-logger-store-postgres/  #   Logger store: PostgreSQL
+        js-server-helper-logger-store-mysql/     #   Logger store: MySQL / MariaDB
+        js-server-helper-logger-store-mongodb/   #   Logger store: MongoDB (native TTL, compound pk/actor keys)
+        js-server-helper-logger-store-dynamodb/  #   Logger store: DynamoDB (entity_pk + actor_gsi, native TTL)
+      js-server-helper-http-gateway/  #   Runtime-agnostic HTTP gateway; normalizes Lambda/Express requests via adapter pattern
+        js-server-helper-http-gateway-adapter-aws-apigateway/  #   API Gateway adapter (payload v1 + v2)
+        js-server-helper-http-gateway-adapter-express/         #   Express adapter
     helper-modules-client/        # Client-specific helpers (browser, mobile)
-      js-client-helper-crypto/    #   UUID, random strings, base64 (Web Crypto API). Delegates to core crypto when available.
+      js-client-helper-crypto/    #   UUID, random strings, base64 (Web Crypto API)
 ```
 
 ### js-demo-project (superloomdev/js-demo-project)
 
+Full JavaScript reference application. Source: `docs/dev/org-structure.md`.
+
 ```
 js-demo-project/
-  ops/                          # Operations runbook (numbered, sequential)
-  src/model/                    # Base models (pure, IO-free)
-  src/model-server/             # Server-only model extensions
-  src/server/common/            # Bootstrap, config, loader, shared functions
-  src/server/controller/        # Thin adapters (validate + DTO + delegate)
-  src/server/service/           # Business logic and orchestration
-  src/server/interfaces/api/express/      # Express routes
-  src/server/interfaces/api/lambda-aws/   # Per-entity AWS Lambda handlers
-  _deploy/                      # Per-entity Serverless Framework configs
+  ops/                             # Operations runbook (numbered, sequential)
+  src/model/                       # Base models (pure, IO-free)
+  src/model-server/                # Server-only model extensions
+  src/server/common/               # Bootstrap, config, loader, shared infrastructure
+  src/server/controller/           # Thin adapters (validate + DTO + delegate)
+  src/server/service/              # Business logic and orchestration
+  src/server/interfaces/api/       # Express routes + per-entity Lambda handlers
+  src/server/_deploy/              # Per-entity Serverless Framework configs
 ```
 
 ## Dependency Hierarchy
@@ -604,8 +613,6 @@ Every module documents itself across three files, each with one audience. Full r
 - **Response envelope illustration** in "What this is" section
 - **Lazy initialization** note in `docs/configuration.md`
 
-**Status:** v2 rubric applied to 6 modules (`sql-postgres`, `sql-mysql`, `sql-sqlite`, `nosql-mongodb`, `nosql-aws-dynamodb`, `storage-aws-s3`) across 4 commit waves on 2026-05-16. 14 modules pending. Prioritized backlog in `__dev__/plans/0008-module-readme-pilot.md`.
-
 ### ROBOTS.md - AI Agent Reference (Every Module)
 
 Every module has a `ROBOTS.md` alongside `README.md`. It is the compact AI reference:
@@ -625,6 +632,7 @@ The following items are mandatory for every helper module. These caught real iss
 |---|---|
 | `eslint.config.js` | ESLint v9+ requires a flat config file; without it lint silently fails |
 | `engines.node` in `package.json` | Declares minimum Node.js version; prevents silent runtime incompatibilities |
+| `.npmignore` at module root | **Required** - without it `npm pack` includes `_test/`, `.github/`, `eslint.config.js`. Must exclude dev files and include `README.md`, `ROBOTS.md`, `docs/`, `parts/` (if present). Use `js-helper-utils` as canonical reference. Verify with `npm pack --dry-run` before publishing |
 | `publishConfig.registry` | Exactly `https://npm.pkg.github.com` (no trailing `/@superloomdev` scope suffix) |
 | No `.npmrc` in module dir | Global `~/.npmrc` is the only source of truth |
 | Package name | `@superloomdev/<module>` - scoped; must match directory name |
@@ -655,6 +663,7 @@ The following items are mandatory for every helper module. These caught real iss
 - ❌ British spelling in strings, comments, or package descriptions
 - ❌ Forgetting to bump dependent test `package.json` files when publishing a new version
 - ❌ Adding a redundant `exports` field to single-entrypoint packages that already have `main`
+- ❌ Missing `.npmignore` - causes `_test/`, dev files, and CI configs to ship in the published tarball
 
 ### Helper Module Structure (Three Patterns)
 
@@ -684,60 +693,9 @@ The loader body mirrors the signature: build only the parameters `createInterfac
 
 **Parameter ordering (internal-before-external):** `createInterface(Lib, CONFIG, ERRORS, [Validators,] [Parts,] [store | adapter | state])`. Everything the module built for itself (Lib, CONFIG, ERRORS, Validators, Parts) comes before the one thing handed to it from outside (store/adapter/state). **Parameter casing:** PascalCase for internally-assembled namespaced containers (`Lib`, `CONFIG`, `ERRORS`, `Parts`, `Validators`); camelCase for externally-supplied resolved dependencies (`store`, `adapter`, `state`). Source: `docs/modules/module-structure-js.md` -> "Parameter Ordering Convention" and "Parameter Casing Convention".
 
-#### Pattern 1: Singleton Config
+#### Pattern 1: Singleton Config (Legacy)
 
-```javascript
-// Info: [Module purpose - 1 line]
-// [Additional context - 1 line]
-'use strict';
-
-// Shared Dependencies (Managed by Loader)
-const Lib = {};
-
-// Exclusive Dependencies
-const CONFIG = require('./[name].config');
-
-
-/////////////////////////// Module-Loader START ////////////////////////////////
-const loader = function (shared_libs, config) {
-
-  // Shared Dependencies
-  Lib.Utils = shared_libs.Utils;
-
-  // Override default configuration
-  if (config && typeof config === 'object') {
-    Object.assign(CONFIG, config);
-  }
-
-};
-//////////////////////////// Module-Loader END /////////////////////////////////
-
-
-
-///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config) {
-
-  // Run Loader
-  loader(shared_libs, config);
-
-  // Return Public Functions of this module
-  return ModuleName;
-
-};//////////////////////////// Module Exports END //////////////////////////////
-
-
-
-///////////////////////////Public Functions START//////////////////////////////
-const ModuleName = {
-  // functions here
-};///////////////////////////Public Functions END//////////////////////////////
-
-
-
-//////////////////////////Private Functions START//////////////////////////////
-// Private helpers here
-//////////////////////////Private Functions END//////////////////////////////
-```
+This pattern is **preserved for historical reference only** and is no longer used in new modules. Old modules using it are migration candidates. See appendix in `docs/modules/module-structure-js.md` -> "Appendix: Pattern 1 (Singleton, Legacy)" for full shape. The key structural difference from the current singleton pattern is that Pattern 1 mutated shared `const Lib = {}` and `const CONFIG` on every loader call — meaning the last caller's config won.
 
 #### Pattern 2: Multi-Instance (Factory)
 
@@ -845,6 +803,19 @@ Omit positions that do not apply. Preserve relative order of those that remain. 
 
 **Reference implementations:** `js-helper-money/money.js` (main module singleton), `js-server-helper-auth/auth.validators.js` (module-root singleton, special case).
 
+**Singleton upgrade candidates (currently factory, meet all four criteria - breaking change per module):**
+
+| Module | Reason |
+|---|---|
+| `js-helper-utils` | Zero deps, zero state, pure type-check functions. No-dep subtype - no `let Lib` needed |
+| `js-helper-debug` | Pure logging. Config set once at startup, same for all callers |
+| `js-helper-time` | Pure date math. Config is app-wide constant |
+| `js-server-helper-crypto` | Pure hashing/UUID/encoding. Config never varies per-caller |
+| `js-server-helper-instance` | Pure request lifecycle. No held state - per-request object returned to caller |
+| `js-server-helper-http` | `CONFIG` holds `TIMEOUT`/`USER_AGENT` only. All per-call variation via `options` params |
+
+**Do not convert:** all DB modules (`sql-*`, `nosql-*`), all cloud SDK modules, `js-server-helper-auth`, `js-server-helper-verify`, `js-server-helper-logger`, and all `*-store-*` adapters.
+
 ### Parts Pattern (Complex Helper Modules)
 
 When a helper module's `createInterface` body grows beyond ~500 lines and decomposes into bounded **stateless** responsibilities, split each responsibility into a co-located factory under `parts/`. Source: `docs/modules/module-structure-js.md` -> "Parts Pattern".
@@ -857,7 +828,7 @@ When a helper module's `createInterface` body grows beyond ~500 lines and decomp
 - **Inter-part deps self-resolve:** if part A needs part B, A `require`s B with the same `(Lib, CONFIG, ERRORS)` signature. No registry, no dispatch
 - **Never exported:** parts are an internal organization technique. `package.json` `exports` lists only the parent module's main entry. External consumers see only the parent's public interface
 - **Stateless rule:** if a candidate part needs its own pool / persistent client / lifecycle state, it does not belong in `parts/` - lift it into a sibling helper module
-- **Reference:** `src/helper-modules-server/js-server-helper-auth/parts/` (auth-id, cookie, jwt, policy, record-shape, token-source, validators)
+- **Reference:** `js-server-helper-auth` in `js-helper-modules`: six parts (auth-id, cookie, jwt, policy, record-shape, token-source) consumed by `auth.js`. Validators live in `auth.validators.js`, not in `parts/`
 
 ### Adapter Pattern (Multi-Backend Helper Modules)
 
@@ -875,16 +846,26 @@ When a helper module needs interchangeable backends (databases, transports, key/
 
 ### Application Module Structure (Models, Controllers, Services)
 
+All application modules (models, services, controllers) use the same strict DI pattern. Source: `docs/modules/module-structure-js.md` -> "Application Module Pattern".
+
 ```javascript
+// [Module purpose - 1 line]
+'use strict';
+
 let Lib;
 let CONFIG;
 
-const loader = function (shared_libs, config, errors) {
+module.exports = function loader (shared_libs, config) {
+
   Lib = shared_libs;
   CONFIG = config;
-  ERRORS = errors;
+
+  return ModuleName;
+
 };
 ```
+
+Layer dependency flows top-to-bottom only: Interfaces → Controller → Service + Model → Helper Modules. A controller never reaches into another entity's service. A model never imports from `server/`.
 
 ### Model Index Pattern
 
@@ -905,6 +886,7 @@ module.exports = function (shared_libs, config_override) {
 
 - `publishConfig.registry`: exactly `https://npm.pkg.github.com` (no trailing slash, no scope suffix)
 - `private: false`, `license: MIT`
+- **`.npmignore` required** at module root — excludes `_test/`, `.github/`, `eslint.config.js`; includes `README.md`, `ROBOTS.md`, `docs/`. Reference: `js-helper-utils`. Verify with `npm pack --dry-run` before first publish
 - Test `package.json` references module as `"file:../"`, has `"private": true`
 - **No per-module `.npmrc` files** - global `~/.npmrc` with:
   - `@superloomdev:registry=https://npm.pkg.github.com` (scoped to our packages only)

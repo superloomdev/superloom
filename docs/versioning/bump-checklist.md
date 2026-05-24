@@ -70,7 +70,7 @@ npm run lint
 
 ### Step 2: Update Module Version
 
-Edit `src/helper-modules-{category}/{module-name}/package.json`:
+Edit the module's `package.json`:
 
 ```json
 {
@@ -96,7 +96,7 @@ Test `package.json` files use wildcards:
 
 ### Step 4: Update Changelog
 
-Edit `src/helper-modules-{category}/{module-name}/CHANGELOG.md`:
+Edit the module's `CHANGELOG.md`:
 
 ```markdown
 # Changelog
@@ -214,8 +214,7 @@ git push origin main
 After publishing `utils@1.0.2`, verify dependent tests still pass:
 
 ```bash
-# In test directory for a dependent module
-cd src/helper-modules-core/js-helper-time/_test
+# From the dependent module's _test/ directory
 rm -rf node_modules package-lock.json
 npm install
 npm test

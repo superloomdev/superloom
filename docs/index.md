@@ -22,7 +22,7 @@ Superloom is an opinionated frame for backend applications: one way to structure
 
 ## Anatomy of a Superloom Module File
 
-Every Superloom helper module follows the same internal shape. A developer who has read one file can navigate any file. Three details, all visible in the wild in [`postgres.js`](https://github.com/superloomdev/superloom/blob/main/src/helper-modules-server/js-server-helper-sql-postgres/postgres.js):
+Every Superloom helper module follows the same internal shape. A developer who has read one file can navigate any file. Three details that appear in every module:
 
 ### Section banners as scroll-stop checkpoints
 

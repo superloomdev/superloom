@@ -21,7 +21,7 @@
 ## Purpose
 
 - Provide **generic, reusable, stateless** functions that are universal and platform-agnostic
-- Run in **any** environment: browser, React Native, Node.js, Python
+- Run in **any** JavaScript environment: browser, React Native, Node.js, edge runtimes
 - Never depend on server-only APIs (database drivers, AWS SDKs, filesystem writes)
 - Never depend on client-only APIs (DOM, `window`, `navigator`, mobile-specific APIs)
 
@@ -48,7 +48,7 @@ This is the layer that everything else stands on. If a function would behave dif
 
 Module directory name: `[js|py]-helper-[module-name]`
 
-The `core-helper-modules` location at `src/helper-modules-core/` makes the platform-agnostic intent visible at the path level.
+In the `js-helper-modules` repo, core helper modules live under `helper-modules-core/`. The directory name makes the platform-agnostic intent visible at the path level.
 
 ---
 

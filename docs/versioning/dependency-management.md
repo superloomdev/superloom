@@ -138,7 +138,7 @@ GitHub Actions workflow:
 ```yaml
 - name: Install test dependencies
   run: npm install
-  working-directory: src/helper-modules-server/js-server-helper-sql-sqlite/_test
+  working-directory: [module-path]/_test
 ```
 
 **What happens**:

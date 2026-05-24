@@ -381,10 +381,7 @@ Reference block: same.
 
 Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g. **Replica-Set Requirement for Transactions** for MongoDB).
 
-**Pilot references** (copy from one of these when migrating a new Class C module):
-- SQL driver: `src/helper-modules-server/js-server-helper-sql-mysql/` (most generic SQL shape)
-- SQL driver. Embedded: `src/helper-modules-server/js-server-helper-sql-sqlite/`
-- NoSQL driver: `src/helper-modules-server/js-server-helper-nosql-mongodb/`
+**Pilot references.** When migrating a new Class C module, use the closest existing Class C module in `js-helper-modules` as a template: `js-server-helper-sql-mysql` for the generic SQL shape, `js-server-helper-sql-sqlite` for the embedded SQL variant, and `js-server-helper-nosql-mongodb` for the NoSQL shape.
 
 *DynamoDB lives under Class D, not Class C. See the Class D section below.*
 
@@ -427,9 +424,7 @@ Patterns block:
 4. **Worked example minimal IAM policy** (JSON)
 5. Brief note about credential rotation behavior. The module does not refresh in-flight; pass refreshed values on a new loader call
 
-**Pilot references:**
-- AWS cloud DB: `src/helper-modules-server/js-server-helper-nosql-aws-dynamodb/`
-- AWS cloud storage: `src/helper-modules-server/js-server-helper-storage-aws-s3/`
+**Pilot references.** Use `js-server-helper-nosql-aws-dynamodb` for the cloud database shape and `js-server-helper-storage-aws-s3` for the cloud storage shape, both in `js-helper-modules`.
 
 ### Class E. Feature Module with Adapters
 

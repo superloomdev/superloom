@@ -134,7 +134,7 @@ The split lets each tier run at maximum speed: Tier 2 has zero Docker latency an
 The parent module's `_test/` directory contains a `createInMemory<Adapter>()` helper that implements the **full adapter contract** using a plain in-process Map or array. This is what makes Tier 2 possible:
 
 ```
-src/helper-modules-server/js-server-helper-[parent]/
+[module-root]/
   _test/
     memory-store.js     createInMemory<Adapter>() - full contract, in-process
     test.js             Tier 2 tests - load parent with memory store
@@ -175,15 +175,12 @@ The suite is **not exported** through the parent module's `package.json` `export
 
 ### Reference Implementations
 
-**Auth (canonical):**
-- **Parent + in-memory fixture:** `src/helper-modules-server/js-server-helper-auth/_test/memory-store.js` + `_test/store-contract-suite.js`
-- **Five adapter copies:** each `js-server-helper-auth-store-*/_test/store-contract-suite.js`
-- **Tier wiring:** each adapter's `_test/test.js` imports the local copy (`require('./store-contract-suite')`) and runs it against the real backend
+Two modules in `js-helper-modules` implement this pattern end-to-end:
 
-**Verify (second example, same pattern):**
-- **Parent + in-memory fixture:** `src/helper-modules-server/js-server-helper-verify/_test/memory-store.js` + `_test/shared-store-suite.js`
-- **Five adapter copies:** each `js-server-helper-verify-store-*/_test/shared-store-suite.js`
-- **Tier wiring:** same. Each adapter’s `_test/test.js` imports the local copy and runs it against the real backend
+- **`js-server-helper-auth`** (canonical). Parent ships an in-memory fixture (`_test/memory-store.js`) and a shared contract suite (`_test/store-contract-suite.js`). Each storage adapter copies the contract suite and runs it against the real backend in its own `_test/test.js`.
+- **`js-server-helper-verify`** (same pattern, second example). Parent ships `_test/memory-store.js` and `_test/shared-store-suite.js`. Each storage adapter copies and runs the suite against its backend.
+
+The number of adapters per parent is not part of the contract and varies as new backends are added.
 
 > **Note:** The in-memory fixture for verify is currently defined inline in `_test/test.js`. It must be extracted to `_test/memory-store.js` before the adapter `_test/` directories can be created (they need to import it). This extraction is tracked in the verify adapter work plan.
 
@@ -209,7 +206,7 @@ module.exports = function() {
   const Lib = {};
   
   // Load helpers
-  Lib.Utils = require('../../src/helper-modules-core/js-helper-utils');
+  Lib.Utils = require('js-helper-utils');
   
   // Load models with dependency injection
   const UserConfig = require('../user/user.config');
