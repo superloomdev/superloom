@@ -8,6 +8,8 @@ description: Compile AGENTS.md from docs/ - sync (default), rebuild, or verify
 
 **Authority:** All edits made by this workflow follow [`docs/dev/documentation-authoring.md`](../../docs/dev/documentation-authoring.md): prescriptive, generic, DRY, compact. For new knowledge that does not fit existing sections, use `/learn` first to place it canonically in `docs/`, then run this workflow.
 
+**Precondition:** If the current task changed `docs/` or `.windsurf/workflows/`, run `/validate-docs` first. Do not sync unvalidated documentation into `AGENTS.md`.
+
 ---
 
 ## Verb Dispatch
@@ -47,15 +49,15 @@ Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. Use this tab
 | `docs/dev/testing-local-modules.md` | "Module testing contract" |
 | `docs/dev/cicd-publishing.md` | "Publish-job CI rules" |
 | `docs/dev/planning.md` | "At session start" line |
-| `docs/dev/documentation-authoring.md` | (referenced; not mirrored — `/learn` enforces the rules directly) |
+| `docs/dev/documentation-authoring.md` | (referenced; not mirrored - `/learn` enforces the rules directly) |
 | `docs/dev/org-structure.md` | "Directory Map" |
 | `docs/versioning/bump-checklist.md` | "Version and Publish" |
 | `docs/versioning/dependency-management.md` | "Dependency Management" |
-| `docs/ops/**` | (referenced as "see ops/" — not embedded) |
+| `docs/ops/**` | (referenced as "see ops/" - not embedded) |
 
 ---
 
-## Phase 1 — Conversation Diff
+## Phase 1 - Conversation Diff
 
 Run only on `sync` (skip on `rebuild`).
 
@@ -68,7 +70,7 @@ If a touched file has no entry in the Section Map → ask the user where it shou
 
 ---
 
-## Phase 2 — Full-Doc Audit
+## Phase 2 - Full-Doc Audit
 
 Run on both `sync` and `rebuild`.
 
@@ -93,9 +95,38 @@ On `rebuild`, write each section from scratch rather than diff-and-patch.
 
 ---
 
-## Phase 3 — Write & Verify
+## Phase 2.5 - Unmirrored Rule Scan
 
-After Phase 1 + Phase 2 produce the updated `AGENTS.md`:
+Run after Phase 2 on `sync`, `rebuild`, and `verify`.
+
+This phase guarantees zero-context-loss compression. Phase 2 catches drift. Phase 2.5 catches omissions: rules that exist in `docs/` but have no compressed representation in `AGENTS.md`.
+
+1. **Build the rule inventory.** For every file in the Section Map, extract each sentence or list item that contains one of these rule markers: `must`, `must not`, `should`, `should not`, `never`, `always`, `required`, `forbidden`, `do not`, `only`, `use`, `run`, `write`, `create`, `delete`, `update`, `prefer`, `avoid`.
+2. **Preserve source location.** Every inventory item must include `source file:line`.
+3. **Cross-check against `AGENTS.md`.** For each inventory item, search `AGENTS.md` for a compressed rule that preserves both condition and conclusion. A conclusion without its condition is not mirrored.
+4. **Report unmirrored rules.** For every missing or incomplete mirror, report source file:line and suggested compressed wording.
+5. **Apply or report depending on verb.**
+   - `sync` / `rebuild`: add the compressed rule to the correct `AGENTS.md` section before Phase 3.
+   - `verify`: report `would update`; do not edit `AGENTS.md`.
+
+Output:
+
+```
+Phase 2.5 - Unmirrored Rule Scan
+Rules in source inventory: N
+Rules mirrored in AGENTS.md: M
+Unmirrored rules: K
+  - docs/foo.md:42 | missing | suggested: [compressed rule]
+  - docs/bar.md:88 | condition missing | suggested: [compressed rule with condition]
+```
+
+This is a hard gate. Phase 3 does not run until Phase 2.5 reports zero unmirrored rules for `sync` and `rebuild`, or reports the complete would-update list for `verify`.
+
+---
+
+## Phase 3 - Write & Verify
+
+After Phase 1 + Phase 2 + Phase 2.5 produce the updated `AGENTS.md`:
 
 1. **Golden Rule check.** Confirm the Golden Rule callout is still the first content block, with the correct propagation workflow name (`/compile-agents-md`).
 2. **Table of contents.** If `AGENTS.md` has an explicit ToC, regenerate it from the actual `##` headings.
@@ -130,9 +161,9 @@ This is the safe pre-commit check: it tells the user exactly what `/compile-agen
 
 Every line written to `AGENTS.md` follows [`docs/dev/documentation-authoring.md`](../../docs/dev/documentation-authoring.md):
 
-- **Tables over prose.** Rules with attributes → table. One-shot statements → bullet.
+- **Tables over prose.** Rules with attributes become tables. One-shot statements become bullets.
 - **One rule = one line** where possible.
-- **Strip preamble.** No "This section explains...", "It is important to note...".
+- **Strip preamble.** Do not use filler openings; start with the rule.
 - **Cross-reference, do not duplicate.** A rule that exists in full detail in `docs/` appears in `AGENTS.md` as a one-line compressed statement plus `See docs/[path].md`.
 - **No code examples** unless the rule cannot be expressed in text. Prefer one-line patterns over multi-line snippets.
 - **Preserve the Golden Rule callout at the very top.** It must always reference this workflow by its current name.

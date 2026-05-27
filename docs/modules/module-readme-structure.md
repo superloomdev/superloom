@@ -39,7 +39,7 @@ Each module's documentation is split across three files. Each file has one audie
 
 **The README is the entry point.** It explains *what the module is and why it exists* in plain language. It links into `docs/` for reference detail and to `ROBOTS.md` for AI-specific guidance. It does not contain configuration tables, function signatures, or return shapes. Those belong in `docs/`.
 
-**The `docs/` folder is the reference layer.** Complete, exhaustive, written for someone actively integrating or maintaining the module. Every class ships at least `docs/api.md` and `docs/configuration.md`; deeper classes add more (Class D may add `iam.md`; Class E adds `data-model.md` and optional `runtime.md`; Class F adds `schema.md` and `cleanup.md`).
+**The `docs/` folder is the reference layer.** Complete, exhaustive, written for someone actively integrating or maintaining the module. Every class ships at least `docs/api.md` and `docs/configuration.md`; deeper classes add more (Class D may add `iam.md`; Class E adds `data-model.md` and optional `runtime.md`; Class F stores add `schema.md` and `cleanup.md`; Class F adapters ship only the universal pair).
 
 **`ROBOTS.md` is the AI surface.** Compact, structured, every exported function with its signature and return shape. See `ROBOTS.md` in each module for the existing convention.
 
@@ -181,8 +181,8 @@ Every module belongs to one of six classes (enumerated in [`module-categorizatio
 | **C. Driver wrapper** | (none extra) | The Hot-Swappable section at position 5 already serves Class C's special case. |
 | **D. Cloud service wrapper** | "Credentials & Permissions" | Short section on credentials, regional config, IAM/permissions. Vendor-neutral wording. |
 | **B. Extended utility** | "Behavior" | Explains lifecycle semantics (cleanup ordering, background tasks). |
-| **E. Feature module with adapters** | "Architecture Overview" + "Storage Adapters" | Two adjacent README subsections. Architecture Overview is a high-level diagram or tree. Storage Adapters is a short list/table of available adapters with a one-sentence selection rule and a pointer to each adapter package's README for backend-specific details. **No separate `docs/storage-adapters.md` file.** |
-| **F. Storage adapter** | (none extra) | Class F READMEs use only the universal sections. The "extension of the parent module" framing lives in the tagline; the factory-protocol explanation lives in `docs/api.md`. |
+| **E. Feature module with adapters** | "Architecture Overview" + "Storage Adapters" or "Transport Adapters" | Two adjacent README subsections. Architecture Overview is a high-level diagram or tree. The adapter subsection ("Storage Adapters" for persistence-backed modules, "Transport Adapters" for runtime-backed modules) is a short list/table of available adapters with a one-sentence selection rule and a pointer to each adapter package's README for backend-specific details. **No separate `docs/storage-adapters.md` file.** |
+| **F. Dependent adapter** | (none extra) | Class F READMEs use only the universal sections. The "extension of the parent module" framing lives in the tagline; the factory-protocol explanation lives in `docs/api.md`. |
 
 The Hot-Swappable section at position 5 is itself class-conditional. It appears whenever a module has at least one sibling, irrespective of class.
 
@@ -201,7 +201,7 @@ Every class ships **at minimum** `docs/api.md` and `docs/configuration.md`. Clas
 | **C. Driver** | `docs/api.md`, `docs/configuration.md` |
 | **D. Cloud service** | `docs/api.md`, `docs/configuration.md`, optionally `docs/iam.md` |
 | **E. Feature** | `docs/api.md`, `docs/configuration.md`, `docs/data-model.md`, optionally `docs/runtime.md`. Storage-adapter documentation lives in each Class F adapter package, not in the parent |
-| **F. Adapter** | `docs/api.md`, `docs/configuration.md`, `docs/schema.md`, `docs/cleanup.md`. Each adapter is the authoritative source for its own backend's operational detail (DDL, indexes, TTL behavior, `STORE_CONFIG` shape) |
+| **F. Dependent adapter** | Stores: `docs/api.md`, `docs/configuration.md`, `docs/schema.md`, `docs/cleanup.md`. Adapters: `docs/api.md`, `docs/configuration.md`. Each Class F package is the authoritative source for its own backend or runtime's operational detail |
 
 The canonical reasoning, audience map, and per-class footprint are documented in [`module-categorization.md` → Universal Documentation Footprint](module-categorization.md#universal-documentation-footprint).
 
@@ -433,7 +433,7 @@ Full-featured business-logic module. May combine Class A utilities, Class B serv
 **Class-specific README subsections.** Class E uses **two** adjacent class-specific subsections in the README:
 
 - **Architecture Overview.** High-level diagram or tree. Shows the loader factory shape, the `parts/` split, and how the chosen Class F adapter is wired in.
-- **Storage Adapters.** Short list or table of available adapters (one row per Class F package) plus a one- or two-sentence selection rule (typically: "match your application's database") plus a pointer to each adapter's own README for backend-specific configuration, schema, indexes, TTL behavior, and IaC provisioning. **No separate `docs/storage-adapters.md` file.** Each Class F adapter is the authoritative source for its own backend; the parent's README only points to the list.
+- **Storage Adapters** or **Transport Adapters** (depending on what the module delegates). Short list or table of available adapters (one row per Class F package) plus a one- or two-sentence selection rule plus a pointer to each adapter's own README for backend-specific details. **No separate `docs/storage-adapters.md` file.** Each Class F adapter is the authoritative source for its own backend or runtime; the parent's README only points to the list.
 
 **`docs/` folder shape** per [`complex-module-docs-guide.md`](complex-module-docs-guide.md):
 - `docs/data-model.md`. Record fields and design rationale
@@ -444,34 +444,45 @@ Storage-adapter detail is owned by each Class F adapter package, not by the pare
 
 **Pilot status:** *not yet migrated.* `verify`, `logger`, `auth` are the planned waves (smallest to largest).
 
-### Class F. Storage Adapter
+### Class F. Dependent Adapter
 
-Cannot function on its own. Implements a Class E parent module's store contract for a single backend. Thin wrapper around a Class C or Class D module. For the full conceptual definition see [`module-categorization.md` → Class F](module-categorization.md#class-f-storage-adapter).
+Cannot function on its own. Implements a Class E parent module's adapter contract for a single backend or runtime. For the full conceptual definition see [`module-categorization.md` → Class F](module-categorization.md#class-f-dependent-adapter).
 
-**Tagline template:**
+Class F has two subtypes: **stores** (`-store-[backend]`, data persistence) and **adapters** (`-adapter-[name]`, everything else: runtimes, transports, integrations). Either can use factory or singleton pattern internally depending on whether per-instance state is needed. See `module-structure-js.md` → "Storage Adapter Skeleton" and "Adapter Skeleton" for the code templates.
 
-> A [Backend Name]-backed implementation of the [Parent] module's storage contract. Plug it into the parent's `STORE` config; the [Parent] module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
+**Tagline templates:**
+
+> **Store subtype:** A [Backend Name]-backed implementation of the [Parent] module's storage contract. Plug it into the parent's `STORE` config; the [Parent] module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
+
+> **Adapter subtype:** A [Runtime/Integration Name] adapter for the [Parent] module. Plug it into the parent's `ADAPTER` config; the [Parent] module's calling shape stays identical regardless of which runtime is active. Part of [Superloom](https://superloom.dev).
 
 The tagline does not name competitor adapters and does not promise multi-backend support at the adapter scope (that promise belongs to the Class E parent's README).
 
 **README structure.** Class F READMEs follow the **same Universal Section list as every other class**. They are kept short by condensing each section, not by skipping sections. There is no class-specific section (position 6 is empty for Class F); the "extension of the parent module" framing is carried by the tagline (position 2) and the brief "What This Is" paragraph (position 3), not by a separate "How This Fits Into the Parent Module" subsection. The factory-protocol explanation lives in `docs/api.md`, not the README.
 
-The README does not duplicate the schema, the contract, the configuration table, the environment variables, or the testing-runtime detail; those all live in `docs/`. **Section 9 ("Adding to Your Project") points to the parent module's install instructions and the loader-pattern doc; it does NOT contain its own `npm install` snippet.** Class F adapters cannot be installed alone (the parent and the underlying driver helper are mandatory peers), so the canonical install command for the parent + adapter pair lives in the parent's README; each adapter's README links into that section instead of duplicating it.
+The README does not duplicate the schema, the contract, the configuration table, the environment variables, or the testing-runtime detail; those all live in `docs/`. **Section 9 ("Adding to Your Project") points to the parent module's install instructions and the loader-pattern doc; it does NOT contain its own `npm install` snippet.** Class F packages cannot be installed alone (the parent and the underlying driver helper or runtime are mandatory peers), so the canonical install command for the parent + adapter pair lives in the parent's README; each adapter's README links into that section instead of duplicating it.
 
 A realistic Class F README is **~70-90 lines** (comparable to a Class C driver like `sql-postgres`). Compared to the Class E parent's README, the Why bullets are fewer (4-5 instead of 5-7) and the Architecture Overview is absent (the parent owns it).
 
-**Value bullets.** Bullets 1-4 from the [universal set](#universal-why-use-this-module-bullets) transfer near-verbatim. The wrapped object is the underlying driver helper (e.g. `Lib.Postgres` / the `pg` driver), not the Class E parent. Bullet 5 is the **class-specific bullet for Class F**:
+**Value bullets.** Bullets 1-4 from the [universal set](#universal-why-use-this-module-bullets) transfer near-verbatim. The wrapped object is the underlying driver helper (e.g. `Lib.Postgres` / the `pg` driver) for stores, or the underlying runtime (e.g. Express, AWS API Gateway event) for adapters. Bullet 5 is the **class-specific bullet for Class F**:
 
-> **[Backend Name]-correct semantics handled for you.** [List the backend-specific operational concerns the adapter encapsulates. PostgreSQL: `INSERT ... ON CONFLICT ... DO UPDATE` UPSERT, BIGINT-as-string coercion at the `pg` driver boundary, double-quoted identifiers, native `BOOLEAN`, JSON encoding of the canonical record's free-form fields. MongoDB: native `expireAfterSeconds` TTL index, BSON encoding, replica-set requirement for transactions. DynamoDB: native AWS table-level TTL, GSI design, conditional UPSERT via `PutItem`.] Application code writes against the parent module; the adapter's job is to make [Backend Name] behave correctly.
+> **Store subtype:** **[Backend Name]-correct semantics handled for you.** [List the backend-specific operational concerns the adapter encapsulates. PostgreSQL: `INSERT ... ON CONFLICT ... DO UPDATE` UPSERT, BIGINT-as-string coercion at the `pg` driver boundary, double-quoted identifiers, native `BOOLEAN`, JSON encoding of the canonical record's free-form fields. MongoDB: native `expireAfterSeconds` TTL index, BSON encoding, replica-set requirement for transactions. DynamoDB: native AWS table-level TTL, GSI design, conditional UPSERT via `PutItem`.] Application code writes against the parent module; the adapter's job is to make [Backend Name] behave correctly.
 
-**Hot-Swappable section.** Present whenever sibling adapters exist for the same parent (true for every current Class F family: `auth-store-*`, `verify-store-*`, `logger-store-*`). Short list of sibling adapter packages with a one-sentence framing that swapping is a one-line config change.
+> **Adapter subtype:** **[Runtime Name] specifics handled for you.** [List the runtime-specific concerns the adapter normalizes. AWS API Gateway: payload format v1 vs v2 detection, multi-value headers, base64-encoded body, Lambda context extraction. Express: req/res object mapping, cookie parsing middleware, originalUrl preservation.] Application code interacts with the parent module; the adapter's job is to normalize [Runtime Name] into the parent's standard shape.
 
-**`docs/` folder shape:**
+**Hot-Swappable section.** Present whenever sibling adapters exist for the same parent (true for every current Class F family: `auth-store-*`, `verify-store-*`, `logger-store-*`, `http-gateway-adapter-*`). Short list of sibling adapter packages with a one-sentence framing that swapping is a one-line config change.
+
+**`docs/` folder shape (store subtype):**
 
 - `docs/api.md`. The store contract this adapter implements. One subsection per method with its signature, return shape, and any backend-specific semantic notes (timing-safe lookups, batch deletes, programmer-error guards, integer coercion at the driver boundary).
 - `docs/configuration.md`. The `STORE_CONFIG` keys this adapter requires. Peer dependencies. Environment variables consumed by `_test/loader.js`. Testing tier.
 - `docs/schema.md`. What `setupNewStore` creates. The DDL or `createIndex` / `CreateTable` calls verbatim. Backend-specific syntax notes (identifier quoting, integer coercion at the driver boundary, JSON serialization, UPSERT semantics, native-TTL configuration).
 - `docs/cleanup.md`. The TTL behavior of this specific backend (none, native via index, or table-level). The recommended cleanup mechanism for this backend. How `cleanupExpired*` is implemented in this adapter.
+
+**`docs/` folder shape (adapter subtype):**
+
+- `docs/api.md`. The adapter contract this package implements. One subsection per method with its signature, return shape, and any runtime-specific notes.
+- `docs/configuration.md`. Any adapter-specific configuration. Peer dependencies. Environment variables consumed by `_test/loader.js`. Testing tier.
 
 **No `docs/data-model.md` or `docs/runtime.md`.** The data model is owned by the Class E parent (`auth/docs/data-model.md`); the adapter only documents column-to-field mapping where the encoding diverges from the parent's canonical record (BIGINT-as-string from a driver, JSON-encoding of a structured field). Runtime-shape concerns are also owned by the parent; the adapter only cross-links to the parent's `docs/runtime.md` when discussing cleanup scheduling.
 

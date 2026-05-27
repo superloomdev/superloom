@@ -2,7 +2,7 @@
 
 > **Language:** JavaScript
 
-Class E feature modules (`auth`, `verify`, `logger`) and Class F storage adapters (`auth-store-*`, `verify-store-*`, `logger-store-*`) both ship a `docs/` folder. This guide defines the structure and content patterns for both. The two classes share the universal `docs/api.md` + `docs/configuration.md` pair and add different class-specific files on top: Class E adds `data-model.md` and an optional `runtime.md`; Class F adds `schema.md` and `cleanup.md`.
+Class E feature modules (`auth`, `verify`, `logger`, `http-gateway`) and Class F dependent adapters (stores: `auth-store-*`, `verify-store-*`, `logger-store-*`; adapters: `http-gateway-adapter-*`) both ship a `docs/` folder. This guide defines the structure and content patterns for both. The two classes share the universal `docs/api.md` + `docs/configuration.md` pair and add different class-specific files on top: Class E adds `data-model.md` and an optional `runtime.md`; Class F stores add `schema.md` and `cleanup.md`; Class F adapters ship only `api.md` + `configuration.md`.
 
 ## When to Create a docs/ Folder
 
@@ -171,9 +171,14 @@ A realistic `runtime.md` is **80–120 lines**. Anything longer almost certainly
 
 ---
 
-## Class F Adapters: Their Own `docs/` Folder
+## Class F Dependent Adapters: Their Own `docs/` Folder
 
-Class F storage adapters (`auth-store-*`, `verify-store-*`, `logger-store-*`) ship their own `docs/` folder with four files: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. The README itself follows the **same Universal Section list as every other class** (see [`module-readme-structure.md` → Universal README Sections](module-readme-structure.md#universal-readme-sections)), with each section condensed. A realistic Class F README is **~70-90 lines** (comparable to a Class C driver). The README does NOT include a `## Install` block (Section 9 points to the parent's install instructions instead) and does NOT include a `## Usage` or Quick Start. The schema, the contract, the configuration table, the environment variables, and the testing-runtime detail all live in `docs/`, never in the README.
+Class F dependent adapters ship their own `docs/` folder. The shape depends on the subtype:
+
+- **Stores** (`-store-[backend]`): four files: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`
+- **Adapters** (`-adapter-[name]`): two files: `api.md`, `configuration.md`
+
+The README itself follows the **same Universal Section list as every other class** (see [`module-readme-structure.md` → Universal README Sections](module-readme-structure.md#universal-readme-sections)), with each section condensed. A realistic Class F README is **~70-90 lines** (comparable to a Class C driver). The README does NOT include a `## Install` block (Section 9 points to the parent's install instructions instead) and does NOT include a `## Usage` or Quick Start. The contract, the configuration table, the environment variables, and the testing-runtime detail all live in `docs/`, never in the README.
 
 ### docs/api.md (Class F)
 
@@ -374,7 +379,7 @@ For backend-specific configuration, schema, indexes, and TTL behavior, see each 
 - [ ] Cross-links work (relative paths)
 - [ ] No duplication with README (README = overview, docs/ = depth)
 
-### Class F storage adapters
+### Class F dependent adapters (store subtype)
 
 - [ ] `docs/api.md` documents the full store contract (one subsection per method) with backend-specific semantics noted where they differ
 - [ ] `docs/configuration.md` documents every `STORE_CONFIG` key, peer dependency, environment variable, and the testing tier
@@ -385,4 +390,15 @@ For backend-specific configuration, schema, indexes, and TTL behavior, see each 
 - [ ] No comparison with sibling adapters anywhere in the package
 - [ ] README follows the full Universal Section list (Title, Tagline, What This Is, Why Use This Module, Hot-Swappable, Aligned with Superloom Philosophy, Extended Documentation, Adding to Your Project, Testing Status, License) condensed to ~70-90 lines
 - [ ] No `## Install` block in the README. Section 9 ("Adding to Your Project") points to the parent module's install instructions and the loader-pattern doc
+- [ ] No `## Usage` or Quick Start in the README
+
+### Class F dependent adapters (adapter subtype)
+
+- [ ] `docs/api.md` documents the full adapter contract (one subsection per method) with runtime-specific notes where they differ
+- [ ] `docs/configuration.md` documents any adapter-specific configuration, peer dependencies, environment variables, and the testing tier
+- [ ] No `docs/schema.md` or `docs/cleanup.md` (adapters have no persistence layer)
+- [ ] No `docs/data-model.md` or `docs/runtime.md` (the parent owns those)
+- [ ] No comparison with sibling adapters anywhere in the package
+- [ ] README follows the full Universal Section list condensed to ~70-90 lines
+- [ ] No `## Install` block in the README. Section 9 points to the parent module's install instructions
 - [ ] No `## Usage` or Quick Start in the README

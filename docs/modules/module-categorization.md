@@ -17,7 +17,7 @@ Every Superloom helper module belongs to one of six classes. The class determine
 - [Class C. Driver Wrapper](#class-c-driver-wrapper)
 - [Class D. Cloud Service Wrapper](#class-d-cloud-service-wrapper)
 - [Class E. Feature Module with Adapters](#class-e-feature-module-with-adapters)
-- [Class F. Storage Adapter](#class-f-storage-adapter)
+- [Class F. Dependent Adapter](#class-f-dependent-adapter)
 - [Documentation Status Matrix](#documentation-status-matrix)
 - [Migration Priority](#migration-priority)
 
@@ -34,9 +34,9 @@ The classes form a **dependency staircase**: each step adds one more thing the m
 | **C. Driver wrapper** | A third-party-implemented service that operators **can self-host** on commodity infrastructure (Postgres, MySQL, MongoDB, SQLite) | `README-master-template.md` (driver variant) | `api.md`, `configuration.md` |
 | **D. Cloud service wrapper** | A proprietary cloud service that operators **cannot self-host**. Runs only on the provider or a dedicated emulator (DynamoDB, S3, SQS) | `README-master-template.md` (cloud variant) | `api.md`, `configuration.md`, optional `iam.md` |
 | **E. Feature module with adapters** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class F adapters. Provides a complete business-logic feature, not a primitive | `README-feature-module.md` | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
-| **F. Storage adapter** | A Class E parent module. Cannot function on its own; implements the parent's store contract for a single backend | `README-storage-adapter.md` | `api.md`, `configuration.md`, `schema.md`, `cleanup.md` |
+| **F. Dependent adapter** | A Class E parent module. Cannot function on its own; implements the parent's adapter contract for a single backend or runtime | `README-storage-adapter.md` (store) / `README-master-template.md` (adapter) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
 
-*Reading this table:* a Class B module is allowed to use everything Class A is, plus Node built-ins. A Class C module is allowed to use everything Class B is, plus a self-hostable third-party service. And so on. F is the special case: it is the only class that cannot stand alone.
+*Reading this table:* a Class B module is allowed to use everything Class A is, plus Node built-ins. A Class C module is allowed to use everything Class B is, plus a self-hostable third-party service. And so on. F is the special case: it is the only class that cannot stand alone. Class F has two subtypes: **stores** (data persistence, named `-store-[backend]`) and **adapters** (everything else: runtimes, transports, integrations, named `-adapter-[name]`). Either subtype can use factory or singleton pattern internally — the choice depends on whether per-instance state is needed.
 
 ---
 
@@ -56,9 +56,9 @@ Every class A through F ships the same minimum set of files:
 1. **Token cost for AI tools.** A 1500-line `utils.js` file costs an order of magnitude more tokens to read than a 200-line `docs/api.md`. Every consumer (human or AI) benefits when the canonical reference is small and structured.
 2. **No per-module decisions.** If some Class A modules ship `docs/api.md` and some don't, every contributor and every reviewer has to re-evaluate the call. Making it universal removes the question entirely.
 
-Class-specific extras stack on top of the universal four. Class D adds `docs/iam.md`. Class E adds `docs/data-model.md` and an optional `docs/runtime.md`. Class F adds `docs/schema.md` and `docs/cleanup.md`, the two documents that capture what is operationally distinctive per backend. None of these *replace* the universal four; they add to them. Class E **does not** add a `docs/storage-adapters.md`: storage-adapter documentation lives in each Class F adapter package, not in the parent. The Class E README has a short "Storage Adapters" subsection that lists the available adapters and points to each adapter's own README.
+Class-specific extras stack on top of the universal four. Class D adds `docs/iam.md`. Class E adds `docs/data-model.md` and an optional `docs/runtime.md`. Class F stores add `docs/schema.md` and `docs/cleanup.md`, the two documents that capture what is operationally distinctive per backend; Class F adapters ship only the universal pair (`api.md` + `configuration.md`). None of these *replace* the universal four; they add to them. Class E **does not** add a `docs/storage-adapters.md`: adapter documentation lives in each Class F package, not in the parent. The Class E README has a short "Storage Adapters" or "Transport Adapters" subsection that lists the available adapters and points to each package's own README.
 
-For Class F adapters specifically, `docs/api.md` documents the store contract this adapter implements (with backend-specific semantic notes); `docs/configuration.md` covers the `STORE_CONFIG` keys, peer dependencies, environment variables consumed by `_test/loader.js`, and the testing tier; `docs/schema.md` documents what `setupNewStore` creates and the backend-specific syntax notes; `docs/cleanup.md` documents the TTL behavior of this backend and the recommended cleanup mechanism. The README itself follows the **same Universal Section list as every other class**, condensed to ~70-90 lines (tagline, What This Is, Why-bullets including a backend-specific bullet 5, Hot-Swappable, Aligned with Superloom, Extended Documentation, Adding to Your Project pointing to the parent, Testing Status, License); it contains no `## Install` block and no `## Usage` / Quick Start. Each adapter documents only its own backend. There is no "Postgres has X, MongoDB has Y" comparison anywhere in a Class F package.
+For Class F stores specifically, `docs/api.md` documents the store contract (with backend-specific semantic notes); `docs/configuration.md` covers the `STORE_CONFIG` keys, peer dependencies, environment variables consumed by `_test/loader.js`, and the testing tier; `docs/schema.md` documents what `setupNewStore` creates and the backend-specific syntax notes; `docs/cleanup.md` documents the TTL behavior and the recommended cleanup mechanism. For Class F adapters, `docs/api.md` documents the adapter contract (one subsection per method with runtime-specific notes); `docs/configuration.md` covers any adapter-specific config, peer dependencies, and the testing tier. The README for both subtypes follows the **same Universal Section list as every other class**, condensed to ~70-90 lines (tagline, What This Is, Why-bullets including a backend/runtime-specific bullet 5, Hot-Swappable, Aligned with Superloom, Extended Documentation, Adding to Your Project pointing to the parent, Testing Status, License); it contains no `## Install` block and no `## Usage` / Quick Start. Each Class F package documents only its own backend or runtime. There is no cross-adapter comparison anywhere in a Class F package.
 
 ---
 
@@ -147,7 +147,7 @@ The surface domain does not change the classification. DynamoDB looks like a dat
 
 The data model is deep enough to warrant a dedicated `docs/data-model.md`. The differences between the two runtime shapes the framework supports (persistent server, serverless function) live on a single optional `docs/runtime.md` page. The page documents **only** those differences (how the per-request `instance` is constructed in each shape; how scheduled cleanup is wired in each shape) and nothing else. It is deliberately not a framework cookbook: no Express middleware tutorial, no Lambda handler boilerplate, no login/refresh/logout endpoint code. Per-framework integration code is application code, not module documentation.
 
-**README extras:** Two adjacent class-specific README subsections. **"Architecture Overview"** (high-level diagram or tree of the loader / `parts/` / adapter wiring) and **"Storage Adapters"** (short list of available adapters + selection rule + pointer to each adapter package's own README). No separate `docs/storage-adapters.md` file.
+**README extras:** Two adjacent class-specific README subsections. **"Architecture Overview"** (high-level diagram or tree of the loader / `parts/` / adapter wiring) and **"Storage Adapters"** or **"Transport Adapters"** depending on what the module delegates (short list of available adapters + selection rule + pointer to each adapter package's own README). No separate `docs/storage-adapters.md` file.
 
 **`docs/`:** `data-model.md`, `configuration.md`, optionally `runtime.md`. Storage-adapter detail is owned by each Class F adapter package, not the parent. See [`complex-module-docs-guide.md`](complex-module-docs-guide.md) for the deep guide.
 
@@ -156,18 +156,36 @@ The data model is deep enough to warrant a dedicated `docs/data-model.md`. The d
 | `js-server-helper-auth` | `@superloomdev/js-server-helper-auth` | Session lifecycle and authentication; optional JWT mode with refresh-token rotation |
 | `js-server-helper-verify` | `@superloomdev/js-server-helper-verify` | One-time verification codes (pin, code, token) |
 | `js-server-helper-logger` | `@superloomdev/js-server-helper-logger` | Compliance-friendly action log with per-row retention and optional IP encryption |
+| `js-server-helper-http-gateway` | `@superloomdev/js-server-helper-http-gateway` | Runtime-agnostic HTTP request/response gateway with pluggable transport adapters |
 
 ---
 
-## Class F. Storage Adapter
+## Class F. Dependent Adapter
 
-**Characteristics:** A storage adapter that **cannot function on its own**. Implements a Class E parent module's store contract for a single backend (one adapter per backend per parent feature). Always paired with the parent module via the adapter pattern: the parent passes the adapter factory at loader time and uses it to satisfy its persistence requirements.
+**Characteristics:** An adapter that **cannot function on its own**. Implements a Class E parent module's adapter contract for a single backend or runtime. Always paired with the parent module via the adapter pattern: the parent passes the adapter factory at loader time and uses it to satisfy its persistence or transport requirements.
 
-Class F is the only class with this "cannot stand alone" property. Every other class is independently usable: install, configure, use. Class F adapters need a parent that knows what to do with them. Internally a Class F adapter is a thin wrapper around a Class C or Class D module that handles the persistence work.
+Class F is the only class with this "cannot stand alone" property. Every other class is independently usable: install, configure, use. Class F adapters need a parent that knows what to do with them.
 
-**README extras:** None beyond the standard sections. The README follows the same Universal Section list as every other class (see [`module-readme-structure.md` → Class F](module-readme-structure.md#class-f-storage-adapter)), condensed to ~70-90 lines. The "extension of the parent module" framing lives in the tagline (position 2) and the brief "What This Is" paragraph (position 3); there is no separate "How this fits into the parent module" subsection in the README itself, and no per-backend table comparing siblings. Section 9 ("Adding to Your Project") points to the parent module's install instructions and the loader-pattern doc; it contains no `npm install` snippet of its own. The factory-protocol explanation lives in `docs/api.md`.
+Class F has two subtypes, distinguished by **what they adapt**:
 
-**`docs/`:** `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Each adapter is the authoritative source for its own backend's operational detail (DDL, indexes, TTL behavior, IaC notes, `STORE_CONFIG` shape). The parent's `docs/` does not duplicate any of this. See [`complex-module-docs-guide.md`](complex-module-docs-guide.md) for the deep guide.
+| Subtype | Naming | What it adapts | Typical use cases |
+|---|---|---|---|
+| **Store** (`-store-`) | `[parent]-store-[backend]` | Data persistence and storage backends | Databases (SQL, NoSQL), file systems, caches |
+| **Adapter** (`-adapter-`) | `[parent]-adapter-[name]` | Everything else: runtimes, transports, integrations | HTTP runtimes, queue consumers, notification channels, future use cases |
+
+**Internal shape (factory vs singleton):** Either subtype can use either pattern. The choice depends on whether the adapter needs **per-instance state**:
+
+| Question | Answer: Factory (`createInterface`) | Answer: Singleton (`let Lib;`) |
+|---|---|---|
+| Does it close over per-instance config? | Yes — e.g., each store instance has its own table name, driver reference | No — the adapter is stateless; all per-request state lives on `instance` |
+| Can multiple instances coexist with different configs? | Yes — that is why the closure exists | No — one global instance serves all callers identically |
+| Does the parent module use factory pattern? | Almost always yes (auth, verify, logger all use `createInterface`) | May or may not — transport parent `http-gateway` uses factory but its adapters are singletons |
+
+**In practice:** stores are almost always factory (their parent modules are factory-based and each instance needs its own `STORE_CONFIG`). Adapters are more commonly singleton (stateless normalizers), but can be factory if a future use case requires per-instance adapter config.
+
+**README extras:** None beyond the standard sections. The README follows the same Universal Section list as every other class (see [`module-readme-structure.md` → Class F](module-readme-structure.md#class-f-dependent-adapter)), condensed to ~70-90 lines. The "extension of the parent module" framing lives in the tagline (position 2) and the brief "What This Is" paragraph (position 3); there is no separate "How this fits into the parent module" subsection in the README itself, and no per-backend table comparing siblings. Section 9 ("Adding to Your Project") points to the parent module's install instructions and the loader-pattern doc; it contains no `npm install` snippet of its own. The factory-protocol explanation lives in `docs/api.md`.
+
+**`docs/`:** Stores: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapters: `api.md`, `configuration.md`. Each Class F package is the authoritative source for its own backend or runtime's operational detail. The parent's `docs/` does not duplicate any of this. See [`complex-module-docs-guide.md`](complex-module-docs-guide.md) for the deep guide.
 
 ### Auth Store Adapters
 
@@ -198,6 +216,13 @@ Class F is the only class with this "cannot stand alone" property. Every other c
 | `js-server-helper-logger-store-mysql` | `@superloomdev/...logger-store-mysql` | MySQL | `logger` |
 | `js-server-helper-logger-store-mongodb` | `@superloomdev/...logger-store-mongodb` | MongoDB | `logger` |
 | `js-server-helper-logger-store-dynamodb` | `@superloomdev/...logger-store-dynamodb` | DynamoDB | `logger` |
+
+### HTTP Gateway Transport Adapters
+
+| Module | Package | Runtime | Parent |
+|---|---|---|---|
+| `js-server-helper-http-gateway-adapter-aws-apigateway` | `@superloomdev/...http-gateway-adapter-aws-apigateway` | AWS Lambda + API Gateway v2.0 | `http-gateway` |
+| `js-server-helper-http-gateway-adapter-express` | `@superloomdev/...http-gateway-adapter-express` | Express (Docker) | `http-gateway` |
 
 ---
 
@@ -232,6 +257,8 @@ Tracks which modules have been restructured per [`module-readme-structure.md`](m
 | js-server-helper-auth-store-mysql | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Wave 9. MySQL / MariaDB SQL case under the new four-doc rubric. README condensed from 189 lines to ~70, following the full Universal Section list (bullet 5 matches postgres: schema and cleanup built in). New `docs/api.md` (store contract with MySQL-specific semantics: UPSERT uses `ON DUPLICATE KEY UPDATE col = VALUES(col)` not Postgres's `ON CONFLICT ... EXCLUDED`, same 8 methods), `docs/configuration.md` (`STORE_CONFIG` keys `table_name` and `lib_sql`, peer deps, env vars `MYSQL_HOST`/`PORT`/`DATABASE`/`USER`/`PASSWORD` with port 3307 to avoid collision, Docker testing tier), `docs/schema.md` (DDL verbatim with backtick-quoted identifiers, `TINYINT(1)` boolean encoding with defensive driver-normalization, BIGINT handled same as postgres but without driver-string-coercion since `mysql2` returns Number, inlined `INDEX` in `CREATE TABLE` because MySQL lacks `CREATE INDEX IF NOT EXISTS`, `INSERT ... ON DUPLICATE KEY UPDATE` UPSERT semantics), `docs/cleanup.md` (no native TTL; scheduled cleanup via cron or MySQL Event Scheduler alternative, `OPTIMIZE TABLE` note for space reclamation). ROBOTS.md added with twelve behaviors-not-to-violate (includes backtick-quoting and MariaDB wire-compatibility note). **No comparison with sibling adapters anywhere in the package** |
 | js-server-helper-auth-store-dynamodb | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Wave 9. AWS DynamoDB NoSQL case under the new four-doc rubric. README condensed from 209 lines to ~70, following the full Universal Section list (bullet 5 calls out the native TTL option and Scan-then-batchDelete fallback). **Fixed factual drift in README**: env var is `DYNAMO_ENDPOINT` (not `DYNAMODB_ENDPOINT`), local emulator port is 8001 (not 8000), Sort Key attribute is `session_key` (not `actor_id_token_key`). New `docs/api.md` (store contract with DynamoDB-specific semantics: `setupNewStore` returns `NOT_IMPLEMENTED`, `GetItem`+hash-compare for `getSession`, `Query` with `begins_with` for `listSessionsByActor`, `PutItem` full replace for `setSession`, `UpdateItem` for `updateSessionActivity` with identity blocklist including `session_key`, `DeleteItem`/`BatchWriteItem` for deletes, `Scan`-then-`BatchWriteItem` for cleanup), `docs/configuration.md` (`STORE_CONFIG` keys `table_name` and `lib_dynamodb`, peer deps, **IAM permissions table** with minimum policy JSON, env vars `AWS_REGION`/`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`DYNAMO_ENDPOINT`, Docker testing tier with `amazon/dynamodb-local`), `docs/schema.md` (single-table design with PK=`tenant_id`, SK=`session_key` computed as `` `${actor_id}#${token_key}` ``, CloudFormation/CDK example with **corrected `session_key` attribute name**, item shape example with DynamoDB JSON and canonical record, no GSI required, attribute type mapping including native BOOL and Map for `custom_data`), `docs/cleanup.md` (native TTL on `expires_at` as recommended path with 48-hour eventual consistency caveat, Scan-then-batchDelete fallback for immediate consistency, cost implications of Scan on large tables). ROBOTS.md added with eleven behaviors-not-to-violate (includes `session_key` as blocked identity field and chunking delegation note). **No comparison with sibling adapters anywhere in the package** |
 | js-server-helper-logger-store-* (5) | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Wave 9. Sqlite, postgres, mysql, mongodb, dynamodb - all migrated to the four-doc Class F rubric. Each adapter ships README (~70 lines) + `docs/api.md` + `docs/configuration.md` + `docs/schema.md` + `docs/cleanup.md` + `ROBOTS.md`. Per-adapter detailed rows can be added separately when individual adapter notes are needed |
+| js-server-helper-http-gateway-adapter-aws-apigateway | F | No (pending) | No (pending) | No | Transport adapter subtype. First Class F transport adapter. Lib injection and code sectioning fixed during Plan 0032/0033 audit |
+| js-server-helper-http-gateway-adapter-express | F | No (pending) | No (pending) | No | Transport adapter subtype. Lib injection and code sectioning fixed during Plan 0032/0033 audit |
 
 ---
 

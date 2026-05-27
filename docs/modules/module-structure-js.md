@@ -20,6 +20,8 @@ A reference for how every module in Superloom is shaped: the standard applicatio
   - [Canonical Shape: Module-Root Singleton (Validators)](#canonical-shape-module-root-singleton-validators)
   - [Module-Scope Declaration Ordering](#module-scope-declaration-ordering)
 - [Adapter Pattern (Multi-Backend Helper Modules)](#adapter-pattern-multi-backend-helper-modules)
+  - [Storage Adapter Skeleton](#storage-adapter-skeleton)
+  - [Adapter Skeleton](#adapter-skeleton)
 - [Model Package Index](#model-package-index)
 - [Server Extension Merge Pattern](#server-extension-merge-pattern)
 - [Required Structure Elements](#required-structure-elements)
@@ -854,6 +856,186 @@ return createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store);
 ```
 
 Instantiating `store` inside `createInterface` instead is a structural error: `createInterface` would have a hidden side effect and could no longer be tested by passing a mock store directly.
+
+### Storage Adapter Skeleton
+
+Storage adapters wrap a database driver to implement the parent module's store contract. They use the **factory pattern** (`createInterface`) because each instance closes over its own `STORE_CONFIG` (table name, driver reference). The canonical shape mirrors the helper-module factory pattern, but the loader receives `(Lib, CONFIG, ERRORS)` from the parent rather than from the application.
+
+```javascript
+// Info: [Backend] store adapter for js-server-helper-[parent].
+// [Description of what this adapter does and which backend it wraps.]
+//
+// Store contract (identical shape across all adapters):
+//   - method1(instance, ...)  -> { success, error }
+//   - method2(instance, ...)  -> { success, record, error }
+'use strict';
+
+
+/////////////////////////// Module-Loader START ////////////////////////////////
+
+module.exports = function loader (Lib, CONFIG, ERRORS) {
+
+  // Load the validators singleton and inject Lib
+  const Validators = require('./store.validators')(Lib);
+
+  // Validate STORE_CONFIG - throws on misconfiguration
+  Validators.validateConfig(CONFIG.STORE_CONFIG);
+
+  return createInterface(Lib, CONFIG.STORE_CONFIG, ERRORS);
+
+};///////////////////////////// Module-Loader END ///////////////////////////////
+
+
+
+/////////////////////////// createInterface START //////////////////////////////
+
+const createInterface = function (Lib, STORE_CONFIG, ERRORS) {
+
+  ///////////////////////////Public Functions START//////////////////////////////
+  const Store = {
+
+    methodName: function (instance) {
+      // Public functions close over Lib, STORE_CONFIG, ERRORS
+    }
+
+  };///////////////////////////Public Functions END//////////////////////////////
+
+
+
+  //////////////////////////Private Functions START//////////////////////////////
+  const _Store = {
+
+    helperName: function () {
+      // Private functions close over Lib, STORE_CONFIG, ERRORS
+    }
+
+  };//////////////////////////Private Functions END//////////////////////////////
+
+
+  return Store;
+
+};/////////////////////////// createInterface END //////////////////////////////
+```
+
+**Key rules for storage adapters:**
+
+| Rule | Detail |
+|---|---|
+| **Factory pattern (createInterface)** | Each loader call returns an independent Store instance with its own closure over `STORE_CONFIG` |
+| **Public before private** | `Store` is declared before `_Store` inside `createInterface` |
+| **Validators loaded in the loader** | `store.validators.js` is a module-root singleton, loaded and called before `createInterface` |
+| **`Lib.Utils` for all type checks** | No inline `typeof` or manual length checks; use `Lib.Utils.isString`, `Lib.Utils.isObject`, etc. |
+| **Error catalog from parent** | Return `ERRORS.SERVICE_UNAVAILABLE` (or the parent's catalog equivalent), never adapter-defined error shapes |
+
+**Reference implementation:** `js-server-helper-auth-store-sqlite` (`store.js`) in `js-helper-modules`.
+
+### Adapter Skeleton
+
+This skeleton applies to any Class F adapter (`-adapter-[name]`) that is **stateless** — it has no per-instance configuration and all per-request state lives on `instance`, not inside the adapter. This covers transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type that does not need per-instance closures.
+
+**When to use singleton vs factory for adapters:**
+
+```
+Does the adapter need per-instance configuration (its own config slice, driver reference, connection)?
+├─ Yes → Use the Storage Adapter Skeleton (factory/createInterface)
+└─ No  → Use this skeleton (singleton)
+         The adapter is stateless; one global instance serves all callers.
+         All per-request state lives on `instance`.
+```
+
+Stores (`-store-`) are almost always factory because each parent instance needs its own `STORE_CONFIG`. Adapters (`-adapter-`) are more commonly singleton, but can use factory if a future use case requires per-instance adapter config.
+
+```javascript
+// Info: [Runtime] adapter for js-server-helper-[parent].
+// [Description of what this adapter normalizes.]
+//
+// Adapter contract:
+//   - method1(instance, raw_request, raw_context, response_callback)
+//   - method2(status, headers, body) -> Object
+//   - method3(instance) -> String | null
+//
+// Compatibility: Node.js 24+
+'use strict';
+
+
+// Shared dependency container injected by loader
+let Lib;
+
+
+/////////////////////////// Module-Loader START ////////////////////////////////
+
+/********************************************************************
+Factory loader. Called by [parent].js as CONFIG.ADAPTER(Lib, CONFIG, ERRORS).
+Returns the stateless adapter singleton - all request state lives on instance.
+
+@param {Object} shared_libs - Lib container (Utils, Debug)
+@param {Object} _config     - Merged CONFIG (accepted for contract conformance)
+@param {Object} _errors     - Error catalog (accepted for contract conformance)
+
+@return {Object} - Adapter interface
+*********************************************************************/
+module.exports = function loader (shared_libs, _config, _errors) {
+
+  Lib = shared_libs;
+
+  return Adapter;
+
+};///////////////////////////// Module-Loader END ///////////////////////////////
+
+
+
+///////////////////////////Public Functions START//////////////////////////////
+const Adapter = {
+
+  /********************************************************************
+  [Contract method description]
+
+  @param {Object} instance - Per-request instance to populate
+  *********************************************************************/
+  contractMethod: function (instance) {
+    // Public functions use Lib.Utils for type checks
+    // Call _Adapter helpers for internal logic
+  }
+
+};////////////////////////////Public Functions END//////////////////////////////
+
+
+
+///////////////////////////Private Functions START/////////////////////////////
+const _Adapter = {
+
+  /********************************************************************
+  [Private helper description]
+
+  @param {String} input - Description
+  @return {Object} - Description
+  *********************************************************************/
+  helperMethod: function (input) {
+    // Private functions also use Lib.Utils
+    if (!Lib.Utils.isString(input)) {
+      return {};
+    }
+    // ...
+  }
+
+};///////////////////////////Private Functions END//////////////////////////////
+```
+
+**Key rules for singleton adapters:**
+
+| Rule | Detail |
+|---|---|
+| **Module-scope singleton** | `let Lib;` at module scope, set once by loader. No `createInterface` needed |
+| **Loader accepts `(shared_libs, _config, _errors)`** | Same uniform signature as parts and store adapters, even if `_config` and `_errors` are unused. Underscore-prefix the unused params |
+| **Public before private** | `Adapter` is declared before `_Adapter` at module scope. Same rule as singletons and `createInterface` internals |
+| **`Lib.Utils` for all type checks** | No inline `typeof`, no manual `.length` checks. Use `Lib.Utils.isString`, `Lib.Utils.isObject`, `Lib.Utils.isNullOrUndefined`, `Lib.Utils.isFunction` |
+| **L1 section banners** | `Module-Loader START/END`, `Public Functions START/END`, `Private Functions START/END`. Standard 3/2/1 spacing between sections |
+| **Error catalog usage** | Depends on the adapter's contract. Transport adapters typically do not return error envelopes (the parent handles errors). Other adapter types may use `ERRORS` from the parent if the contract requires it |
+| **All state on `instance`** | The adapter never holds per-request state. It populates fields on `instance` as defined by the parent's adapter contract |
+
+**Reference implementation:** `js-server-helper-http-gateway-adapter-express` (`adapter.js`) in `js-helper-modules`.
+
+**Note:** If an adapter needs per-instance config (e.g., a notification adapter connecting to different providers per tenant), use the Storage Adapter Skeleton structure (`createInterface` with closure over adapter-specific config) but with `-adapter-` naming. The factory vs singleton choice is about state, not about naming.
 
 ### Reference Implementations
 

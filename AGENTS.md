@@ -601,14 +601,14 @@ Every module documents itself across three files, each with one audience. Full r
 | **B. Extended utility** | Node.js runtime only, no third-party packages | "Behavior" (lifecycle semantics, cleanup) | `api.md`, `configuration.md` |
 | **C. Driver wrapper** | Wraps third-party DB driver (Postgres, MySQL, MongoDB, SQLite) | (none - Hot-Swappable section serves this) | `api.md`, `configuration.md` |
 | **D. Cloud service wrapper** | Wraps cloud/network SDK (AWS S3, DynamoDB, SQS) | "Credentials & Permissions" | `api.md`, `configuration.md`, optional `iam.md` |
-| **E. Feature module with adapters** | Business logic + pluggable storage (auth, verify, logger) | "Architecture Overview" + "Storage Adapters" | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md` |
-| **F. Storage adapter** | Implements parent's store contract for single backend | (none) | `api.md`, `configuration.md`, `schema.md`, `cleanup.md` |
+| **E. Feature module with adapters** | Business logic + pluggable storage or transport (auth, verify, logger, http-gateway) | "Architecture Overview" + "Storage Adapters" or "Transport Adapters" | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md` |
+| **F. Dependent adapter** | Implements parent's adapter contract. Two subtypes: **store** (`-store-[backend]`, data/persistence) and **adapter** (`-adapter-[name]`, everything else: transport, integration, future). Either can be factory or singleton depending on per-instance state needs | (none) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
 
 **Universal value bullets 1-4** copy-pasteable across classes (insulation, pre-tested, human review, observability). Only bullet 5 is class-specific. See full templates in `docs/modules/module-readme-structure.md`.
 
 **Cross-cutting patterns:**
 - **AWS Family:** Shared "Explicit credentials" bullet, "Credentials and IAM Permissions" section with minimum-IAM table, local emulator vs real service, multi-region setup
-- **Hot-Swap Families:** SQL drivers, NoSQL drivers, auth storage adapters, crypto (server↔client). Adding sibling requires updating every existing sibling's README
+- **Hot-Swap Families:** SQL drivers, NoSQL drivers, auth storage adapters, http-gateway transport adapters, crypto (server↔client). Adding sibling requires updating every existing sibling's README
 - **"Required (override)"** in config tables for defaults that must be changed (HOST, DATABASE, KEY, SECRET)
 - **Response envelope illustration** in "What this is" section
 - **Lazy initialization** note in `docs/configuration.md`
@@ -840,9 +840,20 @@ When a helper module needs interchangeable backends (databases, transports, key/
 - **Reference implementations:** `js-server-helper-auth` (8-method contract) and `js-server-helper-verify` (6-method contract)
 - **Loader-time validation:** parent's `validateConfig` enforces `typeof CONFIG.STORE === 'function'` - throws on misconfiguration before any per-call work
 - **Uniform `(Lib, CONFIG, ERRORS)`:** parent narrows `Lib` (typically `{ Utils, Debug, Crypto, Instance }`), forwards merged `CONFIG` whole, forwards its frozen `ERRORS` catalog. Adapters extract `CONFIG.STORE_CONFIG` internally
-- **Internal error catalog forwarding:** adapters use the parent's `ERRORS` catalog objects in failure envelopes - never define their own. Identical envelope shape regardless of backend
-- **Adapter contract documented in two places:** top-of-file comment in `[adapter]/store.js` listing every method + signature + return shape; **identical** Store Contract table in every adapter's README
-- **Reference:** `js-server-helper-auth` (parent, 8-method store contract) + 5 standalone adapters (`-sqlite`, `-postgres`, `-mysql`, `-mongodb`, `-dynamodb`)
+- **Internal error catalog forwarding:** storage adapters use the parent's `ERRORS` catalog objects in failure envelopes - never define their own. Identical envelope shape regardless of backend
+- **Adapter contract documented in two places:** top-of-file comment in `[adapter]/store.js` or `[adapter]/adapter.js` listing every method + signature + return shape; contract table in every adapter's README
+- **Two subtypes distinguished by what they adapt:**
+
+| Subtype | Naming | What it adapts | Typical internal shape |
+|---|---|---|---|
+| **Store** | `[parent]-store-[backend]` | Data persistence (databases, file systems, caches) | Factory (`createInterface`) — almost always, because parent is factory-based and each instance needs its own `STORE_CONFIG` |
+| **Adapter** | `[parent]-adapter-[name]` | Everything else: runtimes, transports, integrations, future use cases | Singleton (most common — stateless normalizers) or factory (if per-instance config needed) |
+
+- **Factory vs singleton decision:** Does the adapter need per-instance configuration? Yes → factory. No → singleton. The choice is about state, not naming
+- **Singleton adapter rules:** all state on `instance`, `Lib.Utils` for type checks, public before private at module scope
+- **Skeletons:** `docs/modules/module-structure-js.md` -> "Storage Adapter Skeleton" and "Adapter Skeleton"
+- **Reference (storage):** `js-server-helper-auth` (parent, 8-method store contract) + 5 standalone adapters (`-sqlite`, `-postgres`, `-mysql`, `-mongodb`, `-dynamodb`)
+- **Reference (transport):** `js-server-helper-http-gateway` (parent, 3-method adapter contract) + 2 standalone adapters (`-aws-apigateway`, `-express`)
 
 ### Application Module Structure (Models, Controllers, Services)
 
