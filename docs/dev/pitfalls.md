@@ -739,6 +739,39 @@ if: contains(fromJSON(needs.detect.outputs.test_modules), 'src/helper-modules-ca
 if: contains(fromJSON(needs.detect.outputs.publish_modules), 'src/helper-modules-category/js-module-name')
 ```
 
+### 19. Test loader uses relative source path instead of the `_test/package.json` alias
+
+**Symptom:** A `test-*` CI job fails with `Error: Cannot find module 'cookie'` (or any transitive dep of the module under test). The require stack points at files inside the module's **source directory** (e.g. `src/helper-modules-server/js-server-helper-http-gateway/parts/cookies.js`), not at `_test/node_modules/...`. Tests pass on the developer's machine because `node_modules/` from a previous module-level `npm install` is still present, but break in a clean CI environment.
+
+**Cause:** The test loader (or test file) was written as `require('../adapter.js')` or `require('../../sibling-module/main.js')` instead of using the alias declared in `_test/package.json`. The CI workflow runs `npm install` inside `_test/`, which only populates `_test/node_modules/`. Node's require resolves the relative path to the source directory, where the module's transitive deps were never installed (CI never runs `npm install` at that location).
+
+**Why aliases exist:** Every `_test/package.json` declares aliases like:
+
+```json
+"dependencies": {
+  "helper-foo": "file:../",
+  "helper-foo-adapter-bar": "npm:@superloomdev/js-server-helper-foo-adapter-bar@^1.0.0"
+}
+```
+
+These aliases exist precisely so the loader code stays identical between local-source (resolved via `file:../`) and published-package (resolved via `npm:`) contexts. When `npm install` runs in `_test/`, it copies the aliased package into `_test/node_modules/` AND installs that package's transitive deps right next to it. Bypassing the alias defeats this entirely.
+
+**Fix:** Always require helpers in `_test/` files via the alias declared in `_test/package.json`:
+
+```javascript
+// WRONG — relative path to source directory
+const HttpGateway        = require('../http-gateway.js');
+const HttpGatewayAdapter = require('../adapter.js');
+
+// CORRECT — alias from _test/package.json
+const HttpGateway        = require('helper-http-gateway');
+const HttpGatewayAdapter = require('helper-http-gateway-adapter-express');
+```
+
+**Exception:** Internal files not exposed via the package's main entry (e.g. `parts/cookies.js`, `parts/params.js` testing internals) may continue to use relative paths. They are not addressable through the alias because they are not part of the package's public surface.
+
+**Lesson:** Treat `require()` style as part of test hygiene, not as a stylistic choice. The HTTP Gateway trio (`js-server-helper-http-gateway` + 2 adapters) is the canonical reference. Plan 0037 covers the full audit and lint to enforce this across every module.
+
 ---
 
 ## Adding a New Entry

@@ -58,7 +58,12 @@ The module's `package.json` must have:
 
 const assert = require('node:assert/strict');
 const { describe, it } = require('node:test');
-const ModuleName = require('../module-file.js');
+
+// Require the module under test by its `_test/package.json` alias
+// (which resolves to `file:../`), not by relative source path. Aliases
+// keep the loader identical between local-source and published-package
+// contexts. Internal `parts/*.js` testing internals may stay relative.
+const ModuleName = require('helper-[module-name]');
 
 
 
@@ -284,7 +289,7 @@ The key property: **state persists across calls within the same test**. A `setSe
 
 | Module | File | What it stubs |
 |---|---|---|
-| `js-server-helper-http-gateway` | `_test/stub-adapter.js` | 3-method adapter contract (loadHttpDataToInstance, buildHttpResponseObject, getHttpRequestCountryCode) |
+| `js-server-helper-http-gateway` | `_test/stub-adapter.js` | 3-method adapter contract (extractRequest, buildResponseEnvelope, getCountryCode) |
 
 **What a stub-adapter looks like:**
 
@@ -294,16 +299,25 @@ module.exports = function createStubAdapter () {
   const sent = [];
   return {
     adapter: {
-      loadHttpDataToInstance: function (instance, raw_request, _ctx, cb) {
-        instance.http_request = raw_request || {};
-        instance.gateway_response_callback = cb;
+      extractRequest: function (raw_request, _ctx, cb) {
+        const req = raw_request || {};
+        return {
+          headers: req.headers || {},
+          query: req.query || {},
+          body: req.body || {},
+          params: req.params || {},
+          cookies: req.cookies || {},
+          method: req.method || null,
+          url: req.url || '',
+          response_handler: cb
+        };
       },
-      buildHttpResponseObject: function (status, headers, body) {
+      buildResponseEnvelope: function (status, headers, body) {
         const r = { status, headers, body };
         sent.push(r);
         return r;
       },
-      getHttpRequestCountryCode: function () { return null; }
+      getCountryCode: function () { return null; }
     },
     sent: sent   // test assertions inspect this
   };
@@ -346,7 +360,8 @@ const StubAdapt  = require('./stub-adapter');
 const { adapter, sent } = StubAdapt();
 const store = MemStore();
 
-const Module = require('../module.js')(Lib, {
+// Require the module under test by its `_test/package.json` alias.
+const Module = require('helper-[module-name]')(Lib, {
   STORE:   store,
   ADAPTER: function () { return adapter; }
 });

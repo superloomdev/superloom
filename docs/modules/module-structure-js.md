@@ -966,7 +966,7 @@ let Lib;
 
 /********************************************************************
 Factory loader. Called by [parent].js as CONFIG.ADAPTER(Lib, CONFIG, ERRORS).
-Returns the stateless adapter singleton - all request state lives on instance.
+Returns the stateless adapter singleton. The adapter receives raw inputs and returns normalized data to the parent, which owns instance writes.
 
 @param {Object} shared_libs - Lib container (Utils, Debug)
 @param {Object} _config     - Merged CONFIG (accepted for contract conformance)
@@ -1031,7 +1031,7 @@ const _Adapter = {
 | **`Lib.Utils` for all type checks** | No inline `typeof`, no manual `.length` checks. Use `Lib.Utils.isString`, `Lib.Utils.isObject`, `Lib.Utils.isNullOrUndefined`, `Lib.Utils.isFunction` |
 | **L1 section banners** | `Module-Loader START/END`, `Public Functions START/END`, `Private Functions START/END`. Standard 3/2/1 spacing between sections |
 | **Error catalog usage** | Depends on the adapter's contract. Transport adapters typically do not return error envelopes (the parent handles errors). Other adapter types may use `ERRORS` from the parent if the contract requires it |
-| **All state on `instance`** | The adapter never holds per-request state. It populates fields on `instance` as defined by the parent's adapter contract |
+| **Adapter is a pure normalizer** | The adapter never holds per-request state and never writes to `instance`. It receives raw inputs and returns normalized data; the parent is the sole writer to `instance` |
 
 **Reference implementation:** `js-server-helper-http-gateway-adapter-express` (`adapter.js`) in `js-helper-modules`.
 
@@ -1261,7 +1261,7 @@ Most modules follow a consistent file structure:
 | `.npmignore` | **Required** - controls what files are included in the published tarball. Canonical shape: refer to `js-helper-utils`. See [Registry Ignore File](module-publishing.md#registry-ignore-file-npmignore) |
 | `_test/test.js` | Tests using `node --test` and `node:assert/strict` |
 | `_test/loader.js` | Test loader (env reading, dep injection) - required for any module using DI |
-| `_test/package.json` | Test-only dependencies, `private: true`, references module as `file:../` |
+| `_test/package.json` | Test-only dependencies, `private: true`, references module-under-test via alias `"helper-[name]": "file:../"`. Test code MUST `require()` the module by this alias, never by relative source path (`require('../adapter.js')` etc). The alias keeps loader code identical between local-source and published-package contexts. Internal `parts/*.js` files testing internals are exempt. Reference: HTTP Gateway trio. |
 | `_test/mock-data/` | (Optional) JSON fixtures |
 | `_test/docker-compose.yml` | (Service-dependent modules only) emulator definitions |
 | `_test/ops/` | (Service-dependent modules only) testing setup runbook |
@@ -1440,6 +1440,14 @@ const loader = function (shared_libs, config) {
 
 **Pattern 1 rules (legacy):**
 
+- `const CONFIG = require('./[module].config')` at module level
+- Base config comment: `// Base configuration (overridden by loader-injected config)`
+- Merge comment: `// Merge loader-injected config (overrides base values)`
+- Always guard with `if (config && typeof config === 'object')` before `Object.assign`
+- Public functions (`const [ModuleName] = { ... }`) declared at module level
+- `module.exports` calls `loader(shared_libs, config)` once and returns the module-level public interface
+
+When migrating a Pattern 1 module to Pattern 2, treat it as a breaking change for that module. See [Reference Implementations](#reference-implementations) above.
 - `const CONFIG = require('./[module].config')` at module level
 - Base config comment: `// Base configuration (overridden by loader-injected config)`
 - Merge comment: `// Merge loader-injected config (overrides base values)`
