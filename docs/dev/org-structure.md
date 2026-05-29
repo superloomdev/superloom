@@ -16,19 +16,19 @@ How the Superloom project is divided across repositories and how they relate to 
 
 ```
 superloomdev/
-  superloom              — Framework constitution: docs, conventions, architecture, website
-  js-helper-modules      — All JavaScript helper modules (published as @superloomdev/*)
-  js-demo-project        — JavaScript reference demo application
+  superloom              - Framework constitution: docs, conventions, architecture, website
+  js-helper-modules      - All JavaScript helper modules (published as @superloomdev/*)
+  js-demo-project        - JavaScript reference demo application
   [future]
-  py-helper-modules      — Python helper modules (when ready)
-  js-helper-modules-specialized  — Non-core or community JS wrappers (when ready)
+  py-helper-modules      - Python helper modules (when ready)
+  js-helper-modules-specialized  - Non-core or community JS wrappers (when ready)
 ```
 
 | Repository | Purpose | What lives here |
 |---|---|---|
 | `superloom` | The constitution | `docs/`, `website/`, framework conventions, architectural philosophy, this file |
 | `js-helper-modules` | JS implementation | `src/helper-modules-core/`, `src/helper-modules-server/`, `src/helper-modules-client/`, CI/CD publish pipeline |
-| `js-demo-project` | JS reference app | Full demo application — model, server, ops runbook |
+| `js-demo-project` | JS reference app | Full demo application - model, server, ops runbook |
 
 The `superloom` repo is language-agnostic. It defines patterns, not implementations. Language-specific implementations live in their own repos and reference `superloom` for conventions.
 
@@ -54,11 +54,11 @@ All repositories in the project share a single parent directory on the developer
 
 ```
 project-superloom/
-  codebase-superloom/          — clone of superloomdev/superloom
-  codebase-js-helper-modules/  — clone of superloomdev/js-helper-modules
-  codebase-js-demo-project/    — clone of superloomdev/js-demo-project
-  __dev__/                     — personal workspace (never committed, see below)
-  superloom.code-workspace     — multi-root workspace file for VSCode / Windsurf
+  codebase-superloom/          - clone of superloomdev/superloom
+  codebase-js-helper-modules/  - clone of superloomdev/js-helper-modules
+  codebase-js-demo-project/    - clone of superloomdev/js-demo-project
+  __dev__/                     - personal workspace (never committed, see below)
+  superloom.code-workspace     - multi-root workspace file for VSCode / Windsurf
 ```
 
 The `superloom.code-workspace` file ties all repos together into a single IDE window. Each repo has its own `.git/` and its own CI/CD, but a developer works across all of them from one IDE session.
@@ -69,7 +69,7 @@ The `superloom.code-workspace` file ties all repos together into a single IDE wi
 
 The `__dev__/` folder lives at the **workspace root** (`project-superloom/__dev__/`), one level above all repository clones. It is never committed to any repository.
 
-This location was chosen deliberately: `__dev__/` spans all repos. Plans, secrets, and notes are not tied to any individual repository — they belong to the workspace as a whole.
+This location was chosen deliberately: `__dev__/` spans all repos. Plans, secrets, and notes are not tied to any individual repository - they belong to the workspace as a whole.
 
 | File / Folder | Purpose |
 |---|---|
@@ -77,11 +77,11 @@ This location was chosen deliberately: `__dev__/` spans all repos. Plans, secret
 | `.env.dev` | Dev environment values (copied from `codebase-superloom/docs/dev/.env.dev.example`) |
 | `.env.integration` | Integration environment values (real cloud, sandbox account) |
 | `progress.md` | Current work, pending tasks, session notes |
-| `context.md` | Developer-specific AI context — your patterns, preferences, working notes |
+| `context.md` | Developer-specific AI context - your patterns, preferences, working notes |
 | `plans/` | Long-horizon plans and backlog. See [`planning.md`](planning.md) |
 | `secrets/` | Real credentials, API keys, sandbox passwords (never copied anywhere committed) |
 
-Because `__dev__/` lives outside any git repo, it does not need a `.gitignore` entry — it is simply never tracked.
+Because `__dev__/` lives outside any git repo, it does not need a `.gitignore` entry - it is simply never tracked.
 
 ---
 

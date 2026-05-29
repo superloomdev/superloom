@@ -50,7 +50,7 @@ A third-party dependency is acceptable **only** when **all** of the following ar
 
 ## Where Third-Party Code Is Allowed to Live
 
-Even within an accepted third-party dependency, the `require()` call is confined to specific layers. This confinement is what makes a dependency reversible — swapping a library costs one PR against one file, not N PRs scattered across application code.
+Even within an accepted third-party dependency, the `require()` call is confined to specific layers. This confinement is what makes a dependency reversible - swapping a library costs one PR against one file, not N PRs scattered across application code.
 
 | Layer | Allowed to import third-party code directly? |
 |---|---|
@@ -72,7 +72,7 @@ This applies equally to all dependency categories:
 
 - A pure-string codec (e.g. cookie parsing)
 - A data-list library (e.g. public suffix lookup)
-- A runtime SDK that the module fundamentally cannot operate without (e.g. AWS SDK in a DynamoDB helper — the module is the AWS SDK wrapper, and that is self-evident, but still documented)
+- A runtime SDK that the module fundamentally cannot operate without (e.g. AWS SDK in a DynamoDB helper - the module is the AWS SDK wrapper, and that is self-evident, but still documented)
 - Any future accepted dependency
 
 ### Required Section in README
@@ -81,9 +81,9 @@ Every module README that has at least one runtime dependency must contain a **"T
 
 The section must cover each dependency listed in the module's `package.json` `dependencies` field (not `devDependencies`, not `peerDependencies`). For each dependency, document:
 
-1. **Package name and what it does** — the specific surface the module uses, not the library's full feature set.
-2. **Why the module uses it instead of in-house code** — the concrete technical reason. If the reason is security pitfalls in the problem space, name them.
-3. **What criteria it satisfied** — a brief cross-reference to the eight criteria above, enough that a reader can verify the decision was deliberate.
+1. **Package name and what it does** - the specific surface the module uses, not the library's full feature set.
+2. **Why the module uses it instead of in-house code** - the concrete technical reason. If the reason is security pitfalls in the problem space, name them.
+3. **What criteria it satisfied** - a brief cross-reference to the eight criteria above, enough that a reader can verify the decision was deliberate.
 
 The section does NOT need to repeat the full decision matrix from this document. A few sentences per dependency, plus a pointer to this document for the full rationale, is enough.
 
@@ -130,7 +130,7 @@ Every accepted dependency is re-evaluated under two triggers:
 
 2. **Annually.** Once per calendar year, each dependency across all modules is re-checked: is the library still maintained, has a CVE been disclosed, has a better alternative emerged, has the in-house cost-of-reimplementation changed (e.g., Node added a native API that subsumes the library).
 
-A dependency can be *removed* (replaced with in-house code) at any time if the trade-off has shifted. New ones are added through the README documentation requirement — no central registry is needed; the READMEs are the inventory.
+A dependency can be *removed* (replaced with in-house code) at any time if the trade-off has shifted. New ones are added through the README documentation requirement - no central registry is needed; the READMEs are the inventory.
 
 ---
 

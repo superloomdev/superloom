@@ -166,6 +166,30 @@ Core helpers must operate on **generic data structures**. Avoid domain-specific 
 
 ---
 
+## Factory Pattern for Testability
+
+**Factory pattern is the standard for all core helper modules** except `js-helper-utils`. Each loader call returns an independent instance with its own configuration and dependencies, enabling proper test isolation.
+
+### Why Factory Pattern?
+
+| Benefit | Explanation |
+|---|---|
+| **Test Isolation** | Each test creates independent instances with different configurations |
+| **Parallel Testing** | Tests can run concurrently without conflicting global state |
+| **Configuration Flexibility** | Different callers can have different behavior (log levels, timezones, etc.) |
+| **Mock Injection** | Test doubles can be injected per test scenario |
+| **Future-Proofing** | Easy to add state or dependencies later without breaking changes |
+
+### Singleton Exception: Utils
+
+**`js-helper-utils`** is the only core module that uses singleton pattern because:
+- Zero external dependencies (no libs, no config)
+- Pure utility functions with identical behavior for all callers
+- No configuration needed
+- No test isolation issues since it has no dependencies
+
+All other core modules (`js-helper-debug`, `js-helper-time`, `js-helper-money`) use factory pattern to maintain testability and configuration flexibility.
+
 ## Testing and Reuse
 
 - Each helper module has its own unit tests and integration tests

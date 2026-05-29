@@ -73,7 +73,7 @@ Git reads `.gitignore` files at every directory level and cascades rules down au
 
 **Rules:**
 
-- The root `.gitignore` governs the entire repository — all modules, all subdirectories.
+- The root `.gitignore` governs the entire repository - all modules, all subdirectories.
 - Do not create a `.gitignore` inside any module, helper, or subdirectory.
 - If a new pattern is needed (e.g. a new type of generated artefact), add it to the root `.gitignore` with a comment explaining what it covers.
 

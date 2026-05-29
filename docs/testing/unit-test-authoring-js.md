@@ -224,7 +224,7 @@ Each function is a suite. Each `it()` is a test. All results are visible in the 
 
 ## Test Double Patterns: memory-store vs stub-adapter
 
-When a module under test depends on an external contract (a storage backend, a runtime adapter, a third-party driver), its own tests must not hit the real thing. Instead, a **test double** is placed in `_test/` that satisfies the contract interface with minimal in-process code. Two named patterns exist in this project. They are **not mutually exclusive** — a module can use both if it has two different kinds of dependency.
+When a module under test depends on an external contract (a storage backend, a runtime adapter, a third-party driver), its own tests must not hit the real thing. Instead, a **test double** is placed in `_test/` that satisfies the contract interface with minimal in-process code. Two named patterns exist in this project. They are **not mutually exclusive** - a module can use both if it has two different kinds of dependency.
 
 ---
 
@@ -234,12 +234,12 @@ When a module under test depends on an external contract (a storage backend, a r
 
 **What it is:** A full working implementation of a storage contract, backed by RAM (`Map`, `Array`, plain objects) instead of a real database. It has real logic: records are stored, read back, deleted, and expired. The only thing missing is persistence and a network round-trip.
 
-**Industry term:** *Fake* — a test double with working logic, just a simpler or faster implementation of the real thing.
+**Industry term:** *Fake* - a test double with working logic, just a simpler or faster implementation of the real thing.
 
 **When to use it:**
 
 - The module under test depends on a **storage backend** (database, key-value store, cache).
-- The contract being implemented is stateful — writes made in one call must be visible in a subsequent read call.
+- The contract being implemented is stateful - writes made in one call must be visible in a subsequent read call.
 - The module's own logic (session policy, token rotation, eviction, TTL) is what is being tested, and the store is just the persistence layer underneath it.
 - The real backend can be swapped for an in-process `Map` without changing the observable behavior of the module.
 
@@ -274,14 +274,14 @@ The key property: **state persists across calls within the same test**. A `setSe
 
 **File name:** `_test/stub-adapter.js`
 
-**What it is:** A minimal, stateless implementation of an adapter contract that returns valid-shaped dummy output for every call. It does not simulate any real system's internal behavior — it exists purely to satisfy the function signatures so the module under test can execute its own code paths.
+**What it is:** A minimal, stateless implementation of an adapter contract that returns valid-shaped dummy output for every call. It does not simulate any real system's internal behavior - it exists purely to satisfy the function signatures so the module under test can execute its own code paths.
 
-**Industry term:** *Stub* — a test double that satisfies an interface with hardcoded or trivially computed responses, with no real logic.
+**Industry term:** *Stub* - a test double that satisfies an interface with hardcoded or trivially computed responses, with no real logic.
 
 **When to use it:**
 
 - The module under test depends on a **runtime adapter** or **driver** (an HTTP runtime like API Gateway or Express, a queue client, a cloud SDK).
-- The adapter contract is not stateful in the way a database is — there are no reads that must see prior writes.
+- The adapter contract is not stateful in the way a database is - there are no reads that must see prior writes.
 - The module's own logic (request normalization, response building, header merging, cookie handling) is what is being tested, and the adapter is just the delivery channel underneath it.
 - The real adapter cannot be replicated in memory without reimplementing the actual runtime (Lambda event parsing, Express middleware), which is out of scope.
 
@@ -324,7 +324,7 @@ module.exports = function createStubAdapter () {
 };
 ```
 
-The key property: **no state persists across calls**. The stub just returns a valid-shaped value so the module's own code can run. Tests then inspect `sent[]` or the returned object to assert on the module's behavior — not the adapter's.
+The key property: **no state persists across calls**. The stub just returns a valid-shaped value so the module's own code can run. Tests then inspect `sent[]` or the returned object to assert on the module's behavior - not the adapter's.
 
 ---
 

@@ -759,11 +759,11 @@ These aliases exist precisely so the loader code stays identical between local-s
 **Fix:** Always require helpers in `_test/` files via the alias declared in `_test/package.json`:
 
 ```javascript
-// WRONG — relative path to source directory
+// WRONG - relative path to source directory
 const HttpGateway        = require('../http-gateway.js');
 const HttpGatewayAdapter = require('../adapter.js');
 
-// CORRECT — alias from _test/package.json
+// CORRECT - alias from _test/package.json
 const HttpGateway        = require('helper-http-gateway');
 const HttpGatewayAdapter = require('helper-http-gateway-adapter-express');
 ```
@@ -771,6 +771,46 @@ const HttpGatewayAdapter = require('helper-http-gateway-adapter-express');
 **Exception:** Internal files not exposed via the package's main entry (e.g. `parts/cookies.js`, `parts/params.js` testing internals) may continue to use relative paths. They are not addressable through the alias because they are not part of the package's public surface.
 
 **Lesson:** Treat `require()` style as part of test hygiene, not as a stylistic choice. The HTTP Gateway trio (`js-server-helper-http-gateway` + 2 adapters) is the canonical reference. Plan 0037 covers the full audit and lint to enforce this across every module.
+
+### 20. Singleton pattern prevents test isolation
+
+**Symptom:** Tests interfere with each other, last test's configuration affects subsequent tests, cannot run tests in parallel, difficult to mock dependencies.
+
+**Cause:** Module uses singleton pattern but takes external dependencies (libs, config, adapters). The singleton shares global state across all tests, making isolation impossible.
+
+**Lesson:** Use factory pattern for any module that takes external dependencies. Only use singleton pattern for pure utility modules with zero dependencies (like `js-helper-utils`). Factory pattern enables:
+- Independent instances per test with different configurations
+- Parallel test execution without conflicts  
+- Mock dependency injection per test scenario
+- Multiple instances for different use cases
+
+**Example of the problem:**
+```javascript
+// WRONG: Singleton with dependencies
+let CONFIG;
+module.exports = function loader (config) {
+  CONFIG = config;  // Last caller wins!
+  return singletonInstance;
+};
+
+// PROBLEM: Test A sets {log_level: 'debug'}
+// PROBLEM: Test B sets {log_level: 'error'}  
+// PROBLEM: Both tests now use 'error' level
+```
+
+**Example of the solution:**
+```javascript
+// CORRECT: Factory pattern
+module.exports = function loader (shared_libs, config) {
+  const Lib = { Utils: shared_libs.Utils };
+  const CONFIG = Object.assign({}, defaults, config);
+  return createInterface(Lib, CONFIG);
+};
+
+// BENEFIT: Each test gets isolated instance
+const testInstance1 = createModule({log_level: 'debug'});
+const testInstance2 = createModule({log_level: 'error'});
+```
 
 ---
 

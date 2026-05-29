@@ -258,7 +258,7 @@ const createInterface = function (Lib, CONFIG, state) {
 
 ### createInterface Signature Variants
 
-`createInterface` takes only the parameters the module actually needs. Use the minimal shape that fits — do not add parameters a module does not use.
+`createInterface` takes only the parameters the module actually needs. Use the minimal shape that fits - do not add parameters a module does not use.
 
 | Signature | Use when | Reference |
 |---|---|---|
@@ -267,7 +267,7 @@ const createInterface = function (Lib, CONFIG, state) {
 | `createInterface(Lib, CONFIG)` | Stateless helper - uses peer deps and config but holds no per-instance resource | `js-helper-time`, `js-server-helper-crypto`, `js-server-helper-http`, `js-server-helper-instance` |
 | `createInterface(Lib, CONFIG, state)` | Stateful helper - holds a per-instance resource (pool, persistent client, authenticated session) | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern - Validators singleton + externally-supplied store, no parts | `js-server-helper-verify` |
-| `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied adapter, no Validators singleton | `js-server-helper-http-gateway` |
+| `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied adapter, no Validators singleton | _(no current reference - use `js-server-helper-auth` as the closest shape)_ |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators singleton + decomposed parts (fullest shape) | `js-server-helper-auth` |
 
 The loader body mirrors the signature: it builds only the parameters it will pass. A stateless helper's loader ends with `return createInterface(Lib, CONFIG);` and never declares a `state` object.
@@ -278,12 +278,12 @@ Parameters passed to `createInterface` (and to module loaders in general) follow
 
 | Parameter kind | Casing | Rationale | Examples |
 |---|---|---|---|
-| **Internally-assembled namespaced containers** — bags of named keys built by this module's own loader | `PascalCase` | These are namespaces, not scalars. PascalCase signals "look inside for named sub-things" | `Lib`, `CONFIG`, `ERRORS`, `Parts`, `Validators` |
-| **Externally-supplied resolved dependencies** — a single instance of a contract, obtained by calling a factory that arrived from outside (via `CONFIG.STORE`, `CONFIG.ADAPTER`, etc.) | `camelCase` | These are resolved objects, not namespaces. `camelCase` signals "this is one specific thing that implements a contract" | `store`, `adapter`, `state` |
+| **Internally-assembled namespaced containers** - bags of named keys built by this module's own loader | `PascalCase` | These are namespaces, not scalars. PascalCase signals "look inside for named sub-things" | `Lib`, `CONFIG`, `ERRORS`, `Parts`, `Validators` |
+| **Externally-supplied resolved dependencies** - a single instance of a contract, obtained by calling a factory that arrived from outside (via `CONFIG.STORE`, `CONFIG.ADAPTER`, etc.) | `camelCase` | These are resolved objects, not namespaces. `camelCase` signals "this is one specific thing that implements a contract" | `store`, `adapter`, `state` |
 
-**Why `store` and `adapter` are lowercase — and why that is intentional:**
+**Why `store` and `adapter` are lowercase - and why that is intentional:**
 
-`store` (in auth/verify) and `adapter` (in http-gateway) are the result of calling an externally-supplied factory function: `CONFIG.STORE(Lib, CONFIG, ERRORS)`. The module did not build this object from its own parts; the caller chose it and injected it through config. It is the module's external boundary — the one thing it cannot reason about internally. Lowercase signals: *"this came from outside; we hold it but we did not build it."*
+`store` (in auth/verify) is the result of calling an externally-supplied factory function: `CONFIG.STORE(Lib, CONFIG, ERRORS)`. The module did not build this object from its own parts; the caller chose it and injected it through config. It is the module's external boundary - the one thing it cannot reason about internally. Lowercase signals: *"this came from outside; we hold it but we did not build it."*
 
 This is the same reason `state` is lowercase in simpler stateful modules: `state` is a mutable container, not a named namespace.
 
@@ -295,28 +295,28 @@ Parameters follow **internal-before-external** ordering. The full ordering rule:
 createInterface(Lib, CONFIG, ERRORS, [Validators,] [Parts,] [store | adapter | state])
 ```
 
-1. **`Lib`** — always first; the shared dependency container, present in almost every module
-2. **`CONFIG`** — always second when present; merged runtime configuration
-3. **`ERRORS`** — always third when present; frozen error catalog
-4. **`Validators`** — fourth when present; internally-built singleton from `[module].validators.js`
-5. **`Parts`** — fifth when present; internally-built container of `parts/` sub-modules
-6. **`store` / `adapter` / `state`** — always last; the externally-supplied or mutable resource
+1. **`Lib`** - always first; the shared dependency container, present in almost every module
+2. **`CONFIG`** - always second when present; merged runtime configuration
+3. **`ERRORS`** - always third when present; frozen error catalog
+4. **`Validators`** - fourth when present; internally-built singleton from `[module].validators.js`
+5. **`Parts`** - fifth when present; internally-built container of `parts/` sub-modules
+6. **`store` / `adapter` / `state`** - always last; the externally-supplied or mutable resource
 
-The rule is: **everything the module built for itself comes before the one thing that was handed to it from outside.** This makes the signature self-documenting — a reader scanning the parameter list sees the module's own infrastructure first and the external dependency at the end.
+The rule is: **everything the module built for itself comes before the one thing that was handed to it from outside.** This makes the signature self-documenting - a reader scanning the parameter list sees the module's own infrastructure first and the external dependency at the end.
 
 Modules without all roles stay minimal:
 
 ```javascript
-// No Parts, no external dependency — just the base three
+// No Parts, no external dependency - just the base three
 createInterface(Lib, CONFIG, ERRORS)
 
 // With store but no Parts (verify)
 createInterface(Lib, CONFIG, ERRORS, Validators, store)
 
-// With Parts and adapter (http-gateway)
+// With Parts and adapter
 createInterface(Lib, CONFIG, ERRORS, Parts, adapter)
 
-// With Parts, Validators, and store (auth — fullest shape)
+// With Parts, Validators, and store (auth - fullest shape)
 createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)
 ```
 
@@ -380,7 +380,7 @@ If a part would need to manage its own pool, persistent client, or other lifecyc
 
 ### Uniform Loader Signature
 
-**Every part loader — singleton or factory — always accepts `(shared_libs, config, errors)`.** This is a hard rule with no exceptions. It ensures the parent module can instantiate all parts with identical call sites and a new part can be added without touching existing call sites.
+**Every part loader - singleton or factory - always accepts `(shared_libs, config, errors)`.** This is a hard rule with no exceptions. It ensures the parent module can instantiate all parts with identical call sites and a new part can be added without touching existing call sites.
 
 ### Part Shape: Singleton or Factory
 
@@ -388,7 +388,7 @@ The loader signature is always the same. What differs is what happens inside:
 
 | Shape | When to use | What the loader does |
 |---|---|---|
-| **Singleton** | Part needs no per-instance closure — all state is module-scope | Assigns to module-scope `let` vars, returns the module-scope public object directly |
+| **Singleton** | Part needs no per-instance closure - all state is module-scope | Assigns to module-scope `let` vars, returns the module-scope public object directly |
 | **Factory** | Part needs a per-instance closure (e.g. over per-call `CONFIG` slice, per-instance resource) | Calls `createInterface(Lib, CONFIG, ERRORS)` and returns the result |
 
 ### Singleton Part Shape
@@ -478,7 +478,7 @@ Some modules are **stateless, pure, and globally shared**. They need no per-inst
 
 ### When To Use
 
-Use the singleton pattern when **all four** of these are true:
+**Factory pattern is the default for all modules** except in rare cases where all criteria are met. Use the singleton pattern only when **all five** of these are true:
 
 | Criterion | Detail |
 |---|---|
@@ -486,20 +486,36 @@ Use the singleton pattern when **all four** of these are true:
 | **Pure** | Every method takes inputs, returns a result or throws (no I/O, no side effects) |
 | **Shared identity** | One instance is always correct. There is no architectural reason for two callers to have different instances |
 | **No per-caller CONFIG** | All callers need the same behavior. `CONFIG` does not vary at runtime between callers |
+| **No external dependencies** | Module takes no `shared_libs`, `config`, or other injected dependencies that need test isolation |
 
-**Do not use the singleton pattern when:**
+**Always use the factory pattern when:**
 
 - The module holds a DB connection pool, persistent client, or any per-instance resource → use the **factory pattern** with `state`
 - Different callers legitimately need different `CONFIG` at runtime (different DB, different bucket, different queue) → use the **factory pattern**
 - The module wraps a vendor SDK or driver → use the **factory pattern** with `ensureAdapter`
 - The module is a `parts/` sub-module **and has at least one factory dependency** → use the factory `createInterface` shape (see [Part Shape: Singleton or Factory](#part-shape-singleton-or-factory))
+- **The module takes any external dependencies** (libs, config, adapters) → use the **factory pattern** for test isolation
+
+### Testability Considerations
+
+**Factory pattern enables proper test isolation:**
+- Each test can create independent instances with different configurations
+- Tests can run in parallel without conflicting global state
+- Mock dependencies can be injected per test
+- Multiple instances can coexist for different test scenarios
+
+**Singleton pattern creates testing problems:**
+- Global state makes test isolation impossible
+- Last test's configuration affects subsequent tests
+- Cannot run tests in parallel
+- Difficult to mock dependencies per test
 
 ### Three Singleton Subtypes
 
 | Subtype | Shape | Examples |
 |---|---|---|
 | **Data-only** | Pure `module.exports = Object.freeze({...})`, no loader, no `let` variables | `[module].errors.js`, `[module].config.js` |
-| **Lib-injected** | `let Lib;` at module scope, loader sets it once, public/private objects at module scope | `[module].validators.js` |
+| **Lib-injected** | `let Lib;` at module scope, loader sets it once, public/private objects at module scope | `[module].validators.js`, `js-server-helper-http-gateway` |
 | **No-dep** | No `let` variables at all, no loader needed. Pure functions with zero external dependencies | `js-helper-utils` (upgrade candidate) |
 
 ### Canonical Shape: Main Module Singleton
@@ -618,16 +634,16 @@ const _[Name] = {
 };//////////////////////////Private Functions END///////////////////////////////
 ```
 
-Not every module uses every declaration. Omit any that do not apply — but preserve the relative order of those that remain. A module with no validators and no data files would declare only `Lib`, `CONFIG`, and `ERRORS`.
+Not every module uses every declaration. Omit any that do not apply - but preserve the relative order of those that remain. A module with no validators and no data files would declare only `Lib`, `CONFIG`, and `ERRORS`.
 
 ### Canonical Shape: Module-Root Singleton (Validators)
 
 Module-root singletons (`[module].validators.js`) are a **special case** of the singleton pattern. They are singletons, but they do not follow the full main-module singleton shape. Key differences:
 
-- **Accept only `Lib`** — no `CONFIG`, no `ERRORS`. Validators run before config is validated, so they cannot depend on a merged config object.
-- **No config merging in the loader** — the loader is a single assignment (`Lib = shared_libs`) and a return.
-- **No `validateConfig` call** — validators *are* the config validation; they cannot validate themselves.
-- **No error catalog** — validators throw `TypeError` for programmer errors. They do not return operational error envelopes.
+- **Accept only `Lib`** - no `CONFIG`, no `ERRORS`. Validators run before config is validated, so they cannot depend on a merged config object.
+- **No config merging in the loader** - the loader is a single assignment (`Lib = shared_libs`) and a return.
+- **No `validateConfig` call** - validators *are* the config validation; they cannot validate themselves.
+- **No error catalog** - validators throw `TypeError` for programmer errors. They do not return operational error envelopes.
 
 This shape should not be confused with the main-module singleton. It is a stripped-down, single-purpose pattern for config and input validation only.
 
@@ -646,7 +662,7 @@ let Lib;
 
 /********************************************************************
 Singleton loader. Injects Lib and returns the module-scope [Name]
-object. Takes only Lib — no CONFIG or ERRORS.
+object. Takes only Lib - no CONFIG or ERRORS.
 
 @param {Object} shared_libs - Dependency container (Utils)
 
@@ -720,9 +736,9 @@ Module-scope declarations above the loader follow a fixed sequence. This mirrors
 
 **Rules:**
 
-- **Omit positions that do not apply** — a simple Lib-only singleton declares only position 1. A main module without data files declares positions 1-4. The relative order of those that remain is always preserved.
-- **Common infrastructure before module-specific data** — positions 1-4 are the same across all modules. A developer scanning any singleton knows exactly where to find `Lib`, `CONFIG`, `ERRORS`, and `Validators`. Module-specific items (data files, cached adapter refs, etc.) come last because they vary per module.
-- **Each declaration gets a one-line comment above it** — the comment describes what it is and how it is populated (injected by loader, loaded at require time, set by loader after Lib).
+- **Omit positions that do not apply** - a simple Lib-only singleton declares only position 1. A main module without data files declares positions 1-4. The relative order of those that remain is always preserved.
+- **Common infrastructure before module-specific data** - positions 1-4 are the same across all modules. A developer scanning any singleton knows exactly where to find `Lib`, `CONFIG`, `ERRORS`, and `Validators`. Module-specific items (data files, cached adapter refs, etc.) come last because they vary per module.
+- **Each declaration gets a one-line comment above it** - the comment describes what it is and how it is populated (injected by loader, loaded at require time, set by loader after Lib).
 
 ### Section Header Rules for Singletons
 
@@ -743,12 +759,12 @@ The same 3/2/1 spacing and banner rules from [`code-formatting-js.md`](../founda
 | **`let Lib;` at module scope** | Declared above the loader with a one-line comment. No initializer (`undefined` until the loader runs) |
 | **Loader sets `Lib` once** | `Lib = shared_libs;` is the only assignment. Never reassigned after the first call |
 | **Loader returns the public object directly** | `return [Name];`, not `return createInterface(Lib)` |
-| **Module-root vs parts singleton shape** | Module-root singletons (`[module].validators.js`) inject only `Lib` — they run before config is validated so `CONFIG`/`ERRORS` are not accepted. Parts singletons always accept all three `(shared_libs, config, errors)` for call-site uniformity. Do not conflate the two shapes. |
+| **Module-root vs parts singleton shape** | Module-root singletons (`[module].validators.js`) inject only `Lib` - they run before config is validated so `CONFIG`/`ERRORS` are not accepted. Parts singletons always accept all three `(shared_libs, config, errors)` for call-site uniformity. Do not conflate the two shapes. |
 | **No `createInterface`** | Singletons have no factory wrapper. Public and private objects are declared at module scope |
 | **Public before private, both at module scope** | Same order as inside `createInterface` in a factory: public first, private second |
 | **Private helpers use module-scope `Lib`** | `_[Name].helper()` closes over `let Lib` directly, same as factory pattern closes over the `Lib` const inside `createInterface` |
 | **File named `[module].[concern].js`** | Sits at the module root alongside `[module].config.js` and `[module].errors.js` |
-| **Module-root singletons live at module root** | `[module].validators.js`, `[module].errors.js`, `[module].config.js` are module-root files. `parts/` sub-modules may also be singletons when their dependencies are singleton-eligible — see [Part Shape: Singleton or Factory](#part-shape-singleton-or-factory) |
+| **Module-root singletons live at module root** | `[module].validators.js`, `[module].errors.js`, `[module].config.js` are module-root files. `parts/` sub-modules may also be singletons when their dependencies are singleton-eligible - see [Part Shape: Singleton or Factory](#part-shape-singleton-or-factory) |
 | **Not part of the main module** | `[module].validators.js` is a separate file. Not inlined into `[module].js` or tucked into `_Auth`/`_Verify`. The main module's loader calls it and passes `Validators` in |
 
 ### Standard Files Using This Pattern
@@ -759,25 +775,25 @@ The same 3/2/1 spacing and banner rules from [`code-formatting-js.md`](../founda
 | `[module].config.js` | Data-only | Pure `Object.assign({}, defaults)` export, no loader |
 | `[module].validators.js` | Lib-injected | Config + options validators; `Lib.Utils` for type checks |
 
-### Upgrade Candidates (Currently Factory, Should Become Singleton)
+### Singleton Reference Example
 
-These modules are currently written as factories but meet all four singleton criteria. Each is a **breaking change** when converted. Treat each as its own versioned migration step, not a bulk change.
+**`js-helper-utils`** serves as the reference implementation for the singleton pattern:
 
-| Module | Why it qualifies | Migration notes |
-|---|---|---|
-| `js-helper-utils` | Zero dependencies, zero state, pure type-check functions. No valid reason for two separate instances. | No-dep singleton subtype; no `let Lib` needed at all |
-| `js-helper-debug` | Pure structured logging. Config (`log_level`, `output_format`) is set once at app startup and never varies between callers at runtime. | Lib-injected singleton. `CONFIG` injected once via loader |
-| `js-helper-time` | Pure date math + formatting. Uses only `Lib.Utils` and timezone config that is the same for all callers. | Lib-injected singleton. `CONFIG` injected once via loader |
-| `js-server-helper-crypto` | Pure hashing/UUID/encoding functions. Uses `Lib.Utils` + config defaults that never vary per-caller. | Lib-injected singleton |
-| `js-server-helper-instance` | Pure request lifecycle management. No held state; the per-request object is returned to the caller, never stored inside the module. | Lib-injected singleton |
-| `js-server-helper-http` | `CONFIG` only holds `TIMEOUT` and `USER_AGENT`, both are app-wide constants. All per-call variation (auth headers, per-request timeout) is already passed via `options` params, not baked into `CONFIG`. No held state. | Lib-injected singleton |
+- **Zero external dependencies** - pure utility functions with no injected libs or config
+- **No configuration needed** - same behavior for all callers in all scenarios  
+- **Pure functions** - type checks, validation, and data manipulation utilities
+- **No state** - each function operates only on its inputs and returns a result
+- **Test-friendly** - as a singleton, it can be safely used across all tests without isolation issues
 
-**Do not convert:** all DB modules (`sql-*`, `nosql-*`), all cloud SDK modules (`storage-aws-*`, `queue-aws-*`), `js-server-helper-auth`, `js-server-helper-verify`, `js-server-helper-logger`, and all `*-store-*` adapters. These legitimately have per-caller `CONFIG` or per-instance state.
+This module demonstrates the rare case where singleton pattern is appropriate: a foundational utility library with no external dependencies that provides identical behavior for all callers.
+
+**All other modules should use the factory pattern** to maintain testability and configuration flexibility.
 
 ### Reference Implementations
 
-- **Main module singleton (full shape):** `js-helper-money` in `js-helper-modules` (`money.js`)
+- **Main module singleton (reference example):** `js-helper-utils` in `js-helper-modules` (`utils.js`)
 - **Module-root singleton (validators, special case):** `js-server-helper-auth` in `js-helper-modules` (`auth.validators.js`)
+- **Factory pattern (standard for most modules):** `js-helper-money` in `js-helper-modules` (`money.js`)
 
 ---
 
@@ -849,7 +865,7 @@ The store is instantiated in the **loader**, not inside `createInterface`. This 
 // In the loader, after Validators.validateConfig(CONFIG)
 const store = CONFIG.STORE(Lib, CONFIG, ERRORS);
 
-// store is threaded into createInterface last — external dependency goes after
+// store is threaded into createInterface last - external dependency goes after
 // all internally-assembled containers (Lib, CONFIG, ERRORS, Validators, Parts).
 // See Parameter Ordering Convention above.
 return createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store);
@@ -931,7 +947,7 @@ const createInterface = function (Lib, STORE_CONFIG, ERRORS) {
 
 ### Adapter Skeleton
 
-This skeleton applies to any Class F adapter (`-adapter-[name]`) that is **stateless** — it has no per-instance configuration and all per-request state lives on `instance`, not inside the adapter. This covers transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type that does not need per-instance closures.
+This skeleton applies to any Class F adapter (`-adapter-[name]`) that is **stateless** - it has no per-instance configuration and all per-request state lives on `instance`, not inside the adapter. This covers transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type that does not need per-instance closures.
 
 **When to use singleton vs factory for adapters:**
 

@@ -51,7 +51,7 @@ __dev__/plans/
     NNNN-<slug>.md     Completed or discarded plans, kept for reference
 ```
 
-The folder lives at `__dev__/plans/` at the **workspace root** (the parent directory containing all repo clones, e.g. `project-superloom/__dev__/plans/`). It is outside any git repository and is never committed. Plans span all repos in the workspace — not just one. The **rules** (this file) and the **slash command** (`.windsurf/workflows/plan.md`) are tracked in `superloom`; the plan files themselves are personal and local only.
+The folder lives at `__dev__/plans/` at the **workspace root** (the parent directory containing all repo clones, e.g. `project-superloom/__dev__/plans/`). It is outside any git repository and is never committed. Plans span all repos in the workspace - not just one. The **rules** (this file) and the **slash command** (`.windsurf/workflows/plan.md`) are tracked in `superloom`; the plan files themselves are personal and local only.
 
 **There is no index file.** Any number of plans can coexist in `plans/` - this explicitly supports multiple agents or work streams running in parallel. The plan file's own `**Status:**` field is the source of truth. At session start, the AI picks up the most recently modified plan file (by mtime) and confirms it with the user before proceeding.
 

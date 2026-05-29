@@ -155,7 +155,7 @@ module.exports = function loader () {
   const Debug = require('@your-org/js-helper-debug')(Lib, config_debug);
   const Instance = require('@your-org/js-server-helper-instance');
 
-  // Step 3: Create module instance — require by `_test/package.json` alias,
+  // Step 3: Create module instance - require by `_test/package.json` alias,
   // not relative source path. Aliases keep loader code identical between
   // local-source and published-package contexts.
   const Module = require('helper-[module-name]')({ Utils, Debug, Instance }, config_module);

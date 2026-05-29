@@ -133,7 +133,7 @@ Every module documents its runtime dependencies and peer dependencies. The forma
 
 This module bundles {N} runtime npm package(s):
 
-- **`{package}`** ({org}). {What it does}. {Why used — rationale}
+- **`{package}`** ({org}). {What it does}. {Why used - rationale}
 - ...
 
 It expects {N} peer module(s) in the `Lib` container ({list}). For the full dependency breakdown, see [`docs/configuration.md`](docs/configuration.md).

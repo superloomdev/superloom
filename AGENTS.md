@@ -6,13 +6,13 @@
 >
 > To change a rule:
 > 1. Update the source-of-truth file in `docs/` (foundations, modules, dev, testing, versioning, ops)
-> 2. Run `/compile-agents-md` to sync into AGENTS.md
+> 2. Run `/compile-agents-md sync` to propagate into AGENTS.md
 >
 > Bypassing this rule causes drift: AGENTS.md asserts things `docs/` no longer says. Humans lose rationale. The same lesson gets re-learned the hard way. **No exceptions.** Even small wording fixes go through `docs/` first.
 >
 > When discovering a new failure mode, document it in the correct pitfall file BEFORE fixing:
-> - `docs/dev/pitfalls.md` — terminal, CI, and testing failures
-> - `docs/testing/migration-pitfalls.md` — module migration failures
+> - `docs/dev/pitfalls.md` - terminal, CI, and testing failures
+> - `docs/testing/migration-pitfalls.md` - module migration failures
 
 ---
 
@@ -55,7 +55,7 @@ Assist developers working on **Superloom**, a modular application framework buil
 
 **File tools vs terminal:**
 - Normal files: use `read_file`, `edit`, `write_to_file` directly
-- `__dev__/` is at the workspace root (outside any repo) — use file tools directly. `.env*` files: write to `/tmp/...`, then `cat /tmp/file >> /path/to/target`
+- `__dev__/` is at the workspace root (outside any repo) - use file tools directly. `.env*` files: write to `/tmp/...`, then `cat /tmp/file >> /path/to/target`
 
 **Never make shell parse multi-line strings.** zsh enters `dquote>` / `heredoc>` mode; bridge cannot send closing token:
 - **Heredocs** (`cat <<'EOF'`): use `write_to_file` instead
@@ -66,7 +66,7 @@ Assist developers working on **Superloom**, a modular application framework buil
 # Preferred
 git commit -m "feat(module): one-line summary"
 
-# Multi-paragraph — each `-m` becomes a paragraph
+# Multi-paragraph - each `-m` becomes a paragraph
 git commit -m "feat(module): summary" -m "Body paragraph one." -m "Body paragraph two."
 ```
 
@@ -153,16 +153,16 @@ The project spans multiple repositories under `superloomdev`. See `docs/dev/org-
 
 ```
 project-superloom/
-  codebase-superloom/          — clone of superloomdev/superloom
-  codebase-js-helper-modules/  — clone of superloomdev/js-helper-modules
-  codebase-js-demo-project/    — clone of superloomdev/js-demo-project
-  __dev__/                     — personal workspace (never committed)
-    plans/                     —   Long-horizon plans and backlog
-    secrets/                   —   Real credentials, API keys (never copied anywhere committed)
-  superloom.code-workspace     — multi-root workspace file
+  codebase-superloom/          - clone of superloomdev/superloom
+  codebase-js-helper-modules/  - clone of superloomdev/js-helper-modules
+  codebase-js-demo-project/    - clone of superloomdev/js-demo-project
+  __dev__/                     - personal workspace (never committed)
+    plans/                     -   Long-horizon plans and backlog
+    secrets/                   -   Real credentials, API keys (never copied anywhere committed)
+  superloom.code-workspace     - multi-root workspace file
 ```
 
-### superloom (this repo — framework constitution)
+### superloom (this repo - framework constitution)
 
 ```
 superloom/
@@ -673,7 +673,7 @@ Helper modules use one of three patterns. **Singleton** for stateless, pure, sha
 
 | Pattern | Use when | Examples |
 |---|---|---|
-| Singleton | Stateless, pure, shared identity, no per-caller CONFIG. `let Lib;` at module scope, no `createInterface` | `js-helper-money`, `js-helper-utils` (upgrade candidate) |
+| Singleton | Stateless, pure, shared identity, no per-caller CONFIG. `let Lib;` at module scope, no `createInterface` | `js-helper-money`, `js-server-helper-http-gateway`, `js-helper-utils` (upgrade candidate) |
 | Multi-Instance (Factory) | Stateful (pool, persistent client, session) or per-caller CONFIG variation | DB modules, cloud SDK modules, auth, verify, logger |
 | Singleton Config | *Legacy - no longer used.* | - |
 
@@ -686,7 +686,7 @@ Helper modules use one of three patterns. **Singleton** for stateless, pure, sha
 | `createInterface(Lib, CONFIG)` | Stateless helper - peer deps + config, no per-instance resource | `js-helper-time`, `js-server-helper-crypto`, `js-server-helper-http`, `js-server-helper-instance`, `js-client-helper-crypto` |
 | `createInterface(Lib, CONFIG, state)` | Stateful helper - holds a per-instance resource | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern. Validators + store injected from loader | `js-server-helper-verify` |
-| `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied runtime adapter, no Validators | `js-server-helper-http-gateway` |
+| `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied runtime adapter, no Validators | _(no current reference - use `js-server-helper-auth` as the closest shape)_ |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators + decomposed parts (fullest shape) | `js-server-helper-auth` (target; currently `Validators, store, Parts` - corrected when next touched) |
 
 The loader body mirrors the signature: build only the parameters `createInterface` will receive. Stateless helpers never declare a `state` object.
@@ -695,7 +695,7 @@ The loader body mirrors the signature: build only the parameters `createInterfac
 
 #### Pattern 1: Singleton Config (Legacy)
 
-This pattern is **preserved for historical reference only** and is no longer used in new modules. Old modules using it are migration candidates. See appendix in `docs/modules/module-structure-js.md` -> "Appendix: Pattern 1 (Singleton, Legacy)" for full shape. The key structural difference from the current singleton pattern is that Pattern 1 mutated shared `const Lib = {}` and `const CONFIG` on every loader call — meaning the last caller's config won.
+This pattern is **preserved for historical reference only** and is no longer used in new modules. Old modules using it are migration candidates. See appendix in `docs/modules/module-structure-js.md` -> "Appendix: Pattern 1 (Singleton, Legacy)" for full shape. The key structural difference from the current singleton pattern is that Pattern 1 mutated shared `const Lib = {}` and `const CONFIG` on every loader call - meaning the last caller's config won.
 
 #### Pattern 2: Multi-Instance (Factory)
 
@@ -799,9 +799,9 @@ Modules that are stateless, pure, globally shared, and have no per-caller CONFIG
 
 Omit positions that do not apply. Preserve relative order of those that remain. Common infrastructure (1-4) before module-specific data (5).
 
-**Module-root singletons (`[module].validators.js`) are a special case:** accept only `Lib`, no CONFIG/ERRORS/Validators. They run before config is validated. Stripped-down shape — do not conflate with the main-module singleton.
+**Module-root singletons (`[module].validators.js`) are a special case:** accept only `Lib`, no CONFIG/ERRORS/Validators. They run before config is validated. Stripped-down shape - do not conflate with the main-module singleton.
 
-**Reference implementations:** `js-helper-money/money.js` (main module singleton), `js-server-helper-auth/auth.validators.js` (module-root singleton, special case).
+**Reference implementations:** `js-helper-money/money.js` (main module singleton), `js-server-helper-http-gateway/http-gateway.js` (main module singleton with adapter + parts), `js-server-helper-auth/auth.validators.js` (module-root singleton, special case).
 
 **Singleton upgrade candidates (currently factory, meet all four criteria - breaking change per module):**
 
@@ -846,11 +846,11 @@ When a helper module needs interchangeable backends (databases, transports, key/
 
 | Subtype | Naming | What it adapts | Typical internal shape |
 |---|---|---|---|
-| **Store** | `[parent]-store-[backend]` | Data persistence (databases, file systems, caches) | Factory (`createInterface`) — almost always, because parent is factory-based and each instance needs its own `STORE_CONFIG` |
-| **Adapter** | `[parent]-adapter-[name]` | Everything else: runtimes, transports, integrations, future use cases | Singleton (most common — stateless normalizers) or factory (if per-instance config needed) |
+| **Store** | `[parent]-store-[backend]` | Data persistence (databases, file systems, caches) | Factory (`createInterface`) - almost always, because parent is factory-based and each instance needs its own `STORE_CONFIG` |
+| **Adapter** | `[parent]-adapter-[name]` | Everything else: runtimes, transports, integrations, future use cases | Singleton (most common - stateless normalizers) or factory (if per-instance config needed) |
 
 - **Factory vs singleton decision:** Does the adapter need per-instance configuration? Yes → factory. No → singleton. The choice is about state, not naming
-- **Singleton adapter rules:** all state on `instance`, `Lib.Utils` for type checks, public before private at module scope
+- **Singleton adapter rules:** pure normalizer - receives raw inputs and returns normalized data; never writes to `instance`; parent is sole writer to `instance`; `Lib.Utils` for type checks; public before private at module scope
 - **Skeletons:** `docs/modules/module-structure-js.md` -> "Storage Adapter Skeleton" and "Adapter Skeleton"
 - **Reference (storage):** `js-server-helper-auth` (parent, 8-method store contract) + 5 standalone adapters (`-sqlite`, `-postgres`, `-mysql`, `-mongodb`, `-dynamodb`)
 - **Reference (transport):** `js-server-helper-http-gateway` (parent, 3-method adapter contract) + 2 standalone adapters (`-aws-apigateway`, `-express`)
@@ -897,7 +897,7 @@ module.exports = function (shared_libs, config_override) {
 
 - `publishConfig.registry`: exactly `https://npm.pkg.github.com` (no trailing slash, no scope suffix)
 - `private: false`, `license: MIT`
-- **`.npmignore` required** at module root — excludes `_test/`, `.github/`, `eslint.config.js`; includes `README.md`, `ROBOTS.md`, `docs/`. Reference: `js-helper-utils`. Verify with `npm pack --dry-run` before first publish
+- **`.npmignore` required** at module root - excludes `_test/`, `.github/`, `eslint.config.js`; includes `README.md`, `ROBOTS.md`, `docs/`. Reference: `js-helper-utils`. Verify with `npm pack --dry-run` before first publish
 - Test `package.json` references module as `"file:../"`, has `"private": true`
 - **No per-module `.npmrc` files** - global `~/.npmrc` with:
   - `@superloomdev:registry=https://npm.pkg.github.com` (scoped to our packages only)

@@ -45,7 +45,7 @@ Framework docs (`docs/foundations/`, `docs/modules/`, `docs/server/`, `docs/test
 - No project names, no module names (no "MySQL", "Postgres", "DynamoDB" in framework rules)
 - Module-specific examples belong only in that module's `README.md` / `ROBOTS.md`
 
-### C. DRY — single source of truth
+### C. DRY - single source of truth
 
 Each rule lives in exactly one canonical file:
 
@@ -107,7 +107,7 @@ After editing docs:
 
 ## Related Workflows
 
-- **`/learn`** — operational arm of this contract. When the user types `/learn <new rule>`, the workflow classifies the knowledge against the decision tree above, applies the core principles, and writes the change in the right place.
-- **`/compile-agents-md`** — keeps the compressed mirror in `AGENTS.md` aligned with the canonical `docs/` sources. Sub-verbs: `sync` (default, conversation diff + full audit), `rebuild` (full doc walk only), `verify` (read-only drift report).
+- **`/learn`** - operational arm of this contract. When the user types `/learn <new rule>`, the workflow classifies the knowledge against the decision tree above, applies the core principles, and writes the change in the right place.
+- **`/compile-agents-md`** - keeps the compressed mirror in `AGENTS.md` aligned with the canonical `docs/` sources. Sub-verbs: `sync` (default, conversation diff + full audit), `rebuild` (full doc walk only), `verify` (read-only drift report).
 
 These workflows enforce the principles automatically. The discipline survives across sessions and contributors.

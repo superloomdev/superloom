@@ -36,7 +36,7 @@ The classes form a **dependency staircase**: each step adds one more thing the m
 | **E. Feature module with adapters** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class F adapters. Provides a complete business-logic feature, not a primitive | `README-feature-module.md` | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
 | **F. Dependent adapter** | A Class E parent module. Cannot function on its own; implements the parent's adapter contract for a single backend or runtime | `README-storage-adapter.md` (store) / `README-master-template.md` (adapter) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
 
-*Reading this table:* a Class B module is allowed to use everything Class A is, plus Node built-ins. A Class C module is allowed to use everything Class B is, plus a self-hostable third-party service. And so on. F is the special case: it is the only class that cannot stand alone. Class F has two subtypes: **stores** (data persistence, named `-store-[backend]`) and **adapters** (everything else: runtimes, transports, integrations, named `-adapter-[name]`). Either subtype can use factory or singleton pattern internally — the choice depends on whether per-instance state is needed.
+*Reading this table:* a Class B module is allowed to use everything Class A is, plus Node built-ins. A Class C module is allowed to use everything Class B is, plus a self-hostable third-party service. And so on. F is the special case: it is the only class that cannot stand alone. Class F has two subtypes: **stores** (data persistence, named `-store-[backend]`) and **adapters** (everything else: runtimes, transports, integrations, named `-adapter-[name]`). Either subtype can use factory or singleton pattern internally - the choice depends on whether per-instance state is needed.
 
 ---
 
@@ -177,9 +177,9 @@ Class F has two subtypes, distinguished by **what they adapt**:
 
 | Question | Answer: Factory (`createInterface`) | Answer: Singleton (`let Lib;`) |
 |---|---|---|
-| Does it close over per-instance config? | Yes — e.g., each store instance has its own table name, driver reference | No — the adapter is stateless; all per-request state lives on `instance` |
-| Can multiple instances coexist with different configs? | Yes — that is why the closure exists | No — one global instance serves all callers identically |
-| Does the parent module use factory pattern? | Almost always yes (auth, verify, logger all use `createInterface`) | May or may not — transport parent `http-gateway` uses factory but its adapters are singletons |
+| Does it close over per-instance config? | Yes - e.g., each store instance has its own table name, driver reference | No - the adapter is stateless; all per-request state lives on `instance` |
+| Can multiple instances coexist with different configs? | Yes - that is why the closure exists | No - one global instance serves all callers identically |
+| Does the parent module use factory pattern? | Almost always yes (auth, verify, logger all use `createInterface`) | May or may not - transport parent `http-gateway` uses factory but its adapters are singletons |
 
 **In practice:** stores are almost always factory (their parent modules are factory-based and each instance needs its own `STORE_CONFIG`). Adapters are more commonly singleton (stateless normalizers), but can be factory if a future use case requires per-instance adapter config.
 

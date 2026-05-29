@@ -426,7 +426,7 @@ if (result.error.type === 'AUTH_SERVICE_UNAVAILABLE') {
 
 ## Programmer Error Message Format
 
-The previous section (`Type String Naming`) governs the `type` field of catalog errors returned in envelopes. This section governs the **string passed to `throw new Error(...)` and `throw new TypeError(...)`** — the programmer-error channel.
+The previous section (`Type String Naming`) governs the `type` field of catalog errors returned in envelopes. This section governs the **string passed to `throw new Error(...)` and `throw new TypeError(...)`** - the programmer-error channel.
 
 Programmer-error messages have exactly one audience: **a developer reading a stack trace.** They are not parsed by any runtime code, not seen by end users, not forwarded to monitoring as structured data. The only job of the string is to tell the developer two things in the fewest possible characters: *which module raised this* and *what their code did wrong*.
 
@@ -449,17 +449,17 @@ A programmer-error message MUST follow this shape:
 
 The following MUST NOT appear in any programmer-error message string:
 
-1. **No URLs of any kind.** No `https://`, no GitHub links, no npm registry URLs, no documentation links. The stack trace shows the file and line — the developer can read the source. URLs in error strings become stale, leak deployment details, and clutter logs.
+1. **No URLs of any kind.** No `https://`, no GitHub links, no npm registry URLs, no documentation links. The stack trace shows the file and line - the developer can read the source. URLs in error strings become stale, leak deployment details, and clutter logs.
 
 2. **No scoped package names.** Use the bare short-name (`js-server-helper-auth-store-sqlite`), not the scoped publish name (`@superloomdev/js-server-helper-auth-store-sqlite`). The scope is a registry concern, not a contract concern, and it changes when the project is forked or re-scoped. The bare name is stable.
 
 3. **No multi-line concatenation for prose.** Long messages stitched together with `+ ' ... ' +` across multiple lines are a smell. If the message is too long for a single line, the message is too long. Trim it.
 
-4. **No marketing or apologetic language.** No "Please", no "Sorry", no exclamation marks, no emoji. The developer is debugging — they want the fact, not a tone.
+4. **No marketing or apologetic language.** No "Please", no "Sorry", no exclamation marks, no emoji. The developer is debugging - they want the fact, not a tone.
 
-5. **No "click here" or "see docs" pointers.** If a constraint genuinely needs documentation context, the right answer is a tighter `expected-shape` slot, not a URL. Documentation lives in `docs/` and `README.md` — not in stack traces.
+5. **No "click here" or "see docs" pointers.** If a constraint genuinely needs documentation context, the right answer is a tighter `expected-shape` slot, not a URL. Documentation lives in `docs/` and `README.md` - not in stack traces.
 
-6. **No driver wording or vendor names.** A `TypeError` raised by `js-server-helper-sql-postgres` says `[js-server-helper-sql-postgres]`, not `[Postgres]` or `[pg]`. (Note: this overlaps with the wrapper-purity rule for envelope errors — both channels keep vendor wording out of consumer-visible strings.)
+6. **No driver wording or vendor names.** A `TypeError` raised by `js-server-helper-sql-postgres` says `[js-server-helper-sql-postgres]`, not `[Postgres]` or `[pg]`. (Note: this overlaps with the wrapper-purity rule for envelope errors - both channels keep vendor wording out of consumer-visible strings.)
 
 ### Correct Examples
 
@@ -513,8 +513,8 @@ Applies to every `throw new Error(...)` and `throw new TypeError(...)` in:
 
 Does NOT apply to:
 
-- The `message` field of catalog errors returned via envelopes — that goes through the [Wrapper Purity](#wrapper-purity-the-catalog-owns-the-envelope) rule.
-- The `message` field of domain errors in `[entity].errors.js` — that is user-facing copy and follows the [validation approach](validation-approach.md).
+- The `message` field of catalog errors returned via envelopes - that goes through the [Wrapper Purity](#wrapper-purity-the-catalog-owns-the-envelope) rule.
+- The `message` field of domain errors in `[entity].errors.js` - that is user-facing copy and follows the [validation approach](validation-approach.md).
 - Inline source-code comments showing usage examples (these can use any format that aids the human reader).
 
 ---
