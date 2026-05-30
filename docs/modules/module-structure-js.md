@@ -647,6 +647,16 @@ Module-root singletons (`[module].validators.js`) are a **special case** of the 
 
 This shape should not be confused with the main-module singleton. It is a stripped-down, single-purpose pattern for config and input validation only.
 
+> **Store / adapter contract validation belongs here too.** A module that accepts an externally-supplied `store` (via `CONFIG.STORE`) or `adapter` (via `CONFIG.ADAPTER`) adds a contract validator method to its validators singleton. Call it `validateStoreContract(store)` or `validateAdapterContract(adapter)` depending on which dependency the module receives.
+>
+> The loader calls this method once, immediately after instantiating the store or adapter. This ensures a backend missing a required method fails fast at boot instead of on the first live request.
+>
+> Like `validateConfig`, a contract validator throws `Error` because a missing method is a setup error, not a programmer call error. Use the canonical message format: `[module-name] Invalid store contract: missing method [name]`.
+>
+> Only **required** methods belong in the contract list. Optional maintenance methods such as `setupNewStore` or `cleanupExpired*` keep their call-time `isFunction` guards. Do not list them in the contract validator.
+>
+> Reference implementations: `js-server-helper-http-gateway` (adapter), `js-server-helper-auth` / `js-server-helper-verify` / `js-server-helper-logger` (store).
+
 ```javascript
 // Info: [What this singleton provides - 1 line]
 //

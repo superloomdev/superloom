@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "sync-docs": "rsync -a --delete ../docs/ ./docs/",
+    "cleanup": "rm -rf ./docs/",
     "dev": "npm run sync-docs && vitepress dev .",
-    "build": "npm run sync-docs && vitepress build .",
+    "build": "npm run sync-docs && vitepress build . && npm run cleanup",
     "preview": "vitepress preview ."
   },
   "devDependencies": {

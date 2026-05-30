@@ -116,6 +116,56 @@ No Docker, no AWS SDK, no SAM, no LocalStack. Each fixture is loaded via `fs.rea
 
 ---
 
+## Test Infrastructure Dependencies
+
+Some modules require direct access to underlying SDK classes for test setup/teardown, even though the main module wraps these dependencies internally. This creates a dependency duplication pattern that must be documented to prevent accidental removal.
+
+### When Test Infrastructure Dependencies Are Needed
+
+**Pattern:** Test needs direct access to SDK classes that the main module doesn't export
+
+Common scenarios:
+- **Database table management** - `CreateTableCommand`, `DeleteTableCommand` for test lifecycle
+- **Cloud resource setup** - Bucket creation, queue setup, or other infrastructure commands
+- **Service client mocking** - Direct client instances for test doubles
+
+### Nomenclature Convention
+
+Use descriptive `devDependency` names that make purpose obvious:
+
+```json
+{
+  "devDependencies": {
+    "test-infra-aws-sdk": "npm:@aws-sdk/client-dynamodb@^1.2.3",
+    "test-infra-aws-sdk-s3": "npm:@aws-sdk/client-s3@^1.2.3",
+    "test-infra-aws-sdk-sqs": "npm:@aws-sdk/client-sqs@^1.2.3"
+  }
+}
+```
+
+**Why this naming:**
+- `test-infra-` prefix clearly indicates test infrastructure purpose
+- Prevents accidental removal during cleanup
+- Makes version-matching requirements obvious
+
+### Version Matching Discipline
+
+The test infrastructure dependency **must stay version-matched** with the main module's dependencies:
+
+```javascript
+// In test.js - document the contract
+// NOTE: This devDependency must stay version-matched with ../package.json
+const { SomeCommand } = require('@aws-sdk/client-dynamodb');
+```
+
+When upgrading the main module's SDK version, update the corresponding test infrastructure dependency simultaneously.
+
+### Extensible Pattern
+
+The `test-infra-` prefix and naming convention apply to any SDK or service client, not only AWS. Add new entries using the same shape: `test-infra-[provider]-[service]`.
+
+---
+
 ## Healthcheck Philosophy (Mandatory)
 
 A healthcheck must verify the same level of readiness that the test code requires. Probing the process is not enough. Probing a public port is rarely enough. The probe must exercise the application path the test will use.

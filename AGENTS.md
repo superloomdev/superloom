@@ -801,6 +801,8 @@ Omit positions that do not apply. Preserve relative order of those that remain. 
 
 **Module-root singletons (`[module].validators.js`) are a special case:** accept only `Lib`, no CONFIG/ERRORS/Validators. They run before config is validated. Stripped-down shape - do not conflate with the main-module singleton.
 
+**Store/adapter contract validation:** Modules with externally-supplied stores or adapters add `validateStoreContract(store)` or `validateAdapterContract(adapter)` to their validators singleton. The loader calls it once after instantiating the store/adapter. Throws `Error` (setup error, not programmer error) with format `[module-name] Invalid store contract: missing method [name]`. Only required methods belong in the contract; optional maintenance methods keep call-time `isFunction` guards. Reference: `js-server-helper-http-gateway` (adapter), `js-server-helper-auth`/`verify`/`logger` (store).
+
 **Reference implementations:** `js-helper-money/money.js` (main module singleton), `js-server-helper-http-gateway/http-gateway.js` (main module singleton with adapter + parts), `js-server-helper-auth/auth.validators.js` (module-root singleton, special case).
 
 **Singleton upgrade candidates (currently factory, meet all four criteria - breaking change per module):**
@@ -918,6 +920,7 @@ module.exports = function (shared_libs, config_override) {
 - **Loader returns `{ Lib, Config }`:** `Lib` = dependency container, `Config` = resolved env values for test infrastructure. No fallback defaults (`||`) - module's own `config.js` handles defaults
 - **Inline export:** `module.exports = function loader () {` - no separate `const` + `module.exports`. Matches factory pattern in main module files
 - **Test infrastructure in test.js:** AdminClient and table setup/teardown use `Config` from loader, never `process.env` directly
+- **Test infrastructure devDependencies use `test-infra-` prefix:** When tests need direct SDK classes the main module wraps but doesn't export (e.g. `CreateTableCommand`), add an aliased devDependency: `"test-infra-aws-sdk": "npm:@aws-sdk/client-dynamodb@^x.y.z"`. Prefix prevents accidental removal. Version must stay matched with the main module's dependency. Pattern extends to any provider: `test-infra-[provider]-[service]`. See `docs/dev/testing-local-modules.md`
 - **Env var registration (4-file rule):** Every env var read in `_test/loader.js` must be added to all four files: `docs/dev/.env.dev.example` (dummy), `docs/dev/.env.integration.example` (placeholder), `__dev__/.env.dev` (dummy), `__dev__/.env.integration` (placeholder). Every key in `.env.dev` must exist in `.env.integration`. Dummy values must match `_test/docker-compose.yml` exactly. The `_test/ops/00-local-testing/` guide must list all keys with their dummy values explicitly
 - **No hard-coding env values in loader.js:** The loader only reads `process.env`. Defaults live in the module's `config.js`
 - **Env var docs:** Every module README must document required environment variables with a table using column headers `Emulated (Dev)` and `Integration (Real)`
