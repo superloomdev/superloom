@@ -673,7 +673,7 @@ Helper modules use one of three patterns. **Singleton** for stateless, pure, sha
 
 | Pattern | Use when | Examples |
 |---|---|---|
-| Singleton | Stateless, pure, shared identity, no per-caller CONFIG. `let Lib;` at module scope, no `createInterface` | `js-helper-money`, `js-server-helper-http-gateway`, `js-helper-utils` (upgrade candidate) |
+| Singleton | Stateless, pure, shared identity, no per-caller CONFIG. Module-scope objects, loader sets them once | `js-helper-utils` (loader-initialized), `js-helper-money`, `js-server-helper-http-gateway` |
 | Multi-Instance (Factory) | Stateful (pool, persistent client, session) or per-caller CONFIG variation | DB modules, cloud SDK modules, auth, verify, logger |
 | Singleton Config | *Legacy - no longer used.* | - |
 
@@ -791,7 +791,7 @@ Modules that are stateless, pure, globally shared, and have no per-caller CONFIG
 
 | Position | Declaration | Mutability | Present in |
 |---|---|---|---|
-| 1 | `let Lib` | Set once by loader | All except no-dep singletons |
+| 1 | `let Lib` | Set once by loader | All except loader-initialized singletons (e.g. `js-helper-utils`) |
 | 2 | `let CONFIG` | Set once by loader | Main modules with config |
 | 3 | `const ERRORS` | Loaded at require time | Main modules with error catalogs |
 | 4 | `let Validators` | Initialized by loader (needs Lib) | Main modules with validators |
@@ -805,16 +805,9 @@ Omit positions that do not apply. Preserve relative order of those that remain. 
 
 **Reference implementations:** `js-helper-money/money.js` (main module singleton), `js-server-helper-http-gateway/http-gateway.js` (main module singleton with adapter + parts), `js-server-helper-auth/auth.validators.js` (module-root singleton, special case).
 
-**Singleton upgrade candidates (currently factory, meet all four criteria - breaking change per module):**
+**Current singleton:** `js-helper-utils` (loader-initialized subtype - `let Validators;` at module scope, loader initializes internal singletons and returns the module-scope Utils object. No external Lib or CONFIG dependencies).
 
-| Module | Reason |
-|---|---|
-| `js-helper-utils` | Zero deps, zero state, pure type-check functions. No-dep subtype - no `let Lib` needed |
-| `js-helper-debug` | Pure logging. Config set once at startup, same for all callers |
-| `js-helper-time` | Pure date math. Config is app-wide constant |
-| `js-server-helper-crypto` | Pure hashing/UUID/encoding. Config never varies per-caller |
-| `js-server-helper-instance` | Pure request lifecycle. No held state - per-request object returned to caller |
-| `js-server-helper-http` | `CONFIG` holds `TIMEOUT`/`USER_AGENT` only. All per-call variation via `options` params |
+**All other modules remain factories** (Debug, Time, Money, Crypto, Instance, HTTP, and all server modules). Factory pattern is essential for test isolation and configuration flexibility. See `docs/modules/factory-vs-singleton-decision.md`.
 
 **Do not convert:** all DB modules (`sql-*`, `nosql-*`), all cloud SDK modules, `js-server-helper-auth`, `js-server-helper-verify`, `js-server-helper-logger`, and all `*-store-*` adapters.
 
