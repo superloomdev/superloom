@@ -516,7 +516,7 @@ Some modules are **stateless, pure, and globally shared**. They need no per-inst
 |---|---|---|
 | **Data-only** | Pure `module.exports = Object.freeze({...})`, no loader, no `let` variables | `[module].errors.js`, `[module].config.js` |
 | **Lib-injected** | `let Lib;` at module scope, loader sets it once, public/private objects at module scope | `[module].validators.js`, `js-server-helper-http-gateway` |
-| **No-dep** | No `let` variables at all, no loader needed. Pure functions with zero external dependencies | `js-helper-utils` (upgrade candidate) |
+| **Loader-initialized** | `let Validators;` at module scope, loader initializes internal singletons and returns the module-scope public object. No external `Lib` or `CONFIG` dependencies | `js-helper-utils` |
 
 ### Canonical Shape: Main Module Singleton
 
@@ -738,7 +738,7 @@ Module-scope declarations above the loader follow a fixed sequence. This mirrors
 
 | Position | Declaration | Mutability | Present in |
 |---|---|---|---|
-| 1 | `let Lib` | Set once by loader | All modules except no-dep singletons |
+| 1 | `let Lib` | Set once by loader | All modules except loader-initialized singletons (e.g. `js-helper-utils`) |
 | 2 | `let CONFIG` | Set once by loader | Main modules with config |
 | 3 | `const ERRORS` | Loaded at require time, never reassigned | Main modules with error catalogs |
 | 4 | `let Validators` | Initialized once by loader (needs Lib) | Main modules with validators |

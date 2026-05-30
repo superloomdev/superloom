@@ -98,8 +98,15 @@ Use singleton pattern only when **all** criteria are met:
 
 #### Foundation Utilities
 ```javascript
-// js-helper-utils - pure type checking functions
-module.exports = {
+// js-helper-utils - pure utility functions, loader initializes Validators
+let Validators;
+
+module.exports = function loader (shared_libs, config) {
+  Validators = require('./utils.validators')(shared_libs);
+  return Utils;
+};
+
+const Utils = {
   isNull: function (arg) { return arg === null; },
   isString: function (arg) { return typeof arg === 'string'; },
   // ... pure utility functions
@@ -246,8 +253,8 @@ const Auth = require('@superloomdev/js-server-helper-auth')(Lib, {
 ### Correct Singleton Usage
 
 ```javascript
-// js-helper-utils - pure functions, no dependencies
-const Utils = require('@superloomdev/js-helper-utils');
+// js-helper-utils - singleton loader, returns same Utils object
+const Utils = require('@superloomdev/js-helper-utils')({}, {});
 
 // error catalog - data only
 const Errors = require('./module.errors');
