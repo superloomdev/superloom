@@ -1014,8 +1014,6 @@ Every loader merges caller config over module defaults via `Object.assign({}, de
 
 **Category 4 exempt modules:** all DB/SQL/NoSQL helpers, all storage helpers, all queue helpers, all store adapters (`auth-store-*`, `logger-store-*`, `verify-store-*`), `js-server-helper-http`, `js-server-helper-http-gateway-adapter-*`.
 
-**No version bump for contract tests.** `_test/` is excluded from published packages. Adding these tests requires no version bump and no republish. Run lint + test + commit per module.
-
 ## Security
 
 - Secrets stored in `__dev__/secrets/` (fully gitignored, personal workspace)

@@ -557,10 +557,6 @@ Exempt modules in this category:
 **When to document exemption in the test file vs here**
 Only add an in-file comment (`// config absorption contract: exempt — ...`) when the exemption is **non-obvious from the category** — for example when CONFIG is accepted but silently ignored (Category 1/2), so future developers don't add a test block before checking. For Category 4 (backend-coupled), the exemption is clear from the module's purpose; no in-file comment is needed.
 
-### No version bump required
-
-`_test/` is excluded from the published package. Adding these tests requires **no version bump and no republish**. Run lint + test + commit per module.
-
 ---
 
 ## Further Reading
