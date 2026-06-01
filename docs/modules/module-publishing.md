@@ -71,9 +71,10 @@ Without it, `npm pack` includes everything that is not in `.gitignore` - meaning
 **Rules:**
 
 - Place `.npmignore` at the module root (alongside `package.json`).
-- It must exclude at minimum: `_test/`, `eslint.config.js`, `.github/`.
+- It must exclude at minimum: `_test/`, `eslint.config.js`, `.github/`, `THOUGHTS.md`.
 - It must include (i.e. not accidentally exclude): the main entry file, `README.md`, `ROBOTS.md`, `docs/`, `package.json`, and any `parts/` or `src/` subdirectories that contain production code.
 - `README.md`, `ROBOTS.md`, and `docs/` ship intentionally - `README.md` links to both, and those links must resolve for anyone reading the package page or consuming the package.
+- `THOUGHTS.md` is an internal engineering decision journal for contributors. It must never ship in the published tarball. See [THOUGHTS.md convention](module-thoughts-file.md).
 - Verify with `npm pack --dry-run` from the module root before publishing. The output lists every file that would be included.
 
 **Canonical reference:** For the exact file contents and the complete exclusion list, refer to `js-helper-utils` - it is the simplest base module and serves as the reference implementation for all JS helper modules. Copy its `.npmignore` as your starting point and adjust only for module-specific additions (e.g. `parts/` subdirectory modules need no adjustment; adapter modules with a `schema/` folder may need to verify it is included).

@@ -86,6 +86,7 @@ export default defineConfig({
             { text: 'Server Helpers',           link: '/docs/modules/server-helper-modules' },
             { text: 'Peer Dependencies',        link: '/docs/modules/peer-dependencies' },
             { text: 'Complex Module Docs',      link: '/docs/modules/complex-module-docs-guide' },
+            { text: 'THOUGHTS.md Convention',   link: '/docs/modules/module-thoughts-file' },
           ],
         },
         {

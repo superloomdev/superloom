@@ -632,7 +632,7 @@ The following items are mandatory for every helper module. These caught real iss
 |---|---|
 | `eslint.config.js` | ESLint v9+ requires a flat config file; without it lint silently fails |
 | `engines.node` in `package.json` | Declares minimum Node.js version; prevents silent runtime incompatibilities |
-| `.npmignore` at module root | **Required** - without it `npm pack` includes `_test/`, `.github/`, `eslint.config.js`. Must exclude dev files and include `README.md`, `ROBOTS.md`, `docs/`, `parts/` (if present). Use `js-helper-utils` as canonical reference. Verify with `npm pack --dry-run` before publishing |
+| `.npmignore` at module root | **Required** - without it `npm pack` includes `_test/`, `.github/`, `eslint.config.js`. Must exclude dev files (including `THOUGHTS.md`) and include `README.md`, `ROBOTS.md`, `docs/`, `parts/` (if present). Use `js-helper-utils` as canonical reference. Verify with `npm pack --dry-run` before publishing |
 | `publishConfig.registry` | Exactly `https://npm.pkg.github.com` (no trailing `/@superloomdev` scope suffix) |
 | No `.npmrc` in module dir | Global `~/.npmrc` is the only source of truth |
 | Package name | `@superloomdev/<module>` - scoped; must match directory name |
@@ -646,6 +646,7 @@ The following items are mandatory for every helper module. These caught real iss
 | No `exports` field | Omit when `main` covers the only entry file; only add for multi-entrypoint packages |
 | American English | `Initialize` not `Initialise`, `standardize` not `standardise` |
 | `ROBOTS.md` | Covers every exported function with exact signatures, types, async flag, one-line purpose |
+| `THOUGHTS.md` | Optional engineering decision journal. Include when significant design decisions were made. Never published to npm. See `docs/modules/module-thoughts-file.md` |
 | Commit discipline | Code AND docs together; never push ROBOTS.md referencing non-existent functions |
 
 ### Common Mistakes to Avoid (Observed in Prior Migrations)

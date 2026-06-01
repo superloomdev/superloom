@@ -38,6 +38,7 @@ Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. Use this tab
 | `docs/modules/module-structure-js.md` | "Module Patterns" |
 | `docs/modules/module-categorization.md` | "Module Classes" |
 | `docs/modules/module-publishing.md` | "Publishing" |
+| `docs/modules/module-thoughts-file.md` | "Standard Files Per Module" (THOUGHTS.md row in module-structure mirror) |
 | `docs/modules/peer-dependencies.md` | "Dependency Hierarchy" |
 | `docs/modules/module-readme-structure.md` | "README Structure" |
 | `docs/server/*` | "Server Layer Rules" |

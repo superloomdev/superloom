@@ -1283,6 +1283,7 @@ Most modules follow a consistent file structure:
 | `package.json` | Module metadata and dependencies |
 | `README.md` | Human documentation (badges, usage examples, testing guides) |
 | `ROBOTS.md` | AI agent reference (compact, token-efficient) |
+| `THOUGHTS.md` | Engineering decision journal. Records why the module is designed the way it is. Not published to the package registry. See [THOUGHTS.md convention](module-thoughts-file.md) |
 | `eslint.config.js` | **Required** - ESLint flat config (ESLint v9+). Canonical shape: refer to `js-helper-utils`. See [Linter Configuration](module-publishing.md#linter-configuration) |
 | `.npmignore` | **Required** - controls what files are included in the published tarball. Canonical shape: refer to `js-helper-utils`. See [Registry Ignore File](module-publishing.md#registry-ignore-file-npmignore) |
 | `_test/test.js` | Tests using `node --test` and `node:assert/strict` |
