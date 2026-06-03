@@ -178,7 +178,27 @@ Class F dependent adapters ship their own `docs/` folder. The shape depends on t
 - **Stores** (`-store-[backend]`): four files: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`
 - **Adapters** (`-adapter-[name]`): two files: `api.md`, `configuration.md`
 
-The README itself follows the **same Universal Section list as every other class** (see [`module-readme-structure.md` → Universal README Sections](module-readme-structure.md#universal-readme-sections)), with each section condensed. A realistic Class F README is **~70-90 lines** (comparable to a Class C driver). The README does NOT include a `## Install` block (Section 9 points to the parent's install instructions instead) and does NOT include a `## Usage` or Quick Start. The contract, the configuration table, the environment variables, and the testing-runtime detail all live in `docs/`, never in the README.
+The README explains what the adapter enables and why its backend-specific approach matters. Keep it **short and focused** — implementation details belong in `docs/`.
+
+**Structure:**
+- Badges
+- Short description + **key innovation sentence** (what makes this backend implementation clever)
+- Usage snippet
+- Configuration ( prose explanation of `STORE_CONFIG` keys, link to `docs/configuration.md` for details)
+- Extended Documentation links
+- Testing + License
+
+**What NOT to include:**
+- Detailed schema (use `docs/schema.md`)
+- Index creation SQL/commands (use `docs/schema.md`)
+- Configuration tables — use prose bullet list instead
+- Generic benefits that apply to all adapters ("hot-swappable", "tested")
+- Extended backend concept explanations
+
+**The key innovation sentence** answers: "What did we do with this backend to make the parent module work efficiently?" Examples:
+- MongoDB: "Uses a smart subdocument `_id` design for prefix queries without secondary indexes"
+- DynamoDB: "Uses composite sort keys for time-range queries within a partition"
+- SQL: "Uses a covering index for single-row lookups with no table access"
 
 ### docs/api.md (Class F)
 
@@ -248,6 +268,15 @@ Docker lifecycle (if service-dependent), the contract suite, what runs in CI.
 ### docs/schema.md (Class F)
 
 **Purpose:** Document what `setupNewStore` creates and the backend-specific syntax notes that matter when reading or modifying the adapter.
+
+**Critical distinction:** Schema documentation explains **database concepts**, not wrapper API names. When describing how data is stored and queried, use generic database terminology (`find`, `deleteMany`, `insertOne`) because these describe what the database does conceptually. The actual code uses wrapper-specific method names (`getRecord`, `deleteRecordsByFilter`, `writeRecord`).
+
+| Context | Use | Example |
+|---------|-----|---------|
+| **Schema docs** (this file) | Native database concepts | "Uses `deleteMany` with filter on `_id`" |
+| **Implementation** (store.js) | Wrapper API names | `lib_mongodb.deleteRecordsByFilter(...)` |
+
+This separation lets readers familiar with the database understand the behavior, while the code correctly uses our abstraction layer.
 
 **Structure:**
 
