@@ -28,23 +28,17 @@ export GITHUB_READ_PACKAGES_TOKEN=<your token>
 
 All module tests live in `_test/` inside the module directory. Always run commands from `_test/` -- never from the module root or the repo root.
 
-### Step 1: Clean install dependencies
+### Step 1: Install dependencies
 
 Navigate to the module's `_test/` directory and run:
 
 ```bash
-rm -rf node_modules package-lock.json && npm install   # from <module>/_test
+npm install   # from <module>/_test
 ```
 
-**Always delete `node_modules` and `package-lock.json` before every `npm install`.** This is mandatory, not optional. Three failure modes make it necessary:
+Run this every time before testing. The module itself is linked via `file:../` so source changes are picked up automatically, but published peer dependencies may have been updated and `npm install` is the only safe way to refresh them. Skipping `npm install` is never worth the few seconds saved.
 
-1. **Stale `file:` resolved paths in lock file.** When a `file:` swap is used during bootstrap testing (e.g. to pin the local gateway before it publishes), `npm install` writes `"resolved": "../../some-module"` into `package-lock.json`. If that lock file survives to the next run, subsequent `npm install` silently installs the local file reference instead of the registry package — even after the `package.json` is restored to a registry semver range.
-
-2. **Version reset to 1.0.0 hits a cached old tarball.** When a module is reset to `1.0.0` for fresh publication, the registry may already have a `1.0.0` from a previous publish epoch. A stale `node_modules` or cached lock resolves to the old tarball, not the newly published one. Clean install forces npm to resolve from the live registry.
-
-3. **GitHub Packages E409 checksum mismatch.** The registry occasionally serves a tarball whose checksum differs from a previously cached entry. The npm cache compounds this: the cached entry is stale, the registry entry changed. `rm -rf node_modules package-lock.json` before `npm install` ensures npm fetches fresh.
-
-Skipping the clean install is never worth the few seconds saved.
+> **During module refactoring only:** use `rm -rf node_modules package-lock.json && npm install` instead. Stale lock files from temporary `file:` swaps and version resets to `1.0.0` can cause silent wrong-version installs. See `docs/dev/pitfalls.md` entry 21 and the `/js-helper-module-refactor` workflow Step 6.
 
 ### Step 2: Run tests
 
@@ -85,10 +79,10 @@ Fix all lint issues before proceeding.
 
 ```bash
 # From the module's _test/ directory
-rm -rf node_modules package-lock.json && npm install && npm test
+npm install && npm test
 ```
 
-Must exit `0` with `fail 0`. The clean install is mandatory here for the same reasons as Step 1 above — stale lock files and cached tarballs produce silent wrong-version installs. See [Running Tests](#running-tests) above for the full contract.
+Must exit `0` with `fail 0`. See [Running Tests](#running-tests) above for the full contract.
 
 ### Then commit
 
