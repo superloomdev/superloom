@@ -178,7 +178,7 @@ Class F dependent adapters ship their own `docs/` folder. The shape depends on t
 - **Stores** (`-store-[backend]`): four files: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`
 - **Adapters** (`-adapter-[name]`): two files: `api.md`, `configuration.md`
 
-The README explains what the adapter enables and why its backend-specific approach matters. Keep it **short and focused** — implementation details belong in `docs/`.
+The README explains what the adapter enables and why its backend-specific approach matters. Keep it **short and focused.** Implementation details belong in `docs/`.
 
 **Structure:**
 - Badges
@@ -191,7 +191,7 @@ The README explains what the adapter enables and why its backend-specific approa
 **What NOT to include:**
 - Detailed schema (use `docs/schema.md`)
 - Index creation SQL/commands (use `docs/schema.md`)
-- Configuration tables — use prose bullet list instead
+- Configuration tables: use a prose bullet list instead
 - Generic benefits that apply to all adapters ("hot-swappable", "tested")
 - Extended backend concept explanations
 

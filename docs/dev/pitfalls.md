@@ -133,6 +133,20 @@ The same rule applies to `gh pr create`, `aws ssm put-parameter`, and any other 
 
 **Fix:** Pipe to `tail -N` or `grep` to keep only what matters: `npm test 2>&1 | tail -30`, `npm test 2>&1 | grep -E "^(ℹ|✖|✔)"`. The full log is still in `npm-debug.log` if needed.
 
+#### P5. Background command + mismatched `CommandId` → false "command failed" conclusion
+
+**Symptom:** A short, quick command (`git commit`, `git push`, `gh api ...`) is launched. Subsequent `command_status` polls return `command <N> not found in trajectory`, and `read_terminal` returns empty. The agent concludes the command failed and asks the user to run it manually — but the command actually **succeeded** (the commit is in `git log`, already pushed to `origin`).
+
+**Cause:** The command was launched in background mode (`Blocking: false`) and the bridge returned a *Background command ID* (e.g. `506`). The agent then polled `command_status` with a **guessed or adjacent ID** (`395`, `397`, …) that never existed, producing the `not found in trajectory` error. Short commands also complete and clear before `read_terminal` can capture anything, so the terminal read comes back empty. None of this is evidence of failure — only that the command's output was never observed.
+
+**Fix:**
+
+- For short, quick commands (`git`, `gh`, `npm view`, file checks), always use `Blocking: true`. Output is returned synchronously in the tool result.
+- If a command genuinely must run in the background, poll `command_status` with the **exact** `CommandId` the launch returned — never a guessed or incremented number.
+- Before reporting that a state-changing command failed, **verify the actual state** (`git log --oneline -3`, `git status --short`, `gh api "$BASE/versions"`). Absence of captured output is not proof of failure.
+
+Reserve `Blocking: false` for genuinely long-running foreground processes (servers, `tail -f`, `docker compose logs -f`) per P2 — not for fast one-shot commands whose output you need immediately.
+
 ### Working-directory pitfalls
 
 #### W1. Missing `Cwd` runs from the repo root
@@ -521,6 +535,40 @@ The reported line number is often **far below** the line that actually caused th
 3. **Verify documentation changes locally before pushing** when the change touches any VitePress-rendered file in `docs/`. Run `npm run build` from `website/`. That is the same pipeline CI runs (`vitepress build .` after `sync-docs`). Watch for the `Element is missing end tag` family of errors. Local build is fast (single-digit seconds) and catches the failure before it occupies a CI runner.
 
 This pitfall is distinct from the helper-modules CI chain (entries 1–14): it lives in `ci-deploy-website.yml`, not `ci-helper-modules.yml`, and a website-deploy failure does not block module publishing. The two pipelines are independent. But the same commit that triggers helper-module publishing will also trigger website deploy if it touches any `docs/` file, so a documentation-side bug is a hidden cost on every push that updates rules.
+
+### 16. Deleting a GitHub Packages package: org-scoped vs user-scoped endpoint
+
+**Symptom:** `gh api --method DELETE /users/OWNER/packages/npm/PACKAGE/versions/ID` returns success (exit 0, empty body) but the package is still on the registry. Repeated attempts appear to "do nothing", and the agent cannot tell whether the delete worked.
+
+**Cause:** `superloomdev` packages are owned by a GitHub **organization**, not a user. Organization-owned packages live under `/orgs/OWNER/...`. The `/users/OWNER/...` endpoint targets the user-account namespace; for an org-owned package it returns a misleading no-op instead of an error. Two further traps: the API path uses the **bare package name** without the `@scope/` prefix (`js-server-helper-http-gateway`, not `@superloomdev/js-server-helper-http-gateway`), and deleting the last remaining version deletes the whole package.
+
+**Lesson:** Determine the owner type first, then use the matching endpoint and always verify with a 404.
+
+```bash
+gh api /users/OWNER --jq '.type'        # "Organization" or "User"
+# org:        BASE=/orgs/OWNER/packages/npm/PACKAGE_NAME
+# own user:   BASE=/user/packages/npm/PACKAGE_NAME
+gh api "$BASE/versions"                  # list / confirm it exists
+gh api "$BASE/versions" --jq '.[].id' | xargs -I {} gh api --method DELETE "$BASE/versions/{}"
+gh api "$BASE/versions"                  # MUST return 404 Package not found
+```
+
+If the verify step returns a JSON array, the delete did not work — re-check the owner type and path. The `/js-helper-module-refactor` workflow Step 10 encodes this procedure.
+
+### 17. `git add .` bundles unrelated modules into one commit
+
+**Symptom:** A single commit touches many modules at once. CI's per-module `detect` job then schedules tests/publish for every changed module path in that commit, and git history no longer maps one module refactor to one commit ("bulk commits").
+
+**Cause:** `git add .` (or `git add -A`) stages every modified file in the working tree, not just the module currently being worked on. During a multi-module sweep (e.g. refactoring a parent plus its adapters), in-progress edits to sibling modules get swept into the same commit.
+
+**Lesson:** Stage only the directory of the module being committed, so each module refactor is one independent commit:
+
+```bash
+git add src/helper-modules-server/js-server-helper-<name>/
+git commit -m "refactor(<name>): one-line summary"
+```
+
+This keeps the CI publish trigger scoped to a single module, makes history bisectable, and lets one module be reverted without disturbing others. Always run `git status --short` before committing and confirm only the intended module's files are staged. The `/js-helper-module-refactor` workflow Step 11 encodes this rule.
 
 ---
 

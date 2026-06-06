@@ -1021,28 +1021,28 @@ These rules apply to every module that uses `_test/docker-compose.yml` and to ev
 
 ### Config Absorption Contract
 
-Every loader merges caller config over module defaults via `Object.assign({}, defaults, config)`. This merge is **public API surface** — add a `describe('config absorption contract', ...)` block to every non-exempt module's `test.js`. Source: `docs/testing/unit-test-authoring-js.md` → "Config Absorption Contract".
+Every loader merges caller config over module defaults via `Object.assign({}, defaults, config)`. This merge is **public API surface** - add a `describe('config absorption contract', ...)` block to every non-exempt module's `test.js`. Source: `docs/testing/unit-test-authoring-js.md` → "Config Absorption Contract".
 
 **Strategy selection:**
 
 | Strategy | When to use |
 |---|---|
-| **1 — Validation throws** | Module validates CONFIG at load time; override bad value → assert throws |
-| **2 — Behavioral** | Config key changes observable output of a public function without a backend |
-| **4 — Integration tier** | Keys only manifest against a live backend; exempt at unit tier |
+| **1 - Validation throws** | Module validates CONFIG at load time; override bad value → assert throws |
+| **2 - Behavioral** | Config key changes observable output of a public function without a backend |
+| **4 - Integration tier** | Keys only manifest against a live backend; exempt at unit tier |
 
-**Assertions (3–5 `it` blocks):** override-wins, omission-keeps-default, null-honored (0032 canary — explicit `null` for a key with a non-null default must be seen as `null` not silently replaced), shallow-merge (optional), factory-independence (optional).
+**Assertions (3–5 `it` blocks):** override-wins, omission-keeps-default, null-honored (0032 canary - explicit `null` for a key with a non-null default must be seen as `null` not silently replaced), shallow-merge (optional), factory-independence (optional).
 
-**`validBaseConfig()` helper required:** returns a fresh, complete, valid config object on each call — prevents test reference sharing.
+**`validBaseConfig()` helper required:** returns a fresh, complete, valid config object on each call - prevents test reference sharing.
 
 **Exemption categories (no contract block needed):**
 
 | Category | Condition | In-file comment? |
 |---|---|---|
-| 1 — Config unused | Loader accepts `config` but `createInterface` never reads CONFIG | Yes — document why |
-| 2 — Config empty | `.config.js` exports `{}` | Yes — document why |
-| 3 — All defaults null | No null-meaningful key; null override indistinguishable from default | Partial block — add override-wins if observable; document null-honored as deferred |
-| 4 — Backend-coupled | All keys only observable through live backend (DB, storage, queue, network) | No — exempt by module purpose; policy documented here |
+| 1 - Config unused | Loader accepts `config` but `createInterface` never reads CONFIG | Yes - document why |
+| 2 - Config empty | `.config.js` exports `{}` | Yes - document why |
+| 3 - All defaults null | No null-meaningful key; null override indistinguishable from default | Partial block - add override-wins if observable; document null-honored as deferred |
+| 4 - Backend-coupled | All keys only observable through live backend (DB, storage, queue, network) | No - exempt by module purpose; policy documented here |
 
 **Category 4 exempt modules:** all DB/SQL/NoSQL helpers, all storage helpers, all queue helpers, all store adapters (`auth-store-*`, `logger-store-*`, `verify-store-*`), `js-server-helper-http`, `js-server-helper-http-gateway-adapter-*`.
 

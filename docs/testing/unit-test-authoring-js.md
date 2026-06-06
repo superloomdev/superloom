@@ -374,7 +374,7 @@ When adding a new module, identify each external dependency, classify it as "sta
 
 ## Config Absorption Contract
 
-Every loader function takes a `config` argument that is merged with module defaults via `Object.assign({}, defaults, config)`. This merge is **public API surface** — it must be tested. Add a `config absorption contract` describe block to every non-exempt module's `test.js`.
+Every loader function takes a `config` argument that is merged with module defaults via `Object.assign({}, defaults, config)`. This merge is **public API surface** - it must be tested. Add a `config absorption contract` describe block to every non-exempt module's `test.js`.
 
 ### Why this matters
 
@@ -382,20 +382,20 @@ Plan 0032 mechanically replaced `Object.assign({}, defaults, config)` with `Lib.
 
 ### The four promises
 
-1. **Override wins** — a provided non-default value takes effect.
-2. **Omission keeps default** — a key not provided retains its default.
-3. **Explicit `null` is honored** — a `null` override of a key with a non-null default actually clears/replaces it.
-4. **Shallow merge is intentional** — a partial nested-object override replaces the nested object wholesale (no deep merge).
+1. **Override wins** - a provided non-default value takes effect.
+2. **Omission keeps default** - a key not provided retains its default.
+3. **Explicit `null` is honored** - a `null` override of a key with a non-null default actually clears/replaces it.
+4. **Shallow merge is intentional** - a partial nested-object override replaces the nested object wholesale (no deep merge).
 
 ### The core challenge: CONFIG is private
 
-Every loader captures `CONFIG` in a closure; the returned interface does not expose it. Tests must observe the merge **indirectly** through module behavior. Three strategies are available — choose based on what the module exposes. Strategy numbers mirror the exemption category numbers (Category 3 has no strategy because it uses a partial block, not a full contract):
+Every loader captures `CONFIG` in a closure; the returned interface does not expose it. Tests must observe the merge **indirectly** through module behavior. Three strategies are available - choose based on what the module exposes. Strategy numbers mirror the exemption category numbers (Category 3 has no strategy because it uses a partial block, not a full contract):
 
 | Strategy | When to use | How it works |
 |---|---|---|
-| **1 — Validation throws** | Module validates CONFIG at load time and throws on bad values (Archetype A: auth, verify, logger, http-gateway) | Override a key with an invalid value → assert it throws; override with a valid but distinct value → assert it does not. The throw proves the override reached the effective config. |
-| **2 — Behavioral** | Module has a config key whose value changes observable output of a public function without a backend (Archetype B: money, time, crypto, http, instance) | Call the function with a known override → assert the output reflects the override (and the default produces the other behavior). |
-| **4 — Integration tier** | Module keys only manifest against a live backend (Archetype C: DB, storage, queue) | Connection keys are already covered implicitly by Docker integration tests. The null-override assertion and any non-connection keys go in the integration suite if the key is observable there, otherwise they are documented as deferred. |
+| **1 - Validation throws** | Module validates CONFIG at load time and throws on bad values (Archetype A: auth, verify, logger, http-gateway) | Override a key with an invalid value → assert it throws; override with a valid but distinct value → assert it does not. The throw proves the override reached the effective config. |
+| **2 - Behavioral** | Module has a config key whose value changes observable output of a public function without a backend (Archetype B: money, time, crypto, http, instance) | Call the function with a known override → assert the output reflects the override (and the default produces the other behavior). |
+| **4 - Integration tier** | Module keys only manifest against a live backend (Archetype C: DB, storage, queue) | Connection keys are already covered implicitly by Docker integration tests. The null-override assertion and any non-connection keys go in the integration suite if the key is observable there, otherwise they are documented as deferred. |
 
 ### Decision tree
 
@@ -412,21 +412,21 @@ For each module:
 
 ### What to assert (keep it to 3–5 `it` blocks)
 
-- **(a) override-wins** — pass an override that flips a validation outcome or observable behavior; prove it was absorbed.
-- **(b) omission-keeps-default** — omit an optional key with a non-null default; prove the module still constructs without error.
-- **(c) null-honored** (the 0032 canary) — explicitly pass `null` for a key whose default is a non-null object/value; prove `null` was seen as `null`, not silently replaced by the default. This is the single assertion that would have caught the 0032 regression in every module.
-- **(d) shallow-merge** (optional, Archetype A) — pass a partial nested override; prove sibling keys in the nested default are dropped (not deep-merged).
-- **(e) factory-independence** (optional, universal) — two loader calls with different configs produce independent instances.
+- **(a) override-wins** - pass an override that flips a validation outcome or observable behavior; prove it was absorbed.
+- **(b) omission-keeps-default** - omit an optional key with a non-null default; prove the module still constructs without error.
+- **(c) null-honored** (the 0032 canary) - explicitly pass `null` for a key whose default is a non-null object/value; prove `null` was seen as `null`, not silently replaced by the default. This is the single assertion that would have caught the 0032 regression in every module.
+- **(d) shallow-merge** (optional, Archetype A) - pass a partial nested override; prove sibling keys in the nested default are dropped (not deep-merged).
+- **(e) factory-independence** (optional, universal) - two loader calls with different configs produce independent instances.
 
 Do **not** assert every key. Target the minimum set that catches a merge-semantics regression.
 
 ### Finding the null-meaningful key
 
-`null` must be meaningful for the chosen key — i.e., the key has a **non-null default** and `null` is a distinct, observable state. Examples per module:
+`null` must be meaningful for the chosen key - i.e., the key has a **non-null default** and `null` is a distinct, observable state. Examples per module:
 
 - `auth`: `JWT` (default is a plain object; `null` + `ENABLE_JWT: true` must throw)
 - `auth`: `LIMITS.by_form_factor_max` (default `null`, not useful for this test), `COOKIE_PREFIX` (default `null`, not useful)
-- `logger`: `IP_ENCRYPT_KEY` (default `null` in most configs — confirm the module's own default)
+- `logger`: `IP_ENCRYPT_KEY` (default `null` in most configs - confirm the module's own default)
 - `verify`: confirm with the module's `.config.js`
 
 If no null-meaningful key exists in a module, document that explicitly in a comment inside the block and skip Promise 3 for that module.
@@ -448,7 +448,7 @@ function validBaseConfig () {
 
 `CONFIG.Store` is a ready-to-use store object (here the in-memory fixture). The parent receives it directly; it does not call a store factory or pass a separate store-config object.
 
-### Template 1 — Validation-throw (Archetype A)
+### Template 1 - Validation-throw (Archetype A)
 
 ```javascript
 describe('config absorption contract', function () {
@@ -496,7 +496,7 @@ describe('config absorption contract', function () {
 });
 ```
 
-### Template 2 — Behavioral (Archetype B)
+### Template 2 - Behavioral (Archetype B)
 
 ```javascript
 describe('config absorption contract', function () {
@@ -526,25 +526,25 @@ describe('config absorption contract', function () {
 
 A module is exempt from the `describe('config absorption contract', ...)` block when there is nothing to assert at the unit tier. There are four exemption categories:
 
-**Category 1 — Config argument unused**
+**Category 1 - Config argument unused**
 The loader accepts `config` for interface uniformity but the parameter is never read by `createInterface`. No public function observes CONFIG.
 
 Examples: `js-helper-utils`, `js-server-helper-crypto`, `js-server-helper-instance`, `js-helper-time`
 
-**Category 2 — Config is empty**
+**Category 2 - Config is empty**
 The `.config.js` file defines no keys (`module.exports = {}`). The merge succeeds but there is nothing to override.
 
 Examples: `js-server-helper-instance` (empty config), any future module before its first configurable key is added.
 
-**Category 3 — All defaults are null with no observable null-override**
+**Category 3 - All defaults are null with no observable null-override**
 Every CONFIG key defaults to `null`. Overriding with `null` is indistinguishable from the default, and the only non-null overrides require a backend to observe. Add the override-wins and omission-keeps-default assertions if a non-null override is observable without a backend; document the null-honored promise as deferred if not.
 
-Examples: `js-server-helper-logger` (all defaults null — covered with behavioral IP override-wins only).
+Examples: `js-server-helper-logger` (all defaults null - covered with behavioral IP override-wins only).
 
-**Category 4 — Backend-coupled (Strategy 4 — integration tier)**
+**Category 4 - Backend-coupled (Strategy 4 - integration tier)**
 Every meaningful CONFIG key (connection strings, table names, bucket names, pool sizes) only manifests its effect through a live backend call (DynamoDB, MongoDB, MySQL, Postgres, SQLite, S3, SQS, etc.). Unit tests cannot observe whether the override reached CONFIG without the backend.
 
-These modules are fully exempt at the unit tier. Do **not** add an exempt comment to the test file — the policy is documented here. Verification belongs in the module's Docker integration tests.
+These modules are fully exempt at the unit tier. Do **not** add an exempt comment to the test file - the policy is documented here. Verification belongs in the module's Docker integration tests.
 
 Exempt modules in this category:
 - All DB/SQL helpers: `js-server-helper-sql-postgres`, `js-server-helper-sql-mysql`, `js-server-helper-sql-sqlite`
@@ -556,7 +556,7 @@ Exempt modules in this category:
 - HTTP gateway adapters: `js-server-helper-http-gateway-adapter-*`
 
 **When to document exemption in the test file vs here**
-Only add an in-file comment (`// config absorption contract: exempt — ...`) when the exemption is **non-obvious from the category** — for example when CONFIG is accepted but silently ignored (Category 1/2), so future developers don't add a test block before checking. For Category 4 (backend-coupled), the exemption is clear from the module's purpose; no in-file comment is needed.
+Only add an in-file comment (`// config absorption contract: exempt - ...`) when the exemption is **non-obvious from the category** - for example when CONFIG is accepted but silently ignored (Category 1/2), so future developers don't add a test block before checking. For Category 4 (backend-coupled), the exemption is clear from the module's purpose; no in-file comment is needed.
 
 ---
 

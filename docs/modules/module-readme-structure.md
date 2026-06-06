@@ -452,9 +452,9 @@ Class F has two subtypes: **stores** (`-store-[backend]`, data persistence) and 
 
 **Tagline templates:**
 
-> **Store subtype:** A [Backend Name]-backed implementation of the [Parent] module's storage contract. Plug it into the parent's `STORE` config; the [Parent] module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
+> **Store subtype:** A [Backend Name]-backed implementation of the [Parent] module's storage contract. Plug it into the parent's `Store` config; the [Parent] module's calling shape stays identical regardless of which storage backend is active. Part of [Superloom](https://superloom.dev).
 
-> **Adapter subtype:** A [Runtime/Integration Name] adapter for the [Parent] module. Plug it into the parent's `ADAPTER` config; the [Parent] module's calling shape stays identical regardless of which runtime is active. Part of [Superloom](https://superloom.dev).
+> **Adapter subtype:** A [Runtime/Integration Name] adapter for the [Parent] module. Plug it into the parent's `Adapter` config; the [Parent] module's calling shape stays identical regardless of which runtime is active. Part of [Superloom](https://superloom.dev).
 
 The tagline does not name competitor adapters and does not promise multi-backend support at the adapter scope (that promise belongs to the Class E parent's README).
 
