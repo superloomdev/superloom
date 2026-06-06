@@ -116,6 +116,8 @@ See `docs/dev/pitfalls.md` entry 18.
 
 **Auto-run is for read-only or idempotent operations only.** Never set `SafeToAutoRun: true` for `rm -rf`, `git push --force`, `docker volume rm`, `npm publish`, or state mutation, even if user previously approved similar command.
 
+**Never use `--legacy-peer-deps`.** It masks real errors and writes incorrect lock entries that break future installs. If `npm install` fails with `E409 Conflict / checksum mismatch` during a module refactor, wait 30 to 60 seconds then re-run `rm -rf node_modules package-lock.json && npm install`. See `docs/dev/pitfalls.md` entry 21.
+
 **VitePress / Vue parser crashes on bare angle-bracket placeholders in `docs/` markdown.** Any `<lowercase-or-PascalCase-name>` outside backticks is parsed as an HTML/Vue element open tag and hangs `vitepress build` with `Element is missing end tag` (the reported line number is often far below the real culprit). Rules: (1) never use `<...>` placeholders in prose. Use `[name]`, `{name}`, or plain capitalized phrases instead. (2) For verbatim copy-paste templates inside fenced blocks, use ` ```text ` instead of ` ```markdown ` to disable Vue's secondary scan. (3) When changes touch any VitePress-rendered file in `docs/`, run `npm run build` from `website/` locally before pushing. The single-digit-second build catches the failure before CI does. See `docs/dev/pitfalls.md` entry 15.
 
 ## Boundaries
