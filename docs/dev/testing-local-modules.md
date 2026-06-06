@@ -38,7 +38,7 @@ npm install   # from <module>/_test
 
 Run this every time before testing. The module itself is linked via `file:../` so source changes are picked up automatically, but published peer dependencies may have been updated and `npm install` is the only safe way to refresh them. Skipping `npm install` is never worth the few seconds saved.
 
-> **During module refactoring only:** use `rm -rf node_modules package-lock.json && npm install` instead. Stale lock files from temporary `file:` swaps and version resets to `1.0.0` can cause silent wrong-version installs. See `docs/dev/pitfalls.md` entry 21 and the `/js-helper-module-refactor` workflow Step 6.
+> **During module refactoring only:** use `rm -rf node_modules package-lock.json && npm install` instead. Stale lock files from temporary `file:` swaps and version resets to `1.0.0` can cause silent wrong-version installs. See [`pitfalls.md` entry 21](pitfalls.md#21-stale-package-lockjson-causes-wrong-version-install-after-file-swap-or-version-reset) and the `/js-helper-module-refactor` workflow Step 6.
 
 ### Step 2: Run tests
 
