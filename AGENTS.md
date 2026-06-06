@@ -420,6 +420,8 @@ The framework recognises **three** error categories. Each has one correct dispos
 
 **This applies to every helper module** (dynamodb, mongodb, s3, sql-*, verify, http, etc.) and every entity service. When in doubt: programmer errors throw, everything else returns an envelope, and the service translates before the controller sees it.
 
+**Programmer error message format:** `[module-short-name] field-path expected-shape[(e.g. bare-example)]`. Example: `[js-server-helper-auth] CONFIG.Store is required (a store object implementing the store contract)`. No URLs, no scoped package names (`@superloomdev/...`), no multi-line concatenation, no apologetic language, no "see docs" pointers, no vendor/driver names in the prefix. Source: `docs/foundations/error-handling.md` -> "Programmer Error Message Format".
+
 Full rule with rationale, anti-patterns, type-string naming, and worked examples: `docs/foundations/error-handling.md`.
 
 ### Section Header Hierarchy
@@ -686,9 +688,10 @@ Helper modules use one of three patterns. **Singleton** for stateless, pure, sha
 | `createInterface(CONFIG)` | Foundation module, config but no peer deps | `js-helper-debug` |
 | `createInterface(Lib, CONFIG)` | Stateless helper - peer deps + config, no per-instance resource | `js-helper-time`, `js-server-helper-crypto`, `js-server-helper-http`, `js-server-helper-instance`, `js-client-helper-crypto` |
 | `createInterface(Lib, CONFIG, state)` | Stateful helper - holds a per-instance resource | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
+| `createInterface(Lib, CONFIG, ERRORS)` | Standalone store adapter - owns its own Lib, CONFIG, ERRORS; returns a ready-to-use store object | `[parent]-store-[backend]` |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern. Validators + store injected from loader | `js-server-helper-verify` |
 | `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied runtime adapter, no Validators | _(no current reference - use `js-server-helper-auth` as the closest shape)_ |
-| `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators + decomposed parts (fullest shape) | `js-server-helper-auth` (target; currently `Validators, store, Parts` - corrected when next touched) |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators + decomposed parts (fullest shape) | `js-server-helper-auth` |
 
 The loader body mirrors the signature: build only the parameters `createInterface` will receive. Stateless helpers never declare a `state` object.
 
@@ -802,7 +805,7 @@ Omit positions that do not apply. Preserve relative order of those that remain. 
 
 **Module-root singletons (`[module].validators.js`) are a special case:** accept only `Lib`, no CONFIG/ERRORS/Validators. They run before config is validated. Stripped-down shape - do not conflate with the main-module singleton.
 
-**Store/adapter contract validation:** Modules with externally-supplied stores or adapters add `validateStoreContract(store)` or `validateAdapterContract(adapter)` to their validators singleton. The loader calls it once after instantiating the store/adapter. Throws `Error` (setup error, not programmer error) with format `[module-name] Invalid store contract: missing method [name]`. Only required methods belong in the contract; optional maintenance methods keep call-time `isFunction` guards. Reference: `js-server-helper-http-gateway` (adapter), `js-server-helper-auth`/`verify`/`logger` (store).
+**Store/adapter contract validation:** Modules with externally-supplied stores or adapters add `validateStoreContract(store)` or `validateAdapterContract(adapter)` to their validators singleton. The parent receives a ready-to-use object via `CONFIG.Store` / `CONFIG.Adapter`; the loader calls the contract validator once right after receiving it. Throws `Error` (setup error, not programmer error) with format `[module-name] Invalid store contract: missing method [name]`. Only required methods belong in the contract; optional maintenance methods keep call-time `isFunction` guards. Reference: `js-server-helper-http-gateway` (adapter), `js-server-helper-auth`/`verify`/`logger` (store).
 
 **Reference implementations:** `js-helper-money/money.js` (main module singleton), `js-server-helper-http-gateway/http-gateway.js` (main module singleton with adapter + parts), `js-server-helper-auth/auth.validators.js` (module-root singleton, special case).
 
@@ -828,28 +831,62 @@ When a helper module's `createInterface` body grows beyond ~500 lines and decomp
 
 ### Adapter Pattern (Multi-Backend Helper Modules)
 
-When a helper module needs interchangeable backends (databases, transports, key/value stores), each backend is a **standalone npm package**. The parent module accepts the adapter factory via configuration. Source: `docs/modules/module-structure-js.md` -> "Adapter Pattern".
+When a helper module needs interchangeable backends (databases, transports, key/value stores), each backend is a **standalone npm package** that owns its own `Lib`, `CONFIG`, and `ERRORS`. Source: `docs/modules/module-structure-js.md` -> "Adapter Pattern".
 
-- **Naming:** `[parent]-store-[backend]` for database-backed adapters; `[parent]-adapter-[name]` for non-database adapters; the general concept is "adapter" - "store" is reserved for database backings
-- **Factory injection only:** parent accepts `CONFIG.STORE = require('@superloomdev/[parent]-store-[backend]')` - the factory function itself, not a string. No internal registry, no string dispatch
-- **Store instantiation in the loader, not in `createInterface`:** after `Validators.validateConfig(CONFIG)`, call `const store = CONFIG.STORE(Lib, CONFIG, ERRORS)` in the loader body, then pass `store` explicitly into `createInterface`. Instantiating inside `createInterface` is a structural error. It creates a hidden side effect and prevents passing a mock store in tests
-- **Reference implementations:** `js-server-helper-auth` (8-method contract) and `js-server-helper-verify` (6-method contract)
-- **Loader-time validation:** parent's `validateConfig` enforces `typeof CONFIG.STORE === 'function'` - throws on misconfiguration before any per-call work
-- **Uniform `(Lib, CONFIG, ERRORS)`:** parent narrows `Lib` (typically `{ Utils, Debug, Crypto, Instance }`), forwards merged `CONFIG` whole, forwards its frozen `ERRORS` catalog. Adapters extract `CONFIG.STORE_CONFIG` internally
-- **Internal error catalog forwarding:** storage adapters use the parent's `ERRORS` catalog objects in failure envelopes - never define their own. Identical envelope shape regardless of backend
-- **Adapter contract documented in two places:** top-of-file comment in `[adapter]/store.js` or `[adapter]/adapter.js` listing every method + signature + return shape; contract table in every adapter's README
-- **Two subtypes distinguished by what they adapt:**
+- **Adapter owns its own Lib:** built from injected `shared_libs`, not received from parent
+- **Adapter owns its own Config:** own `store.config.js` with adapter-specific keys
+- **Adapter owns its own ERRORS:** frozen `store.errors.js` with adapter-specific error types, prefixed with the module short-name
+- **Returns a ready-to-use store object:** not a factory. Parent receives via `CONFIG.Store` and uses it directly
+- **Only coupling is the return contract:** method names + return shapes (`{ success, error }`)
+- The parent never calls into the adapter after receiving the ready-to-use object. No `Lib` or `ERRORS` forwarding
 
-| Subtype | Naming | What it adapts | Typical internal shape |
+```javascript
+// Application loader
+const Store = require('@superloomdev/[parent]-store-[backend]')(Lib, { /* adapter config */ });
+Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
+```
+
+**Naming conventions:**
+
+| Concept | Naming |
+|---|---|
+| Database-backed adapters | `[parent]-store-[backend]` |
+| Non-database adapters | `[parent]-adapter-[name]` |
+| General concept | "adapter" - "store" reserved for database backings |
+
+**Adapter subtypes:**
+
+| Subtype | Naming | What it adapts | Typical shape |
 |---|---|---|---|
-| **Store** | `[parent]-store-[backend]` | Data persistence (databases, file systems, caches) | Factory (`createInterface`) - almost always, because parent is factory-based and each instance needs its own `STORE_CONFIG` |
-| **Adapter** | `[parent]-adapter-[name]` | Everything else: runtimes, transports, integrations, future use cases | Singleton (most common - stateless normalizers) or factory (if per-instance config needed) |
+| **Store** | `[parent]-store-[backend]` | Data persistence | Factory (`createInterface(Lib, CONFIG, ERRORS)`) - returns ready-to-use store |
+| **Adapter** | `[parent]-adapter-[name]` | Runtimes, transports, integrations | Singleton (stateless) or factory (if per-instance config) |
 
-- **Factory vs singleton decision:** Does the adapter need per-instance configuration? Yes → factory. No → singleton. The choice is about state, not naming
-- **Singleton adapter rules:** pure normalizer - receives raw inputs and returns normalized data; never writes to `instance`; parent is sole writer to `instance`; `Lib.Utils` for type checks; public before private at module scope
-- **Skeletons:** `docs/modules/module-structure-js.md` -> "Storage Adapter Skeleton" and "Adapter Skeleton"
-- **Reference (storage):** `js-server-helper-auth` (parent, 8-method store contract) + 5 standalone adapters (`-sqlite`, `-postgres`, `-mysql`, `-mongodb`, `-dynamodb`)
-- **Reference (transport):** `js-server-helper-http-gateway` (parent, 3-method adapter contract) + 2 standalone adapters (`-aws-apigateway`, `-express`)
+**Adapter files:**
+
+```
+[adapter]/
+  store.js              # Main loader + createInterface
+  store.config.js       # Adapter config keys
+  store.errors.js       # Adapter error catalog
+  store.validators.js   # Lib-injected singleton
+  _test/
+    loader.js           # Builds Lib, loads adapter
+    test.js             # Contract + integration tests
+```
+
+**Key rules:**
+
+- Store adapters use `Lib.Utils` for type checks - no inline `typeof`
+- Driver errors → `ERRORS.SERVICE_UNAVAILABLE` from adapter's own catalog
+- Log via `Lib.Debug.debug` with driver details; never leak driver wording in public envelopes
+- Skeletons: `docs/modules/module-structure-js.md` -> "Storage Adapter Skeleton" and "Adapter Skeleton"
+
+**Reference implementations:**
+
+| Type | Parent | Adapters |
+|---|---|---|
+| Store | `js-server-helper-distinct-queue` | `js-server-helper-distinct-queue-store-dynamodb`, `js-server-helper-distinct-queue-store-mongodb` |
+| Transport | `js-server-helper-http-gateway` | `js-server-helper-http-gateway-adapter-aws-apigateway`, `js-server-helper-http-gateway-adapter-express` (singleton) |
 
 ### Application Module Structure (Models, Controllers, Services)
 
@@ -968,9 +1005,10 @@ Modules using the [Adapter Pattern](#adapter-pattern-multi-backend-helper-module
 | **2 - Parent logic** | `[parent]/_test/test.js` | parent + in-memory fixture | none | Does the pure parent logic work? (loader validation, policy, JWT) |
 | **3 - Contract integration** | `[adapter]/_test/test.js` | parent + real adapter | yes | Does this adapter satisfy the contract end-to-end? |
 
-- **In-memory fixture (Tier 2 enabler):** `[parent]/_test/memory-store.js` exports a `createInMemory<Adapter>()` that implements the **full** adapter contract using Node-built-in structures. Same return shapes as a real adapter. Lives only in `_test/`, never published, never required from outside test code. Reference: `js-server-helper-auth/_test/memory-store.js` (canonical); `js-server-helper-verify/_test/memory-store.js` (second example. Must be extracted from inline `test.js` before verify adapter `_test/` dirs are created)
+- **Standalone adapter test (Tier 1 enabler):** the adapter's `_test/loader.js` builds its own Lib and loads the adapter as a standalone module (it owns its own Lib/CONFIG/ERRORS). The adapter's `_test/` uses `file:../` only for the module under test
+- **In-memory fixture (Tier 2 enabler):** `[parent]/_test/memory-store.js` exports a `createInMemory<Adapter>()` that implements the **full** adapter contract using Node-built-in structures. Same return shapes as a real adapter. Lives only in `_test/`, never published, never required from outside test code
 - **Shared contract suite copy pattern (Tier 3 enabler):** the integration suite is written **once** in `[parent]/_test/store-contract-suite.js` and **copied** into each adapter's `_test/store-contract-suite.js`. Never exported through the parent's `package.json`, never deep-required across packages
-- **Why copy:** keeps test code out of runtime exports; each adapter has its own version-pinned snapshot; `npm install` graph in `_test/` stays clean (one `file:../` for the adapter under test, registry pins for siblings); auditing which contract version an adapter was built against is trivial
+- **Why copy:** keeps test code out of runtime exports; each adapter has its own version-pinned snapshot; `npm install` graph in `_test/` stays clean (one `file:../` for the adapter under test, registry pins for siblings)
 
 ### Healthcheck and concurrency rules (Docker-dependent modules)
 

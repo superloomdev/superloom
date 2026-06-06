@@ -266,9 +266,12 @@ const createInterface = function (Lib, CONFIG, state) {
 | `createInterface(CONFIG)` | Foundation module with config but no peer deps (structured logging primitives) | `js-helper-debug` |
 | `createInterface(Lib, CONFIG)` | Stateless helper - uses peer deps and config but holds no per-instance resource | `js-helper-time`, `js-server-helper-crypto`, `js-server-helper-http`, `js-server-helper-instance` |
 | `createInterface(Lib, CONFIG, state)` | Stateful helper - holds a per-instance resource (pool, persistent client, authenticated session) | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
+| `createInterface(Lib, CONFIG, ERRORS)` | Standalone store adapter - owns its own `Lib`, `CONFIG`, and `ERRORS`; returns a ready-to-use store object | `[parent]-store-[backend]` |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern - Validators singleton + externally-supplied store, no parts | `js-server-helper-verify` |
 | `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied adapter, no Validators singleton | _(no current reference - use `js-server-helper-auth` as the closest shape)_ |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators singleton + decomposed parts (fullest shape) | `js-server-helper-auth` |
+
+> A standalone store adapter builds its own dependencies and owns its own error catalog, so it takes only `(Lib, CONFIG, ERRORS)`. See [Storage Adapter Skeleton](#storage-adapter-skeleton).
 
 The loader body mirrors the signature: it builds only the parameters it will pass. A stateless helper's loader ends with `return createInterface(Lib, CONFIG);` and never declares a `state` object.
 
@@ -279,11 +282,11 @@ Parameters passed to `createInterface` (and to module loaders in general) follow
 | Parameter kind | Casing | Rationale | Examples |
 |---|---|---|---|
 | **Internally-assembled namespaced containers** - bags of named keys built by this module's own loader | `PascalCase` | These are namespaces, not scalars. PascalCase signals "look inside for named sub-things" | `Lib`, `CONFIG`, `ERRORS`, `Parts`, `Validators` |
-| **Externally-supplied resolved dependencies** - a single instance of a contract, obtained by calling a factory that arrived from outside (via `CONFIG.STORE`, `CONFIG.ADAPTER`, etc.) | `camelCase` | These are resolved objects, not namespaces. `camelCase` signals "this is one specific thing that implements a contract" | `store`, `adapter`, `state` |
+| **Externally-supplied resolved dependencies** - a single instance of a contract, obtained from outside via config | `camelCase` | These are resolved objects, not namespaces. `camelCase` signals "this is one specific thing that implements a contract" | `store`, `adapter`, `state` |
 
 **Why `store` and `adapter` are lowercase - and why that is intentional:**
 
-`store` (in auth/verify) is the result of calling an externally-supplied factory function: `CONFIG.STORE(Lib, CONFIG, ERRORS)`. The module did not build this object from its own parts; the caller chose it and injected it through config. It is the module's external boundary - the one thing it cannot reason about internally. Lowercase signals: *"this came from outside; we hold it but we did not build it."*
+`store` is a ready-to-use store object received via `CONFIG.Store` (the caller loads the adapter, then passes the resulting object in). The module did not build this object from its own parts; the caller chose the adapter and injected the resulting store through config. It is the module's external boundary - the one thing it cannot reason about internally. Lowercase signals: *"this came from outside; we hold it but we did not build it."*
 
 This is the same reason `state` is lowercase in simpler stateful modules: `state` is a mutable container, not a named namespace.
 
@@ -647,9 +650,9 @@ Module-root singletons (`[module].validators.js`) are a **special case** of the 
 
 This shape should not be confused with the main-module singleton. It is a stripped-down, single-purpose pattern for config and input validation only.
 
-> **Store / adapter contract validation belongs here too.** A module that accepts an externally-supplied `store` (via `CONFIG.STORE`) or `adapter` (via `CONFIG.ADAPTER`) adds a contract validator method to its validators singleton. Call it `validateStoreContract(store)` or `validateAdapterContract(adapter)` depending on which dependency the module receives.
+> **Store / adapter contract validation belongs here too.** A module that accepts an externally-supplied `store` (via `CONFIG.Store`) or `adapter` (via `CONFIG.Adapter`) adds a contract validator method to its validators singleton. Call it `validateStoreContract(store)` or `validateAdapterContract(adapter)` depending on which dependency the module receives.
 >
-> The loader calls this method once, immediately after instantiating the store or adapter. This ensures a backend missing a required method fails fast at boot instead of on the first live request.
+> The loader calls this method once, immediately after receiving the ready-to-use store or adapter object. This ensures a backend missing a required method fails fast at boot instead of on the first live request.
 >
 > Like `validateConfig`, a contract validator throws `Error` because a missing method is a setup error, not a programmer call error. Use the canonical message format: `[module-name] Invalid store contract: missing method [name]`.
 >
@@ -821,42 +824,95 @@ Some helper modules need to support multiple interchangeable backends - differen
 
 For a parent module `js-server-helper-[X]` with multiple backends, ship `js-server-helper-[X]-store-[backend]` (or `-adapter-[name]`) packages alongside it.
 
-### Factory Injection, Not String Dispatch
+### Independent Adapter Modules
 
-The parent module accepts the **adapter factory function itself** through `CONFIG.STORE`. There is no internal registry, no string-to-factory lookup, no `require()` of unused backends:
+Each store adapter is a **fully independent module** that owns its own `Lib`, `CONFIG`, and `ERRORS`. The adapter receives dependency injection at load time and returns a **ready-to-use store object** that the parent consumes directly. There is no internal registry, no string-to-factory lookup, no `require()` of unused backends:
 
 ```javascript
 // At the call site (loader.js or service wiring)
-const Auth = require('@superloomdev/js-server-helper-auth')(Lib, {
-  STORE: require('@superloomdev/js-server-helper-auth-store-postgres'),  // factory function
-  STORE_CONFIG: { table_name: 'sessions_user', lib_sql: Lib.Postgres },
-  ACTOR_TYPE: 'user',
-  TTL_SECONDS: 2592000
+// 1. Load the adapter first - it builds its own Lib, CONFIG, and ERRORS
+const Store = require('@superloomdev/[parent]-store-[backend]')(Lib, {
+  // adapter-specific config keys
+});
+
+// 2. Pass the ready-to-use store object to the parent
+const Parent = require('@superloomdev/[parent]')(Lib, {
+  Store: Store,  // Ready-to-use store object, not a factory
+  // ... other parent config
 });
 ```
 
-This pattern has three concrete benefits:
+`CONFIG.Store` is a **ready-to-use store object** returned by the adapter. The parent uses it directly - no `Lib` or `ERRORS` forwarding, no factory call. The adapter owns its own configuration internally, like any standalone module. The **only coupling point** between parent and adapter is the **return contract** (method names + return shapes).
+
+This pattern has four concrete benefits:
 
 1. **No dead requires.** The application bundle includes only the adapter package(s) actually used.
 2. **No string-keyed registries.** Adding a new backend is a new package; the parent module's source never changes.
-3. **Validation at loader time.** `validateConfig` checks `typeof CONFIG.STORE === 'function'` and throws if a string or `null` was passed - misconfiguration fails at startup, never on first request.
+3. **Validation at loader time.** The adapter validates its own config at construction, and the parent validates the store contract - misconfiguration fails at startup, never on first request.
+4. **True decoupling.** Parent and adapter share only the return contract. The adapter can evolve its internals (error types, internal Lib structure) without affecting the parent.
 
-### Uniform Factory Signature for Adapters
+### Adapter Architecture
 
-Adapters use the same factory signature as parts: `(Lib, CONFIG, ERRORS)`. The parent module's loader narrows `Lib` to the dependencies it shares with adapters (typically `{ Utils, Debug, Crypto, Instance }`), forwards the merged `CONFIG` whole, and forwards its frozen `ERRORS` catalog so adapter return envelopes match the parent's contract:
+The adapter is a standalone module that builds its own `Lib` from injected `shared_libs`, defines its own `CONFIG` with its own config keys, and owns its own `ERRORS` catalog. The parent receives the ready-to-use store object and never forwards `Lib` or `ERRORS` to the adapter.
 
 ```javascript
-// Inside the parent loader, after building Lib + CONFIG + ERRORS
-const store = CONFIG.STORE(Lib, CONFIG, ERRORS);
+// Adapter loader - fully independent
+module.exports = function loader (shared_libs, config) {
+
+  // Build own Lib (not received from parent)
+  const Lib = {
+    Utils: shared_libs.Utils,
+    Debug: shared_libs.Debug,
+    [Driver]: shared_libs.[Driver]  // backend driver from the Lib container
+  };
+
+  // Merge own config with own defaults
+  const CONFIG = Object.assign(
+    {},
+    require('./store.config'),  // Adapter's own config keys
+    config || {}
+  );
+
+  // Load own error catalog (not from parent)
+  const ERRORS = require('./store.errors');
+
+  // Validate at construction
+  const Validators = require('./store.validators')(Lib);
+  Validators.validateConfig(CONFIG);
+
+  // Return ready-to-use store
+  return createInterface(Lib, CONFIG, ERRORS);
+};
 ```
 
-The adapter extracts its slice of `CONFIG` internally (`CONFIG.STORE_CONFIG.table_name`, `CONFIG.STORE_CONFIG.lib_sql`, etc.). Callers never pre-extract anything before passing `CONFIG`.
+**The Contract (only coupling point):**
 
-### Internal Error Catalog Forwarding
+| Return Shape | Meaning |
+|---|---|
+| `{ success: true, ... }` | Operation succeeded |
+| `{ success: false, error: { type, message } }` | Operation failed |
 
-The parent module's error catalog is the **single source of truth** for the public envelope shape. Adapters must use the same catalog objects in their failure returns so envelopes are identical regardless of which backend is active. The catalog is forwarded as `ERRORS`; adapters never define their own envelope shapes.
+Error types are adapter-defined; the parent forwards them transparently.
 
-This is the operational consequence of the wrapper-purity rule - see [`error-handling.md`](../foundations/error-handling#wrapper-purity-the-catalog-owns-the-envelope).
+> **Adapter-internal structure is documented separately** (see [Storage Adapter Skeleton](#storage-adapter-skeleton)). This section covers only the parent-facing contract.
+
+### Adapter Error Catalogs
+
+Each adapter module **owns its own error catalog** (`store.errors.js`). The parent does not forward its ERRORS to the adapter; instead, the adapter defines its own operational error types that are specific to its backend.
+
+```javascript
+// store.errors.js - adapter's own error catalog
+module.exports = Object.freeze({
+  SERVICE_UNAVAILABLE: Object.freeze({
+    type: '[PARENT]_[BACKEND]_SERVICE_UNAVAILABLE',
+    message: '[Backend] storage unavailable'
+  })
+});
+```
+
+The parent forwards adapter errors transparently. Service-layer code can branch on the `error.type` field, which is prefixed with the adapter's module short-name so it is unambiguous in logs. Both parent and adapter follow the same envelope shape (`{ success: false, error: { type, message } }`), but the error types are adapter-defined.
+
+This maintains wrapper purity (the catalog owns the envelope) while allowing true decoupling between parent and adapter. See [`error-handling.md`](../foundations/error-handling#wrapper-purity-the-catalog-owns-the-envelope).
 
 ### Adapter Contract: Documented Method Set
 
@@ -867,13 +923,17 @@ Each parent module that uses the Adapter pattern publishes its **adapter contrac
 
 When the parent module evolves the contract (adds a method, changes a return shape), every adapter updates synchronously - this is enforced via the shared contract test suite (see [`testing-strategy.md`](../testing/testing-strategy.md)).
 
-### Where Store Instantiation Lives
+### Where Store Lives in the Parent
 
-The store is instantiated in the **loader**, not inside `createInterface`. This keeps `createInterface` a pure factory that only builds an interface from what it is given:
+The store is received by the parent as a **ready-to-use object** via `CONFIG.Store`. The parent validates the store contract and uses it directly:
 
 ```javascript
-// In the loader, after Validators.validateConfig(CONFIG)
-const store = CONFIG.STORE(Lib, CONFIG, ERRORS);
+// In the parent loader
+// CONFIG.Store is a ready-to-use store object (already instantiated by adapter)
+const store = CONFIG.Store;
+
+// Validate contract (optional but recommended)
+Validators.validateStoreContract(store);
 
 // store is threaded into createInterface last - external dependency goes after
 // all internally-assembled containers (Lib, CONFIG, ERRORS, Validators, Parts).
@@ -881,61 +941,133 @@ const store = CONFIG.STORE(Lib, CONFIG, ERRORS);
 return createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store);
 ```
 
-Instantiating `store` inside `createInterface` instead is a structural error: `createInterface` would have a hidden side effect and could no longer be tested by passing a mock store directly.
+The parent never instantiates the store; it receives it already configured from the adapter. This keeps parent and adapter decoupled.
 
 ### Storage Adapter Skeleton
 
-Storage adapters wrap a database driver to implement the parent module's store contract. They use the **factory pattern** (`createInterface`) because each instance closes over its own `STORE_CONFIG` (table name, driver reference). The canonical shape mirrors the helper-module factory pattern, but the loader receives `(Lib, CONFIG, ERRORS)` from the parent rather than from the application.
+Storage adapters (`-store-[backend]`) are **fully independent modules**. They own their own `Lib`, `CONFIG`, and `ERRORS`, and return a ready-to-use store object.
+
+#### Adapter File Structure
+
+```
+[module-root]/
+  store.js                 # Main loader + createInterface
+  store.config.js          # Adapter-specific config keys
+  store.errors.js          # Adapter's own frozen error catalog
+  store.validators.js      # Singleton validators (Lib-injected)
+  _test/
+    loader.js              # Test loader - builds Lib, loads adapter
+    test.js                # Contract + integration tests
+  README.md, ROBOTS.md     # Documentation
+```
+
+#### Adapter Loader Pattern
 
 ```javascript
-// Info: [Backend] store adapter for js-server-helper-[parent].
-// [Description of what this adapter does and which backend it wraps.]
+// Info: [Backend] store adapter for [parent-module].
+// Implements the [N]-method store contract.
 //
-// Store contract (identical shape across all adapters):
-//   - method1(instance, ...)  -> { success, error }
-//   - method2(instance, ...)  -> { success, record, error }
+// The adapter owns its own Lib, CONFIG, and ERRORS. Returns a ready-to-use
+// store object that the parent consumes via CONFIG.Store.
+//
+// Store contract:
+//   - method1(instance, ...) -> { success, error }
+//   - method2(instance, ...) -> { success, data, error }
+//   ...
+//
+// Compatibility: Node.js 24+
 'use strict';
 
 
 /////////////////////////// Module-Loader START ////////////////////////////////
 
-module.exports = function loader (Lib, CONFIG, ERRORS) {
+/********************************************************************
+Factory loader. One call = one independent store instance with its
+own Lib, CONFIG, and ERRORS. Validates CONFIG at construction so
+misconfiguration fails fast at startup, not on first request.
+
+@param {Object} shared_libs - Lib container with Utils, Debug, [Driver]
+@param {Object} config      - Overrides merged over adapter config defaults
+
+@return {Object} - Store interface (contract methods + optional setupNewStore)
+*********************************************************************/
+module.exports = function loader (shared_libs, config) {
+
+  // Dependencies for this instance
+  const Lib = {
+    Utils: shared_libs.Utils,
+    Debug: shared_libs.Debug,
+    [Driver]: shared_libs.[Driver]  // backend driver from the Lib container
+  };
+
+  // Merge overrides over defaults
+  const CONFIG = Object.assign(
+    {},
+    require('./store.config'),
+    config || {}
+  );
+
+  // Load internal error catalog
+  const ERRORS = require('./store.errors');
 
   // Load the validators singleton and inject Lib
   const Validators = require('./store.validators')(Lib);
 
-  // Validate STORE_CONFIG - throws on misconfiguration
-  Validators.validateConfig(CONFIG.STORE_CONFIG);
+  // Validate CONFIG - throws on misconfiguration
+  Validators.validateConfig(CONFIG);
 
-  return createInterface(Lib, CONFIG.STORE_CONFIG, ERRORS);
+  // Build the public Store interface
+  return createInterface(Lib, CONFIG, ERRORS);
 
-};///////////////////////////// Module-Loader END ///////////////////////////////
+};/////////////////////////// Module-Loader END /////////////////////////////////
 
 
 
 /////////////////////////// createInterface START //////////////////////////////
 
-const createInterface = function (Lib, STORE_CONFIG, ERRORS) {
+/********************************************************************
+Builds the public Store interface. All functions close over
+Lib, CONFIG, and ERRORS.
 
-  ///////////////////////////Public Functions START//////////////////////////////
+@param {Object} Lib    - Dependency container
+@param {Object} CONFIG - Merged adapter configuration
+@param {Object} ERRORS - Frozen error catalog
+
+@return {Object} - Store interface
+*********************************************************************/
+const createInterface = function (Lib, CONFIG, ERRORS) {
+
+  //////////////////////////// Public Functions START //////////////////////////
   const Store = {
 
-    methodName: function (instance) {
-      // Public functions close over Lib, STORE_CONFIG, ERRORS
+    /********************************************************************
+    Contract method.
+
+    @param {Object} instance - Request instance
+    @param {...}    ...     - Method-specific params
+
+    @return {Promise<Object>} - { success, error } or { success, data, error }
+    *********************************************************************/
+    methodName: async function (instance) {
+      // Implementation using Lib.[Driver]
+      // Return ERRORS.SERVICE_UNAVAILABLE on driver failure
     }
 
-  };///////////////////////////Public Functions END//////////////////////////////
+  };/////////////////////////// Public Functions END ///////////////////////////
 
 
 
-  //////////////////////////Private Functions START//////////////////////////////
+  //////////////////////////// Private Functions START ///////////////////////////
   const _Store = {
 
-    helperName: function () {
-      // Private functions close over Lib, STORE_CONFIG, ERRORS
+    logDriverFailure: function (method, driver_error) {
+      Lib.Debug.debug('[' + CONFIG.[STORE_NAME] + '] ' + method + ' failed', {
+        type: 'DRIVER_ERROR',
+        driver_message: driver_error.message
+      });
     }
 
-  };//////////////////////////Private Functions END//////////////////////////////
+  };/////////////////////////// Private Functions END //////////////////////////
 
 
   return Store;
@@ -943,21 +1075,50 @@ const createInterface = function (Lib, STORE_CONFIG, ERRORS) {
 };/////////////////////////// createInterface END //////////////////////////////
 ```
 
-**Key rules for storage adapters:**
+#### Adapter Config Pattern
+
+```javascript
+// store.config.js - adapter's own config keys
+'use strict';
+
+module.exports = {
+  [STORE_NAME]: null,   // Required - backend storage target (table/collection name)
+  // ... other backend-specific keys, with safe defaults where applicable
+};
+```
+
+#### Adapter Rules
 
 | Rule | Detail |
 |---|---|
-| **Factory pattern (createInterface)** | Each loader call returns an independent Store instance with its own closure over `STORE_CONFIG` |
-| **Public before private** | `Store` is declared before `_Store` inside `createInterface` |
-| **Validators loaded in the loader** | `store.validators.js` is a module-root singleton, loaded and called before `createInterface` |
-| **`Lib.Utils` for all type checks** | No inline `typeof` or manual length checks; use `Lib.Utils.isString`, `Lib.Utils.isObject`, etc. |
-| **Error catalog from parent** | Return `ERRORS.SERVICE_UNAVAILABLE` (or the parent's catalog equivalent), never adapter-defined error shapes |
+| **Own Lib** | Build from `shared_libs` in loader; narrow to required dependencies |
+| **Own CONFIG** | Merge `config` over `require('./store.config')` defaults |
+| **Own ERRORS** | Load from `store.errors.js`; never receive from parent |
+| **Ready-to-use return** | Return store object directly, not a factory |
+| **Parent receives via CONFIG.Store** | Parent passes store object in config, not a factory |
+| **Implements store contract** | Same method set across all sibling adapters |
+| **`Lib.Utils` for type checks** | No inline `typeof`; use `Lib.Utils.isString`, etc. |
+| **Public before private** | `Store` declared before `_Store` |
+| **Driver errors -> SERVICE_UNAVAILABLE** | Log via `Lib.Debug.debug`, return `ERRORS.SERVICE_UNAVAILABLE` |
 
-**Reference implementation:** `js-server-helper-auth-store-sqlite` (`store.js`) in `js-helper-modules`.
+#### Parent Usage Pattern
+
+```javascript
+// Application loader
+const Store = require('@superloomdev/[parent]-store-[backend]')(Lib, {
+  // adapter-specific config keys
+});
+
+Lib.[Parent] = require('@superloomdev/[parent]')(Lib, {
+  Store: Store  // Ready-to-use object
+});
+```
+
+**Reference implementations:** `js-server-helper-distinct-queue-store-dynamodb`, `js-server-helper-distinct-queue-store-mongodb`.
 
 ### Adapter Skeleton
 
-This skeleton applies to any Class F adapter (`-adapter-[name]`) that is **stateless** - it has no per-instance configuration and all per-request state lives on `instance`, not inside the adapter. This covers transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type that does not need per-instance closures.
+This skeleton applies to any Class F adapter (`-adapter-[name]`) that is **stateless** - it has no per-instance configuration and all per-request state lives on `instance`, not inside the adapter. This covers transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type that does not need per-instance closures. Like store adapters, a singleton adapter is loaded by the application and passed to the parent as a ready-to-use object via `CONFIG.Adapter`.
 
 **When to use singleton vs factory for adapters:**
 
@@ -969,7 +1130,7 @@ Does the adapter need per-instance configuration (its own config slice, driver r
          All per-request state lives on `instance`.
 ```
 
-Stores (`-store-`) are almost always factory because each parent instance needs its own `STORE_CONFIG`. Adapters (`-adapter-`) are more commonly singleton, but can use factory if a future use case requires per-instance adapter config.
+Stores (`-store-`) are almost always factory because each instance closes over its own configuration. Adapters (`-adapter-`) are more commonly singleton, but can use factory if a future use case requires per-instance adapter config.
 
 ```javascript
 // Info: [Runtime] adapter for js-server-helper-[parent].
@@ -991,16 +1152,16 @@ let Lib;
 /////////////////////////// Module-Loader START ////////////////////////////////
 
 /********************************************************************
-Factory loader. Called by [parent].js as CONFIG.ADAPTER(Lib, CONFIG, ERRORS).
-Returns the stateless adapter singleton. The adapter receives raw inputs and returns normalized data to the parent, which owns instance writes.
+Singleton loader. The application loads the adapter once and passes the
+returned object to the parent via CONFIG.Adapter. The adapter receives
+raw inputs and returns normalized data to the parent, which owns instance
+writes.
 
 @param {Object} shared_libs - Lib container (Utils, Debug)
-@param {Object} _config     - Merged CONFIG (accepted for contract conformance)
-@param {Object} _errors     - Error catalog (accepted for contract conformance)
 
-@return {Object} - Adapter interface
+@return {Object} - Adapter interface (ready to use)
 *********************************************************************/
-module.exports = function loader (shared_libs, _config, _errors) {
+module.exports = function loader (shared_libs) {
 
   Lib = shared_libs;
 
@@ -1052,11 +1213,11 @@ const _Adapter = {
 | Rule | Detail |
 |---|---|
 | **Module-scope singleton** | `let Lib;` at module scope, set once by loader. No `createInterface` needed |
-| **Loader accepts `(shared_libs, _config, _errors)`** | Same uniform signature as parts and store adapters, even if `_config` and `_errors` are unused. Underscore-prefix the unused params |
+| **Loader accepts `(shared_libs)`** | The application loads the adapter once and passes the ready-to-use object to the parent via `CONFIG.Adapter`. Accept a second `config` argument only if the adapter needs its own config |
 | **Public before private** | `Adapter` is declared before `_Adapter` at module scope. Same rule as singletons and `createInterface` internals |
 | **`Lib.Utils` for all type checks** | No inline `typeof`, no manual `.length` checks. Use `Lib.Utils.isString`, `Lib.Utils.isObject`, `Lib.Utils.isNullOrUndefined`, `Lib.Utils.isFunction` |
 | **L1 section banners** | `Module-Loader START/END`, `Public Functions START/END`, `Private Functions START/END`. Standard 3/2/1 spacing between sections |
-| **Error catalog usage** | Depends on the adapter's contract. Transport adapters typically do not return error envelopes (the parent handles errors). Other adapter types may use `ERRORS` from the parent if the contract requires it |
+| **Error catalog usage** | Depends on the adapter's contract. Transport adapters typically do not return error envelopes (the parent handles errors). Other adapter types define their own `store.errors.js` / `[adapter].errors.js` catalog when the contract requires returning envelopes |
 | **Adapter is a pure normalizer** | The adapter never holds per-request state and never writes to `instance`. It receives raw inputs and returns normalized data; the parent is the sole writer to `instance` |
 
 **Reference implementation:** `js-server-helper-http-gateway-adapter-express` (`adapter.js`) in `js-helper-modules`.
@@ -1309,13 +1470,11 @@ Every module **must** include a `[name].errors.js` file to maintain consistency 
 
 **Template for modules with operational errors:**
 ```javascript
+// Info: Error catalog for [module-name].
+// Operational errors returned via { success: false, error }.
+// Frozen to prevent accidental mutation.
 'use strict';
 
-/**
- * Error catalog for [module-name].
- * Operational errors returned via {success: false, error}.
- * Frozen to prevent accidental mutation.
- */
 
 module.exports = Object.freeze({
 
@@ -1330,14 +1489,12 @@ module.exports = Object.freeze({
 
 **Template for simple modules (no operational errors):**
 ```javascript
+// Info: Error catalog for [module-name].
+// This module has no operational errors - programmer errors throw TypeError.
+// Empty frozen object provided for consistency across all server modules.
+// Frozen to prevent accidental mutation.
 'use strict';
 
-/**
- * Error catalog for [module-name].
- * This module has no operational errors - programmer errors throw TypeError.
- * Empty frozen object provided for consistency across all server modules.
- * Frozen to prevent accidental mutation.
- */
 
 module.exports = Object.freeze({
   // No operational errors defined

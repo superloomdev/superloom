@@ -438,14 +438,15 @@ Every `config absorption contract` block must use a `validBaseConfig()` factory 
 ```javascript
 function validBaseConfig () {
   return {
-    STORE:        MemoryStoreFactory,
-    STORE_CONFIG: {},
-    ACTOR_TYPE:   'user',
-    TTL_SECONDS:  3600,
-    LIMITS:       { total_max: 5, evict_oldest_on_limit: true }
+    Store:       createInMemoryStore(),
+    ACTOR_TYPE:  'user',
+    TTL_SECONDS: 3600,
+    LIMITS:      { total_max: 5, evict_oldest_on_limit: true }
   };
 }
 ```
+
+`CONFIG.Store` is a ready-to-use store object (here the in-memory fixture). The parent receives it directly; it does not call a store factory or pass a separate store-config object.
 
 ### Template 1 — Validation-throw (Archetype A)
 

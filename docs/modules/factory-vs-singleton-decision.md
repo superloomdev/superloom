@@ -243,9 +243,9 @@ const Time = require('@superloomdev/js-helper-time')(Lib, {
   default_timezone: 'UTC'
 });
 
-// js-server-helper-auth - takes store dependency
+// js-server-helper-auth - takes a ready-to-use store object
 const Auth = require('@superloomdev/js-server-helper-auth')(Lib, {
-  STORE: postgresStore,
+  Store: postgresStore,
   ACTOR_TYPE: 'user'
 });
 ```

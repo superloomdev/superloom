@@ -475,7 +475,7 @@ A realistic Class F README is **~70-90 lines** (comparable to a Class C driver l
 **`docs/` folder shape (store subtype):**
 
 - `docs/api.md`. The store contract this adapter implements. One subsection per method with its signature, return shape, and any backend-specific semantic notes (timing-safe lookups, batch deletes, programmer-error guards, integer coercion at the driver boundary).
-- `docs/configuration.md`. The `STORE_CONFIG` keys this adapter requires. Peer dependencies. Environment variables consumed by `_test/loader.js`. Testing tier.
+- `docs/configuration.md`. The adapter's own config keys (it owns its configuration; the parent does not pass them through). Peer dependencies. Environment variables consumed by `_test/loader.js`. Testing tier.
 - `docs/schema.md`. What `setupNewStore` creates. The DDL or `createIndex` / `CreateTable` calls verbatim. Backend-specific syntax notes (identifier quoting, integer coercion at the driver boundary, JSON serialization, UPSERT semantics, native-TTL configuration).
 - `docs/cleanup.md`. The TTL behavior of this specific backend (none, native via index, or table-level). The recommended cleanup mechanism for this backend. How `cleanupExpired*` is implemented in this adapter.
 

@@ -184,7 +184,7 @@ The README explains what the adapter enables and why its backend-specific approa
 - Badges
 - Short description + **key innovation sentence** (what makes this backend implementation clever)
 - Usage snippet
-- Configuration ( prose explanation of `STORE_CONFIG` keys, link to `docs/configuration.md` for details)
+- Configuration (prose explanation of the adapter's own config keys, link to `docs/configuration.md` for details)
 - Extended Documentation links
 - Testing + License
 
@@ -209,11 +209,11 @@ The README explains what the adapter enables and why its backend-specific approa
 ```markdown
 # API
 
-One-paragraph intro: this adapter is loaded by the parent module via the factory protocol; the parent calls these methods to satisfy its persistence requirements.
+One-paragraph intro: this adapter is loaded by the application and passed to the parent module as a ready-to-use store object; the parent calls these methods to satisfy its persistence requirements.
 
-## Adapter Factory
+## Adapter Loader
 
-Factory call signature, what `Lib`, `CONFIG`, and `ERRORS` are, what the factory returns.
+Loader call signature, what `Lib` provides (including the backend driver), the adapter's own config keys, and what the loader returns (a ready-to-use store object).
 
 ## Store Contract
 
@@ -233,7 +233,7 @@ Signature, return shape, UPSERT semantics for this backend.
 
 ### docs/configuration.md (Class F)
 
-**Purpose:** Document `STORE_CONFIG`, peer dependencies, environment variables consumed by `_test/loader.js`, and the testing tier.
+**Purpose:** Document the adapter's own config keys, peer dependencies, environment variables consumed by `_test/loader.js`, and the testing tier.
 
 **Structure:**
 
@@ -242,15 +242,16 @@ Signature, return shape, UPSERT semantics for this backend.
 
 ## Loader Pattern
 
-How the parent calls into this adapter. The factory protocol.
+How the application loads this adapter (injected `Lib` plus the adapter's own config) and passes the returned object to the parent via `CONFIG.Store`.
 
-## STORE_CONFIG Keys
+## Config Keys
 
 | Key | Type | Required | Description |
 |---|---|---|---|
 | `table_name` | String | Yes | What the table or collection is named |
-| `lib_sql` | Object | Yes | Initialized driver helper instance |
-| [other keys specific to this adapter, e.g. `aws_region` for DynamoDB] |
+| [other keys specific to this adapter, e.g. `aws_region` for a cloud backend] |
+
+The backend driver is read from the injected `Lib` (for example `Lib.Postgres`), not passed as a config key.
 
 ## Peer Dependencies
 
@@ -361,7 +362,7 @@ N storage adapters are available, each a separate package. Install only the one 
 
 A legitimate deviation is using a NoSQL adapter in a SQL-backed application when the {module}'s data has different scaling characteristics from the rest of the app. Mixing SQL families (Postgres app with MySQL adapter) is not a useful pattern.
 
-Each adapter package ships its own `docs/` folder with the backend-specific schema, indexes, TTL behavior, IaC provisioning notes, and `STORE_CONFIG` shape.
+Each adapter package ships its own `docs/` folder with the backend-specific schema, indexes, TTL behavior, IaC provisioning notes, and its own config shape.
 ```
 
 ---
@@ -411,7 +412,7 @@ For backend-specific configuration, schema, indexes, and TTL behavior, see each 
 ### Class F dependent adapters (store subtype)
 
 - [ ] `docs/api.md` documents the full store contract (one subsection per method) with backend-specific semantics noted where they differ
-- [ ] `docs/configuration.md` documents every `STORE_CONFIG` key, peer dependency, environment variable, and the testing tier
+- [ ] `docs/configuration.md` documents every config key the adapter owns, peer dependency, environment variable, and the testing tier
 - [ ] `docs/schema.md` contains the verbatim DDL or createIndex / CreateTable calls and backend-specific syntax notes
 - [ ] `docs/cleanup.md` states the TTL behavior of this backend and the recommended cleanup mechanism
 - [ ] No `docs/data-model.md` (the parent owns the data model; document only mapping divergences in `docs/schema.md`)

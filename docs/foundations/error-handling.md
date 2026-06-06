@@ -60,7 +60,7 @@ Applying the heuristic to every error the `js-server-helper-verify` module can p
 |---|---|---|---|
 | `options.scope is required` | Caller forgot to pass `scope` | **No** - if your code is correct, you always pass it | Throw `TypeError` |
 | `options.length must be a positive integer` | Caller passed `0` or `null` | **No** - your code wouldn't pass invalid values | Throw `TypeError` |
-| `CONFIG.STORE is required` | Loader called without storage adapter | **No** - one-time misconfiguration at module construction | Throw at loader time, before any per-call work |
+| `CONFIG.Store is required` | Loader called without storage adapter | **No** - one-time misconfiguration at module construction | Throw at loader time, before any per-call work |
 | `COOLDOWN_ACTIVE` | User submitted another OTP request 30s after the last one | **Yes** - this is the cooldown rule working as designed; correct code calls `createPin`, the system correctly says "wait" | Envelope - from `verify.errors.js` |
 | `STORE_READ_FAILED` | DynamoDB is down, IAM token expired, network blip | **Yes** - your code is fine, the world is broken | Envelope - from `verify.errors.js` |
 | `STORE_WRITE_FAILED` | Same - infrastructure | **Yes** | Envelope - from `verify.errors.js` |
@@ -441,9 +441,9 @@ A programmer-error message MUST follow this shape:
 | Slot | Required | Format | Example |
 |---|---|---|---|
 | **Module prefix** | Yes | `[js-server-helper-<name>]` in square brackets, lowercase, exactly the module's package short-name without any scope | `[js-server-helper-auth]`, `[js-server-helper-http-gateway]` |
-| **Field path** | Yes | Dotted path that names the exact CONFIG key, options key, or argument that is wrong | `CONFIG.STORE`, `options.scope`, `createSession options.tenant_id` |
-| **Expected shape** | Yes | Declarative statement of the constraint the value failed to meet. Phrased as "must be …" or "is required …" | `must be a store factory function`, `is required (non-empty string)`, `must be a positive integer` |
-| **Concrete example** | Optional | One bare example inside `(e.g. …)`. Used only when the expected shape needs disambiguation (e.g., showing which package satisfies a factory contract) | `(e.g. require("js-server-helper-auth-store-sqlite"))` |
+| **Field path** | Yes | Dotted path that names the exact CONFIG key, options key, or argument that is wrong | `CONFIG.Store`, `options.scope`, `createSession options.tenant_id` |
+| **Expected shape** | Yes | Declarative statement of the constraint the value failed to meet. Phrased as "must be …" or "is required …" | `must be a store object implementing the store contract`, `is required (non-empty string)`, `must be a positive integer` |
+| **Concrete example** | Optional | One bare example inside `(e.g. …)`. Used only when the expected shape needs disambiguation (e.g., showing which package provides the object) | `(e.g. the object from require("js-server-helper-auth-store-sqlite"))` |
 
 ### Hard Prohibitions
 
@@ -464,12 +464,11 @@ The following MUST NOT appear in any programmer-error message string:
 ### Correct Examples
 
 ```javascript
-throw new Error('[js-server-helper-auth] CONFIG.STORE must be a store factory function (e.g. require("js-server-helper-auth-store-sqlite"))');
-throw new Error('[js-server-helper-auth] CONFIG.STORE_CONFIG is required (object)');
+throw new Error('[js-server-helper-auth] CONFIG.Store is required (a store object implementing the store contract)');
 throw new Error('[js-server-helper-auth] CONFIG.JWT.signing_key must be a string of at least 32 chars when ENABLE_JWT is true');
 throw new TypeError('[js-server-helper-auth] createSession options.tenant_id must be a non-empty string');
 
-throw new Error('[js-server-helper-http-gateway] CONFIG.ADAPTER must be an adapter factory function (e.g. require("js-server-helper-http-gateway-adapter-aws-apigateway"))');
+throw new Error('[js-server-helper-http-gateway] CONFIG.Adapter is required (an adapter object implementing the adapter contract)');
 ```
 
 ### Incorrect Examples
@@ -477,16 +476,16 @@ throw new Error('[js-server-helper-http-gateway] CONFIG.ADAPTER must be an adapt
 ```javascript
 // WRONG: scoped package names + URL-shaped example + multi-line concatenation
 throw new Error(
-  'js-server-helper-http-gateway: CONFIG.ADAPTER must be an adapter factory function. ' +
-  'Pass require("@superloomdev/js-server-helper-http-gateway-adapter-aws-apigateway") ' +
-  'or require("@superloomdev/js-server-helper-http-gateway-adapter-express").'
+  'js-server-helper-http-gateway: CONFIG.Adapter must be an adapter object. ' +
+  'Pass the object from require("@superloomdev/js-server-helper-http-gateway-adapter-aws-apigateway")(Lib) ' +
+  'or require("@superloomdev/js-server-helper-http-gateway-adapter-express")(Lib).'
 );
 
 // WRONG: no module prefix, vague field path
 throw new TypeError('options is invalid');
 
 // WRONG: "Please" + URL
-throw new Error('Please configure CONFIG.STORE. See https://example.com/docs/auth');
+throw new Error('Please configure CONFIG.Store. See https://example.com/docs/auth');
 
 // WRONG: vendor wording in the prefix
 throw new Error('[Postgres] connection_string is required');
