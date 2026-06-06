@@ -982,42 +982,32 @@ Storage adapters (`-store-[backend]`) are **fully independent modules**. They ow
 /////////////////////////// Module-Loader START ////////////////////////////////
 
 /********************************************************************
-Factory loader. One call = one independent store instance with its
-own Lib, CONFIG, and ERRORS. Validates CONFIG at construction so
-misconfiguration fails fast at startup, not on first request.
+Thin loader. Builds own Lib and ERRORS from peer dependencies,
+validates config via the Validators singleton, then delegates to
+createInterface. Each call returns an independent Store instance.
 
-@param {Object} shared_libs - Lib container with Utils, Debug, [Driver]
-@param {Object} config      - Overrides merged over adapter config defaults
+@param {Object} config - { table_name, lib_dynamodb } (backend-specific)
 
 @return {Object} - Store interface (contract methods + optional setupNewStore)
 *********************************************************************/
-module.exports = function loader (shared_libs, config) {
+module.exports = function loader (config) {
 
-  // Dependencies for this instance
-  const Lib = {
-    Utils: shared_libs.Utils,
-    Debug: shared_libs.Debug,
-    [Driver]: shared_libs.[Driver]  // backend driver from the Lib container
-  };
+  // Build own Lib container from peer dependencies
+  const Lib = {};
+  Lib.Utils = require('helper-utils')(Lib, {});
+  Lib.Debug = require('helper-debug')(Lib, {});
 
-  // Merge overrides over defaults
-  const CONFIG = Object.assign(
-    {},
-    require('./store.config'),
-    config || {}
-  );
-
-  // Load internal error catalog
+  // Own frozen error catalog
   const ERRORS = require('./store.errors');
 
   // Load the validators singleton and inject Lib
   const Validators = require('./store.validators')(Lib);
 
-  // Validate CONFIG - throws on misconfiguration
-  Validators.validateConfig(CONFIG);
+  // Validate config - throws on misconfiguration
+  Validators.validateConfig(config);
 
   // Build the public Store interface
-  return createInterface(Lib, CONFIG, ERRORS);
+  return createInterface(Lib, config, ERRORS);
 
 };/////////////////////////// Module-Loader END /////////////////////////////////
 
@@ -1027,15 +1017,15 @@ module.exports = function loader (shared_libs, config) {
 
 /********************************************************************
 Builds the public Store interface. All functions close over
-Lib, CONFIG, and ERRORS.
+Lib, config, and ERRORS.
 
 @param {Object} Lib    - Dependency container
-@param {Object} CONFIG - Merged adapter configuration
+@param {Object} config - Adapter configuration (validated)
 @param {Object} ERRORS - Frozen error catalog
 
 @return {Object} - Store interface
 *********************************************************************/
-const createInterface = function (Lib, CONFIG, ERRORS) {
+const createInterface = function (Lib, config, ERRORS) {
 
   //////////////////////////// Public Functions START //////////////////////////
   const Store = {

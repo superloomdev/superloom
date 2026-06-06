@@ -116,8 +116,6 @@ See `docs/dev/pitfalls.md` entry 18.
 
 **Auto-run is for read-only or idempotent operations only.** Never set `SafeToAutoRun: true` for `rm -rf`, `git push --force`, `docker volume rm`, `npm publish`, or state mutation, even if user previously approved similar command.
 
-**Never use `--legacy-peer-deps`.** It masks real errors and writes incorrect lock entries that break future installs. If `npm install` fails with `E409 Conflict / checksum mismatch` during a module refactor, wait 30 to 60 seconds then re-run `rm -rf node_modules package-lock.json && npm install`. See `docs/dev/pitfalls.md` entry 21.
-
 **VitePress / Vue parser crashes on bare angle-bracket placeholders in `docs/` markdown.** Any `<lowercase-or-PascalCase-name>` outside backticks is parsed as an HTML/Vue element open tag and hangs `vitepress build` with `Element is missing end tag` (the reported line number is often far below the real culprit). Rules: (1) never use `<...>` placeholders in prose. Use `[name]`, `{name}`, or plain capitalized phrases instead. (2) For verbatim copy-paste templates inside fenced blocks, use ` ```text ` instead of ` ```markdown ` to disable Vue's secondary scan. (3) When changes touch any VitePress-rendered file in `docs/`, run `npm run build` from `website/` locally before pushing. The single-digit-second build catches the failure before CI does. See `docs/dev/pitfalls.md` entry 15.
 
 ## Boundaries
@@ -860,7 +858,7 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
 
 | Subtype | Naming | What it adapts | Typical shape |
 |---|---|---|---|
-| **Store** | `[parent]-store-[backend]` | Data persistence | Factory (`createInterface(Lib, CONFIG, ERRORS)`) - returns ready-to-use store |
+| **Store** | `[parent]-store-[backend]` | Data persistence | Independent factory - builds own Lib, takes only config, returns ready-to-use store |
 | **Adapter** | `[parent]-adapter-[name]` | Runtimes, transports, integrations | Singleton (stateless) or factory (if per-instance config) |
 
 **Adapter files:**
@@ -875,6 +873,12 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
     loader.js           # Builds Lib, loads adapter
     test.js             # Contract + integration tests
 ```
+
+**Independent adapter pattern:**
+- Store adapters build their own Lib from peer dependencies (`helper-utils`, `helper-debug`)
+- Loader takes only `config` (not `shared_libs`) - e.g., `{ table_name, lib_dynamodb }`
+- Returns ready-to-use store object; parent consumes via `CONFIG.Store`
+- See `docs/modules/module-structure-js.md` -> "Storage Adapter Skeleton"
 
 **Key rules:**
 
