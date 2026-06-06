@@ -870,14 +870,14 @@ const testInstance2 = createModule({log_level: 'error'});
 
 2. **Version reset to 1.0.0 hits a cached tarball.** When a module is deleted from the registry and re-published at `1.0.0`, a stale `node_modules/` or lock file from the previous `1.0.0` epoch resolves to the old tarball. The npm cache keeps the old hash; the registry now serves a different tarball for the same version string, producing a `409 Conflict / checksum mismatch`.
 
-**Lesson:** Always run `rm -rf node_modules package-lock.json` before `npm install` when testing locally. This is the canonical test command for all module work:
+**Lesson:** During **module refactoring** — where `file:` swaps and version resets to `1.0.0` are routine — always run `rm -rf node_modules package-lock.json` before `npm install`:
 
 ```bash
 # From the module's _test/ directory
 rm -rf node_modules package-lock.json && npm install && npm test
 ```
 
-This is now the mandatory form documented in `testing-local-modules.md` → Step 1 and Gate 2. The three-second overhead of a clean install is never worth the debugging time a stale lock produces.
+This clean-install form is mandatory in the `/js-helper-module-refactor` workflow Step 6. It is **not** required for general module development (building a module that is not being refactored), where a plain `npm install` is correct and repeated lock-file deletion would be wasteful — see `testing-local-modules.md` → Step 1. The three-second overhead of a clean install is never worth the debugging time a stale lock produces during a refactor.
 
 **Secondary lesson:** If `npm install` fails with `E409 Conflict / checksum mismatch` even after a clean install, the registry itself is temporarily inconsistent (a known GitHub Packages transient bug). Wait 30–60 seconds and retry. If it persists, add `--legacy-peer-deps` as a one-time workaround — but immediately re-run a clean `rm -rf node_modules package-lock.json && npm install` afterward to regenerate a correct lock file, since `--legacy-peer-deps` can write lock entries that are wrong for future runs.
 
