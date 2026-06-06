@@ -860,6 +860,27 @@ const testInstance1 = createModule({log_level: 'debug'});
 const testInstance2 = createModule({log_level: 'error'});
 ```
 
+### 21. Stale `package-lock.json` causes wrong-version install after `file:` swap or version reset
+
+**Symptom:** `npm install && npm test` in `_test/` fails with a runtime error that does not match the source code — e.g. `CONFIG.ADAPTER must be an adapter factory function` even though the source was already refactored to the new `CONFIG.Adapter` object pattern. Or: a freshly deleted-and-republished `1.0.0` still installs the old pre-refactor tarball. Or: `npm error 409 Conflict — Package file checksum mismatch` on a package that has not changed.
+
+**Cause:** Two compounding sources produce the same class of failure:
+
+1. **Stale `file:` path in lock file.** During bootstrap testing, `_test/package.json` is temporarily changed to `"helper-foo": "file:../../js-server-helper-foo"` so tests can run against local source before the parent module is published. After restoring `package.json` to a registry semver range, the `package-lock.json` still has `"resolved": "../../js-server-helper-foo"`. A subsequent `npm install` reads the lock, sees the path is satisfied, and skips the registry fetch — silently installing the local source (or nothing, if the path no longer exists).
+
+2. **Version reset to 1.0.0 hits a cached tarball.** When a module is deleted from the registry and re-published at `1.0.0`, a stale `node_modules/` or lock file from the previous `1.0.0` epoch resolves to the old tarball. The npm cache keeps the old hash; the registry now serves a different tarball for the same version string, producing a `409 Conflict / checksum mismatch`.
+
+**Lesson:** Always run `rm -rf node_modules package-lock.json` before `npm install` when testing locally. This is the canonical test command for all module work:
+
+```bash
+# From the module's _test/ directory
+rm -rf node_modules package-lock.json && npm install && npm test
+```
+
+This is now the mandatory form documented in `testing-local-modules.md` → Step 1 and Gate 2. The three-second overhead of a clean install is never worth the debugging time a stale lock produces.
+
+**Secondary lesson:** If `npm install` fails with `E409 Conflict / checksum mismatch` even after a clean install, the registry itself is temporarily inconsistent (a known GitHub Packages transient bug). Wait 30–60 seconds and retry. If it persists, add `--legacy-peer-deps` as a one-time workaround — but immediately re-run a clean `rm -rf node_modules package-lock.json && npm install` afterward to regenerate a correct lock file, since `--legacy-peer-deps` can write lock entries that are wrong for future runs.
+
 ---
 
 ## Adding a New Entry
