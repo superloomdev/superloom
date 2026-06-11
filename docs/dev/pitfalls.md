@@ -889,19 +889,18 @@ This clean-install form is mandatory in the `/js-helper-module-refactor` workflo
 
 **Why not remove it or rename to `_CONFIG`?** Removing breaks the structural contract and creates an inconsistency when the slot gets wired later. Renaming to `_CONFIG` changes the actual variable name and deviates from the naming convention used across all modules (`Lib`, `CONFIG`, `React`, etc.).
 
-**Fix:** Add a targeted `eslint-disable-next-line` comment on the line immediately above the reserved variable. This suppresses the rule for that one declaration only, making the intent explicit:
+**Fix:** Add an inline `// eslint-disable-line no-unused-vars` comment at the end of the reserved declaration. This is the established convention for module-scope `let` vars across all modules (see `docs/modules/module-structure-js.md` Singleton Part Shape):
 
 ```js
 // Injected dependencies, set by the loader (module-scope).
-let Lib;             // shared_libs container
-// eslint-disable-next-line no-unused-vars
-let CONFIG;          // merged config (reserved for future knobs)
-let React;           // injected React (required)
+let Lib;
+let CONFIG; // eslint-disable-line no-unused-vars -- reserved for future knobs
+let React;
 ```
 
-Never use a file-level `/* eslint-disable */` for this — it would suppress the rule for the entire file and hide real unused-variable bugs. The line-level directive is the only correct form.
+Never use a file-level `/* eslint-disable */` for this — it suppresses the rule for the entire file and hides real bugs. The inline directive is the only correct form.
 
-**Lesson:** The module-scope injection-slot block (`let Lib; let CONFIG; ...`) is a deliberate structural pattern, not dead code. When adding a new slot that is not yet used, always add the `eslint-disable-next-line no-unused-vars` comment at the same time. When the slot is eventually wired, remove the disable comment as part of that commit.
+**Lesson:** The module-scope injection-slot block (`let Lib; let CONFIG; ...`) is a deliberate structural pattern, not dead code. When adding a new slot that is not yet used, add `// eslint-disable-line no-unused-vars` on the same line. Remove the directive when the slot is wired.
 
 ---
 

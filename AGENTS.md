@@ -334,6 +334,7 @@ Full rule: `docs/dev/documentation-standards.md` -> "Code Comment Standards".
 - **No underscore prefix on parameters** - never use `_param` to suppress ESLint `no-unused-vars` on function params
 - **No `void param;` statements** - `void` is a runtime no-op expression, not a lint annotation. Non-standard and misleading
 - Use `// eslint-disable-line no-unused-vars` on the function signature line instead: `function (Lib, CONFIG, ERRORS) { // eslint-disable-line no-unused-vars`
+- **Reserved module-scope `let` slots** - injection-slot vars (`Lib`, `CONFIG`, `React`, etc.) are declared at module scope as a structural contract even before wired. Suppress with `let CONFIG; // eslint-disable-line no-unused-vars -- reserved for future knobs`. Remove directive when wired. Never use `_CONFIG` or file-level `/* eslint-disable */`. See `docs/dev/pitfalls.md` entry 22.
 
 ### Uniform Factory Signatures
 
