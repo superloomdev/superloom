@@ -173,15 +173,17 @@ Detailed test instructions (Docker lifecycle, env vars, integration setup) live 
 
 ## Class-Specific Sections
 
-Every module belongs to one of six classes (enumerated in [`module-categorization.md`](module-categorization.md)). Each class can add one section between sections 4 (Why bullets) and 7 (Aligned with Superloom). The class-specific section sits at position 6 in the section order.
+Every module belongs to one of eight classes (enumerated in [`module-categorization.md`](module-categorization.md)). Each class can add one section between sections 4 (Why bullets) and 7 (Aligned with Superloom). The class-specific section sits at position 6 in the section order.
 
 | Class | Section name | Contents |
 |---|---|---|
 | **A. Foundation utility** | "API Categories" | Grouped overview of available functions, one line each. No signatures. |
+| **H. Extension** | "Extension vs Parent" | Comparison table showing parent vs extension responsibilities. Brief explanation of the extension pattern. |
 | **C. Driver wrapper** | (none extra) | The Hot-Swappable section at position 5 already serves Class C's special case. |
 | **D. Cloud service wrapper** | "Credentials & Permissions" | Short section on credentials, regional config, IAM/permissions. Vendor-neutral wording. |
 | **B. Extended utility** | "Behavior" | Explains lifecycle semantics (cleanup ordering, background tasks). |
 | **E. Feature module with adapters** | "Architecture Overview" + "Storage Adapters" or "Transport Adapters" | Two adjacent README subsections. Architecture Overview is a high-level diagram or tree. The adapter subsection ("Storage Adapters" for persistence-backed modules, "Transport Adapters" for runtime-backed modules) is a short list/table of available adapters with a one-sentence selection rule and a pointer to each adapter package's README for backend-specific details. **No separate `docs/storage-adapters.md` file.** |
+| **G. Feature module with extensions** | "Architecture Overview" + "Extensions" | Two adjacent README subsections. Architecture Overview showing extension points for framework integration. The "Extensions" subsection lists available Class H packages with a one-sentence selection rule. **No separate `docs/extensions.md` file.** |
 | **F. Dependent adapter** | (none extra) | Class F READMEs use only the universal sections. The "extension of the parent module" framing lives in the tagline; the factory-protocol explanation lives in `docs/api.md`. |
 
 The Hot-Swappable section at position 5 is itself class-conditional. It appears whenever a module has at least one sibling, irrespective of class.
@@ -197,6 +199,7 @@ Every class ships **at minimum** `docs/api.md` and `docs/configuration.md`. Clas
 | Class | Recommended `docs/` files |
 |---|---|
 | **A. Foundation** | `docs/api.md`, `docs/configuration.md` |
+| **G. Extension** | `docs/api.md` (hooks/components), `docs/philosophy.md` (extension pattern). No `configuration.md` — config lives in core |
 | **B. Extended utility** | `docs/api.md`, `docs/configuration.md` |
 | **C. Driver** | `docs/api.md`, `docs/configuration.md` |
 | **D. Cloud service** | `docs/api.md`, `docs/configuration.md`, optionally `docs/iam.md` |
@@ -288,6 +291,42 @@ Class A does **not** carry the universal Bullet 1 (insulation against driver/SDK
 **No Hot-Swappable section.** Foundation modules typically don't have functional siblings. The `js-helper-crypto` server/client pair is the exception and may cross-link in Hot-Swappable form.
 
 **Pilot status:** `js-helper-utils` is the active Class A pilot.
+
+### Class H. Extension
+
+Framework-specific binding for parent module (Class G). The parent module provides the core functionality; the extension adds framework bindings (React hooks, Vue composables, etc.). Extension imports parent; parent never knows about the extension. For the full conceptual definition see [`module-categorization.md` → Class H](module-categorization.md#class-h-extension).
+
+**Naming convention:** `[parent-name]-ext-[framework]`. Example: `js-client-helper-styler-ext-react`.
+
+**Entry point:** `extension.js` (not `index.js`). This makes the module type discoverable by filename.
+
+**Tagline template:**
+
+> React hooks and components for the [parent-name] theme engine. Part of [Superloom](https://superloom.dev).
+
+**Value bullets. Four total:**
+
+1. **Keeps the parent framework-agnostic.** The parent module stays pure JavaScript. This module adds only the React bindings.
+2. **Hooks for every use case.** `useTheme()` for reading, `useStyles()` for utilities, `useThemeController()` for runtime theme switching.
+3. **Pre-tested with React.** Full test suite runs against React's test renderer in CI on every push.
+4. **Designed for human review.** Short functions, clear variable names, comments as checkpoints. Open the source to verify.
+
+**README class-specific section. "Extension vs Parent":** A comparison table showing the boundary between parent and extension:
+
+| | Parent Module | This Extension |
+|---|---|---|
+| **What it is** | Pure JavaScript theme engine | React bindings |
+| **Dependencies** | None | React 18+ |
+| **Exports** | Functions (derive, assemble, etc.) | Hooks and components |
+| **Where to use** | Anywhere (Node, browser, RN) | React apps only |
+
+Followed by a brief explanation of the extension pattern: extension imports parent, not the other way around. Extension is boss — it decides when to call the parent, how to cache results, and when to trigger React re-renders.
+
+**No Install section.** Extension modules have no `npm install` snippet. They are peer dependencies loaded through the project's loader pattern. The README points to the parent module's install instructions and adds "Also load this extension if using React."
+
+**`docs/` folder:** `docs/api.md` (hooks/components reference), `docs/philosophy.md` (extension pattern explained). No `configuration.md` — configuration lives in the parent module.
+
+**Pilot status:** `js-client-helper-styler-ext-react` is the active Class H pilot.
 
 ### Class B. Extended Utility
 
@@ -443,6 +482,27 @@ Full-featured business-logic module. May combine Class A utilities, Class B serv
 Storage-adapter detail is owned by each Class F adapter package, not by the parent's `docs/`.
 
 **Pilot status:** *not yet migrated.* `verify`, `logger`, `auth` are the planned waves (smallest to largest).
+
+### Class G. Feature Module with Extensions
+
+Full-featured business-logic module designed for framework integration. Similar to Class E, but provides extension points for Class H modules rather than adapter contracts for Class F modules. For the full conceptual definition see [`module-categorization.md` → Class G](module-categorization.md#class-g-feature-module-with-extensions).
+
+**Value bullets.** Similar to Class E (insulation, pre-tested, human review, observability), but bullet 5 highlights the extension-ready design: "Extension-ready. Clean JavaScript API that Class H extensions can wrap with React, Vue, or Angular bindings."
+
+**README class-specific sections. "Architecture Overview" + "Extensions":**
+
+- **Architecture Overview** - A short paragraph or diagram showing the module's extension points. What can be customized? What does a Class H extension hook into?
+- **Extensions** - A short table listing available Class H packages:
+
+| Extension | Framework | Purpose |
+|---|---|---|
+| `js-client-helper-styler-ext-react` | React 18+ | Hooks and ThemeProvider for React apps |
+
+> **Need a different framework?** The parent module is pure JavaScript. Build your own Class H extension following the extension pattern.
+
+**`docs/` folder:** `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Extension documentation lives in each Class H package.
+
+**Pilot status:** `js-client-helper-styler` is the active Class G pilot.
 
 ### Class F. Dependent Adapter
 

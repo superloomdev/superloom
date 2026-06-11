@@ -595,7 +595,7 @@ Every module documents itself across three files, each with one audience. Full r
 - **Table cells do not end with periods** - cells are not sentences.
 - **Sentences 30 words or fewer** - split at conjunctions when longer.
 
-**Six module classes** (determines class-specific extras + `docs/` footprint):
+**Eight module classes** (determines class-specific extras + `docs/` footprint):
 
 | Class | Trait | Class-specific README section | `docs/` files |
 |---|---|---|---|
@@ -603,8 +603,10 @@ Every module documents itself across three files, each with one audience. Full r
 | **B. Extended utility** | Node.js runtime only, no third-party packages | "Behavior" (lifecycle semantics, cleanup) | `api.md`, `configuration.md` |
 | **C. Driver wrapper** | Wraps third-party DB driver (Postgres, MySQL, MongoDB, SQLite) | (none - Hot-Swappable section serves this) | `api.md`, `configuration.md` |
 | **D. Cloud service wrapper** | Wraps cloud/network SDK (AWS S3, DynamoDB, SQS) | "Credentials & Permissions" | `api.md`, `configuration.md`, optional `iam.md` |
-| **E. Feature module with adapters** | Business logic + pluggable storage or transport (auth, verify, logger, http-gateway) | "Architecture Overview" + "Storage Adapters" or "Transport Adapters" | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md` |
-| **F. Dependent adapter** | Implements parent's adapter contract. Two subtypes: **store** (`-store-[backend]`, data/persistence) and **adapter** (`-adapter-[name]`, everything else: transport, integration, future). Either can be factory or singleton depending on per-instance state needs | (none) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
+| **E. Feature module with adapters** | Business logic + pluggable storage or transport (auth, verify, logger, http-gateway) | "Architecture Overview" + "Storage Adapters" or "Transport Adapters" | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
+| **F. Dependent adapter** | Implements parent's adapter contract. Parent utilizes adapter — adapter is instrument, parent is boss. Two subtypes: **store** (`-store-[backend]`, data/persistence) and **adapter** (`-adapter-[name]`, everything else: transport, integration, future). Either can be factory or singleton depending on per-instance state needs | (none) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
+| **G. Feature module with extensions** | Business logic + framework extension points (styler, UI state). Extension-ready design for React, Vue, Angular bindings | "Architecture Overview" + "Extensions" | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
+| **H. Extension** | Framework-specific binding for parent module (Class G). Extension utilizes parent — extension is instrument, extension is boss. Cannot stand alone | "Extension vs Parent" | `api.md` (hooks/components), `philosophy.md` (extension pattern). No `configuration.md` — config lives in parent |
 
 **Universal value bullets 1-4** copy-pasteable across classes (insulation, pre-tested, human review, observability). Only bullet 5 is class-specific. See full templates in `docs/modules/module-readme-structure.md`.
 
@@ -614,6 +616,26 @@ Every module documents itself across three files, each with one audience. Full r
 - **"Required (override)"** in config tables for defaults that must be changed (HOST, DATABASE, KEY, SECRET)
 - **Response envelope illustration** in "What this is" section
 - **Lazy initialization** note in `docs/configuration.md`
+- **Utilizes pattern (Class F and H):** Class F (adapter) — parent utilizes adapter, adapter is instrument, parent is boss. Class H (extension) — extension utilizes parent, extension is instrument, extension is boss
+
+### Client Module Patterns
+
+Client helper modules (`helper-modules-client/`) come in two types:
+
+| Type | Pattern | Example | Class |
+|---|---|---|---|
+| **Universal core** | Pure JavaScript, no framework | `js-client-helper-crypto`, `js-client-helper-styler` | A or G |
+| **Framework extension** | Binds parent to React/Vue/Angular | `js-client-helper-styler-ext-react` | H |
+
+**Extension pattern (Class G + H):**
+- Parent module (Class G) provides clean JavaScript API
+- Extension module (Class H) imports parent, adds framework bindings
+- Extension is boss — decides when to call parent, how to cache results
+- Entry point: `extension.js` (not `index.js`)
+- Naming: `[parent]-ext-[framework]`
+- Peer dependencies: parent module + framework (React, Vue, etc.)
+
+See full pattern in `docs/modules/client-helper-modules.md`.
 
 ### ROBOTS.md - AI Agent Reference (Every Module)
 
@@ -872,6 +894,36 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
   _test/
     loader.js           # Builds Lib, loads adapter
     test.js             # Contract + integration tests
+```
+
+**Extension naming conventions:**
+
+| Concept | Naming |
+|---|---|
+| Framework extension | `[parent]-ext-[framework]` |
+| React Native Web | `*-ext-react-native-web` |
+| Entry point | `extension.js` (not `index.js`) |
+
+**Extension pattern (Class H):**
+
+- Extension imports parent (not the other way around)
+- Extension is boss — decides when to call parent, how to cache, when to trigger re-renders
+- Parent stays pure — has no framework knowledge
+
+**Extension files:**
+
+```
+[extension]/
+  extension.js          # Main entry point
+  package.json          # Peer deps: parent module + framework
+  README.md             # ~70-90 lines, "Extension vs Parent" table
+  ROBOTS.md             # AI hook reference
+  docs/
+    api.md              # Hooks/components reference
+    philosophy.md       # Extension pattern explained
+  _test/
+    test.js             # React test renderer tests
+    loader.js           # Test loader
 ```
 
 **Independent adapter pattern:**

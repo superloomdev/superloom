@@ -41,6 +41,7 @@ Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. Use this tab
 | `docs/modules/module-thoughts-file.md` | "Standard Files Per Module" (THOUGHTS.md row in module-structure mirror) |
 | `docs/modules/peer-dependencies.md` | "Dependency Hierarchy" |
 | `docs/modules/module-readme-structure.md` | "README Structure" |
+| `docs/modules/client-helper-modules.md` | "Client Module Patterns" |
 | `docs/server/*` | "Server Layer Rules" |
 | `docs/testing/testing-strategy.md` | "Testing" |
 | `docs/testing/unit-test-authoring-js.md` | "Testing" |

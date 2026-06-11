@@ -367,6 +367,66 @@ Each adapter package ships its own `docs/` folder with the backend-specific sche
 
 ---
 
+## Class H: Parent vs Extension Documentation Boundaries
+
+Extension modules (Class H) add framework-specific bindings to Class G parent modules only. The documentation split follows the code split: the parent owns its domain concepts, the extension owns framework integration.
+
+### Documentation ownership
+
+| Concern | Parent module owns | Extension module owns |
+|---|---|---|
+| **Configuration** | All config keys, templates, derivation rules | No configuration.md — points to parent |
+| **API surface** | Parent functions (derive, assemble, etc.) | Hooks, components, framework lifecycle |
+| **Philosophy** | Derivation concepts, template design | Extension pattern explanation |
+| **Data models** | Template structure, token types | React context shape, hook return types |
+
+### Parent module docs structure
+
+Parent modules (of any class) that support extensions ship their standard `docs/` footprint plus optionally domain-specific docs:
+
+- `docs/api.md` — Parent functions: signatures, parameters, return shapes
+- `docs/configuration.md` — Config keys, templates, derivation rules
+- `docs/template.md` — Template structure and customization (domain-specific)
+- `docs/philosophy.md` — Why templates work this way
+
+The parent README mentions extensions in a single line: "Want React integration? Check out the extension module: `{parent-name}-ext-react-native-web`."
+
+### Extension module docs structure
+
+Extension modules ship a minimal `docs/` folder:
+
+- `docs/api.md` — Hooks and components: `useTheme()`, `useStyles()`, `ThemeProvider` props
+- `docs/philosophy.md` — Extension pattern: how extension imports parent, why this pattern keeps the parent universal
+
+**No `docs/configuration.md`.** Configuration lives in the parent module. The extension receives config through the parent's loader or at runtime through props/context.
+
+### Cross-referencing between parent and extension
+
+The extension's `docs/api.md` opens with a cross-link to the parent:
+
+```markdown
+# API Reference
+
+This document covers the React hooks and components. For the parent module's API, see the [parent module's docs/api.md](../js-client-helper-styler/docs/api.md).
+```
+
+The extension's `docs/philosophy.md` explains the pattern:
+
+```markdown
+# Extension Pattern
+
+Extension modules consume parent modules. This is the extension pattern (different from the adapter pattern in Class F).
+
+**Extension is boss.** The extension decides:
+- When to call the parent
+- How to cache results
+- When to trigger React re-renders
+
+**Parent stays pure.** The parent module has no React knowledge. It works in Node, browsers, or React Native.
+```
+
+---
+
 ## Writing Style for docs/
 
 Same human-first approach as READMEs:
@@ -432,3 +492,13 @@ For backend-specific configuration, schema, indexes, and TTL behavior, see each 
 - [ ] README follows the full Universal Section list condensed to ~70-90 lines
 - [ ] No `## Install` block in the README. Section 9 points to the parent module's install instructions
 - [ ] No `## Usage` or Quick Start in the README
+
+### Class H extensions
+
+- [ ] `docs/api.md` documents hooks and components (signatures, return shapes, lifecycle)
+- [ ] `docs/philosophy.md` explains the extension pattern: extension imports parent, extension is boss
+- [ ] No `docs/configuration.md` (configuration lives in the parent module)
+- [ ] README has "Extension vs Parent" comparison table showing responsibilities
+- [ ] README "Adding to Your Project" points to parent module install, adds "Also load this extension if using [framework]"
+- [ ] Entry point is `extension.js` (not `index.js`)
+- [ ] Cross-link to parent module's `docs/api.md` from extension's `docs/api.md`

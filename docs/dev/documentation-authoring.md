@@ -61,6 +61,16 @@ Tables and bullets, never prose paragraphs for rules.
 - Code examples only when the pattern cannot be expressed in text
 - Strip all preamble ("This section explains...", "It is important to note...")
 
+### E. Clear and direct language
+
+Write like you speak. Simple sentences. No fluff.
+
+- **Good**: "Extension consumes core. Extension is boss."
+- **Bad**: "In the extension pattern, the extension module acts as the consumer of the core module's functionality, establishing an inverse dependency relationship where..."
+- Use active voice. Subject-verb-object.
+- Remove filler words: "essentially", "basically", "in order to", "it is important to note"
+- Remove redundant phrases: "the reason why is because", "each and every"
+
 ---
 
 ## Decision Tree: Where Does New Knowledge Go?

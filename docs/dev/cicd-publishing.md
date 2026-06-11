@@ -102,6 +102,66 @@ The unified workflow fixes both by:
 
 This pattern (registry-existence check + version-bump-by-implication + per-job safety-net) is a lightweight alternative to Changesets / semantic-release. It suits quick-iteration monorepos where versions are bumped manually per Conventional Commits.
 
+## Module Execution Sequence
+
+The pipeline processes modules in three groups, organized by dependency boundaries and runtime environment:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  GROUP 1: Core Modules (Foundation Utilities)                  │
+│  Location: src/helper-modules-core/                            │
+│  Pattern: Class A - Zero dependencies, pure JavaScript         │
+├─────────────────────────────────────────────────────────────────┤
+│  js-helper-utils → js-helper-debug → js-helper-time            │
+│  → js-helper-money → js-client-helper-crypto                   │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  GROUP 2: Server Modules (Node.js Runtime Required)            │
+│  Location: src/helper-modules-server/                          │
+│  Pattern: Classes B-F - Node built-ins, drivers, services    │
+├─────────────────────────────────────────────────────────────────┤
+│  Crypto → Instance → HTTP → Gateway → Storage/Database         │
+│  → Verification → Logging → Auth → Queueing                    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  GROUP 3: Client Modules (Browser/Universal Runtime)         │
+│  Location: src/helper-modules-client/                          │
+│  Pattern: Class A - Universal, often UI-adjacent               │
+├─────────────────────────────────────────────────────────────────┤
+│  js-client-helper-styler → (future client modules)             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Why This Order Matters
+
+**Dependency Direction**
+- Core modules have zero external dependencies — they must publish first
+- Server modules can depend on Core modules
+- Client modules can depend on Core modules (and sometimes Server modules via extension pattern)
+
+**Runtime Boundaries**
+- **Core**: Pure JavaScript, runs anywhere (Node, browser, edge, mobile)
+- **Server**: Requires Node.js runtime (built-in modules like `crypto`, `fs`, networking)
+- **Client**: Universal runtime (browser-focused but still pure JS)
+
+**Testing Requirements**
+- Core modules: No Docker, no external services — fast unit tests
+- Server modules: Often need databases, emulators, or Docker — integration tests
+- Client modules: No framework dependencies — pure JS tests (React/Vue/etc. bindings live in extension modules)
+
+### Adding a New Module
+
+When adding a module to the pipeline:
+
+1. **Determine its class** using [`module-categorization.md`](../modules/module-categorization.md)
+2. **Place it in the correct group** based on its directory (`helper-modules-core/`, `helper-modules-server/`, or `helper-modules-client/`)
+3. **Position within group** based on its dependencies — if Module B imports Module A, Module A must come first
+4. **Add both `test-*` and `publish-*` jobs** — they run sequentially per module
+
+The workflow file groups jobs visually with comment banners showing the group boundaries. Maintain this structure when adding new modules.
+
 ## Workflow Location
 
 ```
