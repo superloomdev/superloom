@@ -881,6 +881,28 @@ This clean-install form is mandatory in the `/js-helper-module-refactor` workflo
 
 **Secondary lesson:** If `npm install` fails with `E409 Conflict / checksum mismatch` even after a clean install, the registry is temporarily inconsistent (a known GitHub Packages transient bug). Wait 30 to 60 seconds, then re-run `rm -rf node_modules package-lock.json && npm install`. Do not use `--legacy-peer-deps`. It masks the real error, writes incorrect lock entries, and creates new failures on the next run. The clean install is the correct fix.
 
+### 22. ESLint `no-unused-vars` on intentionally reserved module-scope variables
+
+**Symptom:** `npm run lint` fails with `error 'CONFIG' is assigned a value but never used  no-unused-vars` (or similar for `Lib`, `React`, `ThemeContext`, etc.) even though the variable is deliberately kept as a reserved injection slot for future use.
+
+**Cause:** Every module in this codebase declares its full set of dependency injection slots at the top of the file as a standard structural contract — even slots that are not yet wired. This keeps the injection surface explicit, consistent, and visually scannable across every module. ESLint does not know the variable is intentionally reserved; it sees an unread assignment and flags it.
+
+**Why not remove it or rename to `_CONFIG`?** Removing breaks the structural contract and creates an inconsistency when the slot gets wired later. Renaming to `_CONFIG` changes the actual variable name and deviates from the naming convention used across all modules (`Lib`, `CONFIG`, `React`, etc.).
+
+**Fix:** Add a targeted `eslint-disable-next-line` comment on the line immediately above the reserved variable. This suppresses the rule for that one declaration only, making the intent explicit:
+
+```js
+// Injected dependencies, set by the loader (module-scope).
+let Lib;             // shared_libs container
+// eslint-disable-next-line no-unused-vars
+let CONFIG;          // merged config (reserved for future knobs)
+let React;           // injected React (required)
+```
+
+Never use a file-level `/* eslint-disable */` for this — it would suppress the rule for the entire file and hide real unused-variable bugs. The line-level directive is the only correct form.
+
+**Lesson:** The module-scope injection-slot block (`let Lib; let CONFIG; ...`) is a deliberate structural pattern, not dead code. When adding a new slot that is not yet used, always add the `eslint-disable-next-line no-unused-vars` comment at the same time. When the slot is eventually wired, remove the disable comment as part of that commit.
+
 ---
 
 ## Adding a New Entry
