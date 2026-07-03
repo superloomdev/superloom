@@ -19,9 +19,9 @@ Use this file for **how to write the words**; use the companion docs for **what 
 **Key principles:**
 
 - **Lead with the problem.** What does this module do, and why would someone need it?
-- **Show, don't just tell.** Code examples should be copy-paste ready and runnable.
+- **Show, don't just tell.** Reference docs (`docs/`) carry copy-paste-ready, runnable examples. The README explains and carries no runnable code.
 - **Consistency across modules.** Once a developer learns one module, learning the next should feel familiar.
-- **Progressive disclosure.** Quick start for the impatient, deep docs for the curious.
+- **Progressive disclosure.** Plain-language explanation in the README, exhaustive reference in `docs/`.
 
 ---
 
@@ -31,7 +31,7 @@ Use this file for **how to write the words**; use the companion docs for **what 
 
 **Do:**
 - "This module handles session lifecycle."
-- "You create an Auth instance per actor type."
+- "One Auth instance is created per actor type."
 - "The token expires after 30 days."
 
 **Don't:**
@@ -49,10 +49,29 @@ Use this file for **how to write the words**; use the companion docs for **what 
 **Do:** "Checks if the value is null or undefined."
 **Don't:** "Performs nullity validation on the input parameter."
 
-### Second Person for Instructions
+### Describe the Module, Not the Reader
 
-**Do:** "Install the module with npm."
-**Don't:** "The module should be installed."
+Reference prose describes the module, the function, the value, or the config key. It does not address the reader. Recast second person into third person or a declarative statement.
+
+| Avoid (addresses the reader) | Prefer (describes the module) |
+|---|---|
+| "Pick the adapter that matches your database" | "Each application selects the adapter that matches its database" |
+| "Your project trusts the wrapper" | "A consuming project trusts the wrapper" |
+| "You create one instance per flow" | "One factory call produces one independent instance" |
+
+A bare imperative is allowed only for a genuine command step in a how-to, and carries no "you": "Run the cleanup on a schedule" is correct; "You should run the cleanup" is not. Integration is framed loader-first, never as an `npm install` command. See [`module-readme-structure.md`](../modules/module-readme-structure.md#section-9-adding-to-your-project).
+
+### Confidence Without Hype
+
+State the design stance plainly and back it with its mechanism in the same breath. A strong claim with no adjacent rationale is hype. Reference docs carry no emoji, no exclamation marks, and no rhetorical questions.
+
+### Banned Vocabulary
+
+These words are AI and marketing tells. They are removed, not softened.
+
+`facilitate`, `comprehensive`, `robust`, `seamless`, `leverage`, `powerful`, `blazing`, `effortless`, `simply`, `easily`, `just` (as filler), `in order to`, `it is important to note`, `please note`, `feel free to`, `a wide range of`, `out of the box`, `battle-tested`, `cutting-edge`, `world-class`.
+
+The word `utilize` is retained: it is established house vocabulary (`module-categorization.md` uses "the parent utilizes the adapter") and is not a tell in this codebase.
 
 ### Consistent Terminology
 
@@ -141,9 +160,9 @@ This convention also matches the standard placeholder syntax used in CLI documen
 1. **Starting with implementation details.** Lead with purpose, not mechanics.
 2. **Writing for yourself.** The reader doesn't know your design decisions.
 3. **Skipping the "why."** Every section should answer why, not just what.
-4. **Missing runnable examples.** Every code block should be copy-paste ready.
+4. **Missing runnable examples in `docs/`.** Every code block in the reference layer is copy-paste ready. The README carries no runnable code.
 5. **Assuming context.** Mention Superloom, link to related modules, explain terminology.
-6. **AI-sounding phrases.** Avoid `facilitate`, `comprehensive`, `robust`, `seamless`, `leverages`. Use a verb the reader would say out loud.
+6. **AI and marketing tells.** See [Banned Vocabulary](#banned-vocabulary). Use a verb the reader would say out loud.
 
 For **structural** mistakes (wrong section order, missing Universal Sections, wrong class-specific sections), see [`module-readme-structure.md` → Anti-Patterns](../modules/module-readme-structure.md#anti-patterns-to-avoid).
 
@@ -154,9 +173,11 @@ For **structural** mistakes (wrong section order, missing Universal Sections, wr
 Before finalizing any `.md` file:
 
 - [ ] One-sentence description is clear and accurate
-- [ ] No AI-sounding phrases (facilitate, comprehensive, robust, seamless, leverage)
+- [ ] No banned vocabulary (see [Banned Vocabulary](#banned-vocabulary))
 - [ ] Active voice used throughout
-- [ ] Second person for instructions
+- [ ] Reference prose is third-person; bare imperative only for genuine command steps (no "you")
+- [ ] No emoji, no exclamation marks, no rhetorical questions
+- [ ] README carries no function signatures, config tables, or `npm install` command; runnable examples live in `docs/`
 - [ ] Consistent terminology with other modules
 - [ ] No em dashes anywhere (`-` only for compound words)
 - [ ] No periods at the end of table cells
@@ -191,7 +212,7 @@ Source files must never contain paths or links to internal `docs/` files. Explai
 
 ## Brand Usage in Documentation and Comments
 
-The project brand name "Superloom" and the npm scope `@superloomdev/` are first-class identifiers in `package.json` only. Everywhere else - documentation prose, code comments, examples, JSDoc, error messages - prefer the **alias short-name** (e.g. `helper-utils`, `helper-sql-sqlite`) defined in [`code-formatting-js.md` → NPM Aliases](../foundations/code-formatting-js.md#npm-package-aliases).
+The module name exists in exactly **two forms**. The npm scope form (`@superloomdev/js-helper-utils`) and the bare package form (`js-helper-utils`) are `package.json` and directory-layout identifiers only. Everywhere else - documentation prose, titles, code comments, examples, JSDoc, error messages, file banners - use the **alias short-name** (e.g. `helper-utils`, `helper-sql-sqlite`) defined in [`code-formatting-js.md` → NPM Aliases](../foundations/code-formatting-js.md#npm-package-aliases). There is no third form: a surface either carries the published identity (`package.json`) or the alias.
 
 This keeps the codebase forkable. A consumer who renames the scope only edits `package.json` aliases; nothing else moves.
 
@@ -200,9 +221,11 @@ This keeps the codebase forkable. A consumer who renames the scope only edits `p
 | `package.json` (`name`, `repository`, `peerDependencies` target) | **Yes** - the published identity |
 | Top-level project `README.md` and `docs/index.md` | **Yes** - introducing the project |
 | Module `README.md` intro line | **Yes, once** - "Part of Superloom" or equivalent |
-| Module `docs/` API reference, examples, code blocks | **No** - use alias short-names |
-| Source code: `require()`, error prefixes, JSDoc, comments | **No** - alias short-names only |
-| `ROBOTS.md` | **No** - alias short-names only |
+| Module `README.md` H1 and sibling/family links | **No** - alias short-names only |
+| Module `docs/` API reference, examples, code blocks, H1 titles | **No** - use alias short-names |
+| Source code: `require()`, error prefixes, JSDoc, comments, `// Info:` banners | **No** - alias short-names only |
+| Error-catalog file headers (`[name].errors.js`) | **No** - alias short-names only |
+| `ROBOTS.md` (body and H1) | **No** - alias short-names only |
 
 The alias derivation rule itself (strip `js-` and `server`/`client`, keep everything else) is the single source of truth in [`code-formatting-js.md`](../foundations/code-formatting-js.md#npm-package-aliases) and is not duplicated here.
 

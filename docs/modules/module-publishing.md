@@ -87,7 +87,13 @@ Every JS module **must** have an `eslint.config.js` file at its root (ESLint fla
 
 Linter config is per-module because each module is published and lintable independently - there is no shared workspace-level config that consumers can rely on. The config must be present for `npm run lint` to work as part of the pre-publish gate.
 
-**Canonical reference:** For the exact config shape, refer to `js-helper-utils`. Copy its `eslint.config.js` as your starting point. Do not reproduce or embed the config contents in documentation - the module is the living reference and will stay current as ESLint evolves.
+**Canonical reference:** the config is **byte-identical across every module** - copy `eslint.config.js` from `js-helper-utils` verbatim. There are no module-type variants (store adapters, clients, and core modules all carry the same file); a divergent copy is drift, not customization. Do not reproduce or embed the config contents in documentation - the module is the living reference and will stay current as ESLint evolves.
+
+Three properties of the canonical config are policy, not preference:
+
+- **`ecmaVersion: 2022`** - matches the Node.js 24+ engine floor.
+- **No `argsIgnorePattern` / `caughtErrorsIgnorePattern`.** Underscore-prefixed parameters (`_param`, `catch (_err)`) are forbidden; lint must flag them. Parity parameters keep their real name with `// eslint-disable-line no-unused-vars`; unused catch bindings use `catch {`. See [`code-formatting-js.md` → Parameter Naming](../foundations/code-formatting-js.md#parameter-naming).
+- **Full rule comments retained** - the config is read by humans deciding whether a rule applies; stripped copies caused the variant drift this rule exists to prevent.
 
 Note: other languages have their own linter conventions (Python: `ruff` or `pylint` config; etc.). Each language's module structure documentation covers its own convention.
 

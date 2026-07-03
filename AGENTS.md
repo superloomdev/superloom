@@ -289,13 +289,13 @@ These rules apply to **ALL** code written in this project. Source: `docs/foundat
 - Object braces: `{ key: value }` not `{key: value}`
 - Array brackets: `[1, 2, 3]` not `[ 1, 2, 3 ]`
 - ALL `if` statements must use curly braces (no inline if)
-- All output JSON keys use `snake_case`
+- All public JSON keys use `snake_case` - return fields AND input/options keys. Vendor wrappers normalize driver camelCase at the boundary (`affectedRows` -> `affected_rows`); leaking driver casing couples consumers to the vendor. Source: `docs/foundations/code-formatting-js.md` -> "Public Data Field Naming"
 
 ### Vertical Spacing Hierarchy (3/2/1 Rule)
 
 | Spacing | Purpose |
 |---|---|
-| **3 blank lines** | Between major module sections (Loader → Exports → Public → Private) |
+| **3 blank lines** | Between major module sections (Loader → Public → Private; application modules also have Exports) |
 | **2 blank lines** | Between individual function definitions |
 | **1 blank line** | After opening `{`, before closing `}`, between logical blocks |
 
@@ -421,7 +421,9 @@ The framework recognises **three** error categories. Each has one correct dispos
 
 **This applies to every helper module** (dynamodb, mongodb, s3, sql-*, verify, http, etc.) and every entity service. When in doubt: programmer errors throw, everything else returns an envelope, and the service translates before the controller sees it.
 
-**Programmer error message format:** `[module-short-name] field-path expected-shape[(e.g. bare-example)]`. Example: `[js-server-helper-auth] CONFIG.Store is required (a store object implementing the store contract)`. No URLs, no scoped package names (`@superloomdev/...`), no multi-line concatenation, no apologetic language, no "see docs" pointers, no vendor/driver names in the prefix. Source: `docs/foundations/error-handling.md` -> "Programmer Error Message Format".
+**Programmer error message format:** `[module-alias] field-path expected-shape[(e.g. bare-example)]`. The prefix is the npm alias short-name. Example: `[helper-auth] CONFIG.Store is required (a store object implementing the store contract)`. No URLs, no scoped (`@superloomdev/...`) or bare (`js-server-helper-...`) package names, no multi-line concatenation, no apologetic language, no "see docs" pointers, no vendor/driver names in the prefix. Source: `docs/foundations/error-handling.md` -> "Programmer Error Message Format".
+
+**Pure-engine exception:** a module with zero operational errors (synchronous derivation only - no I/O, no network, no external state; reference: `helper-styler`) throws for ALL failures using the programmer-error format and needs no `{success,error}` envelope. The exception is defined by the module's nature - any I/O or external state reinstates the envelope rule in full. `Utils.error(...)` is a consumer convenience Error constructor, not a module-catalog shape - catalogs use `{ type, message }` only. Source: `docs/foundations/error-handling.md` -> "Pure Engines".
 
 Full rule with rationale, anti-patterns, type-string naming, and worked examples: `docs/foundations/error-handling.md`.
 
@@ -431,7 +433,7 @@ Three levels of section separators. Use from coarsest to finest. Full spec: `doc
 
 | Level | Marker | Purpose |
 |---|---|---|
-| 1 | `/////////////////////////// [Name] START ///...` | Major module sections: `Module-Loader`, `Module Exports`, `createInterface`, `Public Functions`, `Private Functions` |
+| 1 | `/////////////////////////// [Name] START ///...` | Major module sections: `Module-Loader`, `createInterface`, `Public Functions`, `Private Functions` (+ `Module Exports` in application modules) |
 | 2 | `// ~~~~~~~~~~~~~~~~~~~~ [Name] ~~~~~~~~~~~~~~~~~~~~` + short purpose comment (1-4 lines) | Subsections inside a public/private function object (group by responsibility) |
 | 3 | `// [comment]` | Inline comment above a logical block |
 
@@ -474,7 +476,9 @@ The closing `};` of every named section must be **combined on the same line** as
   ///////////////////////////Public Functions END////////////////////////////////
 ```
 
-Applies to every section closer: `Public Functions END`, `Private Functions END`, `createInterface END`, `Module-Loader END`, `Module Exports END`. Full spec: `docs/foundations/code-formatting-js.md` -> "Section Closing Banners".
+Applies to every section closer: `Public Functions END`, `Private Functions END`, `createInterface END`, `Module-Loader END`. Full spec: `docs/foundations/code-formatting-js.md` -> "Section Closing Banners".
+
+**Merged loader (helper modules):** the loader and the export are one named function - `module.exports = function loader (shared_libs, config)` under the `Module-Loader` banner - with no separate `Module Exports` section. Application modules (entity controllers/services/models) keep the separate `Module Exports` section per `docs/server/entity-creation-guide-js.md`. Source: `docs/foundations/code-formatting-js.md` -> "Standard Module Skeleton".
 
 ### Inline Section Comments
 
@@ -499,6 +503,7 @@ Applies to every section closer: `Public Functions END`, `Private Functions END`
 ### Performance Logging
 
 - **Every external service operation must log performance** - use `Lib.Debug.performanceAuditLog(action, routine, instance['time_ms'])`
+- **One call per operation, after it completes, `action: 'End'`, exactly 3 args** - never `'Start'`/`'End'` pairs (reference time carries the start), never a 4th argument (silently dropped)
 - **Use `instance.time_ms`** as reference time - shows elapsed since request started (request-level timeline), not just function duration
 - **Client initialization must log performance** - how long SDK import + connection took
 - **Error logs must include performance data** - duration even on failure helps diagnose timeouts
@@ -579,7 +584,7 @@ Every module documents itself across three files, each with one audience. Full r
 5. **Hot-Swappable with Other Backends** *(class-conditional)* - Bullet list of sibling modules with same API. Present when module has at least one sibling.
 6. **Class-Specific Section** *(class-conditional)* - One section per class (e.g. "Architecture overview" for Class E, "Credentials & Permissions" for Class D).
 7. **Aligned with Superloom Philosophy** - One short paragraph. Frames as consistency for projects already using Superloom, NOT as a Why bullet.
-8. **Extended Documentation** - Links to `docs/api.md`, `docs/configuration.md`, Superloom. NEVER link `ROBOTS.md` here (AI-only).
+8. **Extended Documentation** - Links to `docs/api.md`, `docs/configuration.md`, `docs/schemas.md` (modules with a `*.validators.js`), Superloom. NEVER link `ROBOTS.md` here (AI-only).
 9. **Adding to Your Project** - Peer dependency through loader pattern. NO `npm install` snippet. Links to loader-pattern doc.
 10. **Dependencies** - Every bundled npm package with one-sentence rationale. Explicitly states external service dependencies or none.
 11. **Testing Status** - Status table (Emulated/Integration tiers). Test runtime details live in `docs/configuration.md`.
@@ -593,6 +598,7 @@ Every module documents itself across three files, each with one audience. Full r
 - **No vendor product names as headline categories** - use industry-neutral terms (*serverless*, *persistent infrastructure*) with vendor names only as illustrative examples.
 - **No function names in marketing prose** - they belong in `docs/api.md` and `ROBOTS.md`.
 - **No Quick Start, "What this module is NOT", or `npm install` snippet** - pilot proved they don't serve any persona.
+- **Reference prose is third-person** - describe the module, not the reader (no "you"); bare imperative only for genuine command steps. Full voice doctrine + banned vocabulary: `docs/dev/documentation-standards.md`.
 - **Table cells do not end with periods** - cells are not sentences.
 - **Sentences 30 words or fewer** - split at conjunctions when longer.
 
@@ -604,10 +610,12 @@ Every module documents itself across three files, each with one audience. Full r
 | **B. Extended utility** | Node.js runtime only, no third-party packages | "Behavior" (lifecycle semantics, cleanup) | `api.md`, `configuration.md` |
 | **C. Driver wrapper** | Wraps third-party DB driver (Postgres, MySQL, MongoDB, SQLite) | (none - Hot-Swappable section serves this) | `api.md`, `configuration.md` |
 | **D. Cloud service wrapper** | Wraps cloud/network SDK (AWS S3, DynamoDB, SQS) | "Credentials & Permissions" | `api.md`, `configuration.md`, optional `iam.md` |
-| **E. Feature module with adapters** | Business logic + pluggable storage or transport (auth, verify, logger, http-gateway) | "Architecture Overview" + "Storage Adapters" or "Transport Adapters" | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
-| **F. Dependent adapter** | Implements parent's adapter contract. Parent utilizes adapter — adapter is instrument, parent is boss. Two subtypes: **store** (`-store-[backend]`, data/persistence) and **adapter** (`-adapter-[name]`, everything else: transport, integration, future). Either can be factory or singleton depending on per-instance state needs | (none) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
-| **G. Feature module with extensions** | Business logic + framework extension points (styler, UI state). Extension-ready design for React, Vue, Angular bindings | "Architecture Overview" + "Extensions" | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
-| **H. Extension** | Framework-specific binding for parent module (Class G). Extension utilizes parent — extension is instrument, extension is boss. Cannot stand alone | "Extension vs Parent" | `api.md` (hooks/components), `philosophy.md` (extension pattern). No `configuration.md` — config lives in parent |
+| **E. Feature module with adapters** | Business logic + pluggable storage or transport (auth, verify, logger, http-gateway) | "Architecture Overview" + "Storage Adapters" or "Transport Adapters" | `api.md`, `configuration.md`, `schemas.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
+| **F. Dependent adapter** | Implements parent's adapter contract. Parent utilizes adapter - adapter is instrument, parent is boss. Two subtypes: **store** (`-store-[backend]`, data/persistence) and **adapter** (`-adapter-[name]`, everything else: transport, integration, future). Either can be factory or singleton depending on per-instance state needs | (none) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
+| **G. Feature module with extensions** | Business logic + framework extension points (styler, UI state). Extension-ready design for React, Vue, Angular bindings | "Architecture Overview" + "Extensions" | `api.md`, `configuration.md`, `schemas.md` (when a `*.validators.js` is present), `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
+| **H. Extension** | Framework-specific binding for parent module (Class G). Extension utilizes parent - extension is instrument, extension is boss. Cannot stand alone | "Extension vs Parent" | `api.md` (hooks/components), `philosophy.md` (extension pattern). No `configuration.md` - config lives in parent |
+
+**`docs/schemas.md`** ships for any module with a `*.validators.js` (always E and G; lighter classes only when they validate input): the validated boundary contracts plus the throw-versus-return discipline, distinct from a Class F store's `docs/schema.md` (DDL). **Config/root hygiene:** the root's published Markdown is exactly `README.md` + `ROBOTS.md` (`THOUGHTS.md` is an unpublished journal); `[name].config.js` holds only keys the module reads with one-line reasons, no worked examples (those live in `docs/configuration.md`), no dead keys. Full detail: `docs/modules/module-structure-js.md`.
 
 **Universal value bullets 1-4** copy-pasteable across classes (insulation, pre-tested, human review, observability). Only bullet 5 is class-specific. See full templates in `docs/modules/module-readme-structure.md`.
 
@@ -617,7 +625,7 @@ Every module documents itself across three files, each with one audience. Full r
 - **"Required (override)"** in config tables for defaults that must be changed (HOST, DATABASE, KEY, SECRET)
 - **Response envelope illustration** in "What this is" section
 - **Lazy initialization** note in `docs/configuration.md`
-- **Utilizes pattern (Class F and H):** Class F (adapter) — parent utilizes adapter, adapter is instrument, parent is boss. Class H (extension) — extension utilizes parent, extension is instrument, extension is boss
+- **Utilizes pattern (Class F and H):** Class F (adapter) - parent utilizes adapter, adapter is instrument, parent is boss. Class H (extension) - extension utilizes parent, extension is instrument, extension is boss
 
 ### Client Module Patterns
 
@@ -631,7 +639,7 @@ Client helper modules (`helper-modules-client/`) come in two types:
 **Extension pattern (Class G + H):**
 - Parent module (Class G) provides clean JavaScript API
 - Extension module (Class H) imports parent, adds framework bindings
-- Extension is boss — decides when to call parent, how to cache results
+- Extension is boss - decides when to call parent, how to cache results
 - Entry point: `extension.js` (not `index.js`)
 - Naming: `[parent]-ext-[framework]`
 - Peer dependencies: parent module + framework (React, Vue, etc.)
@@ -655,17 +663,17 @@ The following items are mandatory for every helper module. These caught real iss
 
 | File/Rule | Requirement |
 |---|---|
-| `eslint.config.js` | ESLint v9+ requires a flat config file; without it lint silently fails |
+| `eslint.config.js` | ESLint v9+ flat config, **byte-identical across all modules** (no store/client variants). Canonical copy: `js-helper-utils`. Policy properties: `ecmaVersion: 2022`; **no `argsIgnorePattern`/`caughtErrorsIgnorePattern`** so lint flags forbidden `_param` (parity params use `// eslint-disable-line no-unused-vars`, unused catch uses `catch {`); full rule comments retained |
 | `engines.node` in `package.json` | Declares minimum Node.js version; prevents silent runtime incompatibilities |
 | `.npmignore` at module root | **Required** - without it `npm pack` includes `_test/`, `.github/`, `eslint.config.js`. Must exclude dev files (including `THOUGHTS.md`) and include `README.md`, `ROBOTS.md`, `docs/`, `parts/` (if present). Use `js-helper-utils` as canonical reference. Verify with `npm pack --dry-run` before publishing |
 | `publishConfig.registry` | Exactly `https://npm.pkg.github.com` (no trailing `/@superloomdev` scope suffix) |
 | No `.npmrc` in module dir | Global `~/.npmrc` is the only source of truth |
 | Package name | `@superloomdev/<module>` - scoped; must match directory name |
-| `[module].errors.js` | **Required** - frozen error catalog for operational errors |
+| `[module].errors.js` | **Required** - frozen error catalog for operational errors. Same file-header rule as every file: `// Info:` banner first, then `'use strict';` - no `/** */` opener |
 | `[module].validators.js` | (Optional) Singleton validators module if module has validation logic. Loader takes only `(shared_libs)`; static data is `require`d internally per Singleton Module Pattern |
 | `data/` | (Optional) Static intrinsic reference data. `require`d at module top-level, never injected. Intrinsic facts only (ISO standards, character sets); no locale-specific or project-specific data |
 | Test `_test/loader.js` | Required for any module using dependency injection |
-| Test `_test/package.json` | Uses scoped dep names (`@superloomdev/js-helper-utils`, never bare) and `file:../` for module under test |
+| Test `_test/package.json` | Dependency keys are npm aliases (`"helper-utils": "npm:@superloomdev/js-helper-utils@^1.0.0"`); the module under test is `"helper-[name]": "file:../"`. The scope appears only inside the `npm:` target |
 | Test dependency versions | Track latest published version; bump all consuming `_test/package.json` files when publishing |
 | `package.json` format | Multi-line JSON, not compressed single-line |
 | No `exports` field | Omit when `main` covers the only entry file; only add for multi-entrypoint packages |
@@ -828,7 +836,7 @@ Omit positions that do not apply. Preserve relative order of those that remain. 
 
 **Module-root singletons (`[module].validators.js`) are a special case:** accept only `Lib`, no CONFIG/ERRORS/Validators. They run before config is validated. Stripped-down shape - do not conflate with the main-module singleton.
 
-**Store/adapter contract validation:** Modules with externally-supplied stores or adapters add `validateStoreContract(store)` or `validateAdapterContract(adapter)` to their validators singleton. The parent receives a ready-to-use object via `CONFIG.Store` / `CONFIG.Adapter`; the loader calls the contract validator once right after receiving it. Throws `Error` (setup error, not programmer error) with format `[module-name] Invalid store contract: missing method [name]`. Only required methods belong in the contract; optional maintenance methods keep call-time `isFunction` guards. Reference: `js-server-helper-http-gateway` (adapter), `js-server-helper-auth`/`verify`/`logger` (store).
+**Store/adapter contract validation:** Modules with externally-supplied stores or adapters add `validateStoreContract(store)` or `validateAdapterContract(adapter)` to their validators singleton. The parent receives a ready-to-use object via `CONFIG.Store` / `CONFIG.Adapter`; the loader calls the contract validator once right after receiving it. Throws `Error` (setup error, not programmer error) with format `[module-name] Invalid store contract: missing method [name]`. Only required methods belong in the contract; optional maintenance methods (`setupNewStore`, `cleanupExpired*`) keep call-time `isFunction` guards. **When an optional method is absent, the guard no-ops with `{ success: true }`** - never throw, never an error envelope; absence is a documented backend property (native TTL, operator-provisioned schema) and callers stay backend-agnostic. Reference: `js-server-helper-http-gateway` (adapter), `js-server-helper-auth`/`verify`/`logger` (store).
 
 **Reference implementations:** `js-helper-money/money.js` (main module singleton), `js-server-helper-http-gateway/http-gateway.js` (main module singleton with adapter + parts), `js-server-helper-auth/auth.validators.js` (module-root singleton, special case).
 
@@ -858,6 +866,8 @@ When a helper module needs interchangeable backends (databases, transports, key/
 
 - **Adapter owns its own Lib:** built from injected `shared_libs`, not received from parent
 - **Adapter owns its own Config:** own `store.config.js` with adapter-specific keys
+- **Driver arrives through config, never built into the adapter's Lib.** Key naming: SQL stores take `lib_sql` (any `helper-sql-*` dialect satisfies it - hot-swap); NoSQL/cloud backends take backend-specific keys (`lib_mongodb`, `lib_dynamodb`)
+- **Sibling Lib keys are alias-derived:** a module consuming a sibling helper through `Lib` uses the PascalCase form of the sibling's npm alias (`helper-http-gateway` -> `Lib.HttpGateway`); never invent a key, document the optional dependency in `docs/configuration.md`
 - **Adapter owns its own ERRORS:** frozen `store.errors.js` with adapter-specific error types, prefixed with the module short-name
 - **Returns a ready-to-use store object:** not a factory. Parent receives via `CONFIG.Store` and uses it directly
 - **Only coupling is the return contract:** method names + return shapes (`{ success, error }`)
@@ -908,8 +918,8 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
 **Extension pattern (Class H):**
 
 - Extension imports parent (not the other way around)
-- Extension is boss — decides when to call parent, how to cache, when to trigger re-renders
-- Parent stays pure — has no framework knowledge
+- Extension is boss - decides when to call parent, how to cache, when to trigger re-renders
+- Parent stays pure - has no framework knowledge
 
 **Extension files:**
 

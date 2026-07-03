@@ -35,10 +35,10 @@ The classes form a **dependency staircase**: each step adds one more thing the m
 | **B. Extended utility** | Only the Node.js runtime. Uses Node-built-in modules (`crypto`, `process`, `fetch`, `Buffer`, etc.). No third-party npm packages, no external services | `README-master-template.md` | `api.md`, `configuration.md` |
 | **C. Driver wrapper** | A third-party-implemented service that operators **can self-host** on commodity infrastructure (Postgres, MySQL, MongoDB, SQLite) | `README-master-template.md` (driver variant) | `api.md`, `configuration.md` |
 | **D. Cloud service wrapper** | A proprietary cloud service that operators **cannot self-host**. Runs only on the provider or a dedicated emulator (DynamoDB, S3, SQS) | `README-master-template.md` (cloud variant) | `api.md`, `configuration.md`, optional `iam.md` |
-| **E. Feature module with adapters** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class F adapters. Provides a complete business-logic feature, not a primitive | `README-feature-module.md` | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
-| **F. Dependent adapter** | A Class E parent module. Cannot function on its own; implements the parent's adapter contract for a single backend or runtime. The parent utilizes the adapter — adapter is the instrument, parent is boss. | `README-storage-adapter.md` (store) / `README-master-template.md` (adapter) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
-| **G. Feature module with extensions** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class H extensions. Provides a complete business-logic feature designed for framework integration | `README-feature-with-extensions.md` | `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
-| **H. Extension** | A Class G parent module only. Cannot function on its own; adds framework-specific bindings (React, Vue, Angular) to a Class G parent module. The extension utilizes the parent — extension is boss. | `README-extension.md` | `api.md` (hooks/components), `philosophy.md` (extension pattern). No `configuration.md` — config lives in parent |
+| **E. Feature module with adapters** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class F adapters. Provides a complete business-logic feature, not a primitive | `README-feature-module.md` | `api.md`, `configuration.md`, `schemas.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
+| **F. Dependent adapter** | A Class E parent module. Cannot function on its own; implements the parent's adapter contract for a single backend or runtime. The parent utilizes the adapter - adapter is the instrument, parent is boss. | `README-storage-adapter.md` (store) / `README-master-template.md` (adapter) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
+| **G. Feature module with extensions** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class H extensions. Provides a complete business-logic feature designed for framework integration | `README-feature-with-extensions.md` | `api.md`, `configuration.md`, `schemas.md` (when a `*.validators.js` is present), `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
+| **H. Extension** | A Class G parent module only. Cannot function on its own; adds framework-specific bindings (React, Vue, Angular) to a Class G parent module. The extension utilizes the parent - extension is boss. | `README-extension.md` | `api.md` (hooks/components), `philosophy.md` (extension pattern). No `configuration.md` - config lives in parent |
 
 *Reading this table:* a Class B module is allowed to use everything Class A is, plus Node built-ins. A Class C module is allowed to use everything Class B is, plus a self-hostable third-party service. And so on. F, G, and H are special cases: they cannot stand alone. Class F has two subtypes: **stores** (data persistence, named `-store-[backend]`) and **adapters** (everything else: runtimes, transports, integrations, named `-adapter-[name]`). Class H has the naming pattern `-ext-[framework]`. Either can use factory or singleton pattern internally - the choice depends on whether per-instance state is needed.
 
@@ -60,7 +60,7 @@ Every class A through H ships the same minimum set of files:
 1. **Token cost for AI tools.** A 1500-line `utils.js` file costs an order of magnitude more tokens to read than a 200-line `docs/api.md`. Every consumer (human or AI) benefits when the canonical reference is small and structured.
 2. **No per-module decisions.** If some Class A modules ship `docs/api.md` and some don't, every contributor and every reviewer has to re-evaluate the call. Making it universal removes the question entirely.
 
-Class-specific extras stack on top of the universal four. Class D adds `docs/iam.md`. Class E adds `docs/data-model.md` and an optional `docs/runtime.md`. Class F stores add `docs/schema.md` and `docs/cleanup.md`, the two documents that capture what is operationally distinctive per backend; Class F adapters ship only the universal pair (`api.md` + `configuration.md`). Class G modules ship the standard docs plus optional `runtime.md`. Extension documentation lives in each Class H package. Class H extensions ship `api.md` (hooks/components) and `philosophy.md` (extension pattern), but not `configuration.md` — configuration lives in the parent module. None of these *replace* the universal four; they add to them. Class E **does not** add a `docs/storage-adapters.md`: adapter documentation lives in each Class F package, not in the parent. The Class E README has a short "Storage Adapters" or "Transport Adapters" subsection that lists the available adapters and points to each package's own README. The Class G README has a short "Extensions" subsection listing available Class H packages.
+Class-specific extras stack on top of the universal four. Class D adds `docs/iam.md`. Class E adds `docs/data-model.md` and an optional `docs/runtime.md`. Any module that ships a `*.validators.js` also adds `docs/schemas.md`, the page that documents every validated boundary contract (the config schema, the per-call options, the injected-dependency contract, the response envelope) and the throw-versus-return discipline; Class E and G always carry one, and a lighter class carries one only when it validates input (for example a Class A `money` module). `docs/schemas.md` (plural) documents the boundary contracts a caller and an injected dependency must satisfy and is distinct from a Class F store's `docs/schema.md` (singular), which documents backend DDL and indexes; the two cross-link and never overlap. Class F stores add `docs/schema.md` and `docs/cleanup.md`, the two documents that capture what is operationally distinctive per backend; Class F adapters ship only the universal pair (`api.md` + `configuration.md`). Class G modules ship the standard docs plus optional `runtime.md`. Extension documentation lives in each Class H package. Class H extensions ship `api.md` (hooks/components) and `philosophy.md` (extension pattern), but not `configuration.md` - configuration lives in the parent module. None of these *replace* the universal four; they add to them. Class E **does not** add a `docs/storage-adapters.md`: adapter documentation lives in each Class F package, not in the parent. The Class E README has a short "Storage Adapters" or "Transport Adapters" subsection that lists the available adapters and points to each package's own README. The Class G README has a short "Extensions" subsection listing available Class H packages.
 
 For Class F stores specifically, `docs/api.md` documents the store contract (with backend-specific semantic notes); `docs/configuration.md` covers the `STORE_CONFIG` keys, peer dependencies, environment variables consumed by `_test/loader.js`, and the testing tier; `docs/schema.md` documents what `setupNewStore` creates and the backend-specific syntax notes; `docs/cleanup.md` documents the TTL behavior and the recommended cleanup mechanism. For Class F adapters, `docs/api.md` documents the adapter contract (one subsection per method with runtime-specific notes); `docs/configuration.md` covers any adapter-specific config, peer dependencies, and the testing tier. The README for both subtypes follows the **same Universal Section list as every other class**, condensed to ~70-90 lines (tagline, What This Is, Why-bullets including a backend/runtime-specific bullet 5, Hot-Swappable, Aligned with Superloom, Extended Documentation, Adding to Your Project pointing to the parent, Testing Status, License); it contains no `## Install` block and no `## Usage` / Quick Start. Each Class F package documents only its own backend or runtime. There is no cross-adapter comparison anywhere in a Class F package.
 
@@ -74,7 +74,7 @@ In the `js-helper-modules` repo, these live under `src/helper-modules-core/` (un
 
 **README extras** (on top of the universal set): none. The categorized function survey lives in `docs/api.md`.
 
-**`docs/`:** `api.md`, `configuration.md` (per the [universal footprint](#universal-documentation-footprint)). The configuration page is short for Class A (no config keys, no environment variables, no peer dependencies) but is still produced for shape consistency.
+**`docs/`:** `api.md`, `configuration.md` (per the [universal footprint](#universal-documentation-footprint)), plus `schemas.md` when the module ships a `*.validators.js` (for example `money`). The configuration page is short for Class A (no config keys, no environment variables, no peer dependencies) but is still produced for shape consistency.
 
 | Module | Package | Purpose |
 |---|---|---|
@@ -153,7 +153,7 @@ The data model is deep enough to warrant a dedicated `docs/data-model.md`. The d
 
 **README extras:** Two adjacent class-specific README subsections. **"Architecture Overview"** (high-level diagram or tree of the loader / `parts/` / adapter wiring) and **"Storage Adapters"** or **"Transport Adapters"** depending on what the module delegates (short list of available adapters + selection rule + pointer to each adapter package's own README). No separate `docs/storage-adapters.md` file.
 
-**`docs/`:** `data-model.md`, `configuration.md`, optionally `runtime.md`. Storage-adapter detail is owned by each Class F adapter package, not the parent. See [`complex-module-docs-guide.md`](complex-module-docs-guide.md) for the deep guide.
+**`docs/`:** `api.md`, `configuration.md`, `schemas.md`, `data-model.md`, optionally `runtime.md`. The `schemas.md` page documents every contract the module's `*.validators.js` enforces. Storage-adapter detail is owned by each Class F adapter package, not the parent. See [`complex-module-docs-guide.md`](complex-module-docs-guide.md) for the deep guide.
 
 | Module | Package | Purpose |
 |---|---|---|
@@ -242,7 +242,7 @@ Class G modules provide complete solutions to problem domains (like theming, UI 
 
 **README extras:** "Architecture Overview" showing extension points, "Extensions" subsection listing available Class H packages.
 
-**`docs/`:** `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Extension details live in each Class H package.
+**`docs/`:** `api.md`, `configuration.md`, `schemas.md` (when a `*.validators.js` is present), `data-model.md`, optional `runtime.md`. Extension details live in each Class H package.
 
 | Module | Package | Purpose | Extensions Available |
 |---|---|---|---|
@@ -259,8 +259,8 @@ Class H is the counterpart to Class G. Where Class G provides extension points f
 - **Class H (extension pattern):** Extension utilizes parent. Extension is instrument, extension is boss.
 
 **Class G + H relationship:** Just as Class F (dependent adapter) pairs with Class E (feature module with adapters), Class H (extension) pairs with Class G (feature module with extensions). The key difference is the dependency direction:
-- **Class E + F:** Parent utilizes adapter — adapter is instrument, parent is boss
-- **Class G + H:** Extension utilizes parent — extension is instrument, extension is boss
+- **Class E + F:** Parent utilizes adapter - adapter is instrument, parent is boss
+- **Class G + H:** Extension utilizes parent - extension is instrument, extension is boss
 
 **Naming convention:** `[parent-name]-ext-[framework]`. Example: `js-client-helper-styler-ext-react`.
 
@@ -268,7 +268,7 @@ Class H is the counterpart to Class G. Where Class G provides extension points f
 
 **README extras:** "Extension vs Parent" comparison table. Brief explanation of the extension pattern. No Install section (peer dependencies only). Points to parent module for full API documentation.
 
-**`docs/`:** `api.md` (hooks/components reference), `philosophy.md` (extension pattern explained). No `configuration.md` — configuration lives in the parent module.
+**`docs/`:** `api.md` (hooks/components reference), `philosophy.md` (extension pattern explained). No `configuration.md` - configuration lives in the parent module.
 
 | Module | Package | Parent Module | Framework | Purpose |
 |---|---|---|---|---|
@@ -287,7 +287,7 @@ Tracks which modules have been restructured per [`module-readme-structure.md`](m
 | js-helper-time | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. 24-function pure-utility surface. Documents the plural-vs-singular Date-Data-Set key convention |
 | js-client-helper-crypto | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Browser-side member of the crypto runtime pair. Hot-Swappable cross-link to `js-server-helper-crypto` |
 | js-client-helper-styler | A | **Yes** | **Yes** (`api.md`, `configuration.md`, `template.md`, `philosophy.md`) | **Yes** | Class G pilot. First extension-based module. Parent theme engine with template-driven token generation, color derivation, scale math, utility generation. Four-doc pattern for Class A: api, configuration, template (domain-specific), philosophy |
-| js-client-helper-styler-ext-react | H | **Yes** | **Yes** (`api.md`, `philosophy.md`) | **Yes** | React extension for Styler. Extension pattern pilot: extension imports core, adds React hooks (useTheme, useStyles, useThemeController) and ThemeProvider. Works with React DOM, React Native, and React Native Web. Entry point `extension.js` (not `index.js`). No configuration.md — config lives in core. Establishes naming convention `*-ext-[framework]` |
+| js-client-helper-styler-ext-react | H | **Yes** | **Yes** (`api.md`, `philosophy.md`) | **Yes** | React extension for Styler. Extension pattern pilot: extension imports core, adds React hooks (useTheme, useStyles, useThemeController) and ThemeProvider. Works with React DOM, React Native, and React Native Web. Entry point `extension.js` (not `index.js`). No configuration.md - config lives in core. Establishes naming convention `*-ext-[framework]` |
 | js-server-helper-instance | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 6. Class B pilot. Established the lifecycle/'Behavior' section pattern. Per-request scope, background routines, FIFO cleanup |
 | js-server-helper-crypto | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 6. Server-side member of the crypto runtime pair. Reciprocal Hot-Swappable cross-link to `js-client-helper-crypto` |
 | js-server-helper-sql-postgres | C | **Yes (pilot)** | **Yes** (`api.md`, `configuration.md`) | **Yes** | First module migrated under the new rubric. Em-dash sweep applied |

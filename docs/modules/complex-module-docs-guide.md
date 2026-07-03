@@ -2,7 +2,7 @@
 
 > **Language:** JavaScript
 
-Class E feature modules (`auth`, `verify`, `logger`, `http-gateway`) and Class F dependent adapters (stores: `auth-store-*`, `verify-store-*`, `logger-store-*`; adapters: `http-gateway-adapter-*`) both ship a `docs/` folder. This guide defines the structure and content patterns for both. The two classes share the universal `docs/api.md` + `docs/configuration.md` pair and add different class-specific files on top: Class E adds `data-model.md` and an optional `runtime.md`; Class F stores add `schema.md` and `cleanup.md`; Class F adapters ship only `api.md` + `configuration.md`.
+Class E feature modules (`auth`, `verify`, `logger`, `http-gateway`) and Class F dependent adapters (stores: `auth-store-*`, `verify-store-*`, `logger-store-*`; adapters: `http-gateway-adapter-*`) both ship a `docs/` folder. This guide defines the structure and content patterns for both. The two classes share the universal `docs/api.md` + `docs/configuration.md` pair and add different class-specific files on top: Class E adds `data-model.md`, `schemas.md` (whenever the module ships a `*.validators.js`), and an optional `runtime.md`; Class F stores add `schema.md` and `cleanup.md`; Class F adapters ship only `api.md` + `configuration.md`.
 
 ## When to Create a docs/ Folder
 
@@ -23,13 +23,13 @@ A `docs/` folder is genuinely deeper for modules with:
 
 ```
 module-name/
-  README.md                 # Overview, quick start, basic API
+  README.md                 # Explanation: what the module is and why it exists
   docs/
-    _config.yml             # (Optional) If using GitHub Pages
+    api.md                  # Every exported function: signature, return shape, lifecycle
+    configuration.md        # Deep config reference, loader pattern, peer dependencies
+    schemas.md              # Validated boundary contracts (only when a *.validators.js exists)
     data-model.md           # Record fields, data types, design rationale
-    configuration.md        # Deep config reference
     runtime.md              # Persistent-server vs serverless-function runtime differences
-    <FEATURE>-guide.md        # Feature-specific deep dive
 ```
 
 ---
@@ -80,6 +80,37 @@ Explain why things are the way they are:
 - Record fields table with 20+ fields
 - install_platform/install_form_factor quick reference table
 - custom_data convention guide
+
+---
+
+### schemas.md
+
+**Purpose:** Document every validated contract at the module boundary: what a caller must pass, what an injected dependency (a store, an adapter) must provide, and what comes back. This is the home for everything `[module].validators.js` enforces. Ships only when the module has a validators file.
+
+**Disjoint from data-model.md.** `schemas.md` documents the boundary contracts (call inputs, the injected-dependency contract, the response envelope). `data-model.md` documents the persisted record shape. The two cross-link and never overlap.
+
+| Doc | Question it answers | Subject |
+|---|---|---|
+| `schemas.md` | What must a caller pass, and what comes back? | The boundary contracts |
+| `data-model.md` | What does a stored record look like, and why? | The persisted shape |
+
+**Throw versus return, stated once at the top.** Programmer errors (a missing required option, a wrong type, a malformed config, an incomplete dependency) throw synchronously at the call site or at construction. Operational errors (not found, cooldown, expiry, backend failure) return through the response envelope as `{ success: false, error }`. This mirrors [`error-handling.md`](../foundations/error-handling.md) and is the single most useful thing the page teaches.
+
+**Structure:**
+
+```markdown
+# Schemas
+
+## Throw Versus Return
+
+One table: category (programmer vs operational), trigger, mechanism (throws vs returns), when.
+
+## [One Section Per Contract]
+
+The config schema, the per-call options, the injected-dependency contract, and the response envelope. Each is a table with a uniform shape: field, type, required, constraint, consequence of violation.
+```
+
+A realistic `schemas.md` is **100-150 lines**. Each contract is a table, not prose.
 
 ---
 
@@ -375,7 +406,7 @@ Extension modules (Class H) add framework-specific bindings to Class G parent mo
 
 | Concern | Parent module owns | Extension module owns |
 |---|---|---|
-| **Configuration** | All config keys, templates, derivation rules | No configuration.md — points to parent |
+| **Configuration** | All config keys, templates, derivation rules | No configuration.md - points to parent |
 | **API surface** | Parent functions (derive, assemble, etc.) | Hooks, components, framework lifecycle |
 | **Philosophy** | Derivation concepts, template design | Extension pattern explanation |
 | **Data models** | Template structure, token types | React context shape, hook return types |
@@ -384,10 +415,10 @@ Extension modules (Class H) add framework-specific bindings to Class G parent mo
 
 Parent modules (of any class) that support extensions ship their standard `docs/` footprint plus optionally domain-specific docs:
 
-- `docs/api.md` — Parent functions: signatures, parameters, return shapes
-- `docs/configuration.md` — Config keys, templates, derivation rules
-- `docs/template.md` — Template structure and customization (domain-specific)
-- `docs/philosophy.md` — Why templates work this way
+- `docs/api.md` - Parent functions: signatures, parameters, return shapes
+- `docs/configuration.md` - Config keys, templates, derivation rules
+- `docs/template.md` - Template structure and customization (domain-specific)
+- `docs/philosophy.md` - Why templates work this way
 
 The parent README mentions extensions in a single line: "Want React integration? Check out the extension module: `{parent-name}-ext-react-native-web`."
 
@@ -395,8 +426,8 @@ The parent README mentions extensions in a single line: "Want React integration?
 
 Extension modules ship a minimal `docs/` folder:
 
-- `docs/api.md` — Hooks and components: `useTheme()`, `useStyles()`, `ThemeProvider` props
-- `docs/philosophy.md` — Extension pattern: how extension imports parent, why this pattern keeps the parent universal
+- `docs/api.md` - Hooks and components: `useTheme()`, `useStyles()`, `ThemeProvider` props
+- `docs/philosophy.md` - Extension pattern: how extension imports parent, why this pattern keeps the parent universal
 
 **No `docs/configuration.md`.** Configuration lives in the parent module. The extension receives config through the parent's loader or at runtime through props/context.
 
@@ -429,12 +460,12 @@ Extension modules consume parent modules. This is the extension pattern (differe
 
 ## Writing Style for docs/
 
-Same human-first approach as READMEs:
+Reference mode, third-person, per [`documentation-standards.md`](../dev/documentation-standards.md). The full voice doctrine, banned-vocabulary list, and review checklist live there; this section lists only the `docs/`-specific habits.
 
-1. **Lead with the use case.** "You need this when..."
-2. **Progressive examples.** Start simple, add complexity.
-3. **Explain the why.** "We use composite keys because..."
-4. **Cross-link liberally.** Inside each module's `docs/` write things like `` See [configuration](configuration.md) for details. `` so readers can hop between files.
+1. **Lead with the use case, stated about the module.** "This page applies when a flow needs...", not "You need this when...".
+2. **Progressive examples.** Start simple, add complexity. Examples use real, specific values.
+3. **Explain the why.** State the design stance and back it with its mechanism in the same breath.
+4. **Cross-link liberally.** Inside each module's `docs/` write `` See [configuration](configuration.md) for details `` so readers hop between files.
 5. **Tables for reference.** Quick lookup tables for common scenarios.
 
 ---
@@ -462,6 +493,8 @@ For backend-specific configuration, schema, indexes, and TTL behavior, see each 
 ### Class E parent modules
 
 - [ ] Every record field is documented in `docs/data-model.md`
+- [ ] Every validated contract is documented in `docs/schemas.md` (config schema, per-call options, the injected-dependency contract, the response envelope), with the throw-versus-return discipline stated once at the top
+- [ ] `docs/schemas.md` and `docs/data-model.md` are disjoint and cross-link (boundary contracts vs persisted shape)
 - [ ] Design decisions explained (not just what, but why)
 - [ ] Code examples are runnable
 - [ ] `docs/runtime.md` covers **only** the differences between persistent-server and serverless-function runtime shapes. No framework cookbook material (Express middleware, login endpoint code), no cold-start cost numbers, no schema provisioning

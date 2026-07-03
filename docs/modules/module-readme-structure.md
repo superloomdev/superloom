@@ -39,7 +39,7 @@ Each module's documentation is split across three files. Each file has one audie
 
 **The README is the entry point.** It explains *what the module is and why it exists* in plain language. It links into `docs/` for reference detail and to `ROBOTS.md` for AI-specific guidance. It does not contain configuration tables, function signatures, or return shapes. Those belong in `docs/`.
 
-**The `docs/` folder is the reference layer.** Complete, exhaustive, written for someone actively integrating or maintaining the module. Every class ships at least `docs/api.md` and `docs/configuration.md`; deeper classes add more (Class D may add `iam.md`; Class E adds `data-model.md` and optional `runtime.md`; Class F stores add `schema.md` and `cleanup.md`; Class F adapters ship only the universal pair).
+**The `docs/` folder is the reference layer.** Complete, exhaustive, written for someone actively integrating or maintaining the module. Every class ships at least `docs/api.md` and `docs/configuration.md`; deeper classes add more (Class D may add `iam.md`; Class E adds `data-model.md` and optional `runtime.md`; Class F stores add `schema.md` and `cleanup.md`; Class F adapters ship only the universal pair). Any module that ships a `*.validators.js` also adds `docs/schemas.md`, the validated boundary contracts.
 
 **`ROBOTS.md` is the AI surface.** Compact, structured, every exported function with its signature and return shape. See `ROBOTS.md` in each module for the existing convention.
 
@@ -110,6 +110,7 @@ A short list pointing to:
 
 - `docs/api.md` (if present) - full API reference
 - `docs/configuration.md` (if present) - all config keys, environment variables, patterns
+- `docs/schemas.md` (modules with a `*.validators.js`) - validated boundary contracts
 - `docs/data-model.md` (Class E only)
 - [Superloom](https://superloom.dev) - the framework
 
@@ -199,7 +200,7 @@ Every class ships **at minimum** `docs/api.md` and `docs/configuration.md`. Clas
 | Class | Recommended `docs/` files |
 |---|---|
 | **A. Foundation** | `docs/api.md`, `docs/configuration.md` |
-| **G. Extension** | `docs/api.md` (hooks/components), `docs/philosophy.md` (extension pattern). No `configuration.md` — config lives in core |
+| **G. Extension** | `docs/api.md` (hooks/components), `docs/philosophy.md` (extension pattern). No `configuration.md` - config lives in core |
 | **B. Extended utility** | `docs/api.md`, `docs/configuration.md` |
 | **C. Driver** | `docs/api.md`, `docs/configuration.md` |
 | **D. Cloud service** | `docs/api.md`, `docs/configuration.md`, optionally `docs/iam.md` |
@@ -320,11 +321,11 @@ Framework-specific binding for parent module (Class G). The parent module provid
 | **Exports** | Functions (derive, assemble, etc.) | Hooks and components |
 | **Where to use** | Anywhere (Node, browser, RN) | React apps only |
 
-Followed by a brief explanation of the extension pattern: extension imports parent, not the other way around. Extension is boss — it decides when to call the parent, how to cache results, and when to trigger React re-renders.
+Followed by a brief explanation of the extension pattern: extension imports parent, not the other way around. Extension is boss - it decides when to call the parent, how to cache results, and when to trigger React re-renders.
 
 **No Install section.** Extension modules have no `npm install` snippet. They are peer dependencies loaded through the project's loader pattern. The README points to the parent module's install instructions and adds "Also load this extension if using React."
 
-**`docs/` folder:** `docs/api.md` (hooks/components reference), `docs/philosophy.md` (extension pattern explained). No `configuration.md` — configuration lives in the parent module.
+**`docs/` folder:** `docs/api.md` (hooks/components reference), `docs/philosophy.md` (extension pattern explained). No `configuration.md` - configuration lives in the parent module.
 
 **Pilot status:** `js-client-helper-styler-ext-react` is the active Class H pilot.
 

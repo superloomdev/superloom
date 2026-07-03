@@ -110,25 +110,14 @@ let CONFIG;
 
 
 /////////////////////////// Module-Loader START ////////////////////////////////
-
-const loader = function (shared_libs, config) {
+module.exports = function loader (shared_libs, config) {
 
   Lib = shared_libs;
   CONFIG = config;
 
-};
-
-//////////////////////////// Module-Loader END /////////////////////////////////
-
-
-
-///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config) {
-
-  loader(shared_libs, config);
   return ModuleName;
 
-};//////////////////////////// Module Exports END //////////////////////////////
+};//////////////////////////// Module-Loader END /////////////////////////////////
 
 
 
@@ -154,6 +143,8 @@ const ModuleName = {
 };////////////////////////////Public Functions END///////////////////////////////
 ```
 
+In **helper modules** the loader and the export are **one merged function** under the `Module-Loader` banner - a named `module.exports = function loader (...)` - with no separate `Module Exports` section; splitting them adds a banner and an indirection without adding information. **Application modules** (entity controllers, services, models) keep the separate `Module Exports` section shown in [`entity-creation-guide-js.md`](../server/entity-creation-guide-js.md), because their loader wires `Lib`/`CONFIG`/`ERRORS` while the export returns a separately-declared module object.
+
 ---
 
 ## Section Header Hierarchy
@@ -162,7 +153,7 @@ Three levels of section separators signal different granularity. Use them from c
 
 | Level | Marker | Purpose |
 |---|---|---|
-| **1** | `/////////////////////////// [Name] START /////////////////////` | Major module sections: `Module-Loader`, `Module Exports`, `createInterface`, `Public Functions`, `Private Functions` |
+| **1** | `/////////////////////////// [Name] START /////////////////////` | Major module sections: `Module-Loader`, `createInterface`, `Public Functions`, `Private Functions` (+ `Module Exports` in application modules) |
 | **2** | `// ~~~~~~~~~~~~~~~~~~~~ [Name] ~~~~~~~~~~~~~~~~~~~~` + one-line purpose | Subsections inside a public/private function object, grouped by responsibility |
 | **3** | `// [comment]` | Inline comment above a logical block inside a function |
 
@@ -343,6 +334,14 @@ const createInterface = function (Lib, CONFIG, ERRORS) { // eslint-disable-line 
 
 Never use `void CONFIG;` or `void ERRORS;` as a workaround for this case.
 
+### Public Data Field Naming
+
+Every field in a public return shape, and every key in a public options/params object, is `snake_case` - regardless of what the underlying driver or SDK calls it.
+
+- Vendor wrappers normalize driver fields at the boundary: mysql's `affectedRows` becomes `affected_rows`, S3 metadata becomes `content_type`, SQS returns `message_id`.
+- Input parameter keys follow the same rule (`keys_by_table`, not `keysByTable`).
+- Leaking driver `camelCase` (`matchedCount`, `deletedCount`) couples consumers to the vendor's naming and breaks cross-backend uniformity - the same reason vendor wording is banned from error strings.
+
 ---
 
 ## Function Parameter Conventions
@@ -453,7 +452,8 @@ Lib.Debug.performanceAuditLog('End', 'ServiceName Operation - ' + identifier, ti
 
 **Rules:**
 
-- Use `Lib.Debug.performanceAuditLog(action, routine, time_start)` - it calculates `elapsed_ms` and includes memory usage
+- Use `Lib.Debug.performanceAuditLog(action, routine, reference_time)` - it calculates `elapsed_ms` and includes memory usage. The signature takes **exactly three arguments**; there is no fourth
+- **One call per operation, after it completes, with `action: 'End'`.** Do not emit `'Start'`/`'End'` pairs - the reference time carries the start, so a second log line adds noise without adding signal
 - For instance-tracked modules, prefer `instance['time_ms']` over `time_start` so the log shows elapsed time since the request began (request-level timeline)
 - Client/SDK initialization must log performance - import + connect time matters
 - Error logs must include performance data - duration on failure helps diagnose timeouts

@@ -12,6 +12,7 @@ The framework recognizes **three** error categories. Each has exactly one correc
 - [Service-Layer Translation Is Mandatory](#service-layer-translation-is-mandatory)
 - [Domain Validation (Model Layer)](#domain-validation-model-layer)
 - [Return Object Shapes (Quick Reference)](#return-object-shapes-quick-reference)
+- [Pure Engines: Modules With No Operational Errors](#pure-engines-modules-with-no-operational-errors)
 - [Type String Naming](#type-string-naming)
 - [Programmer Error Message Format](#programmer-error-message-format)
 - [Scope](#scope)
@@ -54,7 +55,7 @@ The test cleanly separates *"your code is broken"* (throw) from *"the world is b
 
 ### Worked Example: Walking Through `verify`'s Errors
 
-Applying the heuristic to every error the `js-server-helper-verify` module can produce:
+Applying the heuristic to every error the `helper-verify` module can produce:
 
 | Error | Cause | Could correct caller still hit this? | Disposal |
 |---|---|---|---|
@@ -310,7 +311,7 @@ return {
 };
 
 // Helper module - programmer error
-throw new TypeError('[js-server-helper-verify] options.scope is required');
+throw new TypeError('[helper-verify] options.scope is required');
 
 // Service - domain error from entity catalog
 return { success: false, error: Lib.User.errors.EMAIL_ALREADY_EXISTS };
@@ -320,6 +321,21 @@ return Lib.Functions.errorResponse(result.error, result.error.status);
 ```
 
 The envelope pattern is deliberate: every function that can fail returns `{ success: true, data }` or `{ success: false, error }`. The caller checks `result.success` before accessing data. This is more verbose than throwing, but it makes the error path explicit. You cannot accidentally ignore a failure because you forgot a `try/catch`.
+
+---
+
+## Pure Engines: Modules With No Operational Errors
+
+The envelope exists for **operational** errors - expected outcomes of a working system (storage down, cooldown active) that correct caller code must branch on. A **pure engine** - a module that performs synchronous derivation only, with no I/O, no network, no external state (`helper-styler` is the reference) - has an **empty operational set**. Every failure it can produce is, by definition, the caller passing wrong data: a programmer error.
+
+For such a module the house rule resolves cleanly without an envelope:
+
+- **Every failure throws.** There is no `{ success, error }` plumbing, because there is nothing operational to report.
+- **Thrown messages follow the [programmer-error format](#programmer-error-message-format)** - alias prefix, field path, expected shape.
+- The module still ships a frozen catalog if it throws from named error definitions; the catalog feeds the thrown messages instead of envelopes.
+- The exception is defined by the module's nature, not claimed for convenience: the moment a module performs I/O or holds external state, it has operational errors and the envelope rule applies in full.
+
+**`Utils.error` is not an error model.** `helper-utils` exposes `Utils.error(...)` as a convenience constructor for consumers building ad-hoc `Error` objects. It is a utility function, not a sanctioned module-catalog shape - module catalogs use `{ type, message }` and nothing else.
 
 ---
 
@@ -333,7 +349,7 @@ The `type` field of a catalog error is the stable identifier that service-layer 
 
 A mechanical rule like "always prefix with the module name" produces types that look authoritative but are often misleading:
 
-- `POSTGRES_DATABASE_QUERY_FAILED`. The module is `js-server-helper-sql-postgres`, but what does "Postgres" mean to a service receiving this? The service doesn't care which vendor threw the error; it cares that a **database query failed**. The vendor is irrelevant to the service and will change when you swap backends.
+- `POSTGRES_DATABASE_QUERY_FAILED`. The module is `helper-sql-postgres`, but what does "Postgres" mean to a service receiving this? The service doesn't care which vendor threw the error; it cares that a **database query failed**. The vendor is irrelevant to the service and will change when you swap backends.
 - `VERIFY_COOLDOWN_ACTIVE`. `VERIFY_` tells you the module, but `COOLDOWN_ACTIVE` already has zero ambiguity. There is no other module that would emit a `COOLDOWN_ACTIVE` type. The prefix adds noise without adding signal.
 
 The real question to ask before naming a type is: **what piece of information is genuinely missing from the name without a prefix?**
@@ -344,7 +360,7 @@ The real question to ask before naming a type is: **what piece of information is
 
 #### Class 1: Functional namespace (infrastructure drivers)
 
-Used by: SQL and NoSQL driver wrappers (`js-server-helper-sql-*`, `js-server-helper-nosql-*`), storage helpers, queue helpers, and any future infrastructure wrapper.
+Used by: SQL and NoSQL driver wrappers (`helper-sql-*`, `helper-nosql-*`), storage helpers, queue helpers, and any future infrastructure wrapper.
 
 These modules describe **what kind of operation failed**, not which module. The prefix is the operation family (`DATABASE_`, `STORAGE_`, `QUEUE_`), not the vendor name. This is correct because:
 
@@ -363,7 +379,7 @@ QUEUE_SEND_FAILED
 
 #### Class 2: Module prefix (domain/behavioral helpers)
 
-Used by: `js-server-helper-verify`, `js-server-helper-auth`, and any future domain helper that manages application-level state (verification codes, auth sessions).
+Used by: `helper-verify`, `helper-auth`, and any future domain helper that manages application-level state (verification codes, auth sessions).
 
 These modules return errors that describe **outcomes of business logic**, not infrastructure failures. `SERVICE_UNAVAILABLE` and `NOT_FOUND` are examples where the name alone is dangerously generic. Multiple domain helpers could emit them, and a log line showing only `type: 'SERVICE_UNAVAILABLE'` tells you nothing about origin.
 
@@ -378,7 +394,7 @@ The decision process for each error in a domain helper:
 **Decision: domain helpers prefix every entry with their module short-name.**
 
 ```javascript
-// js-server-helper-verify  ->  VERIFY_
+// helper-verify  ->  VERIFY_
 VERIFY_SERVICE_UNAVAILABLE
 VERIFY_COOLDOWN_ACTIVE
 VERIFY_NOT_FOUND
@@ -386,7 +402,7 @@ VERIFY_EXPIRED
 VERIFY_MAX_FAILS
 VERIFY_WRONG_VALUE
 
-// js-server-helper-auth  ->  AUTH_
+// helper-auth  ->  AUTH_
 AUTH_SERVICE_UNAVAILABLE
 AUTH_LIMIT_REACHED
 AUTH_INVALID_TOKEN
@@ -402,7 +418,7 @@ Apply the same decision process. Ask: is this module an infrastructure adapter (
 
 ### The Short-Name Rule
 
-The prefix is derived from the module's **short logical name**, not its package name. `js-server-helper-verify` → `VERIFY_`. `js-server-helper-auth` → `AUTH_`. The prefix is always uppercase with a trailing underscore.
+The prefix is derived from the module's **short logical name**, not its package name. `helper-verify` → `VERIFY_`. `helper-auth` → `AUTH_`. The prefix is always uppercase with a trailing underscore.
 
 Use the short logical name (`VERIFY_`, `AUTH_`), not the full package name (`JS_SERVER_HELPER_VERIFY_`). The short form is easier to read in logs and code.
 
@@ -435,15 +451,15 @@ Programmer-error messages have exactly one audience: **a developer reading a sta
 A programmer-error message MUST follow this shape:
 
 ```text
-[<module-short-name>] <field-path> <expected-shape>[. (e.g. <bare-example>)]
+[<module-alias>] <field-path> <expected-shape>[. (e.g. <bare-example>)]
 ```
 
 | Slot | Required | Format | Example |
 |---|---|---|---|
-| **Module prefix** | Yes | `[js-server-helper-<name>]` in square brackets, lowercase, exactly the module's package short-name without any scope | `[js-server-helper-auth]`, `[js-server-helper-http-gateway]` |
+| **Module prefix** | Yes | `[helper-<name>]` in square brackets, lowercase, exactly the module's npm alias short-name (derivation in [`code-formatting-js.md`](code-formatting-js.md#npm-package-aliases)) | `[helper-auth]`, `[helper-http-gateway]` |
 | **Field path** | Yes | Dotted path that names the exact CONFIG key, options key, or argument that is wrong | `CONFIG.Store`, `options.scope`, `createSession options.tenant_id` |
 | **Expected shape** | Yes | Declarative statement of the constraint the value failed to meet. Phrased as "must be …" or "is required …" | `must be a store object implementing the store contract`, `is required (non-empty string)`, `must be a positive integer` |
-| **Concrete example** | Optional | One bare example inside `(e.g. …)`. Used only when the expected shape needs disambiguation (e.g., showing which package provides the object) | `(e.g. the object from require("js-server-helper-auth-store-sqlite"))` |
+| **Concrete example** | Optional | One bare example inside `(e.g. …)`. Used only when the expected shape needs disambiguation (e.g., showing which package provides the object) | `(e.g. the object from require("helper-auth-store-sqlite"))` |
 
 ### Hard Prohibitions
 
@@ -451,7 +467,7 @@ The following MUST NOT appear in any programmer-error message string:
 
 1. **No URLs of any kind.** No `https://`, no GitHub links, no npm registry URLs, no documentation links. The stack trace shows the file and line - the developer can read the source. URLs in error strings become stale, leak deployment details, and clutter logs.
 
-2. **No scoped package names.** Use the bare short-name (`js-server-helper-auth-store-sqlite`), not the scoped publish name (`@superloomdev/js-server-helper-auth-store-sqlite`). The scope is a registry concern, not a contract concern, and it changes when the project is forked or re-scoped. The bare name is stable.
+2. **No scoped or bare package names.** Use the alias short-name (`helper-auth-store-sqlite`), not the scoped publish name (`@superloomdev/js-server-helper-auth-store-sqlite`) and not the bare package name (`js-server-helper-auth-store-sqlite`). The scope is a registry concern, not a contract concern, and it changes when the project is forked or re-scoped. The alias is the stable name consumers actually `require()`.
 
 3. **No multi-line concatenation for prose.** Long messages stitched together with `+ ' ... ' +` across multiple lines are a smell. If the message is too long for a single line, the message is too long. Trim it.
 
@@ -459,16 +475,16 @@ The following MUST NOT appear in any programmer-error message string:
 
 5. **No "click here" or "see docs" pointers.** If a constraint genuinely needs documentation context, the right answer is a tighter `expected-shape` slot, not a URL. Documentation lives in `docs/` and `README.md` - not in stack traces.
 
-6. **No driver wording or vendor names.** A `TypeError` raised by `js-server-helper-sql-postgres` says `[js-server-helper-sql-postgres]`, not `[Postgres]` or `[pg]`. (Note: this overlaps with the wrapper-purity rule for envelope errors - both channels keep vendor wording out of consumer-visible strings.)
+6. **No driver wording or vendor names.** A `TypeError` raised by `helper-sql-postgres` says `[helper-sql-postgres]`, not `[Postgres]` or `[pg]`. (Note: this overlaps with the wrapper-purity rule for envelope errors - both channels keep vendor wording out of consumer-visible strings.)
 
 ### Correct Examples
 
 ```javascript
-throw new Error('[js-server-helper-auth] CONFIG.Store is required (a store object implementing the store contract)');
-throw new Error('[js-server-helper-auth] CONFIG.JWT.signing_key must be a string of at least 32 chars when ENABLE_JWT is true');
-throw new TypeError('[js-server-helper-auth] createSession options.tenant_id must be a non-empty string');
+throw new Error('[helper-auth] CONFIG.Store is required (a store object implementing the store contract)');
+throw new Error('[helper-auth] CONFIG.JWT.signing_key must be a string of at least 32 chars when ENABLE_JWT is true');
+throw new TypeError('[helper-auth] createSession options.tenant_id must be a non-empty string');
 
-throw new Error('[js-server-helper-http-gateway] CONFIG.Adapter is required (an adapter object implementing the adapter contract)');
+throw new Error('[helper-http-gateway] CONFIG.Adapter is required (an adapter object implementing the adapter contract)');
 ```
 
 ### Incorrect Examples
@@ -493,7 +509,7 @@ throw new Error('[Postgres] connection_string is required');
 
 ### Why These Rules Exist
 
-1. **The module prefix lets a developer grep logs.** A stack trace shows the file path, but a Sentry/CloudWatch search box wants a substring. `[js-server-helper-auth]` is unambiguous and grep-friendly across the whole codebase.
+1. **The module prefix lets a developer grep logs.** A stack trace shows the file path, but a Sentry/CloudWatch search box wants a substring. `[helper-auth]` is unambiguous and grep-friendly across the whole codebase.
 
 2. **The field path is the entire fix.** Almost every programmer error is "you didn't pass X correctly". Naming X precisely (`CONFIG.JWT.signing_key`, not "the JWT config") points the developer directly at the line they need to change.
 
@@ -501,7 +517,7 @@ throw new Error('[Postgres] connection_string is required');
 
 4. **No URLs because URLs lie.** Today the URL works. Six months from now it 404s, the docs site moved, the project was re-scoped, or the deployment doesn't have internet access. The stack trace is the only thing guaranteed to still be true.
 
-5. **No scoped names because the scope is mutable.** Bare names are how the framework refers to itself in code, in commits, and in directory layout. The publish scope (`@superloomdev`) is one concern of one CI pipeline.
+5. **No scoped or bare names because both are registry/layout concerns.** The alias is how the framework refers to itself in code, docs, and error strings; the publish scope (`@superloomdev`) and the bare package name live in `package.json` and the directory layout only.
 
 ### Scope of This Rule
 

@@ -658,6 +658,8 @@ This shape should not be confused with the main-module singleton. It is a stripp
 >
 > Only **required** methods belong in the contract list. Optional maintenance methods such as `setupNewStore` or `cleanupExpired*` keep their call-time `isFunction` guards. Do not list them in the contract validator.
 >
+> **When an optional method is absent, the guard no-ops with `{ success: true }`** - never a throw, never an error envelope. Absence is a documented backend property (native TTL instead of cron cleanup, operator-provisioned schema instead of `setupNewStore`), not a runtime failure. Callers stay backend-agnostic: a setup script or cron calls the method unconditionally and never branches on which backend is installed. The backend's own `docs/` (schema, cleanup) state what the method does or why it is not needed there.
+>
 > Reference implementations: `js-server-helper-http-gateway` (adapter), `js-server-helper-auth` / `js-server-helper-verify` / `js-server-helper-logger` (store).
 
 ```javascript
@@ -1077,6 +1079,8 @@ module.exports = {
 };
 ```
 
+**Driver-injection key naming.** The config key that receives the loaded driver helper is named by the operation family, not the dialect, wherever the injected contract is family-generic: SQL-backed stores take `lib_sql` (any `helper-sql-*` dialect satisfies it - this is what makes the dialect hot-swappable). NoSQL and cloud backends take the backend-specific key (`lib_mongodb`, `lib_dynamodb`) because those driver APIs are not interchangeable. Never build the driver into the adapter's own `Lib` container - it arrives through config.
+
 #### Adapter Rules
 
 | Rule | Detail |
@@ -1427,7 +1431,7 @@ Most modules follow a consistent file structure:
 |---|---|
 | `index.js` | Public export surface |
 | `[name].js` | Main implementation |
-| `[name].config.js` | Module-specific constants and defaults (optional) |
+| `[name].config.js` | Module-specific constants and defaults (optional). Content rules: [Root and Config File Hygiene](#root-and-config-file-hygiene) |
 | `[name].errors.js` | **Required** - frozen error catalog for operational errors (see [Module Error File Policy](#module-error-file-policy)) |
 | `[name].validators.js` | (Optional) Singleton validators module - see [Singleton Module Pattern](#singleton-module-pattern) |
 | `data/` | (Optional) Static intrinsic reference data shipped with the module - see [Static Data Files](#static-data-files) |
@@ -1435,7 +1439,7 @@ Most modules follow a consistent file structure:
 | `README.md` | Human documentation (badges, usage examples, testing guides) |
 | `ROBOTS.md` | AI agent reference (compact, token-efficient) |
 | `THOUGHTS.md` | Engineering decision journal. Records why the module is designed the way it is. Not published to the package registry. See [THOUGHTS.md convention](module-thoughts-file.md) |
-| `eslint.config.js` | **Required** - ESLint flat config (ESLint v9+). Canonical shape: refer to `js-helper-utils`. See [Linter Configuration](module-publishing.md#linter-configuration) |
+| `eslint.config.js` | **Required** - ESLint flat config (ESLint v9+), **byte-identical across all modules**. Canonical copy: `js-helper-utils`. See [Linter Configuration](module-publishing.md#linter-configuration) |
 | `.npmignore` | **Required** - controls what files are included in the published tarball. Canonical shape: refer to `js-helper-utils`. See [Registry Ignore File](module-publishing.md#registry-ignore-file-npmignore) |
 | `_test/test.js` | Tests using `node --test` and `node:assert/strict` |
 | `_test/loader.js` | Test loader (env reading, dep injection) - required for any module using DI |
@@ -1444,6 +1448,15 @@ Most modules follow a consistent file structure:
 | `_test/docker-compose.yml` | (Service-dependent modules only) emulator definitions |
 | `_test/ops/` | (Service-dependent modules only) testing setup runbook |
 | `provider/` | (Optional) vendor-specific implementations |
+
+### Root and Config File Hygiene
+
+| Surface | Rule |
+|---|---|
+| **Root Markdown** | The root's published Markdown is exactly `README.md` and `ROBOTS.md`. `THOUGHTS.md` is an unpublished engineering journal (excluded from the tarball via `.npmignore`). Every other document lives under `docs/`. No `NOTES.md`, `USAGE.md`, or stray design memo at the root |
+| **Config file content** | When a module ships `[name].config.js`, it holds only the keys the module reads, each with a one-line reason for its default. Worked wiring examples and multi-line recipes live in `docs/configuration.md`, not in the config file |
+| **No dead keys** | A config key that no code reads is deleted, not annotated as "reserved". A key kept for parity states the real reason in one line |
+| **Key kinds are obvious** | Each config key is either an overridable default (a value the project may replace) or a required injection with a `null` placeholder the loader must satisfy (for example `Store: null`) |
 
 ### Module Error File Policy
 
@@ -1457,6 +1470,8 @@ Every module **must** include a `[name].errors.js` file to maintain consistency 
 | **Simple server modules** (crypto, instance) | Empty frozen object (consistency placeholder) |
 | **Core modules** (utils, debug, time) | Exempt - too simple, programmer errors only |
 | **Client modules** | Include if module has operational errors; exempt if purely functional |
+
+Errors files follow the **same file-header rule as every other module file**: the `// Info:` banner comes first, then `'use strict';`. A `/** ... */` block opener is not used - one opening shape for every file in the repo.
 
 **Template for modules with operational errors:**
 ```javascript
@@ -1557,6 +1572,7 @@ External libraries (always wrapped)
 ### Key Rules
 
 - **Helpers** are stateless or factory-instantiated, reusable, and wrap external libraries
+- **Lib keys are alias-derived.** When a module optionally consumes a sibling helper through the shared `Lib` container, the key is the PascalCase form of the sibling's npm alias: `helper-http-gateway` -> `Lib.HttpGateway`, `helper-utils` -> `Lib.Utils`. A module never invents its own key for a sibling, and the optional dependency is documented in its `docs/configuration.md`
 - **Models** are pure and IO-free. Safe to share between server and client
 - **DTOs** use ONE complete shape per entity. Absent keys are not added. No separate create/update shapes
 - **Controllers** are thin adapters - no business logic
