@@ -9,6 +9,7 @@ A reference for how every module in Superloom is shaped: the standard applicatio
 - [Module Types Overview](#module-types-overview)
 - [Application Module Pattern](#application-module-pattern)
 - [Helper Module Pattern (Factory)](#helper-module-pattern-factory)
+  - [Universal Companion Files](#universal-companion-files)
   - [Loader Body](#loader-body)
   - [createInterface](#createinterface)
   - [createInterface Signature Variants](#createinterface-signature-variants)
@@ -143,7 +144,25 @@ Helper modules use **Pattern 2 (Multi-Instance Factory)**. Each loader call retu
 
 > **Pattern 1 (Singleton Config) is legacy** and no longer used in new modules. It is preserved at the bottom of this document for historical reference and downstream projects that still have the shape. Do not use it for new modules.
 
-The canonical shape is a thin `loader` function that delegates to a `createInterface` factory. The loader stays minimal (merge config, build state) and `createInterface` holds all public/private function bodies, where they close over `Lib`, `CONFIG`, and `state` without module-level globals.
+The canonical shape is a thin `loader` function that delegates to a `createInterface` factory. The loader stays minimal (merge config, wire companions, build state) and `createInterface` holds all public/private function bodies, where they close over `Lib`, `CONFIG`, `ERRORS`, `Validators`, and `state` without module-level globals.
+
+### Universal Companion Files
+
+**Every helper module ships all three companion files, even when a file has nothing to put in it yet.** This is a hard rule with no exceptions:
+
+| File | Minimum content when empty | Loader wiring (always present) |
+|---|---|---|
+| `[module].config.js` | `module.exports = {};` | `const CONFIG = Object.assign({}, require('./[module].config'), config \|\| {});` |
+| `[module].errors.js` | `module.exports = Object.freeze({});` | `const ERRORS = require('./[module].errors');` |
+| `[module].validators.js` | Returns a Validators object with a no-op `validateConfig` | `const Validators = require('./[module].validators')(Lib, ERRORS);` |
+
+**Rationale.** Extending a module with its first config key, error, or validator must never require refactoring the loader, the `createInterface` signature, or any call site - only filling in the already-wired file. Uniform signatures across every module also mean a developer or AI assistant scanning any loader sees the identical shape everywhere. An empty frozen object costs nothing at runtime.
+
+**Single-require rule.** The main module file (`[module].js`) is the only file that may `require` the module's companion files and static data files (`data/*.json`). Everything else - validators, parts - receives them by injection from the loader:
+
+- `ERRORS` is required once in `[module].js` and injected into the validators singleton and forwarded to `createInterface` - even when no interface function consumes it yet. Removing the parameter is a consistency violation, not a dead-code cleanup.
+- Static reference data (`data/*.json`) is required once at module scope in `[module].js` and injected wherever needed (validators, parts). No other file requires it directly.
+- `[module].validators.js` never self-requires the error catalog or data files. Node's require cache would make a second require harmless at runtime, but it hides the dependency from the loader's wiring, breaks the single-owner principle, and makes the injection graph unauditable.
 
 ### Loader Body
 
@@ -188,12 +207,21 @@ module.exports = function loader (shared_libs, config) {
     config || {}
   );
 
+  // Error catalog (frozen, owned by the main module)
+  const ERRORS = require('./[module].errors');
+
+  // Validators singleton - Lib, ERRORS, and any static data injected here
+  const Validators = require('./[module].validators')(Lib, ERRORS);
+
+  // Validate config immediately so misconfiguration fails at startup
+  Validators.validateConfig(CONFIG);
+
   // Mutable per-instance state ([resource] lives here)
   const state = {
     [resource]: null
   };
 
-  return createInterface(Lib, CONFIG, state);
+  return createInterface(Lib, CONFIG, ERRORS, Validators, state);
 
 };/////////////////////////// Module-Loader END /////////////////////////////////
 ```
@@ -205,15 +233,20 @@ module.exports = function loader (shared_libs, config) {
 
 /********************************************************************
 Builds the public interface for one instance. Public and private
-functions close over the provided Lib, CONFIG, and state.
+functions close over the provided Lib, CONFIG, ERRORS, Validators,
+and state.
 
 @param {Object} Lib - Dependency container (Utils, Debug)
 @param {Object} CONFIG - Merged configuration for this instance
+@param {Object} ERRORS - Frozen error catalog (kept in scope even when
+                         only validators consume it today - see
+                         Universal Companion Files)
+@param {Object} Validators - Validators singleton (Lib + ERRORS injected)
 @param {Object} state - Mutable state holder (e.g. resource reference)
 
 @return {Object} - Public interface for this module
 *********************************************************************/
-const createInterface = function (Lib, CONFIG, state) {
+const createInterface = function (Lib, CONFIG, ERRORS, Validators, state) {
 
   ///////////////////////////Public Functions START//////////////////////////////
   const [ModuleName] = {
@@ -258,22 +291,23 @@ const createInterface = function (Lib, CONFIG, state) {
 
 ### createInterface Signature Variants
 
-`createInterface` takes only the parameters the module actually needs. Use the minimal shape that fits - do not add parameters a module does not use.
+**The first four slots are fixed and always present**: every factory module's `createInterface` takes `(Lib, CONFIG, ERRORS, Validators, ...)` regardless of whether every slot is consumed today. Only the trailing slots (`Parts`, `store`/`adapter`/`state`) vary by module shape. This follows directly from [Universal Companion Files](#universal-companion-files) - since every module ships config, errors, and validators, every module wires them.
 
 | Signature | Use when | Reference |
 |---|---|---|
-| `createInterface()` | Foundation module with no peer deps and no config (self-contained utility library) | `js-helper-utils` |
-| `createInterface(CONFIG)` | Foundation module with config but no peer deps (structured logging primitives) | `js-helper-debug` |
-| `createInterface(Lib, CONFIG)` | Stateless helper - uses peer deps and config but holds no per-instance resource | `js-helper-time`, `js-server-helper-crypto`, `js-server-helper-http`, `js-server-helper-instance` |
-| `createInterface(Lib, CONFIG, state)` | Stateful helper - holds a per-instance resource (pool, persistent client, authenticated session) | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
-| `createInterface(Lib, CONFIG, ERRORS)` | Standalone store adapter - owns its own `Lib`, `CONFIG`, and `ERRORS`; returns a ready-to-use store object | `[parent]-store-[backend]` |
-| `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern - Validators singleton + externally-supplied store, no parts | `js-server-helper-verify` |
-| `createInterface(Lib, CONFIG, ERRORS, Parts, adapter)` | Domain helper with parts + externally-supplied adapter, no Validators singleton | _(no current reference - use `js-server-helper-auth` as the closest shape)_ |
-| `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + Validators singleton + decomposed parts (fullest shape) | `js-server-helper-auth` |
+| `createInterface(Lib, CONFIG, ERRORS, Validators)` | Stateless helper - no per-instance resource, no parts, no external dependency | `js-helper-money`, `js-helper-time`, `js-server-helper-crypto`, `js-server-helper-http`, `js-server-helper-instance` |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, state)` | Stateful helper - holds a per-instance resource (pool, persistent client, authenticated session) | `js-server-helper-sql-mysql`, `js-server-helper-nosql-aws-dynamodb` |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, store)` | Domain helper with adapter pattern - externally-supplied store, no parts | `js-server-helper-verify` |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, adapter)` | Domain helper with parts + externally-supplied adapter | _(use `js-server-helper-auth` as the closest shape)_ |
+| `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + decomposed parts (fullest shape) | `js-server-helper-auth` |
 
-> A standalone store adapter builds its own dependencies and owns its own error catalog, so it takes only `(Lib, CONFIG, ERRORS)`. See [Storage Adapter Skeleton](#storage-adapter-skeleton).
+> Standalone store adapters (`[parent]-store-[backend]`) follow the same fixed-slots rule - they own their own `Lib`, `CONFIG`, `ERRORS`, and `Validators`. See [Storage Adapter Skeleton](#storage-adapter-skeleton).
 
-The loader body mirrors the signature: it builds only the parameters it will pass. A stateless helper's loader ends with `return createInterface(Lib, CONFIG);` and never declares a `state` object.
+> **Unused fixed slots are kept, not removed.** When a module has an empty error catalog or a no-op validators file, the parameters stay in the signature. If a trailing parameter is unused, suppress the lint warning with `// eslint-disable-line no-unused-vars` on the `createInterface` line (the `after-used` ESLint setting already ignores unused params that precede a used one). Remove the directive the day the parameter is first consumed. `js-server-helper-crypto` is the reference precedent: its `ERRORS` catalog is empty, forwarded anyway, with a JSDoc note explaining it is kept for cross-module consistency.
+
+> **Legacy minimal shapes are deprecated.** Older modules with `createInterface()`, `createInterface(CONFIG)`, or `createInterface(Lib, CONFIG)` are brought to the fixed-slots shape during their unification pass.
+
+The loader body always builds all four fixed parameters, then any trailing ones the module shape needs.
 
 ### Parameter Casing Convention
 
@@ -295,31 +329,31 @@ This is the same reason `state` is lowercase in simpler stateful modules: `state
 Parameters follow **internal-before-external** ordering. The full ordering rule:
 
 ```
-createInterface(Lib, CONFIG, ERRORS, [Validators,] [Parts,] [store | adapter | state])
+createInterface(Lib, CONFIG, ERRORS, Validators, [Parts,] [store | adapter | state])
 ```
 
-1. **`Lib`** - always first; the shared dependency container, present in almost every module
-2. **`CONFIG`** - always second when present; merged runtime configuration
-3. **`ERRORS`** - always third when present; frozen error catalog
-4. **`Validators`** - fourth when present; internally-built singleton from `[module].validators.js`
+1. **`Lib`** - always first; the shared dependency container
+2. **`CONFIG`** - always second; merged runtime configuration
+3. **`ERRORS`** - always third; frozen error catalog (empty object when the module has no errors yet)
+4. **`Validators`** - always fourth; internally-built singleton from `[module].validators.js` (no-op when the module has nothing to validate yet)
 5. **`Parts`** - fifth when present; internally-built container of `parts/` sub-modules
 6. **`store` / `adapter` / `state`** - always last; the externally-supplied or mutable resource
 
 The rule is: **everything the module built for itself comes before the one thing that was handed to it from outside.** This makes the signature self-documenting - a reader scanning the parameter list sees the module's own infrastructure first and the external dependency at the end.
 
-Modules without all roles stay minimal:
+Only the trailing slots vary:
 
 ```javascript
-// No Parts, no external dependency - just the base three
-createInterface(Lib, CONFIG, ERRORS)
+// No Parts, no external dependency - the four fixed slots
+createInterface(Lib, CONFIG, ERRORS, Validators)
+
+// With per-instance state
+createInterface(Lib, CONFIG, ERRORS, Validators, state)
 
 // With store but no Parts (verify)
 createInterface(Lib, CONFIG, ERRORS, Validators, store)
 
-// With Parts and adapter
-createInterface(Lib, CONFIG, ERRORS, Parts, adapter)
-
-// With Parts, Validators, and store (auth - fullest shape)
+// With Parts and store (auth - fullest shape)
 createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)
 ```
 
@@ -330,7 +364,7 @@ createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)
 |---|---|
 | **Cached adapters at module scope** | `let [AdapterRef] = null;` declared above the loader. A descriptive comment explains each cached reference and why it is shared across instances |
 | **Config defaults inlined in the loader** | Use `require('./[module].config')` as one of the operands of `Object.assign` - no top-level `const CONFIG_DEFAULTS` |
-| **Three-job loader body** | Loader does only three things: build `Lib`, build merged `CONFIG`, build mutable `state`. Then call `createInterface(Lib, CONFIG, state)` and return the result |
+| **Canonical loader body** | Loader does exactly these jobs in order: build `Lib`, build merged `CONFIG`, require `ERRORS`, build `Validators` (injecting `Lib`, `ERRORS`, and any static data), call `Validators.validateConfig(CONFIG)`, build mutable `state` (stateful modules only). Then call `createInterface(Lib, CONFIG, ERRORS, Validators[, state])` and return the result |
 | **Public first, private second** | `createInterface` hosts both objects; public is declared before private |
 | **Level 2 subsections when warranted** | Use `// ~~~~~~~ [Name] ~~~~~~~` + one-line purpose comment when public/private has 5+ functions or 2+ responsibility groups - see [`code-formatting-js.md`](../foundations/code-formatting-js.md) |
 | **Top-down dependency order** | Order functions so the file reads top-to-bottom as a dependency chain. Put the most common caller-facing helper first; declare each function after its dependencies |
@@ -374,6 +408,7 @@ If a part would need to manage its own pool, persistent client, or other lifecyc
   [module].js              Main loader + createInterface
   [module].config.js
   [module].errors.js       Internal error catalog
+  [module].validators.js   Validators singleton (Lib + ERRORS injected)
   parts/
     [name-1].js            Each part is its own factory file
     [name-2].js
@@ -398,7 +433,7 @@ The loader signature is always the same. What differs is what happens inside:
 
 All three variables are declared at module scope and assigned in the loader, regardless of which are consumed today. Unused variables get `// eslint-disable-line no-unused-vars` inline. Remove the directive when a variable is first used.
 
-> **This is different from the module-root singleton shape** (`[module].validators.js`). Module-root singletons inject only `Lib` and take no `CONFIG`/`ERRORS` because validators run before config is validated. Parts always accept all three for call-site uniformity.
+> **This is different from the module-root singleton shape** (`[module].validators.js`). Module-root singletons inject `(Lib, ERRORS[, static data])` and take no `CONFIG` because validators run before config is validated. Parts always accept all three `(shared_libs, config, errors)` for call-site uniformity.
 
 ```javascript
 // Shared dependencies injected by loader (uniform parts signature)
@@ -518,7 +553,7 @@ Some modules are **stateless, pure, and globally shared**. They need no per-inst
 | Subtype | Shape | Examples |
 |---|---|---|
 | **Data-only** | Pure `module.exports = Object.freeze({...})`, no loader, no `let` variables | `[module].errors.js`, `[module].config.js` |
-| **Lib-injected** | `let Lib;` at module scope, loader sets it once, public/private objects at module scope | `[module].validators.js`, `js-server-helper-http-gateway` |
+| **Lib-injected** | `let Lib;` (plus `let ERRORS;` for validators) at module scope, loader sets them once, public/private objects at module scope | `[module].validators.js`, `js-server-helper-http-gateway` |
 | **Loader-initialized** | `let Validators;` at module scope, loader initializes internal singletons and returns the module-scope public object. No external `Lib` or `CONFIG` dependencies | `js-helper-utils` |
 
 ### Canonical Shape: Main Module Singleton
@@ -542,8 +577,8 @@ let Lib;
 // Domain config injected by loader
 let CONFIG;
 
-// Error catalog (frozen)
-const ERRORS = require('./[module].errors'); // eslint-disable-line no-unused-vars
+// Error catalog (frozen, owned by this module - injected into validators)
+const ERRORS = require('./[module].errors');
 
 // Validators module (singleton, set by loader after Lib is available)
 let Validators;
@@ -579,8 +614,8 @@ module.exports = function loader (shared_libs, config) {
     config || {}
   );
 
-  // Initialize validators (needs Lib to be set first)
-  Validators = require('./[module].validators')(Lib);
+  // Initialize validators (needs Lib to be set first; ERRORS and static data injected)
+  Validators = require('./[module].validators')(Lib, ERRORS);
 
   // Validate config immediately so misconfiguration fails at startup
   Validators.validateConfig(CONFIG);
@@ -637,16 +672,17 @@ const _[Name] = {
 };//////////////////////////Private Functions END///////////////////////////////
 ```
 
-Not every module uses every declaration. Omit any that do not apply - but preserve the relative order of those that remain. A module with no validators and no data files would declare only `Lib`, `CONFIG`, and `ERRORS`.
+Every module declares positions 1-4 (`Lib`, `CONFIG`, `ERRORS`, `Validators`) - the companion files always exist per [Universal Companion Files](#universal-companion-files). Only module-specific data declarations (position 5) are omitted when the module ships no static data. The relative order of declarations is always preserved.
 
 ### Canonical Shape: Module-Root Singleton (Validators)
 
 Module-root singletons (`[module].validators.js`) are a **special case** of the singleton pattern. They are singletons, but they do not follow the full main-module singleton shape. Key differences:
 
-- **Accept only `Lib`** - no `CONFIG`, no `ERRORS`. Validators run before config is validated, so they cannot depend on a merged config object.
-- **No config merging in the loader** - the loader is a single assignment (`Lib = shared_libs`) and a return.
-- **No `validateConfig` call** - validators *are* the config validation; they cannot validate themselves.
-- **No error catalog** - validators throw `TypeError` for programmer errors. They do not return operational error envelopes.
+- **Accept `(Lib, ERRORS[, static data])`** - no `CONFIG`. Validators run before config is validated, so they cannot depend on a merged config object. When a per-call validator needs config values, the caller passes `CONFIG` as a per-call argument.
+- **Everything is injected, nothing self-required** - the main module's loader owns the single `require` of the error catalog and any static data files, and injects them here. Validators never `require('./[module].errors')` or `require('./data/*.json')` themselves. See [Universal Companion Files](#universal-companion-files).
+- **No config merging in the loader** - the loader assigns the injected values to module-scope `let` variables and returns.
+- **No `validateConfig` self-call** - validators *are* the config validation; they cannot validate themselves.
+- **Two error styles** - validators throw `TypeError` for programmer errors (bad arguments). Domain-style validators return `false` on success or an array of error objects from the injected `ERRORS` catalog on failure. See [`validation-approach.md`](../foundations/validation-approach.md).
 
 This shape should not be confused with the main-module singleton. It is a stripped-down, single-purpose pattern for config and input validation only.
 
@@ -665,28 +701,32 @@ This shape should not be confused with the main-module singleton. It is a stripp
 ```javascript
 // Info: [What this singleton provides - 1 line]
 //
-// Singleton: Lib is injected once by the loader. No factory needed.
+// Singleton: Lib and ERRORS are injected once by the loader. No factory needed.
 'use strict';
 
 
-// Shared dependency injected by loader
+// Shared dependencies injected by loader - never self-required
 let Lib;
+let ERRORS;
 
 
 /////////////////////////// Module-Loader START ////////////////////////////////
 
 /********************************************************************
-Singleton loader. Injects Lib and returns the module-scope [Name]
-object. Takes only Lib - no CONFIG or ERRORS.
+Singleton loader. Injects Lib and ERRORS and returns the module-scope
+[Name] object. Takes no CONFIG - validators run before config is
+validated; per-call validators receive CONFIG as an argument.
 
 @param {Object} shared_libs - Dependency container (Utils)
+@param {Object} errors - Frozen error catalog owned by the main module
 
 @return {Object} - Public [Name] interface
 *********************************************************************/
-module.exports = function loader (shared_libs) {
+module.exports = function loader (shared_libs, errors) {
 
-  // Inject shared dependency
+  // Inject shared dependencies
   Lib = shared_libs;
+  ERRORS = errors;
 
   return [Name];
 
@@ -744,15 +784,16 @@ Module-scope declarations above the loader follow a fixed sequence. This mirrors
 | Position | Declaration | Mutability | Present in |
 |---|---|---|---|
 | 1 | `let Lib` | Set once by loader | All modules except loader-initialized singletons (e.g. `js-helper-utils`) |
-| 2 | `let CONFIG` | Set once by loader | Main modules with config |
-| 3 | `const ERRORS` | Loaded at require time, never reassigned | Main modules with error catalogs |
-| 4 | `let Validators` | Initialized once by loader (needs Lib) | Main modules with validators |
+| 2 | `let CONFIG` | Set once by loader | All main modules ([Universal Companion Files](#universal-companion-files)) |
+| 3 | `const ERRORS` | Loaded at require time, never reassigned | All main modules ([Universal Companion Files](#universal-companion-files)) |
+| 4 | `let Validators` | Initialized once by loader (needs Lib) | All main modules ([Universal Companion Files](#universal-companion-files)) |
 | 5 | Module-specific data (`const [DATA]`) | Loaded at require time, never reassigned | Only modules that ship static reference data |
 
 **Rules:**
 
-- **Omit positions that do not apply** - a simple Lib-only singleton declares only position 1. A main module without data files declares positions 1-4. The relative order of those that remain is always preserved.
+- **Main modules declare all of positions 1-4** - the companion files always exist. Only sub-module singletons (validators themselves, parts) declare the narrower shapes their own loaders receive.
 - **Common infrastructure before module-specific data** - positions 1-4 are the same across all modules. A developer scanning any singleton knows exactly where to find `Lib`, `CONFIG`, `ERRORS`, and `Validators`. Module-specific items (data files, cached adapter refs, etc.) come last because they vary per module.
+- **Single-require rule** - `const ERRORS` and `const [DATA]` requires appear only in the main module file. Validators and parts receive these values by injection, never by their own `require`.
 - **Each declaration gets a one-line comment above it** - the comment describes what it is and how it is populated (injected by loader, loaded at require time, set by loader after Lib).
 
 ### Section Header Rules for Singletons
@@ -774,13 +815,14 @@ The same 3/2/1 spacing and banner rules from [`code-formatting-js.md`](../founda
 | **`let Lib;` at module scope** | Declared above the loader with a one-line comment. No initializer (`undefined` until the loader runs) |
 | **Loader sets `Lib` once** | `Lib = shared_libs;` is the only assignment. Never reassigned after the first call |
 | **Loader returns the public object directly** | `return [Name];`, not `return createInterface(Lib)` |
-| **Module-root vs parts singleton shape** | Module-root singletons (`[module].validators.js`) inject only `Lib` - they run before config is validated so `CONFIG`/`ERRORS` are not accepted. Parts singletons always accept all three `(shared_libs, config, errors)` for call-site uniformity. Do not conflate the two shapes. |
+| **Module-root vs parts singleton shape** | Module-root singletons (`[module].validators.js`) inject `(Lib, ERRORS[, static data])` - they run before config is validated so `CONFIG` is not accepted (it is passed per-call where needed). Parts singletons always accept all three `(shared_libs, config, errors)` for call-site uniformity. Do not conflate the two shapes. |
 | **No `createInterface`** | Singletons have no factory wrapper. Public and private objects are declared at module scope |
 | **Public before private, both at module scope** | Same order as inside `createInterface` in a factory: public first, private second |
 | **Private helpers use module-scope `Lib`** | `_[Name].helper()` closes over `let Lib` directly, same as factory pattern closes over the `Lib` const inside `createInterface` |
 | **File named `[module].[concern].js`** | Sits at the module root alongside `[module].config.js` and `[module].errors.js` |
 | **Module-root singletons live at module root** | `[module].validators.js`, `[module].errors.js`, `[module].config.js` are module-root files. `parts/` sub-modules may also be singletons when their dependencies are singleton-eligible - see [Part Shape: Singleton or Factory](#part-shape-singleton-or-factory) |
 | **Not part of the main module** | `[module].validators.js` is a separate file. Not inlined into `[module].js` or tucked into `_Auth`/`_Verify`. The main module's loader calls it and passes `Validators` in |
+| **Never self-require companions or data** | Validators receive `ERRORS` and static data by injection from the main module's loader. Only `[module].js` requires `[module].errors.js` and `data/*.json` - see [Universal Companion Files](#universal-companion-files) |
 
 ### Standard Files Using This Pattern
 
@@ -788,7 +830,7 @@ The same 3/2/1 spacing and banner rules from [`code-formatting-js.md`](../founda
 |---|---|---|
 | `[module].errors.js` | Data-only | Pure `Object.freeze({...})`, no loader |
 | `[module].config.js` | Data-only | Pure `Object.assign({}, defaults)` export, no loader |
-| `[module].validators.js` | Lib-injected | Config + options validators; `Lib.Utils` for type checks |
+| `[module].validators.js` | Lib-injected | Config + options validators; `Lib.Utils` for type checks; `ERRORS` and static data injected by the main module's loader |
 
 ### Singleton Reference Example
 
@@ -878,12 +920,12 @@ module.exports = function loader (shared_libs, config) {
   // Load own error catalog (not from parent)
   const ERRORS = require('./store.errors');
 
-  // Validate at construction
-  const Validators = require('./store.validators')(Lib);
+  // Validate at construction (ERRORS injected - never self-required by validators)
+  const Validators = require('./store.validators')(Lib, ERRORS);
   Validators.validateConfig(CONFIG);
 
   // Return ready-to-use store
-  return createInterface(Lib, CONFIG, ERRORS);
+  return createInterface(Lib, CONFIG, ERRORS, Validators);
 };
 ```
 
@@ -1002,14 +1044,14 @@ module.exports = function loader (config) {
   // Own frozen error catalog
   const ERRORS = require('./store.errors');
 
-  // Load the validators singleton and inject Lib
-  const Validators = require('./store.validators')(Lib);
+  // Load the validators singleton and inject Lib + ERRORS
+  const Validators = require('./store.validators')(Lib, ERRORS);
 
   // Validate config - throws on misconfiguration
   Validators.validateConfig(config);
 
   // Build the public Store interface
-  return createInterface(Lib, config, ERRORS);
+  return createInterface(Lib, config, ERRORS, Validators);
 
 };/////////////////////////// Module-Loader END /////////////////////////////////
 
@@ -1019,15 +1061,16 @@ module.exports = function loader (config) {
 
 /********************************************************************
 Builds the public Store interface. All functions close over
-Lib, config, and ERRORS.
+Lib, config, ERRORS, and Validators.
 
 @param {Object} Lib    - Dependency container
 @param {Object} config - Adapter configuration (validated)
 @param {Object} ERRORS - Frozen error catalog
+@param {Object} Validators - Validators singleton (Lib + ERRORS injected)
 
 @return {Object} - Store interface
 *********************************************************************/
-const createInterface = function (Lib, config, ERRORS) {
+const createInterface = function (Lib, config, ERRORS, Validators) {
 
   //////////////////////////// Public Functions START //////////////////////////
   const Store = {
@@ -1431,9 +1474,9 @@ Most modules follow a consistent file structure:
 |---|---|
 | `index.js` | Public export surface |
 | `[name].js` | Main implementation |
-| `[name].config.js` | Module-specific constants and defaults (optional). Content rules: [Root and Config File Hygiene](#root-and-config-file-hygiene) |
-| `[name].errors.js` | **Required** - frozen error catalog for operational errors (see [Module Error File Policy](#module-error-file-policy)) |
-| `[name].validators.js` | (Optional) Singleton validators module - see [Singleton Module Pattern](#singleton-module-pattern) |
+| `[name].config.js` | **Required** - module-specific constants and defaults; `module.exports = {};` when the module has no config keys yet (see [Universal Companion Files](#universal-companion-files)). Content rules: [Root and Config File Hygiene](#root-and-config-file-hygiene) |
+| `[name].errors.js` | **Required** - frozen error catalog for operational errors; empty frozen object when the module has none yet (see [Module Error File Policy](#module-error-file-policy)) |
+| `[name].validators.js` | **Required** - singleton validators module; no-op `validateConfig` when the module has nothing to validate yet (see [Universal Companion Files](#universal-companion-files) and [Singleton Module Pattern](#singleton-module-pattern)) |
 | `data/` | (Optional) Static intrinsic reference data shipped with the module - see [Static Data Files](#static-data-files) |
 | `package.json` | Module metadata and dependencies |
 | `README.md` | Human documentation (badges, usage examples, testing guides) |
@@ -1468,8 +1511,10 @@ Every module **must** include a `[name].errors.js` file to maintain consistency 
 |---|---|
 | **Complex server modules** (DB, cloud SDKs, HTTP, auth, logger, verify) | Full error catalog with all operational error types |
 | **Simple server modules** (crypto, instance) | Empty frozen object (consistency placeholder) |
-| **Core modules** (utils, debug, time) | Exempt - too simple, programmer errors only |
-| **Client modules** | Include if module has operational errors; exempt if purely functional |
+| **Core modules** (utils, debug, time, money) | Catalog of domain validation errors where present (money); empty frozen object otherwise |
+| **Client modules** | Catalog of operational errors where present; empty frozen object otherwise |
+
+No module is exempt - see [Universal Companion Files](#universal-companion-files). An empty frozen object costs nothing and means the module's first error never requires loader refactoring.
 
 Errors files follow the **same file-header rule as every other module file**: the `// Info:` banner comes first, then `'use strict';`. A `/** ... */` block opener is not used - one opening shape for every file in the repo.
 
@@ -1529,7 +1574,7 @@ Some modules ship with **intrinsic reference data** - facts that are immutable, 
 | Rule | Detail |
 |---|---|
 | **Intrinsic facts only** | Data files contain immutable, framework-neutral facts that ship as part of the module (e.g. `iso_alpha`, `iso_numeric`, `decimals` for a currency). Locale-specific names, country-to-language mappings, project-specific labels, or anything a consuming application might reasonably override do **not** belong here |
-| **Required at module top-level** | `const DATA = require('./data/[name].json');` near the top of `[module].js` or `[module].validators.js`. Never injected through the loader signature - the data is part of the module's identity, not a per-instance dependency |
+| **Required once, in the main module only** | `const DATA = require('./data/[name].json');` at module scope near the top of `[module].js` - and nowhere else. Validators and parts that need the data receive it by injection from the loader (see [Universal Companion Files](#universal-companion-files)). The data is not passed through the *public* loader signature (`(shared_libs, config)`) because it is part of the module's identity, not a per-instance dependency - but internally the main module owns the single require and distributes it |
 | **One concern per file** | Split independent data sets into separate files (`data/currencies.json`, `data/regions.json`) rather than one mega-file. Each file should answer one question |
 | **Lowercase keys, snake_case fields** | Match the JavaScript convention used elsewhere in the framework. Keys are normalized (lowercased) currency / country / locale codes; field names use snake_case |
 | **No code in `data/`** | Pure JSON only. Any transformation logic belongs in the module body or validators, not in the data file |
@@ -1542,7 +1587,7 @@ Some modules ship with **intrinsic reference data** - facts that are immutable, 
 
 **Reference Implementation**
 
-The `js-helper-money` module in `js-helper-modules` ships `data/currencies.json` with ISO codes, English names, symbols, decimal precision, and transactional units for each supported currency. Required inside `money.validators.js` at module load time.
+The `js-helper-money` module in `js-helper-modules` ships `data/currencies.json` with ISO codes, English names, symbols, decimal precision, and transactional units for each supported currency. Required once at module scope in `money.js` and injected into the validators singleton by the loader.
 
 ---
 

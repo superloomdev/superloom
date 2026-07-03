@@ -27,7 +27,7 @@ module-name/
   docs/
     api.md                  # Every exported function: signature, return shape, lifecycle
     configuration.md        # Deep config reference, loader pattern, peer dependencies
-    schemas.md              # Validated boundary contracts (only when a *.validators.js exists)
+    schemas.md              # Validated boundary contracts (only when the validators file enforces real contracts)
     data-model.md           # Record fields, data types, design rationale
     runtime.md              # Persistent-server vs serverless-function runtime differences
 ```
@@ -85,7 +85,7 @@ Explain why things are the way they are:
 
 ### schemas.md
 
-**Purpose:** Document every validated contract at the module boundary: what a caller must pass, what an injected dependency (a store, an adapter) must provide, and what comes back. This is the home for everything `[module].validators.js` enforces. Ships only when the module has a validators file.
+**Purpose:** Document every validated contract at the module boundary: what a caller must pass, what an injected dependency (a store, an adapter) must provide, and what comes back. This is the home for everything `[module].validators.js` enforces. Every module ships a validators file (see `module-structure-js.md` - Universal Companion Files), but `schemas.md` ships only when that file enforces real contracts - a no-op validators file needs no schemas page.
 
 **Disjoint from data-model.md.** `schemas.md` documents the boundary contracts (call inputs, the injected-dependency contract, the response envelope). `data-model.md` documents the persisted record shape. The two cross-link and never overlap.
 

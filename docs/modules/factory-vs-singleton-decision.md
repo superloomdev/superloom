@@ -66,19 +66,24 @@ const tenantBAuth = createAuthModule({ store: tenantBStore });
 ```javascript
 module.exports = function loader (shared_libs, config) {
   const Lib = { Utils: shared_libs.Utils };
-  const CONFIG = Object.assign({}, defaults, config);
-  
-  return createInterface(Lib, CONFIG);
+  const CONFIG = Object.assign({}, require('./[module].config'), config || {});
+  const ERRORS = require('./[module].errors');
+  const Validators = require('./[module].validators')(Lib, ERRORS);
+  Validators.validateConfig(CONFIG);
+
+  return createInterface(Lib, CONFIG, ERRORS, Validators);
 };
 
-const createInterface = function (Lib, CONFIG) {
+const createInterface = function (Lib, CONFIG, ERRORS, Validators) {
   return {
     methodName: function (params) {
-      // Functions close over Lib and CONFIG
+      // Functions close over Lib, CONFIG, ERRORS, and Validators
     }
   };
 };
 ```
+
+See [Universal Companion Files](module-structure-js#universal-companion-files) - the four fixed slots (`Lib`, `CONFIG`, `ERRORS`, `Validators`) are always wired, even when a companion file is empty today.
 
 ---
 

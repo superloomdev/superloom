@@ -848,11 +848,14 @@ module.exports = function loader (config) {
 
 **Example of the solution:**
 ```javascript
-// CORRECT: Factory pattern
+// CORRECT: Factory pattern (fixed-slots shape - see module-structure-js.md)
 module.exports = function loader (shared_libs, config) {
   const Lib = { Utils: shared_libs.Utils };
-  const CONFIG = Object.assign({}, defaults, config);
-  return createInterface(Lib, CONFIG);
+  const CONFIG = Object.assign({}, require('./[module].config'), config || {});
+  const ERRORS = require('./[module].errors');
+  const Validators = require('./[module].validators')(Lib, ERRORS);
+  Validators.validateConfig(CONFIG);
+  return createInterface(Lib, CONFIG, ERRORS, Validators);
 };
 
 // BENEFIT: Each test gets isolated instance

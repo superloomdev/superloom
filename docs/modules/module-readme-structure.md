@@ -110,7 +110,7 @@ A short list pointing to:
 
 - `docs/api.md` (if present) - full API reference
 - `docs/configuration.md` (if present) - all config keys, environment variables, patterns
-- `docs/schemas.md` (modules with a `*.validators.js`) - validated boundary contracts
+- `docs/schemas.md` (modules whose `*.validators.js` enforces real contracts - every module ships the file, but a no-op validators file needs no schemas page) - validated boundary contracts
 - `docs/data-model.md` (Class E only)
 - [Superloom](https://superloom.dev) - the framework
 

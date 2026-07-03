@@ -37,7 +37,7 @@ The classes form a **dependency staircase**: each step adds one more thing the m
 | **D. Cloud service wrapper** | A proprietary cloud service that operators **cannot self-host**. Runs only on the provider or a dedicated emulator (DynamoDB, S3, SQS) | `README-master-template.md` (cloud variant) | `api.md`, `configuration.md`, optional `iam.md` |
 | **E. Feature module with adapters** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class F adapters. Provides a complete business-logic feature, not a primitive | `README-feature-module.md` | `api.md`, `configuration.md`, `schemas.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
 | **F. Dependent adapter** | A Class E parent module. Cannot function on its own; implements the parent's adapter contract for a single backend or runtime. The parent utilizes the adapter - adapter is the instrument, parent is boss. | `README-storage-adapter.md` (store) / `README-master-template.md` (adapter) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
-| **G. Feature module with extensions** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class H extensions. Provides a complete business-logic feature designed for framework integration | `README-feature-with-extensions.md` | `api.md`, `configuration.md`, `schemas.md` (when a `*.validators.js` is present), `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
+| **G. Feature module with extensions** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class H extensions. Provides a complete business-logic feature designed for framework integration | `README-feature-with-extensions.md` | `api.md`, `configuration.md`, `schemas.md` (when the validators file enforces real contracts), `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
 | **H. Extension** | A Class G parent module only. Cannot function on its own; adds framework-specific bindings (React, Vue, Angular) to a Class G parent module. The extension utilizes the parent - extension is boss. | `README-extension.md` | `api.md` (hooks/components), `philosophy.md` (extension pattern). No `configuration.md` - config lives in parent |
 
 *Reading this table:* a Class B module is allowed to use everything Class A is, plus Node built-ins. A Class C module is allowed to use everything Class B is, plus a self-hostable third-party service. And so on. F, G, and H are special cases: they cannot stand alone. Class F has two subtypes: **stores** (data persistence, named `-store-[backend]`) and **adapters** (everything else: runtimes, transports, integrations, named `-adapter-[name]`). Class H has the naming pattern `-ext-[framework]`. Either can use factory or singleton pattern internally - the choice depends on whether per-instance state is needed.
@@ -74,7 +74,7 @@ In the `js-helper-modules` repo, these live under `src/helper-modules-core/` (un
 
 **README extras** (on top of the universal set): none. The categorized function survey lives in `docs/api.md`.
 
-**`docs/`:** `api.md`, `configuration.md` (per the [universal footprint](#universal-documentation-footprint)), plus `schemas.md` when the module ships a `*.validators.js` (for example `money`). The configuration page is short for Class A (no config keys, no environment variables, no peer dependencies) but is still produced for shape consistency.
+**`docs/`:** `api.md`, `configuration.md` (per the [universal footprint](#universal-documentation-footprint)), plus `schemas.md` when the module's `*.validators.js` enforces real contracts (for example `money`). Every module ships a validators file; a no-op one needs no schemas page. The configuration page is short for Class A (no config keys, no environment variables, no peer dependencies) but is still produced for shape consistency.
 
 | Module | Package | Purpose |
 |---|---|---|
@@ -242,7 +242,7 @@ Class G modules provide complete solutions to problem domains (like theming, UI 
 
 **README extras:** "Architecture Overview" showing extension points, "Extensions" subsection listing available Class H packages.
 
-**`docs/`:** `api.md`, `configuration.md`, `schemas.md` (when a `*.validators.js` is present), `data-model.md`, optional `runtime.md`. Extension details live in each Class H package.
+**`docs/`:** `api.md`, `configuration.md`, `schemas.md` (when the validators file enforces real contracts), `data-model.md`, optional `runtime.md`. Extension details live in each Class H package.
 
 | Module | Package | Purpose | Extensions Available |
 |---|---|---|---|
