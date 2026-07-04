@@ -271,6 +271,20 @@ When renaming an entire module, also check **other modules' README and ROBOTS** 
 
 ---
 
+## Signature Drift Issues
+
+### Underscore-prefixed createInterface slots instead of canonical names
+
+**Symptom:** After a unification pass, `createInterface` reads `function (Lib, _CONFIG, _ERRORS, _Validators)` - the underscore prefix silences ESLint's `no-unused-vars` (via `argsIgnorePattern: '^_'`) but breaks the grep-identical fixed-slots signature that [Module Structure](../modules/module-structure-js) mandates.
+
+**Cause:** The module's `createInterface` does not consume every fixed slot, ESLint flags the unused trailing params, and the agent reaches for the underscore escape hatch the lint config appears to bless - without checking the skeleton. The rule was already written ("Unused fixed slots are kept, not removed" in Module Structure): keep canonical names and suppress with `// eslint-disable-line no-unused-vars` on the `createInterface` line. The gap was enforcement, not documentation - the skeleton conformance greps checked step comments and companion wiring but not parameter names.
+
+**Fix:** Restore canonical names `(Lib, CONFIG, ERRORS, Validators)`, add `// eslint-disable-line no-unused-vars` on the signature line, and fix the JSDoc `@param` names to match. The `/unify-module` workflow now greps for `createInterface = function \(.*_(CONFIG|ERRORS|Validators)` as a hard-gate violation.
+
+**Lesson:** A lint suppression mechanism that is *permitted* by the ESLint config is not automatically *permitted* by the skeleton. When lint and skeleton appear to conflict, the skeleton doc decides - and it usually already has (search it before inventing a workaround).
+
+---
+
 ## Prevention Checklist
 
 Before completing any migration:
