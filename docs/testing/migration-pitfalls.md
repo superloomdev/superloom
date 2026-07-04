@@ -283,6 +283,16 @@ When renaming an entire module, also check **other modules' README and ROBOTS** 
 
 **Lesson:** A lint suppression mechanism that is *permitted* by the ESLint config is not automatically *permitted* by the skeleton. When lint and skeleton appear to conflict, the skeleton doc decides - and it usually already has (search it before inventing a workaround).
 
+### JSDoc blocks left at old indentation after nesting-depth change
+
+**Symptom:** After a singleton-to-factory restructure, JSDoc `/***` blocks inside `createInterface` sit at 2 spaces while the function declarations they document sit at 4 spaces (e.g. `js-server-helper-storage-aws-s3-url-signer` post-unification). Lint passes; the misalignment survives every gate.
+
+**Cause:** Restructuring moves code one level deeper, then `eslint --fix` is used to correct indentation. ESLint's `indent` rule auto-fixes **code only - it never touches comment indentation**. Comments keep their pre-restructure column. Neither the sweep battery (pattern greps), the skeleton conformance diff (element presence, not whitespace), nor the two-pass checklist (which did not name this checkpoint) caught it.
+
+**Fix:** Re-indent every comment block (JSDoc and single-line) to the exact column of the next non-comment line. Detect with: for each `/***` line, compare its leading-space count against the following declaration line - any mismatch is a violation.
+
+**Lesson:** `eslint --fix` is not a full indentation authority - comments are outside its jurisdiction. Any pass that changes nesting depth (singleton-to-factory especially) must be followed by an explicit comment-indentation check. Never treat "lint 0" as proof the file is correctly indented.
+
 ---
 
 ## Prevention Checklist
@@ -306,6 +316,7 @@ Before completing any migration:
 - [ ] **Documentation cross-references use new module names**
 - [ ] **No `exports` field in single-entrypoint packages** - if `main` already points to the only entry file, `exports` is redundant and should be omitted. Only add `exports` when the package exposes multiple entry points or needs explicit subpath exports
 - [ ] **Two-pass check done after any refactor** touching 3+ functions or renaming variables: logic pass first, then a dedicated formatting read (step comments, 3/2/1 spacing, stale comment text, banner widths, return objects multi-line, private helpers in `_Name` enclosure, `};` combined with END banners)
+- [ ] **Comment indentation matches code** after any nesting-depth change - every JSDoc `/***` block and single-line comment sits at the exact column of the next non-comment line. `eslint --fix` does NOT fix comment indentation; check manually or via the leading-space comparison in [JSDoc blocks left at old indentation](#jsdoc-blocks-left-at-old-indentation-after-nesting-depth-change)
 - [ ] **Skeleton conformance diff done** - the module's entry file compared element by element against its class's skeleton section in `module-structure-js.md` (loader statement groups + step comments, companion-file wiring, `createInterface` slots, banners). A fix list, lint, and the sweep battery do not substitute for this
 
 ## Further Reading
