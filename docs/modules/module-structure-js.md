@@ -989,7 +989,7 @@ The parent never instantiates the store; it receives it already configured from 
 
 ### Storage Adapter Skeleton
 
-Storage adapters (`-store-[backend]`) are **fully independent modules**. They own their own `Lib`, `CONFIG`, and `ERRORS`, and return a ready-to-use store object.
+Storage adapters (`-store-[backend]`) use the **same factory shape as every other helper module**: the loader takes `(shared_libs, config)`, picks its dependencies from the injected container by reference, and returns a ready-to-use store object. The adapter owns its own `CONFIG`, `ERRORS`, and `Validators` (companion files), but **never constructs its own `Lib`** - dependency injection is universal. One shared `Utils`/`Debug` instance serves the whole application; constructing duplicates inside an adapter loader wastes memory, breaks mock injection in tests, and creates a signature exception.
 
 #### Adapter File Structure
 
@@ -1011,8 +1011,9 @@ Storage adapters (`-store-[backend]`) are **fully independent modules**. They ow
 // Info: [Backend] store adapter for [parent-module].
 // Implements the [N]-method store contract.
 //
-// The adapter owns its own Lib, CONFIG, and ERRORS. Returns a ready-to-use
-// store object that the parent consumes via CONFIG.Store.
+// Standard factory shape: receives shared_libs, owns its own CONFIG, ERRORS,
+// and Validators. Returns a ready-to-use store object that the parent
+// consumes via CONFIG.Store.
 //
 // Store contract:
 //   - method1(instance, ...) -> { success, error }
@@ -1026,16 +1027,24 @@ Storage adapters (`-store-[backend]`) are **fully independent modules**. They ow
 /////////////////////////// Module-Loader START ////////////////////////////////
 
 /********************************************************************
-Thin loader. Builds own Lib and ERRORS from peer dependencies,
-validates config via the Validators singleton, then delegates to
-createInterface. Each call returns an independent Store instance.
+Thin loader. Picks dependencies from the injected container, merges
+config over defaults, validates config via the Validators singleton,
+then delegates to createInterface. Each call returns an independent
+Store instance.
 
+@param {Object} shared_libs - Dependency container (Utils, Debug)
 @param {Object} config - Overrides merged over adapter config defaults
-                         ({ table_name, lib_dynamodb, LOG_LEVEL, ... } - backend-specific)
+                         ({ table_name, lib_dynamodb, ... } - backend-specific)
 
 @return {Object} - Store interface (contract methods + optional setupNewStore)
 *********************************************************************/
-module.exports = function loader (config) {
+module.exports = function loader (shared_libs, config) {
+
+  // Dependencies for this instance - by reference from the shared container
+  const Lib = {
+    Utils: shared_libs.Utils,
+    Debug: shared_libs.Debug
+  };
 
   // Merge overrides over adapter config defaults
   const CONFIG = Object.assign(
@@ -1043,11 +1052,6 @@ module.exports = function loader (config) {
     require('./store.config'),
     config || {}
   );
-
-  // Build own Lib container from aliased peer dependencies
-  const Lib = {};
-  Lib.Utils = require('helper-utils')(Lib, {});
-  Lib.Debug = require('helper-debug')(Lib, { LOG_LEVEL: CONFIG.LOG_LEVEL });
 
   // Own frozen error catalog
   const ERRORS = require('./store.errors');
@@ -1125,8 +1129,7 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators) {
 'use strict';
 
 module.exports = {
-  [STORE_NAME]: null,   // Required - backend storage target (table/collection name)
-  LOG_LEVEL: 'error',   // Verbosity of the adapter's internal Debug instance
+  [STORE_NAME]: null   // Required - backend storage target (table/collection name)
   // ... other backend-specific keys, with safe defaults where applicable
 };
 ```
@@ -1137,24 +1140,24 @@ module.exports = {
 
 | Rule | Detail |
 |---|---|
-| **Own Lib** | Build own `Lib` from aliased peer dependencies inside the loader (`require('helper-utils')(Lib, {})`); never receive `shared_libs` from the caller. The alias resolves because the adapter's own `package.json` maps it to the scope via npm alias syntax (`"helper-utils": "npm:@superloomdev/js-helper-utils@^1.0.0"`) |
+| **Injected Lib** | The loader takes `(shared_libs, config)` like every other factory module and picks its dependencies by reference (`Utils`, `Debug`). Constructing `Lib` inside the loader (`require('helper-utils')(Lib, {})`) is a violation: it duplicates instances, breaks mock injection, and creates a signature exception. Framework helpers therefore do not appear in the adapter's `peerDependencies` - the application supplies them through the container |
 | **Own CONFIG** | Merge `config` over `require('./store.config')` defaults; pass the merged `CONFIG` forward, never the raw `config` |
 | **Own ERRORS** | Load from `store.errors.js`; never receive from parent |
 | **Own Validators** | Load from `store.validators.js` with `(Lib, ERRORS)` injected; call `Validators.validateConfig(CONFIG)` in the loader. Inline `if`/`throw` validation in the loader is a violation |
-| **`LOG_LEVEL` is config, never hardcoded** | The internal `Lib.Debug` instance takes its level from `CONFIG.LOG_LEVEL` (default `'error'` in `store.config.js`). A hardcoded `{ LOG_LEVEL: 'error' }` literal in the loader is a violation: it silences the adapter permanently and the operator cannot raise verbosity |
+| **Log level is the caller's concern** | The adapter uses the shared `Lib.Debug` instance; verbosity is set once by the application when it builds the container. Adapters never instantiate their own Debug and never carry a `LOG_LEVEL` config key |
 | **Ready-to-use return** | Return store object directly, not a factory |
 | **Parent receives via CONFIG.Store** | Parent passes store object in config, not a factory |
 | **Implements store contract** | Same method set across all sibling adapters |
 | **`Lib.Utils` for type checks** | No inline `typeof`; use `Lib.Utils.isString`, etc. |
 | **Public before private** | `Store` declared before `_Store` |
 | **Driver errors -> SERVICE_UNAVAILABLE** | Log via `Lib.Debug.debug`, return `ERRORS.SERVICE_UNAVAILABLE` |
-| **Loader step comments** | Every statement group in the loader carries its one-line step comment, exactly as in the factory skeleton (Merge overrides / Build own Lib / Error catalog / Validators / Validate config / Build interface). A loader without step comments fails the two-pass check |
+| **Loader step comments** | Every statement group in the loader carries its one-line step comment, exactly as in the factory skeleton (Dependencies / Merge overrides / Error catalog / Validators / Validate config / Build interface). A loader without step comments fails the two-pass check |
 
 #### Parent Usage Pattern
 
 ```javascript
-// Application loader - the store loader takes only config (it builds its own Lib)
-const Store = require('@superloomdev/[parent]-store-[backend]')({
+// Application loader - the store loader takes (Lib, config) like every module
+const Store = require('@superloomdev/[parent]-store-[backend]')(Lib, {
   // adapter-specific config keys
 });
 
@@ -1163,20 +1166,20 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, {
 });
 ```
 
-**Reference implementations:** `js-server-helper-distinct-queue-store-dynamodb`, `js-server-helper-distinct-queue-store-mongodb`.
+**Reference implementations:** `js-server-helper-distinct-queue-store-dynamodb`, `js-server-helper-distinct-queue-store-mongodb` (already on the injected-Lib shape).
 
 ### Adapter Skeleton
 
-This skeleton applies to any Class F adapter (`-adapter-[name]`): transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type. Adapters follow the **same fully-independent shape as storage adapters**. Only three things differ: the entry-point name (`adapter.js` instead of `store.js`), the contract they implement (the parent's adapter contract instead of the store contract), and the parent config slot (`CONFIG.Adapter` instead of `CONFIG.Store`).
+This skeleton applies to any Class F adapter (`-adapter-[name]`): transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type. Adapters follow the **same injected-Lib factory shape as storage adapters** (and as every other helper module). Only three things differ: the entry-point name (`adapter.js` instead of `store.js`), the contract they implement (the parent's adapter contract instead of the store contract), and the parent config slot (`CONFIG.Adapter` instead of `CONFIG.Store`).
 
-**One shape, not two.** An earlier revision of this page documented a module-scope singleton shape for stateless adapters (`let Lib;` at module scope, `loader(shared_libs)`). That shape is **deprecated**: it predates the fully-independent adapter refactor and the [Universal Companion Files](#universal-companion-files) rule, and it forces the application to thread its `Lib` into a package that should stand alone. Every Class F module - store or adapter, stateful or stateless - uses the fully-independent factory shape below. Statelessness only means `createInterface` closes over nothing beyond its four fixed slots; it does not change the loader, the companion files, or the file layout.
+**One shape, not two.** Two earlier shapes are **deprecated**: (1) the module-scope singleton (`let Lib;` at module scope) - it predates the [Universal Companion Files](#universal-companion-files) rule; (2) the "fully-independent" shape where the loader took only `(config)` and constructed its own `Lib` via `require('helper-utils')(Lib, {})` - it duplicated Utils/Debug instances per adapter, broke mock injection, forced framework helpers into `peerDependencies`, and made the loader signature an exception. Every Class F module - store or adapter, stateful or stateless - uses the injected-Lib factory shape below, identical in signature to the main factory skeleton. Statelessness only means `createInterface` closes over nothing beyond its four fixed slots; it does not change the loader, the companion files, or the file layout.
 
 #### Adapter File Structure
 
 ```
 [module-root]/
   adapter.js               # Main loader + createInterface
-  adapter.config.js        # Adapter-specific config keys (LOG_LEVEL at minimum)
+  adapter.config.js        # Adapter-specific config keys (may be empty)
   adapter.errors.js        # Adapter's own frozen error catalog
   adapter.validators.js    # Singleton validators (Lib + ERRORS injected)
   _test/
@@ -1191,8 +1194,8 @@ This skeleton applies to any Class F adapter (`-adapter-[name]`): transport adap
 // Info: [Runtime] adapter for helper-[parent].
 // [Description of what this adapter normalizes.]
 //
-// Fully independent: builds its own Lib, owns its own CONFIG, ERRORS, and
-// Validators. Returns a ready-to-use adapter object that the parent
+// Standard factory shape: receives shared_libs, owns its own CONFIG, ERRORS,
+// and Validators. Returns a ready-to-use adapter object that the parent
 // consumes via CONFIG.Adapter.
 //
 // Adapter contract:
@@ -1207,16 +1210,24 @@ This skeleton applies to any Class F adapter (`-adapter-[name]`): transport adap
 /////////////////////////// Module-Loader START ////////////////////////////////
 
 /********************************************************************
-Thin loader. Builds own Lib and ERRORS from peer dependencies,
-validates config via the Validators singleton, then delegates to
-createInterface. Each call returns an independent Adapter instance.
+Thin loader. Picks dependencies from the injected container, merges
+config over defaults, validates config via the Validators singleton,
+then delegates to createInterface. Each call returns an independent
+Adapter instance.
 
+@param {Object} shared_libs - Dependency container (Utils, Debug)
 @param {Object} config - Overrides merged over adapter config defaults
-                         ({ LOG_LEVEL, ... } - adapter-specific)
+                         (adapter-specific keys)
 
 @return {Object} - Adapter interface (the parent's adapter contract)
 *********************************************************************/
-module.exports = function loader (config) {
+module.exports = function loader (shared_libs, config) {
+
+  // Dependencies for this instance - by reference from the shared container
+  const Lib = {
+    Utils: shared_libs.Utils,
+    Debug: shared_libs.Debug
+  };
 
   // Merge overrides over adapter config defaults
   const CONFIG = Object.assign(
@@ -1224,11 +1235,6 @@ module.exports = function loader (config) {
     require('./adapter.config'),
     config || {}
   );
-
-  // Build own Lib container from aliased peer dependencies
-  const Lib = {};
-  Lib.Utils = require('helper-utils')(Lib, {});
-  Lib.Debug = require('helper-debug')(Lib, { LOG_LEVEL: CONFIG.LOG_LEVEL });
 
   // Own frozen error catalog
   const ERRORS = require('./adapter.errors');
@@ -1254,16 +1260,15 @@ module.exports = function loader (config) {
 'use strict';
 
 module.exports = {
-  LOG_LEVEL: 'error'   // Verbosity of the adapter's internal Debug instance
-  // ... other adapter-specific keys, with safe defaults where applicable
+  // ... adapter-specific keys, with safe defaults where applicable
 };
 ```
 
-Most transport adapters need no configuration beyond `LOG_LEVEL`. The companion file still exists (Universal Companion Files): a one-key config file is the floor, not an exception.
+Most transport adapters need no configuration at all. The companion file still exists (Universal Companion Files): an empty config file is the floor, not an exception.
 
 #### Adapter Rules
 
-All [Storage Adapter Rules](#adapter-rules) apply verbatim (own Lib from aliased peer dependencies, own CONFIG merged over defaults, own ERRORS, own Validators with `validateConfig` in the loader, `LOG_LEVEL` never hardcoded, ready-to-use return, `Lib.Utils` for type checks, public before private, loader step comments). Adapter-specific additions:
+All [Storage Adapter Rules](#adapter-rules) apply verbatim (injected Lib picked by reference from `shared_libs`, own CONFIG merged over defaults, own ERRORS, own Validators with `validateConfig` in the loader, log level owned by the caller, ready-to-use return, `Lib.Utils` for type checks, public before private, loader step comments). Adapter-specific additions:
 
 | Rule | Detail |
 |---|---|
@@ -1275,15 +1280,15 @@ All [Storage Adapter Rules](#adapter-rules) apply verbatim (own Lib from aliased
 #### Parent Usage Pattern
 
 ```javascript
-// Application loader - the adapter loader takes only config (it builds its own Lib)
-const Adapter = require('@superloomdev/[parent]-adapter-[name]')({});
+// Application loader - the adapter loader takes (Lib, config) like every module
+const Adapter = require('@superloomdev/[parent]-adapter-[name]')(Lib, {});
 
 Lib.[Parent] = require('@superloomdev/[parent]')(Lib, {
   Adapter: Adapter  // Ready-to-use object
 });
 ```
 
-**Reference implementations:** `js-server-helper-http-gateway-adapter-express` and `js-server-helper-http-gateway-adapter-aws-apigateway` (`adapter.js`) in `js-helper-modules`, brought to this skeleton during the unification wave.
+**Reference implementations:** `js-server-helper-http-gateway-adapter-express` and `js-server-helper-http-gateway-adapter-aws-apigateway` (`adapter.js`) in `js-helper-modules` (pending re-pass to the injected-Lib shape; published versions still carry the deprecated self-built Lib).
 
 ### Reference Implementations
 

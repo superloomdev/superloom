@@ -509,7 +509,7 @@ Full-featured business-logic module designed for framework integration. Similar 
 
 Cannot function on its own. Implements a Class E parent module's adapter contract for a single backend or runtime. For the full conceptual definition see [`module-categorization.md` → Class F](module-categorization.md#class-f-dependent-adapter).
 
-Class F has two subtypes: **stores** (`-store-[backend]`, data persistence) and **adapters** (`-adapter-[name]`, everything else: runtimes, transports, integrations). Both subtypes share one fully-independent internal shape (own `Lib`, companion files, factory `createInterface`). See `module-structure-js.md` → "Storage Adapter Skeleton" and "Adapter Skeleton" for the code templates.
+Class F has two subtypes: **stores** (`-store-[backend]`, data persistence) and **adapters** (`-adapter-[name]`, everything else: runtimes, transports, integrations). Both subtypes share the standard injected-Lib factory shape (loader takes `(shared_libs, config)`, companion files, factory `createInterface`). See `module-structure-js.md` → "Storage Adapter Skeleton" and "Adapter Skeleton" for the code templates.
 
 **Tagline templates:**
 

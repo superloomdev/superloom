@@ -612,7 +612,7 @@ Every module documents itself across three files, each with one audience. Full r
 | **C. Driver wrapper** | Wraps third-party DB driver (Postgres, MySQL, MongoDB, SQLite) | (none - Hot-Swappable section serves this) | `api.md`, `configuration.md` |
 | **D. Cloud service wrapper** | Wraps cloud/network SDK (AWS S3, DynamoDB, SQS) | "Credentials & Permissions" | `api.md`, `configuration.md`, optional `iam.md` |
 | **E. Feature module with adapters** | Business logic + pluggable storage or transport (auth, verify, logger, http-gateway) | "Architecture Overview" + "Storage Adapters" or "Transport Adapters" | `api.md`, `configuration.md`, `schemas.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
-| **F. Dependent adapter** | Implements parent's adapter contract. Parent utilizes adapter - adapter is instrument, parent is boss. Two subtypes: **store** (`-store-[backend]`, data/persistence) and **adapter** (`-adapter-[name]`, everything else: transport, integration, future). Both share one fully-independent factory shape - `loader(config)`, own Lib from aliased peer deps, companion config/errors/validators files, `LOG_LEVEL` config key, fixed `createInterface` slots. The earlier singleton adapter shape is deprecated | (none) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
+| **F. Dependent adapter** | Implements parent's adapter contract. Parent utilizes adapter - adapter is instrument, parent is boss. Two subtypes: **store** (`-store-[backend]`, data/persistence) and **adapter** (`-adapter-[name]`, everything else: transport, integration, future). Both share the standard injected-Lib factory shape - `loader(shared_libs, config)`, Lib picked by reference from the injected container, companion config/errors/validators files, fixed `createInterface` slots. Two earlier shapes (singleton + self-built-Lib) are deprecated | (none) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
 | **G. Feature module with extensions** | Business logic + framework extension points (styler, UI state). Extension-ready design for React, Vue, Angular bindings | "Architecture Overview" + "Extensions" | `api.md`, `configuration.md`, `schemas.md` (when the validators file enforces real contracts), `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
 | **H. Extension** | Framework-specific binding for parent module (Class G). Extension utilizes parent - extension is instrument, extension is boss. Cannot stand alone | "Extension vs Parent" | `api.md` (hooks/components), `philosophy.md` (extension pattern). No `configuration.md` - config lives in parent |
 
@@ -726,7 +726,7 @@ Helper modules use one of three patterns. **Singleton** for stateless, pure, sha
 | `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, adapter)` | Domain helper with parts + externally-supplied adapter | _(use `js-server-helper-auth` as the closest shape)_ |
 | `createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)` | Domain helper with adapter pattern + decomposed parts (fullest shape) | `js-server-helper-auth` |
 
-Standalone store adapters follow the same fixed-slots rule (own Lib/CONFIG/ERRORS/Validators). **Unused fixed slots are kept, not removed** (crypto precedent: empty ERRORS forwarded with a JSDoc consistency note); suppress lint only for trailing unused params (`after-used` covers the rest). Legacy minimal shapes (`()`, `(CONFIG)`, `(Lib, CONFIG)`) are deprecated - fixed during each module's unification pass.
+Class F store adapters follow the same fixed-slots rule (Lib/CONFIG/ERRORS/Validators). **Unused fixed slots are kept, not removed** (crypto precedent: empty ERRORS forwarded with a JSDoc consistency note); suppress lint only for trailing unused params (`after-used` covers the rest). Legacy minimal shapes (`()`, `(CONFIG)`, `(Lib, CONFIG)`) are deprecated - fixed during each module's unification pass.
 
 **Canonical loader body (in order):** build `Lib` -> merge `CONFIG` -> require `ERRORS` -> build `Validators` injecting `(Lib, ERRORS[, static data])` -> `Validators.validateConfig(CONFIG)` -> build `state` (stateful only) -> `return createInterface(Lib, CONFIG, ERRORS, Validators[, state])`.
 
@@ -871,9 +871,9 @@ When a helper module's `createInterface` body grows beyond ~500 lines and decomp
 
 ### Adapter Pattern (Multi-Backend Helper Modules)
 
-When a helper module needs interchangeable backends (databases, transports, key/value stores), each backend is a **standalone npm package** that owns its own `Lib`, `CONFIG`, and `ERRORS`. Source: `docs/modules/module-structure-js.md` -> "Adapter Pattern".
+When a helper module needs interchangeable backends (databases, transports, key/value stores), each backend is a **separate npm package** that owns its own `CONFIG`, `ERRORS`, and `Validators` (companion files) but receives `Lib` by reference from the injected container. Source: `docs/modules/module-structure-js.md` -> "Adapter Pattern".
 
-- **Adapter owns its own Lib:** built from injected `shared_libs`, not received from parent
+- **Adapter receives Lib by reference:** `loader(shared_libs, config)` - same signature as every other helper module; picks `Utils`/`Debug` from the shared container
 - **Adapter owns its own Config:** own `store.config.js` with adapter-specific keys
 - **Driver arrives through config, never built into the adapter's Lib.** Key naming: SQL stores take `lib_sql` (any `helper-sql-*` dialect satisfies it - hot-swap); NoSQL/cloud backends take backend-specific keys (`lib_mongodb`, `lib_dynamodb`)
 - **Sibling Lib keys are alias-derived:** a module consuming a sibling helper through `Lib` uses the PascalCase form of the sibling's npm alias (`helper-http-gateway` -> `Lib.HttpGateway`); never invent a key, document the optional dependency in `docs/configuration.md`
@@ -900,8 +900,8 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
 
 | Subtype | Naming | What it adapts | Typical shape |
 |---|---|---|---|
-| **Store** | `[parent]-store-[backend]` | Data persistence | Independent factory - builds own Lib, takes only config, returns ready-to-use store |
-| **Adapter** | `[parent]-adapter-[name]` | Runtimes, transports, integrations | Fully-independent factory (same shape as store) |
+| **Store** | `[parent]-store-[backend]` | Data persistence | Standard factory - `loader(shared_libs, config)`, Lib by reference, returns ready-to-use store |
+| **Adapter** | `[parent]-adapter-[name]` | Runtimes, transports, integrations | Standard factory (same shape as store) |
 
 **Adapter files:**
 
@@ -946,14 +946,14 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
     loader.js           # Test loader
 ```
 
-**Independent adapter pattern (one shape for all Class F):**
-- Both stores and adapters build their own Lib from aliased peer dependencies (`helper-utils`, `helper-debug`)
-- Loader takes only `config` (not `shared_libs`) - merges over companion config defaults
-- Companion files required: `config.js`, `errors.js`, `validators.js` (even when minimal)
-- `LOG_LEVEL` comes from `CONFIG.LOG_LEVEL` (default `'error'` in config file), never hardcoded
+**Injected-Lib adapter pattern (one shape for all Class F):**
+- Both stores and adapters use `loader(shared_libs, config)` - identical signature to every other helper module
+- Lib is picked by reference from the injected container (`const Lib = { Utils: shared_libs.Utils, Debug: shared_libs.Debug };`)
+- Companion files required: `config.js`, `errors.js`, `validators.js` (even when minimal or empty)
+- Log level is the caller's concern - the shared `Lib.Debug` carries the app-wide level; adapters never instantiate their own Debug or carry a `LOG_LEVEL` config key
 - `createInterface(Lib, CONFIG, ERRORS, Validators)` fixed slots; unused slots kept and lint-suppressed
 - Returns ready-to-use object; parent consumes via `CONFIG.Store` or `CONFIG.Adapter`
-- The earlier singleton adapter shape (`let Lib;` + `loader(shared_libs)`) is deprecated
+- Two earlier shapes are deprecated: (1) singleton (`let Lib;` + `loader(shared_libs)`); (2) self-built-Lib factory (`loader(config)` with `require('helper-utils')(Lib, {})` inside - duplicated instances, broke mock injection)
 - See `docs/modules/module-structure-js.md` -> "Storage Adapter Skeleton" and "Adapter Skeleton"
 
 **Key rules:**
@@ -1088,7 +1088,7 @@ Modules using the [Adapter Pattern](#adapter-pattern-multi-backend-helper-module
 | **2 - Parent logic** | `[parent]/_test/test.js` | parent + in-memory fixture | none | Does the pure parent logic work? (loader validation, policy, JWT) |
 | **3 - Contract integration** | `[adapter]/_test/test.js` | parent + real adapter | yes | Does this adapter satisfy the contract end-to-end? |
 
-- **Standalone adapter test (Tier 1 enabler):** the adapter's `_test/loader.js` builds its own Lib and loads the adapter as a standalone module (it owns its own Lib/CONFIG/ERRORS). The adapter's `_test/` uses `file:../` only for the module under test
+- **Standalone adapter test (Tier 1 enabler):** the adapter's `_test/loader.js` builds the shared Lib container and passes it to the adapter loader (`require('...adapter')(Lib, { ... })`). The adapter's `_test/` uses `file:../` only for the module under test
 - **In-memory fixture (Tier 2 enabler):** `[parent]/_test/memory-store.js` exports a `createInMemory<Adapter>()` that implements the **full** adapter contract using Node-built-in structures. Same return shapes as a real adapter. Lives only in `_test/`, never published, never required from outside test code
 - **Shared contract suite copy pattern (Tier 3 enabler):** the integration suite is written **once** in `[parent]/_test/store-contract-suite.js` and **copied** into each adapter's `_test/store-contract-suite.js`. Never exported through the parent's `package.json`, never deep-required across packages
 - **Why copy:** keeps test code out of runtime exports; each adapter has its own version-pinned snapshot; `npm install` graph in `_test/` stays clean (one `file:../` for the adapter under test, registry pins for siblings)
