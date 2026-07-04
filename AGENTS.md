@@ -43,7 +43,7 @@ Assist developers working on **Superloom**, a modular application framework buil
 - Read `README.md` before modifying any module
 - **Read `ROBOTS.md` before using any module's functions.** Compact AI reference with signatures, types, patterns
 - Always run tests before returning: `npm test` from `_test/` directories
-- **Two-pass check after refactor** touching 3+ functions: Pass 1 (logic + lint), Pass 2 (re-read full file. Step comments, 3/2/1 spacing, banner widths, return objects multi-line, `};` combined with END banners, lint again). See `docs/testing/migration-pitfalls.md`
+- **Two-pass check after refactor** touching 3+ functions: Pass 1 (logic + lint), Pass 2 (re-read full file. Step comments, 3/2/1 spacing, banner widths, return objects multi-line, `};` combined with END banners, JSDoc-block indentation matches declaration indentation, lint again). See `docs/testing/migration-pitfalls.md`
 - **Skeleton conformance diff** after any structural pass: compare the module's entry file element by element against its class skeleton in `docs/modules/module-structure-js.md` (loader step comments, companion-file wiring, `createInterface` slots, banners). A fix list + lint + sweep battery do not catch a missing step comment. See `docs/testing/migration-pitfalls.md`
 - Use workflows in `.windsurf/workflows/` for new modules
 - Use `/learn` to capture new knowledge (enforces `docs/dev/documentation-authoring.md`)
