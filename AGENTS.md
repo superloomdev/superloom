@@ -44,6 +44,7 @@ Assist developers working on **Superloom**, a modular application framework buil
 - **Read `ROBOTS.md` before using any module's functions.** Compact AI reference with signatures, types, patterns
 - Always run tests before returning: `npm test` from `_test/` directories
 - **Two-pass check after refactor** touching 3+ functions: Pass 1 (logic + lint), Pass 2 (re-read full file. Step comments, 3/2/1 spacing, banner widths, return objects multi-line, `};` combined with END banners, lint again). See `docs/testing/migration-pitfalls.md`
+- **Skeleton conformance diff** after any structural pass: compare the module's entry file element by element against its class skeleton in `docs/modules/module-structure-js.md` (loader step comments, companion-file wiring, `createInterface` slots, banners). A fix list + lint + sweep battery do not catch a missing step comment. See `docs/testing/migration-pitfalls.md`
 - Use workflows in `.windsurf/workflows/` for new modules
 - Use `/learn` to capture new knowledge (enforces `docs/dev/documentation-authoring.md`)
 - When docs change, run `/compile-agents-md`
@@ -611,7 +612,7 @@ Every module documents itself across three files, each with one audience. Full r
 | **C. Driver wrapper** | Wraps third-party DB driver (Postgres, MySQL, MongoDB, SQLite) | (none - Hot-Swappable section serves this) | `api.md`, `configuration.md` |
 | **D. Cloud service wrapper** | Wraps cloud/network SDK (AWS S3, DynamoDB, SQS) | "Credentials & Permissions" | `api.md`, `configuration.md`, optional `iam.md` |
 | **E. Feature module with adapters** | Business logic + pluggable storage or transport (auth, verify, logger, http-gateway) | "Architecture Overview" + "Storage Adapters" or "Transport Adapters" | `api.md`, `configuration.md`, `schemas.md`, `data-model.md`, optional `runtime.md`. Storage-adapter detail lives in each Class F adapter package |
-| **F. Dependent adapter** | Implements parent's adapter contract. Parent utilizes adapter - adapter is instrument, parent is boss. Two subtypes: **store** (`-store-[backend]`, data/persistence) and **adapter** (`-adapter-[name]`, everything else: transport, integration, future). Either can be factory or singleton depending on per-instance state needs | (none) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
+| **F. Dependent adapter** | Implements parent's adapter contract. Parent utilizes adapter - adapter is instrument, parent is boss. Two subtypes: **store** (`-store-[backend]`, data/persistence) and **adapter** (`-adapter-[name]`, everything else: transport, integration, future). Both share one fully-independent factory shape - `loader(config)`, own Lib from aliased peer deps, companion config/errors/validators files, `LOG_LEVEL` config key, fixed `createInterface` slots. The earlier singleton adapter shape is deprecated | (none) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
 | **G. Feature module with extensions** | Business logic + framework extension points (styler, UI state). Extension-ready design for React, Vue, Angular bindings | "Architecture Overview" + "Extensions" | `api.md`, `configuration.md`, `schemas.md` (when the validators file enforces real contracts), `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
 | **H. Extension** | Framework-specific binding for parent module (Class G). Extension utilizes parent - extension is instrument, extension is boss. Cannot stand alone | "Extension vs Parent" | `api.md` (hooks/components), `philosophy.md` (extension pattern). No `configuration.md` - config lives in parent |
 
@@ -900,7 +901,7 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
 | Subtype | Naming | What it adapts | Typical shape |
 |---|---|---|---|
 | **Store** | `[parent]-store-[backend]` | Data persistence | Independent factory - builds own Lib, takes only config, returns ready-to-use store |
-| **Adapter** | `[parent]-adapter-[name]` | Runtimes, transports, integrations | Singleton (stateless) or factory (if per-instance config) |
+| **Adapter** | `[parent]-adapter-[name]` | Runtimes, transports, integrations | Fully-independent factory (same shape as store) |
 
 **Adapter files:**
 
@@ -945,17 +946,22 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
     loader.js           # Test loader
 ```
 
-**Independent adapter pattern:**
-- Store adapters build their own Lib from peer dependencies (`helper-utils`, `helper-debug`)
-- Loader takes only `config` (not `shared_libs`) - e.g., `{ table_name, lib_dynamodb }`
-- Returns ready-to-use store object; parent consumes via `CONFIG.Store`
-- See `docs/modules/module-structure-js.md` -> "Storage Adapter Skeleton"
+**Independent adapter pattern (one shape for all Class F):**
+- Both stores and adapters build their own Lib from aliased peer dependencies (`helper-utils`, `helper-debug`)
+- Loader takes only `config` (not `shared_libs`) - merges over companion config defaults
+- Companion files required: `config.js`, `errors.js`, `validators.js` (even when minimal)
+- `LOG_LEVEL` comes from `CONFIG.LOG_LEVEL` (default `'error'` in config file), never hardcoded
+- `createInterface(Lib, CONFIG, ERRORS, Validators)` fixed slots; unused slots kept and lint-suppressed
+- Returns ready-to-use object; parent consumes via `CONFIG.Store` or `CONFIG.Adapter`
+- The earlier singleton adapter shape (`let Lib;` + `loader(shared_libs)`) is deprecated
+- See `docs/modules/module-structure-js.md` -> "Storage Adapter Skeleton" and "Adapter Skeleton"
 
 **Key rules:**
 
-- Store adapters use `Lib.Utils` for type checks - no inline `typeof`
+- All Class F modules use `Lib.Utils` for type checks - no inline `typeof`
 - Driver errors → `ERRORS.SERVICE_UNAVAILABLE` from adapter's own catalog
 - Log via `Lib.Debug.debug` with driver details; never leak driver wording in public envelopes
+- Loader step comments required (same as factory skeleton)
 - Skeletons: `docs/modules/module-structure-js.md` -> "Storage Adapter Skeleton" and "Adapter Skeleton"
 
 **Reference implementations:**
@@ -963,7 +969,7 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, { Store: Store });
 | Type | Parent | Adapters |
 |---|---|---|
 | Store | `js-server-helper-distinct-queue` | `js-server-helper-distinct-queue-store-dynamodb`, `js-server-helper-distinct-queue-store-mongodb` |
-| Transport | `js-server-helper-http-gateway` | `js-server-helper-http-gateway-adapter-aws-apigateway`, `js-server-helper-http-gateway-adapter-express` (singleton) |
+| Transport | `js-server-helper-http-gateway` | `js-server-helper-http-gateway-adapter-aws-apigateway`, `js-server-helper-http-gateway-adapter-express` |
 
 ### Application Module Structure (Models, Controllers, Services)
 

@@ -106,6 +106,14 @@ See [`module-structure-js.md`](../modules/module-structure-js#helper-module-patt
   - (g) **`};` combined with END banner.** No standalone `};` line before `///...END...///` banners (see [Section Closing Banners](../foundations/code-formatting-js.md#section-closing-banners))
   - Run `npm run lint` again.
 
+### Verification scoped to the fix list instead of the class skeleton
+
+**Symptom:** A module passes its unification pass (fix list applied, lint green, tests green, sweep battery clean) but still deviates structurally from the standard - for example a loader with no step comments, a validators loader taking `(Lib)` instead of `(Lib, ERRORS)`, or an adapter with inline `ERRORS` and inline config validation instead of companion files. The `http-gateway` loader shipped without step comments this way: every check verified the enumerated fix list, and the fix list never contained "add step comments" because the audit that produced it predated the check.
+
+**Cause:** The verification pass answered "did I do everything on my list?" instead of "does this file match the canonical skeleton?". Fix lists are derived from point-in-time audits; the skeleton in [`module-structure-js.md`](../modules/module-structure-js) is the living standard. Anything the audit missed stays invisible to a list-scoped verification, no matter how many passes run.
+
+**Fix:** The final verification pass must include a **skeleton conformance diff**: open the class's skeleton section in `module-structure-js.md` (factory skeleton for Class A/B, Storage Adapter Skeleton or Adapter Skeleton for Class F, and so on) side by side with the module's entry file and compare structure element by element - info banner shape, loader statement groups and their step comments, companion-file wiring, `createInterface` slots, section banners. Structural conformance is a distinct checklist item from the fix list, the lint gate, and the sweep battery; none of those three catch a missing step comment.
+
 ### Patching when complete rewrite is needed
 
 **Symptom:** Trying to use targeted edits to transform a singleton-pattern module into a factory-pattern module.
@@ -284,6 +292,7 @@ Before completing any migration:
 - [ ] **Documentation cross-references use new module names**
 - [ ] **No `exports` field in single-entrypoint packages** - if `main` already points to the only entry file, `exports` is redundant and should be omitted. Only add `exports` when the package exposes multiple entry points or needs explicit subpath exports
 - [ ] **Two-pass check done after any refactor** touching 3+ functions or renaming variables: logic pass first, then a dedicated formatting read (step comments, 3/2/1 spacing, stale comment text, banner widths, return objects multi-line, private helpers in `_Name` enclosure, `};` combined with END banners)
+- [ ] **Skeleton conformance diff done** - the module's entry file compared element by element against its class's skeleton section in `module-structure-js.md` (loader statement groups + step comments, companion-file wiring, `createInterface` slots, banners). A fix list, lint, and the sweep battery do not substitute for this
 
 ## Further Reading
 

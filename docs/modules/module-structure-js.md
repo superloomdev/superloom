@@ -1030,16 +1030,24 @@ Thin loader. Builds own Lib and ERRORS from peer dependencies,
 validates config via the Validators singleton, then delegates to
 createInterface. Each call returns an independent Store instance.
 
-@param {Object} config - { table_name, lib_dynamodb } (backend-specific)
+@param {Object} config - Overrides merged over adapter config defaults
+                         ({ table_name, lib_dynamodb, LOG_LEVEL, ... } - backend-specific)
 
 @return {Object} - Store interface (contract methods + optional setupNewStore)
 *********************************************************************/
 module.exports = function loader (config) {
 
-  // Build own Lib container from peer dependencies
+  // Merge overrides over adapter config defaults
+  const CONFIG = Object.assign(
+    {},
+    require('./store.config'),
+    config || {}
+  );
+
+  // Build own Lib container from aliased peer dependencies
   const Lib = {};
   Lib.Utils = require('helper-utils')(Lib, {});
-  Lib.Debug = require('helper-debug')(Lib, {});
+  Lib.Debug = require('helper-debug')(Lib, { LOG_LEVEL: CONFIG.LOG_LEVEL });
 
   // Own frozen error catalog
   const ERRORS = require('./store.errors');
@@ -1048,10 +1056,10 @@ module.exports = function loader (config) {
   const Validators = require('./store.validators')(Lib, ERRORS);
 
   // Validate config - throws on misconfiguration
-  Validators.validateConfig(config);
+  Validators.validateConfig(CONFIG);
 
   // Build the public Store interface
-  return createInterface(Lib, config, ERRORS, Validators);
+  return createInterface(Lib, CONFIG, ERRORS, Validators);
 
 };/////////////////////////// Module-Loader END /////////////////////////////////
 
@@ -1061,16 +1069,16 @@ module.exports = function loader (config) {
 
 /********************************************************************
 Builds the public Store interface. All functions close over
-Lib, config, ERRORS, and Validators.
+Lib, CONFIG, ERRORS, and Validators.
 
 @param {Object} Lib    - Dependency container
-@param {Object} config - Adapter configuration (validated)
+@param {Object} CONFIG - Merged adapter configuration (validated)
 @param {Object} ERRORS - Frozen error catalog
 @param {Object} Validators - Validators singleton (Lib + ERRORS injected)
 
 @return {Object} - Store interface
 *********************************************************************/
-const createInterface = function (Lib, config, ERRORS, Validators) {
+const createInterface = function (Lib, CONFIG, ERRORS, Validators) {
 
   //////////////////////////// Public Functions START //////////////////////////
   const Store = {
@@ -1118,6 +1126,7 @@ const createInterface = function (Lib, config, ERRORS, Validators) {
 
 module.exports = {
   [STORE_NAME]: null,   // Required - backend storage target (table/collection name)
+  LOG_LEVEL: 'error',   // Verbosity of the adapter's internal Debug instance
   // ... other backend-specific keys, with safe defaults where applicable
 };
 ```
@@ -1128,21 +1137,24 @@ module.exports = {
 
 | Rule | Detail |
 |---|---|
-| **Own Lib** | Build from `shared_libs` in loader; narrow to required dependencies |
-| **Own CONFIG** | Merge `config` over `require('./store.config')` defaults |
+| **Own Lib** | Build own `Lib` from aliased peer dependencies inside the loader (`require('helper-utils')(Lib, {})`); never receive `shared_libs` from the caller. The alias resolves because the adapter's own `package.json` maps it to the scope via npm alias syntax (`"helper-utils": "npm:@superloomdev/js-helper-utils@^1.0.0"`) |
+| **Own CONFIG** | Merge `config` over `require('./store.config')` defaults; pass the merged `CONFIG` forward, never the raw `config` |
 | **Own ERRORS** | Load from `store.errors.js`; never receive from parent |
+| **Own Validators** | Load from `store.validators.js` with `(Lib, ERRORS)` injected; call `Validators.validateConfig(CONFIG)` in the loader. Inline `if`/`throw` validation in the loader is a violation |
+| **`LOG_LEVEL` is config, never hardcoded** | The internal `Lib.Debug` instance takes its level from `CONFIG.LOG_LEVEL` (default `'error'` in `store.config.js`). A hardcoded `{ LOG_LEVEL: 'error' }` literal in the loader is a violation: it silences the adapter permanently and the operator cannot raise verbosity |
 | **Ready-to-use return** | Return store object directly, not a factory |
 | **Parent receives via CONFIG.Store** | Parent passes store object in config, not a factory |
 | **Implements store contract** | Same method set across all sibling adapters |
 | **`Lib.Utils` for type checks** | No inline `typeof`; use `Lib.Utils.isString`, etc. |
 | **Public before private** | `Store` declared before `_Store` |
 | **Driver errors -> SERVICE_UNAVAILABLE** | Log via `Lib.Debug.debug`, return `ERRORS.SERVICE_UNAVAILABLE` |
+| **Loader step comments** | Every statement group in the loader carries its one-line step comment, exactly as in the factory skeleton (Merge overrides / Build own Lib / Error catalog / Validators / Validate config / Build interface). A loader without step comments fails the two-pass check |
 
 #### Parent Usage Pattern
 
 ```javascript
-// Application loader
-const Store = require('@superloomdev/[parent]-store-[backend]')(Lib, {
+// Application loader - the store loader takes only config (it builds its own Lib)
+const Store = require('@superloomdev/[parent]-store-[backend]')({
   // adapter-specific config keys
 });
 
@@ -1155,23 +1167,33 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, {
 
 ### Adapter Skeleton
 
-This skeleton applies to any Class F adapter (`-adapter-[name]`) that is **stateless** - it has no per-instance configuration and all per-request state lives on `instance`, not inside the adapter. This covers transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type that does not need per-instance closures. Like store adapters, a singleton adapter is loaded by the application and passed to the parent as a ready-to-use object via `CONFIG.Adapter`.
+This skeleton applies to any Class F adapter (`-adapter-[name]`): transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type. Adapters follow the **same fully-independent shape as storage adapters**. Only three things differ: the entry-point name (`adapter.js` instead of `store.js`), the contract they implement (the parent's adapter contract instead of the store contract), and the parent config slot (`CONFIG.Adapter` instead of `CONFIG.Store`).
 
-**When to use singleton vs factory for adapters:**
+**One shape, not two.** An earlier revision of this page documented a module-scope singleton shape for stateless adapters (`let Lib;` at module scope, `loader(shared_libs)`). That shape is **deprecated**: it predates the fully-independent adapter refactor and the [Universal Companion Files](#universal-companion-files) rule, and it forces the application to thread its `Lib` into a package that should stand alone. Every Class F module - store or adapter, stateful or stateless - uses the fully-independent factory shape below. Statelessness only means `createInterface` closes over nothing beyond its four fixed slots; it does not change the loader, the companion files, or the file layout.
+
+#### Adapter File Structure
 
 ```
-Does the adapter need per-instance configuration (its own config slice, driver reference, connection)?
-├─ Yes → Use the Storage Adapter Skeleton (factory/createInterface)
-└─ No  → Use this skeleton (singleton)
-         The adapter is stateless; one global instance serves all callers.
-         All per-request state lives on `instance`.
+[module-root]/
+  adapter.js               # Main loader + createInterface
+  adapter.config.js        # Adapter-specific config keys (LOG_LEVEL at minimum)
+  adapter.errors.js        # Adapter's own frozen error catalog
+  adapter.validators.js    # Singleton validators (Lib + ERRORS injected)
+  _test/
+    loader.js              # Test loader - builds Lib, loads parent with this adapter
+    test.js                # Contract + integration tests
+  README.md, ROBOTS.md     # Documentation
 ```
 
-Stores (`-store-`) are almost always factory because each instance closes over its own configuration. Adapters (`-adapter-`) are more commonly singleton, but can use factory if a future use case requires per-instance adapter config.
+#### Adapter Loader Pattern
 
 ```javascript
-// Info: [Runtime] adapter for js-server-helper-[parent].
+// Info: [Runtime] adapter for helper-[parent].
 // [Description of what this adapter normalizes.]
+//
+// Fully independent: builds its own Lib, owns its own CONFIG, ERRORS, and
+// Validators. Returns a ready-to-use adapter object that the parent
+// consumes via CONFIG.Adapter.
 //
 // Adapter contract:
 //   - method1(instance, raw_request, raw_context, response_callback)
@@ -1182,84 +1204,86 @@ Stores (`-store-`) are almost always factory because each instance closes over i
 'use strict';
 
 
-// Shared dependency container injected by loader
-let Lib;
-
-
 /////////////////////////// Module-Loader START ////////////////////////////////
 
 /********************************************************************
-Singleton loader. The application loads the adapter once and passes the
-returned object to the parent via CONFIG.Adapter. The adapter receives
-raw inputs and returns normalized data to the parent, which owns instance
-writes.
+Thin loader. Builds own Lib and ERRORS from peer dependencies,
+validates config via the Validators singleton, then delegates to
+createInterface. Each call returns an independent Adapter instance.
 
-@param {Object} shared_libs - Lib container (Utils, Debug)
+@param {Object} config - Overrides merged over adapter config defaults
+                         ({ LOG_LEVEL, ... } - adapter-specific)
 
-@return {Object} - Adapter interface (ready to use)
+@return {Object} - Adapter interface (the parent's adapter contract)
 *********************************************************************/
-module.exports = function loader (shared_libs) {
+module.exports = function loader (config) {
 
-  Lib = shared_libs;
+  // Merge overrides over adapter config defaults
+  const CONFIG = Object.assign(
+    {},
+    require('./adapter.config'),
+    config || {}
+  );
 
-  return Adapter;
+  // Build own Lib container from aliased peer dependencies
+  const Lib = {};
+  Lib.Utils = require('helper-utils')(Lib, {});
+  Lib.Debug = require('helper-debug')(Lib, { LOG_LEVEL: CONFIG.LOG_LEVEL });
 
-};///////////////////////////// Module-Loader END ///////////////////////////////
+  // Own frozen error catalog
+  const ERRORS = require('./adapter.errors');
 
+  // Load the validators singleton and inject Lib + ERRORS
+  const Validators = require('./adapter.validators')(Lib, ERRORS);
 
+  // Validate config - throws on misconfiguration
+  Validators.validateConfig(CONFIG);
 
-///////////////////////////Public Functions START//////////////////////////////
-const Adapter = {
+  // Build the public Adapter interface
+  return createInterface(Lib, CONFIG, ERRORS, Validators);
 
-  /********************************************************************
-  [Contract method description]
-
-  @param {Object} instance - Per-request instance to populate
-  *********************************************************************/
-  contractMethod: function (instance) {
-    // Public functions use Lib.Utils for type checks
-    // Call _Adapter helpers for internal logic
-  }
-
-};////////////////////////////Public Functions END//////////////////////////////
-
-
-
-///////////////////////////Private Functions START/////////////////////////////
-const _Adapter = {
-
-  /********************************************************************
-  [Private helper description]
-
-  @param {String} input - Description
-  @return {Object} - Description
-  *********************************************************************/
-  helperMethod: function (input) {
-    // Private functions also use Lib.Utils
-    if (!Lib.Utils.isString(input)) {
-      return {};
-    }
-    // ...
-  }
-
-};///////////////////////////Private Functions END//////////////////////////////
+};/////////////////////////// Module-Loader END /////////////////////////////////
 ```
 
-**Key rules for singleton adapters:**
+`createInterface` follows the [fixed-slots rule](#createinterface-signature-variants): `(Lib, CONFIG, ERRORS, Validators)`, with unused slots kept and lint-suppressed only when trailing. Public functions (`Adapter`) are declared before private helpers (`_Adapter`) inside `createInterface`, under the standard L1 banners.
+
+#### Adapter Config Pattern
+
+```javascript
+// adapter.config.js - adapter's own config keys
+'use strict';
+
+module.exports = {
+  LOG_LEVEL: 'error'   // Verbosity of the adapter's internal Debug instance
+  // ... other adapter-specific keys, with safe defaults where applicable
+};
+```
+
+Most transport adapters need no configuration beyond `LOG_LEVEL`. The companion file still exists (Universal Companion Files): a one-key config file is the floor, not an exception.
+
+#### Adapter Rules
+
+All [Storage Adapter Rules](#adapter-rules) apply verbatim (own Lib from aliased peer dependencies, own CONFIG merged over defaults, own ERRORS, own Validators with `validateConfig` in the loader, `LOG_LEVEL` never hardcoded, ready-to-use return, `Lib.Utils` for type checks, public before private, loader step comments). Adapter-specific additions:
 
 | Rule | Detail |
 |---|---|
-| **Module-scope singleton** | `let Lib;` at module scope, set once by loader. No `createInterface` needed |
-| **Loader accepts `(shared_libs)`** | The application loads the adapter once and passes the ready-to-use object to the parent via `CONFIG.Adapter`. Accept a second `config` argument only if the adapter needs its own config |
-| **Public before private** | `Adapter` is declared before `_Adapter` at module scope. Same rule as singletons and `createInterface` internals |
-| **`Lib.Utils` for all type checks** | No inline `typeof`, no manual `.length` checks. Use `Lib.Utils.isString`, `Lib.Utils.isObject`, `Lib.Utils.isNullOrUndefined`, `Lib.Utils.isFunction` |
-| **L1 section banners** | `Module-Loader START/END`, `Public Functions START/END`, `Private Functions START/END`. Standard 3/2/1 spacing between sections |
-| **Error catalog usage** | Depends on the adapter's contract. Transport adapters typically do not return error envelopes (the parent handles errors). Other adapter types define their own `store.errors.js` / `[adapter].errors.js` catalog when the contract requires returning envelopes |
+| **Parent receives via CONFIG.Adapter** | The application loads the adapter once and passes the ready-to-use object to the parent via `CONFIG.Adapter` |
 | **Adapter is a pure normalizer** | The adapter never holds per-request state and never writes to `instance`. It receives raw inputs and returns normalized data; the parent is the sole writer to `instance` |
+| **Error catalog usage** | Depends on the adapter's contract. Transport adapters typically do not return error envelopes (the parent handles errors); their `adapter.errors.js` may carry a single construction-time type. Other adapter types define richer catalogs when the contract requires returning envelopes |
+| **Contract documented twice** | Top-of-file `// Info:` comment lists every contract method with signature and return shape; the parent's `docs/api.md` owns the authoritative contract definition |
 
-**Reference implementation:** `js-server-helper-http-gateway-adapter-express` (`adapter.js`) in `js-helper-modules`.
+#### Parent Usage Pattern
 
-**Note:** If an adapter needs per-instance config (e.g., a notification adapter connecting to different providers per tenant), use the Storage Adapter Skeleton structure (`createInterface` with closure over adapter-specific config) but with `-adapter-` naming. The factory vs singleton choice is about state, not about naming.
+```javascript
+// Application loader - the adapter loader takes only config (it builds its own Lib)
+const Adapter = require('@superloomdev/[parent]-adapter-[name]')({});
+
+Lib.[Parent] = require('@superloomdev/[parent]')(Lib, {
+  Adapter: Adapter  // Ready-to-use object
+});
+```
+
+**Reference implementations:** `js-server-helper-http-gateway-adapter-express` and `js-server-helper-http-gateway-adapter-aws-apigateway` (`adapter.js`) in `js-helper-modules`, brought to this skeleton during the unification wave.
 
 ### Reference Implementations
 
