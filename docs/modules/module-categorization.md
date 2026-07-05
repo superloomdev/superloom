@@ -275,7 +275,7 @@ Tracks which modules have been restructured per [`module-readme-structure.md`](m
 | Module | Class | README v2 | `docs/` present | Writing-guide pass | Notes |
 |---|---|---|---|---|---|
 | js-helper-utils | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Class A pilot. Established the four-bullet pattern (zero deps / runs everywhere / pre-tested / designed for review) |
-| js-helper-debug | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Configurable Class A (LOG_LEVEL / LOG_FORMAT / etc.). Documents the canonical `instance.time_ms` pattern |
+| js-helper-debug | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Configurable Class A (LOG_LEVEL / LOG_FORMAT / etc.). Documents the canonical local-`start_ms` performance-audit pattern |
 | js-helper-time | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. 24-function pure-utility surface. Documents the plural-vs-singular Date-Data-Set key convention |
 | js-client-helper-crypto | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Wave 5. Browser-side member of the crypto runtime pair. Hot-Swappable cross-link to `js-server-helper-crypto` |
 | js-client-helper-styler | A | **Yes** | **Yes** (`api.md`, `configuration.md`, `template.md`, `philosophy.md`) | **Yes** | Class G pilot. First extension-based module. Parent theme engine with template-driven token generation, color derivation, scale math, utility generation. Four-doc pattern for Class A: api, configuration, template (domain-specific), philosophy |

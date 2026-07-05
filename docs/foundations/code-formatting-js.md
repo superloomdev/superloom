@@ -445,17 +445,17 @@ Full rule with rationale and worked examples: [`error-handling.md`](error-handli
 Every external service operation (database, cloud API, HTTP, queue) must log performance.
 
 ```javascript
-const time_start = Date.now();
+const start_ms = Lib.Utils.getUnixTimeInMilliSeconds();
 const response = await cloud_client.send(command);
-Lib.Debug.performanceAuditLog('End', 'ServiceName Operation - ' + identifier, time_start);
+Lib.Debug.performanceAuditLog('End', 'ServiceName Operation - ' + identifier, start_ms);
 ```
 
 **Rules:**
 
 - Use `Lib.Debug.performanceAuditLog(action, routine, reference_time)` - it calculates `elapsed_ms` and includes memory usage. The signature takes **exactly three arguments**; there is no fourth
 - **One call per operation, after it completes, with `action: 'End'`.** Do not emit `'Start'`/`'End'` pairs - the reference time carries the start, so a second log line adds noise without adding signal
-- For instance-tracked modules, prefer `instance['time_ms']` over `time_start` so the log shows elapsed time since the request began (request-level timeline)
-- Client/SDK initialization must log performance - import + connect time matters
+- **`reference_time` is the operation's own start time** - a local `start_ms` captured at operation entry via `Lib.Utils.getUnixTimeInMilliSeconds()`, so `elapsed_ms` reports the operation's actual duration. **Never pass `instance['time_ms']`** - it is the request-start timestamp, constant for the life of the request, so `elapsed_ms` would report request age instead of operation duration. Request-level timing is `helper-instance`'s job (`Instance.getAge`), not the audit line's
+- Client/SDK initialization must log performance (import + connect time matters) using the same shape: capture `init_start_ms` before the import/connect work, emit one `'End'` call after it. Never pass a timestamp created on the same line as the call - `elapsed_ms` would always be ~0
 - Error logs must include performance data - duration on failure helps diagnose timeouts
 
 ---

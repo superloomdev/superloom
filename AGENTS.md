@@ -45,6 +45,7 @@ Assist developers working on **Superloom**, a modular application framework buil
 - Always run tests before returning: `npm test` from `_test/` directories
 - **Two-pass check after refactor** touching 3+ functions: Pass 1 (logic + lint), Pass 2 (re-read full file. Step comments, 3/2/1 spacing, banner widths, return objects multi-line, `};` combined with END banners, JSDoc-block indentation matches declaration indentation, lint again). See `docs/testing/migration-pitfalls.md`
 - **Skeleton conformance diff** after any structural pass: compare the module's entry file element by element against its class skeleton in `docs/modules/module-structure-js.md` (loader step comments, companion-file wiring, `createInterface` slots, banners). A fix list + lint + sweep battery do not catch a missing step comment. See `docs/testing/migration-pitfalls.md`
+- **Every `performanceAuditLog` call passes a local `start_ms`** captured at operation entry as `reference_time` - never `instance['time_ms']` (request-start constant) and never a timestamp created on the same line as the call. See `docs/testing/migration-pitfalls.md`
 - Use workflows in `.windsurf/workflows/` for new modules
 - Use `/learn` to capture new knowledge (enforces `docs/dev/documentation-authoring.md`)
 - When docs change, run `/compile-agents-md`
@@ -503,12 +504,12 @@ Applies to every section closer: `Public Functions END`, `Private Functions END`
 
 ### Performance Logging
 
-- **Every external service operation must log performance** - use `Lib.Debug.performanceAuditLog(action, routine, instance['time_ms'])`
-- **One call per operation, after it completes, `action: 'End'`, exactly 3 args** - never `'Start'`/`'End'` pairs (reference time carries the start), never a 4th argument (silently dropped)
-- **Use `instance.time_ms`** as reference time - shows elapsed since request started (request-level timeline), not just function duration
-- **Client initialization must log performance** - how long SDK import + connection took
+- **Every external service operation must log performance** - use `Lib.Debug.performanceAuditLog('End', routine, start_ms)`
+- **One call per operation, after it completes, `action: 'End'`, exactly 3 args** - never `'Start'`/`'End'` pairs, never a 4th argument (silently dropped)
+- **`reference_time` is a local `start_ms`** captured at operation entry via `Lib.Utils.getUnixTimeInMilliSeconds()`, so `elapsed_ms` reports the operation's actual duration. **Never pass `instance['time_ms']`** - it is the request-start timestamp, constant for the request lifetime. Request-level timing is `helper-instance`'s job (`Instance.getAge`), not the audit line's
+- **Client initialization must log performance** - capture `init_start_ms` before import/connect, emit one `'End'` call after. Never pass a timestamp created on the same line as the call
 - **Error logs must include performance data** - duration even on failure helps diagnose timeouts
-- Use `Lib.Debug.performanceAuditLog('End', 'DynamoDB Get - ' + table, instance['time_ms'])` - already calculates elapsed_ms and memory
+- Use `Lib.Debug.performanceAuditLog('End', 'DynamoDB Get - ' + table, start_ms)` - already calculates elapsed_ms and memory
 
 ### Documentation
 
@@ -549,7 +550,7 @@ Default position: **self-contained code**. Every npm dependency is a long-term s
 
 - **3-layer DRY architecture:** Builder (pure, no I/O) → Command Executor (I/O) → Convenience (calls builder + executor). Convenience functions like `put` internally use `commandBuilder` + `commandExecutor`. Builders are also used by transaction functions
 - **Instance first:** All public functions accept `instance` as first parameter (from `Lib.Instance.initialize`). This enables request-level performance tracking
-- **Performance logging uses `instance.time_ms`:** `Lib.Debug.performanceAuditLog('End', 'ServiceName Operation - ' + identifier, instance['time_ms'])` - shows elapsed since request started, not just function duration
+- **Performance logging uses local `start_ms`:** `const start_ms = Lib.Utils.getUnixTimeInMilliSeconds();` at operation entry, then `Lib.Debug.performanceAuditLog('End', 'ServiceName Operation - ' + identifier, start_ms)` - reports operation duration, not request age
 - **Explicit credentials:** Cloud modules must pass credentials (e.g., `KEY`, `SECRET`) via config - never rely on implicit credential chains in the module code
 - **Descriptive SDK variable names:** Name SDK imports after the service - never `lib`, `sdk`, or single letters
 - **Two lazy-load helpers with distinct roles:**

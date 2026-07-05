@@ -16,6 +16,7 @@ For the full migration walkthrough see [`/migrate-module` workflow](https://gith
 - [Documentation Synchronization Issues](#documentation-synchronization-issues)
 - [Testing Issues](#testing-issues)
 - [Cross-Reference Issues](#cross-reference-issues)
+- [Performance Logging Issues](#performance-logging-issues)
 - [Prevention Checklist](#prevention-checklist)
 
 ---
@@ -295,6 +296,20 @@ When renaming an entire module, also check **other modules' README and ROBOTS** 
 
 ---
 
+## Performance Logging Issues
+
+### `performanceAuditLog` reference_time is a constant, not the operation start
+
+**Symptom:** `elapsed_ms` in audit logs grows monotonically across a request instead of reporting each operation's duration. A 5 ms queue send that runs 200 ms into the request logs `elapsed_ms: 200`. In the worst variant, `Init-Start`/`Init-End` calls pass a *freshly created* timestamp as `reference_time`, so `elapsed_ms` is always ~0 and the line carries no signal at all.
+
+**Cause:** A self-contradiction inside the [Performance Logging](../foundations/code-formatting-js.md#performance-logging) rules. The Phase 0 standards freeze added "one call per operation, `action: 'End'`, the reference time carries the start" - a rule that implicitly requires a local `start_ms` captured at operation entry - while a pre-existing bullet in the same section said "prefer `instance['time_ms']` over `time_start`". `instance['time_ms']` is the request-start timestamp set once by `helper-instance` and never updated, so it cannot "carry the start" of any individual operation. The debug module's own `docs/api.md` compounded the contradiction with a canonical example showing a `'Start'`/`'End'` *pair* both passing `instance.time_ms`. Six modules were unified against the contradictory rule and every pass faithfully preserved the wrong reference time - no sweep, lint, or skeleton check examines `performanceAuditLog` arguments.
+
+**Fix:** In every operation, capture `const start_ms = Lib.Utils.getUnixTimeInMilliSeconds();` at entry and pass it as the third argument to the single `performanceAuditLog('End', routine, start_ms)` call. For client/SDK initialization, capture `init_start_ms` before the import/connect work and emit one `'End'` call after it. Never pass `instance['time_ms']` and never pass a timestamp created on the same line as the call.
+
+**Lesson:** When a standards freeze adds a rule to an existing section, every pre-existing bullet in that section must be re-validated against the new rule - a frozen standard that contradicts itself propagates the wrong half to every module unified against it. And semantic argument errors (a plausible-looking but wrong variable) are invisible to lint, tests, and structural sweeps: rules about *which value* to pass need their own grep in the verification battery.
+
+---
+
 ## Prevention Checklist
 
 Before completing any migration:
@@ -318,6 +333,7 @@ Before completing any migration:
 - [ ] **Two-pass check done after any refactor** touching 3+ functions or renaming variables: logic pass first, then a dedicated formatting read (step comments, 3/2/1 spacing, stale comment text, banner widths, return objects multi-line, private helpers in `_Name` enclosure, `};` combined with END banners, JSDoc-block indentation matches declaration indentation)
 - [ ] **Comment indentation matches code** after any nesting-depth change - every JSDoc `/***` block and single-line comment sits at the exact column of the next non-comment line. `eslint --fix` does NOT fix comment indentation; check manually or via the leading-space comparison in [JSDoc blocks left at old indentation](#jsdoc-blocks-left-at-old-indentation-after-nesting-depth-change)
 - [ ] **Skeleton conformance diff done** - the module's entry file compared element by element against its class's skeleton section in `module-structure-js.md` (loader statement groups + step comments, companion-file wiring, `createInterface` slots, banners). A fix list, lint, and the sweep battery do not substitute for this
+- [ ] **Every `performanceAuditLog` call passes a local `start_ms`** captured at operation entry as `reference_time` - never `instance['time_ms']` (request-start constant) and never a timestamp created on the same line as the call (see [Performance Logging Issues](#performance-logging-issues))
 
 ## Further Reading
 
