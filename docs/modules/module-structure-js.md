@@ -1032,9 +1032,10 @@ config over defaults, validates config via the Validators singleton,
 then delegates to createInterface. Each call returns an independent
 Store instance.
 
-@param {Object} shared_libs - Dependency container (Utils, Debug)
+@param {Object} shared_libs - Dependency container (Utils, Debug, and the
+                              backend driver, e.g. DynamoDB)
 @param {Object} config - Overrides merged over adapter config defaults
-                         ({ table_name, lib_dynamodb, ... } - backend-specific)
+                         ({ table_name, ... } - plain data only, backend-specific)
 
 @return {Object} - Store interface (contract methods + optional setupNewStore)
 *********************************************************************/
@@ -1043,7 +1044,8 @@ module.exports = function loader (shared_libs, config) {
   // Dependencies for this instance - by reference from the shared container
   const Lib = {
     Utils: shared_libs.Utils,
-    Debug: shared_libs.Debug
+    Debug: shared_libs.Debug,
+    DynamoDB: shared_libs.DynamoDB   // Backend driver - key per the driver-injection naming rule below
   };
 
   // Merge overrides over adapter config defaults
@@ -1134,13 +1136,13 @@ module.exports = {
 };
 ```
 
-**Driver-injection key naming.** The config key that receives the loaded driver helper is named by the operation family, not the dialect, wherever the injected contract is family-generic: SQL-backed stores take `lib_sql` (any `helper-sql-*` dialect satisfies it - this is what makes the dialect hot-swappable). NoSQL and cloud backends take the backend-specific key (`lib_mongodb`, `lib_dynamodb`) because those driver APIs are not interchangeable. Never build the driver into the adapter's own `Lib` container - it arrives through config.
+**Driver injection and container key naming.** The backend driver helper arrives through the `shared_libs` container and is picked into the adapter's `Lib` by reference, exactly like `Utils` and `Debug` - one injection mechanism for every live dependency. The container key is named by the operation family, not the dialect, wherever the injected contract is family-generic: SQL-backed stores take `Lib.SQL` (any `helper-sql-*` dialect satisfies it - this is what makes the dialect hot-swappable). NoSQL and cloud backends take the backend-specific key (`Lib.MongoDB`, `Lib.DynamoDB`) because those driver APIs are not interchangeable. `config` carries plain data only (table/collection names, timeouts, prefixes) - never live objects. Passing a driver through a `lib_*` config key (`lib_sql`, `lib_dynamodb`) is a **deprecated shape**: it split the injection mechanism in two, made the merged CONFIG non-serializable, and forced `validateConfig` to type-check live objects. Convert it on sight - replace `config.lib_*` reads with the `Lib.[Driver]` pick, and drop the `lib_*` key from `store.config.js`, the validators, and every docs row that lists it.
 
 #### Adapter Rules
 
 | Rule | Detail |
 |---|---|
-| **Injected Lib** | The loader takes `(shared_libs, config)` like every other factory module and picks its dependencies by reference (`Utils`, `Debug`). Constructing `Lib` inside the loader (`require('helper-utils')(Lib, {})`) is a violation: it duplicates instances, breaks mock injection, and creates a signature exception. Framework helpers therefore do not appear in the adapter's `peerDependencies` - the application supplies them through the container |
+| **Injected Lib** | The loader takes `(shared_libs, config)` like every other factory module and picks its dependencies by reference (`Utils`, `Debug`, and the backend driver - see the driver-injection rule above). Constructing `Lib` inside the loader (`require('helper-utils')(Lib, {})`) is a violation: it duplicates instances, breaks mock injection, and creates a signature exception. Framework helpers therefore do not appear in the adapter's `peerDependencies` - the application supplies them through the container |
 | **Own CONFIG** | Merge `config` over `require('./store.config')` defaults; pass the merged `CONFIG` forward, never the raw `config` |
 | **Own ERRORS** | Load from `store.errors.js`; never receive from parent |
 | **Own Validators** | Load from `store.validators.js` with `(Lib, ERRORS)` injected; call `Validators.validateConfig(CONFIG)` in the loader. Inline `if`/`throw` validation in the loader is a violation |

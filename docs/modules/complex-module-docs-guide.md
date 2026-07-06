@@ -306,7 +306,7 @@ Docker lifecycle (if service-dependent), the contract suite, what runs in CI.
 | Context | Use | Example |
 |---------|-----|---------|
 | **Schema docs** (this file) | Native database concepts | "Uses `deleteMany` with filter on `_id`" |
-| **Implementation** (store.js) | Wrapper API names | `lib_mongodb.deleteRecordsByFilter(...)` |
+| **Implementation** (store.js) | Wrapper API names | `Lib.MongoDB.deleteRecordsByFilter(...)` |
 
 This separation lets readers familiar with the database understand the behavior, while the code correctly uses our abstraction layer.
 
