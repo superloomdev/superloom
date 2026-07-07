@@ -442,7 +442,7 @@ Full rule with rationale and worked examples: [`error-handling.md`](error-handli
 
 ## Performance Logging
 
-Every external service operation (database, cloud API, HTTP, queue) must log performance.
+`performanceAuditLog` is a general timing instrument - it measures how long a unit of work took. It has two sanctioned uses: **external service operations** (database, cloud API, HTTP, queue), where it is mandatory, and **significant in-process work** (batch analysis over large datasets, heavy transformations, algorithm phases), where it is used whenever duration insight has value.
 
 ```javascript
 const start_ms = Lib.Utils.getUnixTimeInMilliSeconds();
@@ -452,6 +452,8 @@ Lib.Debug.performanceAuditLog('End', 'ServiceName Operation - ' + identifier, st
 
 **Rules:**
 
+- **Built-in instrumentation is part of every driver's contract.** The service-boundary driver helpers (`nosql-*`, `sql-*`, `queue-*`, `storage-*`, `http`) log every roundtrip and every client/connection initialization themselves. This is an architecture assumption stated once, here: callers rely on it, and individual module docs do not restate it
+- **Each interval is logged exactly once, by the layer that owns the work.** Never instrument an interval whose work is performed by a module you call - the callee's built-in instrumentation already logs it. Wrapping a driver call in a second audit line one level up reports the same interval plus ~1 ms of in-process glue: duplicate noise, no signal. Store adapters and composite/parent modules therefore typically have zero calls; they add one only for their **own** substantial in-process work (a merge, an analysis pass, a large transformation), with a routine name that describes that work - never one that wraps a delegated call. A multi-roundtrip composite operation is visible in the logs as its sequence of driver lines; do not add a wrapper line to sum them
 - Use `Lib.Debug.performanceAuditLog(action, routine, reference_time)` - it calculates `elapsed_ms` and includes memory usage. The signature takes **exactly three arguments**; there is no fourth
 - **One call per operation, after it completes, with `action: 'End'`.** Do not emit `'Start'`/`'End'` pairs - the reference time carries the start, so a second log line adds noise without adding signal
 - **`reference_time` is the operation's own start time** - a local `start_ms` captured at operation entry via `Lib.Utils.getUnixTimeInMilliSeconds()`, so `elapsed_ms` reports the operation's actual duration. **Never pass `instance['time_ms']`** - it is the request-start timestamp, constant for the life of the request, so `elapsed_ms` would report request age instead of operation duration. Request-level timing is `helper-instance`'s job (`Instance.getAge`), not the audit line's
