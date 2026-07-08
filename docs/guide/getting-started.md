@@ -158,7 +158,7 @@ npm test            # from src/model-server  (server model extension tests)
 npm run test:all    # from src/server        (controller and service tests)
 ```
 
-JavaScript tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict` with no external test framework. See [`testing/testing-strategy.md`](../testing/testing-strategy.md) and [`testing/unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md) for the conventions.
+JavaScript tests use Node.js's built-in test runner (`node --test`) and `node:assert/strict` with no external test framework. See [`testing/testing-strategy.md`](../languages/js/testing-strategy.md) and [`testing/unit-test-authoring.md`](../languages/js/unit-test-authoring.md) for the conventions.
 
 ---
 
@@ -212,6 +212,6 @@ All personal secrets, environment files, and AI session notes live in `__dev__/`
 | Add your first domain entity | [Creating Entities](./creating-entities-js.md) |
 | Configure your IDE | [IDE Setup](./ide-setup.md) |
 | Set up your dev machine end-to-end | [Developer Setup](../dev/README.md) |
-| Understand the server architecture pattern | [Why the Server Uses MVC](../philosophy/why-server-mvc.md) |
-| Understand the one-shape DTO rule | [DTO Philosophy (JavaScript)](../philosophy/dto-philosophy-js.md) |
-| Read the full entity walkthrough | [Entity Creation Guide](../server/entity-creation-guide-js) |
+| Understand the server architecture pattern | [Why the Server Uses MVC](../principles/server-architecture.md) |
+| Understand the one-shape DTO rule | [DTO Philosophy (JavaScript)](../languages/js/dto-philosophy.md) |
+| Read the full entity walkthrough | [Entity Creation Guide](../languages/js/server/entity-creation-guide-js) |

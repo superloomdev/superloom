@@ -6,7 +6,7 @@ description: Compile AGENTS.md from docs/ - sync (default), rebuild, or verify
 
 `AGENTS.md` is a **compressed, AI-facing mirror** of everything in `docs/`. It is loaded at every conversation start. This workflow keeps it aligned with the canonical sources in `docs/` with zero context loss and minimum tokens.
 
-**Authority:** All edits made by this workflow follow [`docs/dev/documentation-authoring.md`](../../docs/dev/documentation-authoring.md): prescriptive, generic, DRY, compact. For new knowledge that does not fit existing sections, use `/learn` first to place it canonically in `docs/`, then run this workflow.
+**Authority:** All edits made by this workflow follow [`docs/principles/documentation-authoring.md`](../../docs/principles/documentation-authoring.md): prescriptive, generic, DRY, compact. For new knowledge that does not fit existing sections, use `/learn` first to place it canonically in `docs/`, then run this workflow.
 
 **Precondition:** If the current task changed `docs/` or `.windsurf/workflows/`, run `/validate-docs` first. Do not sync unvalidated documentation into `AGENTS.md`.
 
@@ -32,29 +32,32 @@ Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. Use this tab
 
 | `docs/` source | `AGENTS.md` section |
 |---|---|
-| `docs/foundations/code-formatting-js.md` | "Coding Standards (Mandatory)" |
-| `docs/foundations/architectural-philosophy.md` | "Core Philosophy" |
-| `docs/foundations/error-handling.md` | "Error Handling" |
-| `docs/modules/module-structure-js.md` | "Module Patterns" |
-| `docs/modules/module-categorization.md` | "Module Classes" |
-| `docs/modules/module-publishing.md` | "Publishing" |
-| `docs/modules/module-thoughts-file.md` | "Standard Files Per Module" (THOUGHTS.md row in module-structure mirror) |
-| `docs/modules/peer-dependencies.md` | "Dependency Hierarchy" |
-| `docs/modules/module-readme-structure.md` | "README Structure" |
-| `docs/modules/client-helper-modules.md` | "Client Module Patterns" |
-| `docs/server/*` | "Server Layer Rules" |
-| `docs/testing/testing-strategy.md` | "Testing" |
-| `docs/testing/unit-test-authoring-js.md` | "Testing" |
-| `docs/testing/module-testing.md` | "Testing" |
-| `docs/testing/migration-pitfalls.md` | "Two-pass check" reference |
-| `docs/dev/pitfalls.md` | "Safe Terminal Patterns" + various entry-specific callouts |
+| `docs/principles/engineering-philosophy.md` | "Core Philosophy" |
+| `docs/principles/documentation-authoring.md` | "Documentation Rules" (compressed) + the Golden Rule callout |
+| `docs/languages/js/code-formatting.md` | "Coding Standards (Mandatory)" |
+| `docs/languages/js/project-structure.md` | "Core Philosophy" + "Directory Map" |
+| `docs/languages/js/error-handling.md` | "Error Handling" |
+| `docs/languages/js/module-structure.md` | "Module Patterns" |
+| `docs/languages/js/module-classes.md` | "Module Classes" |
+| `docs/languages/js/publishing.md` | "Publishing" |
+| `docs/languages/js/module-thoughts-file.md` | "Standard Files Per Module" (THOUGHTS.md row) |
+| `docs/languages/js/dependencies.md` | "Dependency Hierarchy" |
+| `docs/languages/js/module-docs.md` | "README Structure" |
+| `docs/languages/js/index.md` | "Two-Form Naming Rule" |
+| `docs/languages/js/catalog-client.md` | "Client Module Patterns" |
+| `docs/languages/js/server/*` | "Server Layer Rules" |
+| `docs/languages/js/testing-strategy.md`, `unit-test-authoring.md`, `module-testing.md` | "Testing" |
+| `docs/languages/js/pitfalls-migration.md` | "Two-pass check" reference |
+| `docs/ai/agent-configuration.md` | "AI Behavior Rules" (this workflow's own budget rule lives there) |
+| `docs/ai/workflow-authoring.md` | Workflow inventory descriptions |
+| `docs/ai/model-tiering.md` | Session and token discipline lines |
+| `docs/dev/pitfalls.md` | "Safe Terminal Patterns" + entry-specific callouts |
 | `docs/dev/testing-local-modules.md` | "Module testing contract" |
 | `docs/dev/cicd-publishing.md` | "Publish-job CI rules" |
 | `docs/dev/planning.md` | "At session start" line |
-| `docs/dev/documentation-authoring.md` | (referenced; not mirrored - `/learn` enforces the rules directly) |
 | `docs/dev/org-structure.md` | "Directory Map" |
-| `docs/versioning/bump-checklist.md` | "Version and Publish" |
-| `docs/versioning/dependency-management.md` | "Dependency Management" |
+| `docs/languages/js/versioning/bump-checklist.md` | "Version and Publish" |
+| `docs/languages/js/versioning/dependency-management.md` | "Dependency Management" |
 | `docs/ops/**` | (referenced as "see ops/" - not embedded) |
 
 ---
@@ -78,13 +81,11 @@ Run on both `sync` and `rebuild`.
 
 Walk the `docs/` tree in this fixed order:
 
-1. `docs/foundations/`
-2. `docs/modules/`
-3. `docs/server/`
-4. `docs/testing/`
-5. `docs/dev/`
-6. `docs/versioning/`
-7. `docs/ops/` (only the index, not every runbook)
+1. `docs/principles/`
+2. `docs/languages/js/` (including `server/` and `versioning/`)
+3. `docs/ai/`
+4. `docs/dev/`
+5. `docs/ops/` (only the index, not every runbook)
 
 For each file:
 
@@ -131,14 +132,16 @@ This is a hard gate. Phase 3 does not run until Phase 2.5 reports zero unmirrore
 After Phase 1 + Phase 2 + Phase 2.5 produce the updated `AGENTS.md`:
 
 1. **Golden Rule check.** Confirm the Golden Rule callout is still the first content block, with the correct propagation workflow name (`/compile-agents-md`).
-2. **Table of contents.** If `AGENTS.md` has an explicit ToC, regenerate it from the actual `##` headings.
-3. **Internal links.** Every relative path referenced in `AGENTS.md` must point to a file that exists under `docs/` or the repo root.
-4. **Report.** Reply with a compact table of changed sections.
+2. **Size budget (hard gate).** Count the lines. Target 300, hard ceiling 400 (`docs/ai/agent-configuration.md` - The Size Budget). Over the ceiling: compress harder, demote rules to one-line pointers, or move lifecycle-only content into the owning workflow. Never raise the ceiling.
+3. **Table of contents.** If `AGENTS.md` has an explicit ToC, regenerate it from the actual `##` headings.
+4. **Internal links.** Every relative path referenced in `AGENTS.md` must point to a file that exists under `docs/` or the repo root.
+5. **Workflow embedded blocks.** Workflows carry compiled rule blocks marked with their `docs/` sources (`docs/ai/workflow-authoring.md` - Embedded Content and the Compile Rule). For each workflow in every workspace repo, if a source feeding an embedded block changed this session, update the block in the same change and report it.
+6. **Report.** Reply with a compact table of changed sections.
 
 ```
 | Section | Source | Change |
 |---|---|---|
-| Coding Standards | docs/foundations/code-formatting-js.md | Added rule about [X] |
+| Coding Standards | docs/languages/js/code-formatting.md | Added rule about [X] |
 | Safe Terminal Patterns | docs/dev/pitfalls.md | Updated entry 18 wording |
 | (no other changes) | | |
 ```

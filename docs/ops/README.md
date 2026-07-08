@@ -53,10 +53,10 @@ The three-layer split keeps generic knowledge here, project values in the projec
 
 ## Full Standard
 
-See [`foundations/operations-documentation.md`](../foundations/operations-documentation.md) for the complete documentation standard - naming conventions, content format, and the three-layer strategy.
+See [`foundations/operations-documentation.md`](../principles/operations-documentation.md) for the complete documentation standard - naming conventions, content format, and the three-layer strategy.
 
 ## Further Reading
 
-- [Operations Documentation](../foundations/operations-documentation.md) - the standard these guides follow
-- [Architectural Philosophy](../foundations/architectural-philosophy.md) - the broader directory layout
+- [Operations Documentation](../principles/operations-documentation.md) - the standard these guides follow
+- [Engineering Philosophy](../principles/engineering-philosophy.md) - the broader directory layout
 - Project runbook example: see `js-demo-project/ops/` in the `js-demo-project` repo

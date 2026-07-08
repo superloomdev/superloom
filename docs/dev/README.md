@@ -29,7 +29,7 @@ Everything a contributor needs to start working on Superloom helper modules and 
 
 ## Quick Start
 
-To run a single module's tests on your machine, see [`testing-local-modules.md`](testing-local-modules.md) - it covers the offline and service-dependent flows plus the pre-publish lint+test gate. For the broader testing strategy (tiers, badges, env vars) see [`../testing/module-testing.md`](../testing/module-testing.md).
+To run a single module's tests on your machine, see [`testing-local-modules.md`](testing-local-modules.md) - it covers the offline and service-dependent flows plus the pre-publish lint+test gate. For the broader testing strategy (tiers, badges, env vars) see [`../languages/js/module-testing.md`](../languages/js/module-testing.md).
 
 For **application-level** development against multiple services at once (separate from per-module testing), the central `docs/dev/docker-compose.yml` runs every emulator together with named volumes so data persists across restarts:
 
@@ -109,5 +109,5 @@ The `__dev__/` folder lives at the **workspace root** (the parent directory that
 - `migration-changelog.md` - personal log of module migration changes
 - `secrets/` - real credentials, API keys, sandbox passwords (never copied anywhere committed)
 
-See [Architectural Philosophy](../foundations/architectural-philosophy.md#personal-workspace-dev) for the full convention and [Organisation Structure](org-structure.md) for the workspace layout.
+See [Architectural Philosophy](../languages/js/project-structure.md#personal-workspace-dev) for the full convention and [Organisation Structure](org-structure.md) for the workspace layout.
 

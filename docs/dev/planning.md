@@ -270,5 +270,5 @@ The slash command is a **convenience layer** over the file conventions in this d
 ## Further Reading
 
 - [`.windsurf/workflows/plan.md`](https://github.com/superloomdev/superloom/blob/main/.windsurf/workflows/plan.md) - the slash-command implementation
-- [Personal Workspace](../foundations/architectural-philosophy.md#personal-workspace-dev) - why `__dev__/` exists and what else lives there
-- [Migration Pitfalls](../testing/migration-pitfalls.md) - the journal pattern that this system extends to in-flight work
+- [Personal Workspace](../languages/js/project-structure.md#personal-workspace-dev) - why `__dev__/` exists and what else lives there
+- [Migration Pitfalls](../languages/js/pitfalls-migration.md) - the journal pattern that this system extends to in-flight work

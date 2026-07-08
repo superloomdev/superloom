@@ -2,7 +2,7 @@
 
 > **Language:** [JavaScript](creating-entities-js.md)
 >
-> **When to read this.** First pass through entity creation, or refreshing on the overall shape. ~15 minutes. For the file-by-file long-form reference (model fields, server-extension contracts, full controller/service templates) read [`Entity Creation Guide`](../server/entity-creation-guide-js.md) instead.
+> **When to read this.** First pass through entity creation, or refreshing on the overall shape. ~15 minutes. For the file-by-file long-form reference (model fields, server-extension contracts, full controller/service templates) read [`Entity Creation Guide`](../languages/js/server/entity-creation-guide-js.md) instead.
 
 A quick-start guide for adding a domain entity to a Superloom project.
 
@@ -146,7 +146,7 @@ Lib.[Entity].service = require('../service/[entity].service')(Lib, [Entity]Confi
 Lib.[Entity].controller = require('../controller/[entity].controller')(Lib, [Entity]Config);
 ```
 
-Full merge mechanics live in [`server/model-modules.md`](../server/model-modules.md).
+Full merge mechanics live in [`server/model-modules.md`](../languages/js/server/model-modules.md).
 
 ---
 
@@ -160,7 +160,7 @@ app.use('/[entity]', require('./routes/[entity]')(Lib));
 
 **AWS Lambda** - create one handler file per endpoint under `src/server/interfaces/api/lambda-aws/[entity]/` and a corresponding `serverless.yml` under `src/server/_deploy/serverless-aws/[entity]/`. Each entity is its own deployable Serverless service.
 
-See [`server/server-interfaces.md`](../server/server-interfaces) for the standardized request/response shapes both adapters produce.
+See [`server/server-interfaces.md`](../languages/js/server/server-interfaces) for the standardized request/response shapes both adapters produce.
 
 ---
 
@@ -176,7 +176,7 @@ node --test src/model/[entity]/_test/test.js
 cd src/model && npm test
 ```
 
-Tests use the Node.js built-in test runner (`node --test`) and `node:assert/strict`. Naming convention: `should [expected behavior] when [condition]`. Full rules in [`testing/unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md).
+Tests use the Node.js built-in test runner (`node --test`) and `node:assert/strict`. Naming convention: `should [expected behavior] when [condition]`. Full rules in [`testing/unit-test-authoring.md`](../languages/js/unit-test-authoring.md).
 
 ---
 
@@ -184,8 +184,8 @@ Tests use the Node.js built-in test runner (`node --test`) and `node:assert/stri
 
 | Goal | Read |
 |---|---|
-| Full file-by-file walkthrough | [Entity Creation Guide](../server/entity-creation-guide-js) |
-| Understand the one-shape DTO rule | [DTO Philosophy (JavaScript)](../philosophy/dto-philosophy-js.md) |
-| Understand validation patterns | [Validation Approach](../foundations/validation-approach.md) |
-| Understand error handling | [Error Handling](../foundations/error-handling) |
-| Understand the loader and Lib container | [Server Loader](../server/server-loader.md) |
+| Full file-by-file walkthrough | [Entity Creation Guide](../languages/js/server/entity-creation-guide-js) |
+| Understand the one-shape DTO rule | [DTO Philosophy (JavaScript)](../languages/js/dto-philosophy.md) |
+| Understand validation patterns | [Validation Approach](../languages/js/validation.md) |
+| Understand error handling | [Error Handling](../languages/js/error-handling) |
+| Understand the loader and Lib container | [Server Loader](../languages/js/server/server-loader.md) |

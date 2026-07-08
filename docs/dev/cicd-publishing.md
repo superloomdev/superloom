@@ -155,7 +155,7 @@ The pipeline processes modules in three groups, organized by dependency boundari
 
 When adding a module to the pipeline:
 
-1. **Determine its class** using [`module-categorization.md`](../modules/module-categorization.md)
+1. **Determine its class** using [`module-classes.md`](../languages/js/module-classes.md)
 2. **Place it in the correct group** based on its directory (`helper-modules-core/`, `helper-modules-server/`, or `helper-modules-client/`)
 3. **Position within group** based on its dependencies — if Module B imports Module A, Module A must come first
 4. **Add both `test-*` and `publish-*` jobs** — they run sequentially per module
@@ -172,7 +172,7 @@ The workflow file groups jobs visually with comment banners showing the group bo
 
 ## Publishing a New Version
 
-The step-by-step bump procedure (SemVer classification, commit format, multi-module bumps, post-publish verification) lives in [`../versioning/bump-checklist.md`](../versioning/bump-checklist.md). This page covers the **pipeline mechanics**; the checklist covers **the contributor's procedure**.
+The step-by-step bump procedure (SemVer classification, commit format, multi-module bumps, post-publish verification) lives in [`../languages/js/versioning/bump-checklist.md`](../languages/js/versioning/bump-checklist.md). This page covers the **pipeline mechanics**; the checklist covers **the contributor's procedure**.
 
 ## GITHUB_TOKEN Permissions
 

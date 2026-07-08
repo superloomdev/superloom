@@ -1,159 +1,116 @@
 # Superloom Documentation
 
-> **Audience.** Contributors browsing the source tree on GitHub. This file is excluded from the rendered website (`srcExclude` in VitePress config).
+> **Audience.** Contributors browsing the source tree on GitHub. This file is excluded from the rendered website.
 >
-> **For readers:** the published documentation lives at [superloom.dev/docs](https://superloom.dev/docs); start there. The website's landing page is [`index.md`](index.md) in this same folder.
+> **For readers:** the published documentation lives at [superloom.dev/docs](https://superloom.dev/docs); start there. The website's landing page is [`index.md`](index.md) in this folder.
 
-This directory is the canonical source for all Superloom technical documentation. Files here are the single source of truth - the website at `superloom.dev` renders from this content.
+This directory is the canonical source for all Superloom technical documentation. The website renders from this content; edit files here directly.
 
-The introductory overview and landing page content lives in the [website repository](https://github.com/superloomdev/superloom.dev). Start at [superloom.dev](https://superloom.dev) for the full experience.
+## The Three Layers
 
-For contributors: edit files in this directory directly. Changes are picked up by the website on the next build.
+| Layer | Purpose | Audience |
+|---|---|---|
+| [`principles/`](principles/) | Universal engineering rules and their reasoning, language-independent | Architects, evaluators, language extenders |
+| [`languages/`](languages/) | Per-language opinionated implementations (currently `js/`) | Developers writing code |
+| [`ai/`](ai/) | AI-assisted development standards: agent config, workflows, model tiering | Developers using AI agents, and the agents |
+
+Two support sections sit beside the layers:
+
+| Section | Purpose |
+|---|---|
+| [`guide/`](guide/) | Task walkthroughs: getting started, creating entities, IDE setup |
+| [`dev/`](dev/) | Contributor machine setup, onboarding, planning system, pitfall journal |
+| [`ops/`](ops/) | Generic, vendor-agnostic infrastructure setup guides |
 
 ## Who Should Read What
 
-| Reader | Start with | Then read |
-|---|---|---|
-| **First-time visitor** | [superloom.dev/docs/intro](https://superloom.dev/docs/intro) | [`philosophy/why-server-mvc.md`](philosophy/why-server-mvc.md) |
-| **New contributor** | [`guide/getting-started.md`](guide/getting-started.md) | [`dev/README.md`](dev/README.md) |
-| **Adding a domain entity** | [`guide/creating-entities-js.md`](guide/creating-entities-js.md) | [`server/entity-creation-guide-js.md`](server/entity-creation-guide-js) |
-| **Architect evaluating the framework** | [`philosophy/`](philosophy/) | [`foundations/architectural-philosophy.md`](foundations/architectural-philosophy.md) |
-| **AI agent (Cascade, Cursor, Copilot)** | [`AGENTS.md`](https://github.com/superloomdev/superloom/blob/main/AGENTS.md) | Module-level `ROBOTS.md` files |
-| **DevOps / infrastructure** | [`ops/README.md`](ops/README.md) | [`foundations/operations-documentation.md`](foundations/operations-documentation.md) |
-| **CI/CD or publishing** | [`dev/cicd-publishing.md`](dev/cicd-publishing.md) | [`modules/module-publishing.md`](modules/module-publishing.md) |
-
-## Section Map
-
-| Section | Purpose | Audience |
-|---|---|---|
-| [`intro.md`](intro.md) | Landing page - what Superloom is and why it exists | Everyone |
-| [`philosophy/`](philosophy/) | Design philosophy and the convictions behind the rules | Framework users |
-| [`guide/`](guide/) | Step-by-step task guides (getting started, entities, IDE) | Framework users |
-| [`architecture/`](architecture/) | Technical standards - the rules the codebase actually follows | Contributors, AI agents |
-| [`dev/`](dev/) | Developer machine setup (Git, npm, Docker, environment files) | New developers |
-| [`ops/`](ops/) | Generic, vendor-agnostic infrastructure setup guides | DevOps, infrastructure |
+| Reader | Start with |
+|---|---|
+| **First-time visitor** | [`index.md`](index.md) |
+| **Application developer** | [`guide/getting-started.md`](guide/getting-started.md) |
+| **New contributor** | [`dev/README.md`](dev/README.md) |
+| **Architect evaluating the framework** | [`principles/engineering-philosophy.md`](principles/engineering-philosophy.md) |
+| **JavaScript module author** | [`languages/js/index.md`](languages/js/index.md) |
+| **AI agent** | Repository `AGENTS.md`, then module-level `ROBOTS.md` files |
+| **Extending to a new language** | [`principles/extending-to-a-language.md`](principles/extending-to-a-language.md) |
+| **DevOps / infrastructure** | [`ops/README.md`](ops/README.md) |
 
 ## Directory Tree
 
 ```
 docs/
-  intro.md                            # Landing page
-  README.md                           # This file - the index
+  index.md                          # Landing page
+  README.md                         # This file - the index
 
-  philosophy/                         # Why we do things the way we do
-    why-server-mvc.md                 # Why the server uses MVC, plus the Service layer adaptation
-    dto-philosophy-js.md                 # The one-shape rule for data transfer objects
+  principles/                       # LAYER 1 - universal rules with reasoning
+    engineering-philosophy.md       #   The five convictions
+    code-readability.md             #   Vertical rhythm, banners, step comments, scanning model
+    file-archetypes.md              #   Named file shapes and conformance
+    module-design.md                #   Module contract, companions, injection, class taxonomy
+    server-architecture.md          #   MVC + Service layers, request flow, DTO one-shape rule
+    error-handling.md               #   Three categories, throw vs return, envelopes, catalogs
+    validation.md                   #   Hand-written co-located validation, and why
+    testing.md                      #   Tiers, self-contained suites, naming
+    versioning-and-releases.md      #   SemVer, conventional commits, pipeline-only releases
+    third-party-libraries.md        #   Zero-dependency default and the exception criteria
+    operations-documentation.md     #   Three-layer ops documentation strategy
+    documentation-authoring.md      #   Voice, mechanics, placement, the Golden Rule
+    extending-to-a-language.md      #   How to add or fork a language layer
 
-  guide/                              # Task-driven walkthroughs
-    getting-started.md                # Run the demo project locally
-    creating-entities-js.md              # Add a new domain entity
-    ide-setup.md                      # Recommended IDE configuration
+  languages/
+    js/                             # LAYER 2 - the JavaScript implementation
+      index.md                      #   Reading path, document map, two-form naming rule
+      project-structure.md          #   Directory layout and repository conventions
+      code-formatting.md            #   Exact spacing, banners, JSDoc, naming, aliases
+      module-structure.md           #   Loader patterns and every archetype skeleton
+      module-classes.md             #   Class A-H assignments for every module
+      factory-vs-singleton.md       #   The pattern decision
+      error-handling.md             #   JS envelopes, frozen catalogs, prefixes
+      validation.md                 #   JS validator shapes
+      dependencies.md               #   Peer dependencies and the Lib container
+      dto-philosophy.md             #   The one-shape rule in JavaScript
+      module-docs.md                #   README / ROBOTS / docs structure per module
+      module-docs-complex.md        #   docs/ folders for feature modules
+      module-thoughts-file.md       #   The THOUGHTS.md engineering journal
+      publishing.md                 #   CI/CD publish pipeline
+      testing-strategy.md           #   Test layout and runner conventions
+      unit-test-authoring.md        #   How to write unit tests
+      module-testing.md             #   Testing tiers and emulator setup
+      integration-testing.md        #   Real cloud testing in a sandbox account
+      pitfalls-migration.md         #   Journal: module-migration failures
+      catalog-core.md               #   Published core modules
+      catalog-server.md             #   Published server modules
+      catalog-client.md             #   Published client modules
+      server/                       #   Application server layers (loader, interfaces,
+                                    #   controllers, services, models, entity guide)
+      versioning/                   #   Bump checklist, changelog format, CI graph,
+                                    #   API stability, dependency management
 
-  architecture/                       # Technical standards (~22 documents)
-    architectural-philosophy.md       #   High-level rules and directory layout
-    code-formatting-js.md             #   JavaScript coding standards
-    error-handling.md                 #   Throw vs return, three error categories
-    validation-approach.md            #   Hand-written, co-located validation
-    module-structure-js.md               #   How helper modules are built
-    module-testing.md                 #   Testing tiers and emulator setup
-    module-publishing.md              #   CI/CD publishing pipeline
-    peer-dependencies.md              #   Self-contained foundation + peer deps
-    entity-creation-guide-js.md          #   Full entity creation walkthrough
-    model-modules.md                  #   Base, server, and client model layers
-    server-loader.md                  #   Dependency injection and the Lib container
-    server-interfaces.md              #   Express and Lambda adapters
-    server-controller-modules.md      #   Thin adapters between interfaces and services
-    server-service-modules.md         #   Business logic and orchestration
-    server-helper-modules.md          #   Server-only helper modules
-    server-common.md                  #   Bootstrap, config, runtime helpers
-    core-helper-modules.md            #   Platform-agnostic helper modules
-    operations-documentation.md       #   Three-layer ops documentation strategy
-    testing-strategy.md               #   Test layout and runner conventions
-    unit-test-authoring-js.md            #   How to write unit tests
-    integration-testing.md            #   Real cloud testing in a sandbox account
-    migration-pitfalls.md             #   Common issues during module migrations
-    module-categorization.md          #   Which class each module belongs to
-    complex-module-docs-guide.md      #   docs/ folder structure for feature modules
+  ai/                               # LAYER 3 - AI-assisted development
+    index.md                        #   The operating ideas
+    agent-configuration.md          #   AGENTS.md standard, size budget, ROBOTS.md
+    workflow-authoring.md           #   The seven properties of reliable workflows
+    model-tiering.md                #   Reasoning tier vs execution tier
 
-  dev/                                # Developer setup
-    README.md                         #   Onboarding quick start
-    documentation-standards.md        #   Writing standards, American English, formatting rules
-    .env.dev.example                  #   Dev environment template
-    .env.integration.example          #   Integration environment template
-    onboarding-git-account.md         #   Git identity for multiple GitHub accounts
-    onboarding-github-packages.md     #   GitHub token + npm registry setup
-    npmrc-setup.md                    #   Global npmrc configuration guide
-    cicd-publishing.md                #   CI/CD philosophy and workflow design
-    testing-local-modules.md          #   Healthcheck philosophy, test concurrency
-    mcp-github-setup.md               #   AI assistant GitHub MCP configuration
-    pitfalls.md                       #   AI journal: every dev-environment failure ever fixed
-    repo-setup.md                     #   One-time repository creation (founder only)
-
-  ops/                                # Infrastructure reference (17 categories)
-    README.md                         #   Overview and how to consume these guides
-    domain/                           #   Domain registration
-    cloud-provider/                   #   AWS, GCP, Azure account setup
-    billing/                          #   Cost management and budget alerts
-    development-environment/          #   Cloud-hosted developer workspaces
-    source-control/                   #   GitHub org, tokens, Actions
-    identity-access/                  #   IAM policies, roles, users
-    networking/                       #   VPC, security groups, firewalls
-    object-storage/                   #   S3, GCS, MinIO
-    parameter-management/             #   Secrets and config (SSM, Vault)
-    relational-database/              #   RDS, Aurora, Cloud SQL
-    nosql-database/                   #   DynamoDB, MongoDB Atlas
-    ssl-certificates/                 #   ACM, Let's Encrypt
-    cdn/                              #   CloudFront, Cloudflare
-    dns/                              #   Route 53, Cloudflare DNS
-    messaging/                        #   SES, SNS, SendGrid, Twilio
-    deployment/                       #   Serverless Framework, Docker
-    scheduled-tasks/                  #   EventBridge, Cloud Scheduler
+  guide/                            # Task walkthroughs
+  dev/                              # Contributor setup, onboarding, planning, pitfalls.md
+  ops/                              # Infrastructure reference (vendor-agnostic folders,
+                                    # vendor-prefixed files)
 ```
 
 ## Documentation Principles
 
-Every file in this directory follows the rules in [`docs/dev/documentation-authoring.md`](./dev/documentation-authoring.md):
+Every file here follows [`principles/documentation-authoring.md`](principles/documentation-authoring.md): rule first, reason second, example third; prescriptive, generic, DRY, compact; no em dashes; American English.
 
-- **Prescriptive over prohibitive** - state what to do, not what to avoid
-- **Generic over specific** - use placeholders (`[module]`, `[entity]`) in framework rules
-- **DRY** - each rule lives in exactly one canonical file; others cross-reference
-- **Compact** - tables and bullets, never prose paragraphs for rules
-- **No preamble** - skip "This section explains..." and similar throat-clearing
+Two derived artifacts are compiled from this tree and never edited directly: the repository `AGENTS.md` files and the embedded rule blocks in workflows. See [`ai/agent-configuration.md`](ai/agent-configuration.md).
 
-The compressed, AI-facing mirror of these documents lives in [`AGENTS.md`](https://github.com/superloomdev/superloom/blob/main/AGENTS.md). When a file in `docs/` changes, run the `/compile-agents-md` workflow to keep the mirror in sync.
+### Pitfall Journals
 
-### Pitfall Journals (AI-Oriented)
-
-Every `docs/<section>/` folder that accumulates enough "real failures we fixed" gets a single `pitfalls.md` file alongside the philosophy docs:
-
-- [`dev/pitfalls.md`](dev/pitfalls.md) - AI terminal, CI/CD publishing, local module testing.
-- [`testing/migration-pitfalls.md`](testing/migration-pitfalls.md) - module-migration failures (kept under its current filename).
-
-Rules:
-
-- One pitfall file per folder. No nested `pitfalls/` directories. No root-level pitfall file.
-- Every entry is **Symptom → Cause → Lesson/Fix**.
-- Philosophy docs keep only the *positive* rules. Symptoms and root causes always live in the pitfall file.
-- Pitfall files are **AI-oriented**, not first-read material. Humans jump to them only when a specific failure needs a confirmed fix.
-- Anchors in pitfall files are stable. `AGENTS.md` and other cross-references rely on them. Never rename an H2 or H3 after it is published.
-
-## Local Preview (Future)
-
-When the Docusaurus site is set up at `superloom.dev`, the local preview will be:
-
-```bash
-cd docs
-npm install
-npm start          # Local dev server at http://localhost:3000
-npm run build      # Build the static site for production
-```
-
-Until then, every file is fully readable directly on GitHub.
+Confirmed failures live in append-only journals (Symptom, Cause, Lesson), one per folder that needs one: [`dev/pitfalls.md`](dev/pitfalls.md) for terminal, CI, and testing failures; [`languages/js/pitfalls-migration.md`](languages/js/pitfalls-migration.md) for module-migration failures. Rule documents carry only the positive rules; the stories stay in the journals. Published heading anchors in journals are never renamed.
 
 ## Why Markdown
 
-- Every file is readable on GitHub without any tooling
-- Plays well with Docusaurus, Hugo, MkDocs, or any static site generator
+- Readable on GitHub without tooling
+- Renders through any static site generator
 - Plays well with `git diff`, code review, and AI agents
-- No proprietary formats, no vendor lock-in
-- MIT licensed - free for commercial use
+- No proprietary formats; MIT licensed

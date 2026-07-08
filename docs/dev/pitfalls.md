@@ -4,7 +4,7 @@
 >
 > **Shape:** Every entry is **Symptom → Cause → Lesson/Fix**. When a new failure mode is discovered, add the entry here first (per the Golden Rule in `AGENTS.md`), then propagate a compact rule into `AGENTS.md` via `/compile-agents-md`.
 >
-> **Scope:** This file covers the `docs/dev/` domain: AI tool-bridge, CI/CD publishing, local module testing. Architecture-level pitfalls (module migration, refactors) live in [`docs/testing/migration-pitfalls.md`](../testing/migration-pitfalls.md).
+> **Scope:** This file covers the `docs/dev/` domain: AI tool-bridge, CI/CD publishing, local module testing. Architecture-level pitfalls (module migration, refactors) live in [`docs/testing/pitfalls-migration.md`](../languages/js/pitfalls-migration.md).
 
 ## On This Page
 
@@ -848,7 +848,7 @@ module.exports = function loader (config) {
 
 **Example of the solution:**
 ```javascript
-// CORRECT: Factory pattern (fixed-slots shape - see module-structure-js.md)
+// CORRECT: Factory pattern (fixed-slots shape - see module-structure.md)
 module.exports = function loader (shared_libs, config) {
   const Lib = { Utils: shared_libs.Utils };
   const CONFIG = Object.assign({}, require('./[module].config'), config || {});
@@ -892,7 +892,7 @@ This clean-install form is mandatory in the `/js-helper-module-refactor` workflo
 
 **Why not remove it or rename to `_CONFIG`?** Removing breaks the structural contract and creates an inconsistency when the slot gets wired later. Renaming to `_CONFIG` changes the actual variable name and deviates from the naming convention used across all modules (`Lib`, `CONFIG`, `React`, etc.).
 
-**Fix:** Add an inline `// eslint-disable-line no-unused-vars` comment at the end of the reserved declaration. This is the established convention for module-scope `let` vars across all modules (see `docs/modules/module-structure-js.md` Singleton Part Shape):
+**Fix:** Add an inline `// eslint-disable-line no-unused-vars` comment at the end of the reserved declaration. This is the established convention for module-scope `let` vars across all modules (see `docs/languages/js/module-structure.md` Singleton Part Shape):
 
 ```js
 // Injected dependencies, set by the loader (module-scope).
@@ -920,6 +920,6 @@ Doc drift is the slowest bug to find. **No exceptions.** Every new lesson goes h
 
 Cross-reference rules:
 
-- Pitfalls that belong to the architecture domain (`docs/foundations/`, `docs/modules/`, `docs/server/`, `docs/testing/` - module migration, refactors) go in [`../testing/migration-pitfalls.md`](../testing/migration-pitfalls.md), not here.
+- Pitfalls that belong to the architecture domain (`docs/foundations/`, `docs/modules/`, `docs/server/`, `docs/testing/` - module migration, refactors) go in [`../languages/js/pitfalls-migration.md`](../languages/js/pitfalls-migration.md), not here.
 - The philosophy docs [`cicd-publishing.md`](cicd-publishing.md) and [`testing-local-modules.md`](testing-local-modules.md) keep only the **positive** rules (what to do). Symptoms and root causes always live here.
 - Anchors in this file are stable. `AGENTS.md` and other cross-references rely on them. Never rename an H2 or H3 after it is published.

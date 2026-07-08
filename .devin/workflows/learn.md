@@ -8,23 +8,26 @@ description: Capture new knowledge into the framework - applies documentation-au
 
 **Goal:** Place the knowledge in exactly the right location(s), in the right shape, with cross-references kept consistent - so the user never has to re-explain authoring rules.
 
-**Authority:** This workflow is the operational arm of [`docs/dev/documentation-authoring.md`](../../docs/dev/documentation-authoring.md). All steps below enforce those principles automatically.
+**Authority:** This workflow is the operational arm of [`docs/principles/documentation-authoring.md`](../../docs/principles/documentation-authoring.md). All steps below enforce those principles automatically.
 
 ---
 
 ## Step 1 - Classify the knowledge
 
-Map the user's input to one row in this table (canonical source: `docs/dev/documentation-authoring.md` → Decision Tree):
+Map the user's input to one row in this table (canonical source: `docs/principles/documentation-authoring.md` → Placement):
 
 | Type of knowledge | Destination |
 |---|---|
-| Universal AI behavior rule | personal `.windsurf/GOD.md` (workspace-root, not committed) |
-| Project-wide AI rule (compressed) | `AGENTS.md` |
-| Architectural rule, full detail | `docs/[bucket]/[topic].md` (foundations/modules/server/testing) |
-| Step-by-step task procedure | `.windsurf/workflows/[name].md` (relevant repo) |
+| Universal AI behavior rule (personal) | workspace-root personal meta file (not committed) |
+| Project-wide AI rule (compressed) | `AGENTS.md` via its source doc + `/compile-agents-md` |
+| Universal engineering rule with reasoning | `docs/principles/[topic].md` |
+| Language-specific rule, syntax, or skeleton | `docs/languages/[lang]/[topic].md` |
+| AI agent config or workflow standard | `docs/ai/[topic].md` |
+| Step-by-step task procedure | workflow file in the relevant repo |
 | Module-specific function/usage | `[module]/README.md` + `[module]/ROBOTS.md` |
 | Operational runbook (env-specific) | `ops/[NN-category]/[vendor-service].md` |
 | Generic infrastructure guide | `docs/ops/[category]/[vendor-service].md` |
+| Failure diagnosed and fixed | the domain's pitfall journal (`docs/dev/pitfalls.md` or `docs/languages/js/pitfalls-migration.md`) |
 | Migration history (gitignored) | `__dev__/migration-changelog.md` |
 
 If the knowledge spans multiple categories, split it: each piece goes to its canonical home, and the others cross-reference.
@@ -59,10 +62,10 @@ Apply the edit using `edit` or `multi_edit`. Include:
 
 Run the **decision sub-tree** for cross-file impact:
 
-- Edited a file in `docs/foundations/`, `docs/modules/`, `docs/server/`, or `docs/testing/`? → Update the matching compressed section in `AGENTS.md` (run `/compile-agents-md` if multiple sections affected)
+- Edited a file in `docs/principles/`, `docs/languages/`, or `docs/ai/`? → Update the matching compressed section in `AGENTS.md` (run `/compile-agents-md` if multiple sections affected), and update any workflow embedded block compiled from it
 - Edited a rule that appears in code comments anywhere? → Search the codebase and align all comments to match the new wording verbatim
 - Edited a workflow? → Update the workflow inventory in the personal `.windsurf/GOD.md` "Current Status" if a workflow was added/removed
-- Added a new authoring principle? → It belongs in `docs/dev/documentation-authoring.md`, not in workflows
+- Added a new authoring principle? → It belongs in `docs/principles/documentation-authoring.md`, not in workflows
 
 ## Step 6 - Verify cross-reference integrity
 

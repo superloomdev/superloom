@@ -6,9 +6,9 @@ This guide is the canonical reference for running module tests on a developer ma
 
 **Companion docs.**
 
-- [`../testing/module-testing.md`](../testing/module-testing.md) - the **strategy** (testing tiers, badges, env vars, when to run what, module categories).
-- [`../testing/unit-test-authoring-js.md`](../testing/unit-test-authoring-js.md) - how to author a single unit test (rules, naming, assertions).
-- [`../testing/integration-testing.md`](../testing/integration-testing.md) - integration testing against real cloud services.
+- [`../languages/js/module-testing.md`](../languages/js/module-testing.md) - the **strategy** (testing tiers, badges, env vars, when to run what, module categories).
+- [`../languages/js/unit-test-authoring.md`](../languages/js/unit-test-authoring.md) - how to author a single unit test (rules, naming, assertions).
+- [`../languages/js/integration-testing.md`](../languages/js/integration-testing.md) - integration testing against real cloud services.
 
 Use this file for **how to run the tests on your machine**; use the strategy doc for **which tier to run and why**.
 

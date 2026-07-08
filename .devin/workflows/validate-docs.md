@@ -185,8 +185,7 @@ Question: do changed files follow the documented writing rules?
 
 Source of truth:
 
-- `docs/dev/documentation-standards.md`
-- `docs/dev/documentation-authoring.md`
+- `docs/principles/documentation-authoring.md`
 
 Mandatory checks:
 
@@ -194,13 +193,13 @@ Mandatory checks:
 |---|---|---|
 | 1 | No em dash characters | Search for the Unicode U+2014 character |
 | 2 | No double hyphen as em dash | Search for space + double hyphen + space |
-| 3 | No banned phrases | Search for the banned phrase list from `docs/dev/documentation-standards.md` |
+| 3 | No banned phrases | Search for the banned phrase list from `docs/principles/documentation-authoring.md` |
 | 4 | Sentence length | Analytic check for sentences over 30 words |
-| 5 | American English | Search for common British spellings listed in the style guide |
+| 5 | American English | Search for common British spellings listed in `docs/principles/documentation-authoring.md` |
 | 6 | Table-cell punctuation | Check table cells ending in periods; classify valid multi-sentence exceptions |
 | 7 | Angle-bracket placeholders | Search for bare `<name>` outside backticks and fenced code |
-| 8 | Session-specific language | Search for temporal or conversation-specific phrases from `docs/dev/documentation-authoring.md` |
-| 9 | Preamble wording | Search for preamble openings banned by `docs/dev/documentation-authoring.md` |
+| 8 | Session-specific language | Search for temporal or conversation-specific phrases per `docs/principles/documentation-authoring.md` |
+| 9 | Preamble wording | Search for preamble openings banned by `docs/principles/documentation-authoring.md` |
 
 Output:
 
@@ -327,6 +326,30 @@ Undefined first uses: K
 Bad forward references: L
 ```
 
+## Pass 12 - Layer Contracts, Embedded Blocks, and Budget
+
+Question: do the three-layer contracts hold, are workflow embedded blocks in sync, and is `AGENTS.md` within budget?
+
+Evidence required:
+
+- Every `docs/languages/[lang]/` document reachable from that layer's `index.md` document map, and every mapped principle file existing.
+- Every `principles/` Language Implementations table row resolving to an existing file.
+- Every workflow embedded block (marked with its `docs/` source) compared against its source for drift.
+- `AGENTS.md` line count against the budget in `docs/ai/agent-configuration.md` (target 300, ceiling 400).
+
+Severity: embedded-block drift and budget-ceiling breach are Blockers; a missing implementations row is High.
+
+Output:
+
+```text
+Pass 12 - Layers and Budget
+Language docs checked: N
+Implementation rows checked: M
+Embedded blocks compared: K
+AGENTS.md lines: L (budget 300/400)
+Findings: J
+```
+
 ## Final Report
 
 After all passes, output one consolidated table:
@@ -388,4 +411,7 @@ New failure modes found during validation must be added here. If no pass catches
 | Term is used before definition | Pass 11 |
 | `AGENTS.md` edited directly | Phase 0 Blocker |
 | `AGENTS.md` missing source-doc rules | `/compile-agents-md` Phase 2.5 |
+| Language doc unreachable or principle row broken | Pass 12 |
+| Workflow embedded block drifted from its source | Pass 12 |
+| `AGENTS.md` over the size budget | Pass 12 |
 ```
