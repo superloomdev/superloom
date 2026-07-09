@@ -136,7 +136,16 @@ After Phase 1 + Phase 2 + Phase 2.5 produce the updated `AGENTS.md`:
 3. **Table of contents.** If `AGENTS.md` has an explicit ToC, regenerate it from the actual `##` headings.
 4. **Internal links.** Every relative path referenced in `AGENTS.md` must point to a file that exists under `docs/` or the repo root.
 5. **Workflow embedded blocks.** Workflows carry compiled rule blocks marked with their `docs/` sources (`docs/ai/workflow-authoring.md` - Embedded Content and the Compile Rule). For each workflow in every workspace repo, if a source feeding an embedded block changed this session, update the block in the same change and report it.
-6. **Report.** Reply with a compact table of changed sections.
+6. **Propagate to `codebase-js-demo-project`.** Copy the updated `AGENTS.md` to the demo project:
+   ```bash
+   cp AGENTS.md ../codebase-js-demo-project/AGENTS.md
+   ```
+   Then commit the copy in the demo-project repo:
+   ```bash
+   git add AGENTS.md && git commit -m "chore: sync AGENTS.md from codebase-superloom"
+   ```
+   This step is required because `codebase-js-demo-project/AGENTS.md` is a real file (not a symlink) and the IDE injects it as a separate workspace root. If the two files diverge, agents in the demo-project workspace get stale rules.
+7. **Report.** Reply with a compact table of changed sections.
 
 ```
 | Section | Source | Change |

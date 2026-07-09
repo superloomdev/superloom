@@ -4,7 +4,7 @@ description: Validate documentation consistency after any docs change with evide
 
 # Validate Docs Workflow
 
-Run this workflow after any addition, modification, rename, move, or removal in `docs/` or any `.windsurf/workflows/` file.
+Run this workflow after any addition, modification, rename, move, or removal in `docs/` or any `.devin/workflows/` file.
 
 `AGENTS.md` is a derived file. This workflow may inspect `AGENTS.md`, but it must not edit it. If `AGENTS.md` changed outside `/compile-agents-md`, treat that as a Blocker.
 
@@ -16,7 +16,7 @@ Use this workflow when:
 
 - A documented concept was added, renamed, removed, or restructured.
 - Content moved between documentation files.
-- A workflow file changed.
+- A `.devin/workflows/` file changed.
 - `/learn` added new knowledge.
 - A documentation change is ready for review or commit.
 
@@ -53,7 +53,7 @@ Evidence: [count or file list proving why]
 
 Build the blast radius before running validation passes.
 
-1. List changed files under `docs/`, `.windsurf/workflows/`, and `AGENTS.md`.
+1. List changed files under `docs/`, `.devin/workflows/`, and `AGENTS.md`.
 2. If `AGENTS.md` changed directly and the current task is not `/compile-agents-md`, record a Blocker and stop.
 3. For each changed file, name the conceptual change: addition, rename, removal, move, restructure, or semantic shift.
 4. For each changed concept, search all relevant workspace repositories for old terms, new terms, section headings, package names, and workflow names.
@@ -255,7 +255,7 @@ Question: do templates, checklists, workflows, and reference implementations ref
 
 Evidence required:
 
-- Workflow files checked across workspace repositories that contain `.windsurf/workflows/`.
+- Workflow files checked across workspace repositories that contain `.devin/workflows/`.
 - Checklists checked in docs and workflows.
 - Templates and skeletons checked against the rules they are meant to illustrate.
 - Reference implementations verified to exist.
@@ -263,7 +263,7 @@ Evidence required:
 Repo scope:
 
 - Start with the current repository.
-- Include sibling workspace repositories that contain `.windsurf/workflows/` or are listed in `docs/dev/org-structure.md`.
+- Include sibling workspace repositories that contain `.devin/workflows/` or are listed in `docs/dev/org-structure.md`.
 - Do not write local absolute paths into docs or workflows.
 
 Output:
