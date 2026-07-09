@@ -254,7 +254,7 @@ Mock `Utils` and `Debug` only when truly needed. Prefer the test loader with rea
 git grep "[old-term]"
 
 # Target specific paths
-git grep "[old-term]" -- 'docs/**' 'AGENTS.md' '.windsurf/**' 'src/**/*.md'
+git grep "[old-term]" -- 'docs/**' 'AGENTS.md' '.devin/**' 'src/**/*.md'
 
 # Fix all matches in the same change (atomic update)
 ```

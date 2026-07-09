@@ -74,7 +74,7 @@ The same rule applies to `gh pr create`, `aws ssm put-parameter`, and any other 
 
 **Cause:** Any time a `run_command` payload spans multiple lines because of an embedded quoted string, the shell-bridge sees the same `dquote>` failure mode.
 
-**Fix:** Route the multi-line content through `write_to_file` to a temp file first, then have the shell read from the file with a single-line command. This pattern is also documented in `.windsurf/workflows/migrate-module.md` Section 7a.
+**Fix:** Route the multi-line content through `write_to_file` to a temp file first, then have the shell read from the file with a single-line command. This pattern is also documented in `.devin/workflows/module.md` Phase C command rules.
 
 #### S4. Backticks inside a double-quoted argument
 

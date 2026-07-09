@@ -64,7 +64,7 @@ Run the **decision sub-tree** for cross-file impact:
 
 - Edited a file in `docs/principles/`, `docs/languages/`, or `docs/ai/`? → Update the matching compressed section in `AGENTS.md` (run `/compile-agents-md` if multiple sections affected), and update any workflow embedded block compiled from it
 - Edited a rule that appears in code comments anywhere? → Search the codebase and align all comments to match the new wording verbatim
-- Edited a workflow? → Update the workflow inventory in `__dev__/GOD.md` "Current Status" if a workflow was added/removed
+- Edited a workflow? → Update the workflow inventory in the workspace-root `.devin/GOD.md` "Current Status" if a workflow was added/removed
 - Added a new authoring principle? → It belongs in `docs/principles/documentation-authoring.md`, not in workflows
 
 ## Step 6 - Verify cross-reference integrity

@@ -8,7 +8,7 @@ description: Compile AGENTS.md from docs/ - sync (default), rebuild, or verify
 
 **Authority:** All edits made by this workflow follow [`docs/principles/documentation-authoring.md`](../../docs/principles/documentation-authoring.md): prescriptive, generic, DRY, compact. For new knowledge that does not fit existing sections, use `/learn` first to place it canonically in `docs/`, then run this workflow.
 
-**Precondition:** If the current task changed `docs/` or `.windsurf/workflows/`, run `/validate-docs` first. Do not sync unvalidated documentation into `AGENTS.md`.
+**Precondition:** If the current task changed `docs/` or `.devin/workflows/`, run `/validate-docs` first. Do not sync unvalidated documentation into `AGENTS.md`.
 
 ---
 
@@ -66,7 +66,7 @@ Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. Use this tab
 
 Run only on `sync` (skip on `rebuild`).
 
-1. Identify every file I edited in this session under `docs/` or `.windsurf/`
+1. Identify every file I edited in this session under `docs/` or `.devin/workflows/`
 2. For each, look up its `AGENTS.md` section via the Section Map above
 3. Read the new source content; compare to the current `AGENTS.md` section
 4. Apply a compressed update per the authoring principles (see "Compression Discipline" below)
