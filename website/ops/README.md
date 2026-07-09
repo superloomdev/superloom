@@ -24,4 +24,4 @@ This directory contains the complete infrastructure setup documentation for host
 ## Reference
 
 For generic how-to guides, see [`docs/ops/`](../docs/ops/README.md).
-For the full documentation standard, see [`docs/foundations/operations-documentation.md`](../docs/foundations/operations-documentation.md).
+

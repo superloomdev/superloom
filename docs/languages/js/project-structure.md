@@ -207,4 +207,4 @@ The repository remote always uses the canonical `github.com` URL. Developers wit
 | **Server layers** (controller, service, common, interfaces) | [`server-controller-modules.md`](server/server-controller-modules.md), [`server-service-modules.md`](server/server-service-modules.md), [`server-common.md`](server/server-common.md), [`server-interfaces.md`](server/server-interfaces) |
 | **Helper modules** (core and server) | [`catalog-core.md`](catalog-core.md), [`catalog-server.md`](catalog-server.md) |
 | **Validation, errors, testing** | [`validation.md`](validation.md), [`error-handling.md`](error-handling), [`testing-strategy.md`](testing-strategy.md) |
-| **Operations and deployment** | [`operations-documentation.md`](operations-documentation.md), [`publishing.md`](publishing.md) |
+| **Operations and deployment** | [`publishing.md`](publishing.md) |
