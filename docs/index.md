@@ -4,7 +4,7 @@
 
 Modern development has a new pressure: AI agents generate code faster than humans can review it. Without structure, the result is drift; every feature adds a slightly different way of doing the same thing, and six months later nobody, human or machine, can say what the house style is.
 
-Superloom is the opposite bet. It is an opinionated engineering standard expressed as documentation, plus a catalog of pre-tested helper modules that implement it. The same business logic runs unchanged on Docker (Express) and AWS Lambda; only the transport adapter at the edge changes. The architecture is language-independent; JavaScript is the current reference implementation.
+Superloom is the opposite bet. It is an opinionated engineering standard expressed as documentation, precise enough to build production modules and applications from. The same business logic runs unchanged on Docker (Express) and AWS Lambda; only the transport adapter at the edge changes. The architecture is language-independent; JavaScript is the current reference implementation.
 
 ---
 
@@ -132,40 +132,11 @@ The pattern and its reasoning: [Server Architecture](principles/server-architect
 
 ---
 
-## Modules at a Glance
+## Module Catalogs
 
-Every module is published independently to GitHub Packages under `@superloomdev/*`. Pick the ones you need; they install as peer dependencies.
+The JavaScript layer documents three module catalogs: platform-agnostic core helpers, server-only helpers (databases, storage, queues), and client helpers. Every documented module follows the same loader shape, response envelope, and testing contract.
 
-### Core helpers (platform-agnostic)
-
-- **helper-utils** - type checks, validation, sanitization, data manipulation. Zero external dependencies
-- **helper-debug** - structured logging with levels, routing to console, JSON, or a custom sink
-- **helper-time** - date and time math, timezone handling, formatting
-- **helper-money** - currency-safe arithmetic and formatting
-
-### Databases (hot-swappable, same calling shape)
-
-- **helper-sql-postgres**, **helper-sql-mysql**, **helper-sql-sqlite** - one SQL calling shape across all three backends
-- **helper-nosql-mongodb**, **helper-nosql-aws-dynamodb** - document and key-value stores behind the same envelope
-
-### Storage and queues
-
-- **helper-storage-aws-s3** and **helper-storage-aws-s3-url-signer** - file operations and isolated presigned-URL generation
-- **helper-queue-aws-sqs** - send, receive, delete, with structured logging built in
-
-### Auth, verification, and logging
-
-- **helper-auth** - session lifecycle plus JWT auth with refresh rotation, storage-agnostic via adapters
-- **helper-verify** - one-time verification codes with hot-swappable store adapters
-- **helper-logger** - compliance-friendly action log with per-row retention and multi-backend stores
-
-### Cross-cutting
-
-- **helper-instance** - request lifecycle, cleanup, background tasks, Lambda-aware
-- **helper-crypto** (server and client) - hashing, encryption, UUID, random strings
-- **helper-http** and **helper-http-gateway** - outgoing HTTP and inbound gateway adaptation
-
-The full per-tier catalogs: [core](languages/js/catalog-core), [server](languages/js/catalog-server), [client](languages/js/catalog-client).
+The per-tier catalogs: [core](languages/js/catalog-core), [server](languages/js/catalog-server), [client](languages/js/catalog-client).
 
 ---
 

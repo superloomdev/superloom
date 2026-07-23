@@ -59,7 +59,7 @@ Helper modules can be implemented in three different ways depending on your proj
 | Server Interfaces | `server-interfaces` | `[project]/src/server/interfaces/` | Entry points: API (Express + Lambda), Hook, Job |
 | Deploy Configs | `deploy` | `[project]/src/server/_deploy/[entity]/` | Per-entity Serverless Framework configs |
 
-Helper module directories live in their own implementation repo (for JavaScript: `js-helper-modules`). Model and project-side directories live inside each application project under `src/`.
+Helper module directories live in their own implementation repository (see [`org-structure.md`](../../dev/org-structure.md)). Model and project-side directories live inside each application project under `src/`.
 
 ---
 
@@ -376,8 +376,8 @@ createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)
 
 ### Reference Implementations
 
-- **Stateful (full shape):** `js-server-helper-sql-mysql` in `js-helper-modules`
-- **Stateless (no `state` param):** `js-server-helper-http` in `js-helper-modules`
+- **Stateful (full shape):** `js-server-helper-sql-mysql` in the JS implementation repository
+- **Stateless (no `state` param):** `js-server-helper-http` in the JS implementation repository
 
 When extending an existing Pattern 1 (Singleton) module to Pattern 2 (Factory), treat it as a breaking change for that module: update the header comment, move all functions into `createInterface`, switch `module.exports` to the loader assignment, and document the migration in `__dev__/migration-changelog.md`.
 
@@ -504,7 +504,7 @@ This convention keeps the parent loader free of part-ordering knowledge. If the 
 
 ### Reference Implementation
 
-The canonical example is `js-server-helper-auth` in `js-helper-modules`: six parts (auth-id, cookie, jwt, policy, record-shape, token-source) all consumed by `auth.js`. Validators live in the module-root singleton `auth.validators.js`, not in `parts/`.
+The canonical example is `js-server-helper-auth` in the JS implementation repository: six parts (auth-id, cookie, jwt, policy, record-shape, token-source) all consumed by `auth.js`. Validators live in the module-root singleton `auth.validators.js`, not in `parts/`.
 
 ---
 
@@ -848,9 +848,9 @@ This module demonstrates the rare case where singleton pattern is appropriate: a
 
 ### Reference Implementations
 
-- **Main module singleton (reference example):** `js-helper-utils` in `js-helper-modules` (`utils.js`)
-- **Module-root singleton (validators, special case):** `js-server-helper-auth` in `js-helper-modules` (`auth.validators.js`)
-- **Factory pattern (standard for most modules):** `js-helper-money` in `js-helper-modules` (`money.js`)
+- **Main module singleton (reference example):** `js-helper-utils` in the JS implementation repository (`utils.js`)
+- **Module-root singleton (validators, special case):** `js-server-helper-auth` in the JS implementation repository (`auth.validators.js`)
+- **Factory pattern (standard for most modules):** `js-helper-money` in the JS implementation repository (`money.js`)
 
 ---
 
@@ -1168,13 +1168,13 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, {
 });
 ```
 
-**Reference implementations:** `js-server-helper-distinct-queue-store-dynamodb`, `js-server-helper-distinct-queue-store-mongodb` (already on the injected-Lib shape).
+**Reference implementations:** `js-server-helper-distinct-queue-store-dynamodb`, `js-server-helper-distinct-queue-store-mongodb`.
 
 ### Adapter Skeleton
 
 This skeleton applies to any Class F adapter (`-adapter-[name]`): transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type. Adapters follow the **same injected-Lib factory shape as storage adapters** (and as every other helper module). Only three things differ: the entry-point name (`adapter.js` instead of `store.js`), the contract they implement (the parent's adapter contract instead of the store contract), and the parent config slot (`CONFIG.Adapter` instead of `CONFIG.Store`).
 
-**One shape, not two.** Two earlier shapes are **deprecated**: (1) the module-scope singleton (`let Lib;` at module scope) - it predates the [Universal Companion Files](#universal-companion-files) rule; (2) the "fully-independent" shape where the loader took only `(config)` and constructed its own `Lib` via `require('helper-utils')(Lib, {})` - it duplicated Utils/Debug instances per adapter, broke mock injection, forced framework helpers into `peerDependencies`, and made the loader signature an exception. Every Class F module - store or adapter, stateful or stateless - uses the injected-Lib factory shape below, identical in signature to the main factory skeleton. Statelessness only means `createInterface` closes over nothing beyond its four fixed slots; it does not change the loader, the companion files, or the file layout.
+**One shape.** Every Class F module — store or adapter, stateful or stateless — uses the injected-Lib factory shape below, identical in signature to the main factory skeleton. Statelessness only means `createInterface` closes over nothing beyond its four fixed slots; it does not change the loader, the companion files, or the file layout.
 
 #### Adapter File Structure
 
@@ -1290,11 +1290,11 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, {
 });
 ```
 
-**Reference implementations:** `js-server-helper-http-gateway-adapter-express` and `js-server-helper-http-gateway-adapter-aws-apigateway` (`adapter.js`) in `js-helper-modules` (pending re-pass to the injected-Lib shape; published versions still carry the deprecated self-built Lib).
+**Reference implementations:** `js-server-helper-http-gateway-adapter-express` and `js-server-helper-http-gateway-adapter-aws-apigateway` (`adapter.js`) in the JS implementation repository.
 
 ### Reference Implementations
 
-Several modules in `js-helper-modules` implement the full adapter pattern, each for a different kind of adapter:
+Several modules in the JS implementation repository implement the full adapter pattern, each for a different kind of adapter:
 
 - **Storage adapters** (`-store-[backend]`): `js-server-helper-auth` and `js-server-helper-verify` each ship a defined store contract and a matching set of storage adapters (one per backend: SQLite, Postgres, MySQL, MongoDB, DynamoDB). Refer to each module's `docs/api.md` for the current contract.
 - **Transport adapters** (`-adapter-[name]`): `js-server-helper-http-gateway` ships a defined adapter contract and separate adapter packages per HTTP runtime (e.g. Express, AWS API Gateway). The parent module is runtime-agnostic; only the adapter knows the transport.
@@ -1618,7 +1618,7 @@ Some modules ship with **intrinsic reference data** - facts that are immutable, 
 
 **Reference Implementation**
 
-The `js-helper-money` module in `js-helper-modules` ships `data/currencies.json` with ISO codes, English names, symbols, decimal precision, and transactional units for each supported currency. Required once at module scope in `money.js` and injected into the validators singleton by the loader.
+The `js-helper-money` module in the JS implementation repository ships `data/currencies.json` with ISO codes, English names, symbols, decimal precision, and transactional units for each supported currency. Required once at module scope in `money.js` and injected into the validators singleton by the loader.
 
 ---
 

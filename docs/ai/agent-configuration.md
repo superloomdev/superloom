@@ -10,6 +10,7 @@ How AI agents are configured across Superloom repositories: which files exist, w
 - [The Size Budget](#the-size-budget)
 - [What Belongs In and Out](#what-belongs-in-and-out)
 - [Tool-Specific Folders](#tool-specific-folders)
+- [Repository Independence](#repository-independence)
 - [Module-Level ROBOTS.md](#module-level-robotsmd)
 - [Personal Configuration](#personal-configuration)
 
@@ -74,6 +75,24 @@ Agent products read workflows and configuration from product-specific locations 
 - **Content lives once.** Workflows are authored in one canonical folder per repository. If a second product needs a different location, it gets a pointer or a copy produced by tooling, never a hand-maintained second version.
 - **No product names inside the content.** A workflow says "the agent", not the name of a vendor's product. Renaming a tool must never require editing procedure content.
 - **Capability differences are handled at the boundary.** If a product cannot execute some workflow feature, the limitation is noted in the personal configuration layer, not worked around inside shared files.
+
+## Repository Independence
+
+The Superloom repository is the constitution: it defines patterns, not implementations. Language-specific module repositories are built from the documentation, never the other way around. The dependency is one-way.
+
+| Repository | Role | References Superloom docs? | References dependent repos? |
+|---|---|---|---|
+| `superloom` | Constitution: documentation and website | Is the source | Never: not workflows, not internals, not implementation details |
+| `[lang]-helper-modules` | Reference implementation built from the docs | Yes, and should | Not applicable |
+| `[lang]-demo-project` | Reference application built from the docs | Yes, and should | Not applicable |
+
+Rules:
+
+- **The constitution repository's workflows, README, and docs never invoke, name, or describe a dependent repository's workflows or internal structure.** The constitution does not know which implementations exist.
+- **The constitution repository may name dependent repositories as organizational context** (for example, in `dev/org-structure.md`) but never describes their internals or invokes their workflows.
+- **Dependent repositories reference the constitution's docs freely.** Their workflows embed standards compiled from `docs/`; their READMEs link to the published documentation.
+- **Documentation is the prime guide.** Everything language-specific (patterns, skeletons, catalogs, pitfalls) lives in `docs/languages/[lang]/` so that any team can build its own implementation from the same source. A helper modules repository is one implementation that validates the docs against real-world use; it does not own the knowledge.
+- **This is an architectural constraint, not a style preference.** A violation couples the constitution to one implementation and breaks the language-independent design.
 
 ## Module-Level ROBOTS.md
 

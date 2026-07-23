@@ -43,7 +43,7 @@ Developer Machine                        AWS Sandbox Account
 
 ### 1. AWS Sandbox Account
 
-Follow the AWS account setup runbook in `js-demo-project/ops/01-cloud-provider/aws-account-setup.md` (in the `js-demo-project` repo) to create a sandbox AWS account. This should be a separate account from production (or at minimum, a separate region with resource isolation).
+Follow the AWS account setup runbook in `ops/01-cloud-provider/aws-account-setup.md` of the JS reference application to create a sandbox AWS account. This should be a separate account from production (or at minimum, a separate region with resource isolation).
 
 ### 2. IAM Unit-Tester User
 
@@ -79,7 +79,7 @@ Example IAM policy for DynamoDB testing:
 
 **Naming convention:** `unit-tester-{service}` (e.g., `unit-tester-dynamodb`)
 
-See the IAM setup runbook in `js-demo-project/ops/05-identity-access/aws-iam-setup.md` (in the `js-demo-project` repo) for detailed IAM setup.
+See the IAM setup runbook in `ops/05-identity-access/aws-iam-setup.md` of the JS reference application for detailed IAM setup.
 
 ### 3. Store Credentials
 
@@ -149,5 +149,4 @@ This includes:
 
 - [Module Testing](module-testing.md) - the emulated tier and CI/CD setup
 - [Testing Strategy](testing-strategy.md) - directory layout and the test loader pattern
-- [Operations Documentation](../../principles/operations-documentation.md) - the three-layer ops doc strategy
 - [Architectural Philosophy](project-structure.md#environment-strategy) - dev vs integration environments

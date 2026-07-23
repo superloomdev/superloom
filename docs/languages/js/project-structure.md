@@ -52,7 +52,7 @@ Four rules govern every line of code in the project. Full detail in [`code-forma
 | **Identical coding standards across modules** | Same loader pattern, same vertical spacing rule, same JSDoc style, same error envelope |
 | **DRY helper functions** | Before writing inline utility functions, check all helper modules (`Lib.Utils`, `Lib.Debug`, `Lib.Time`, etc.). If it exists, use it. Application code focuses on integrations, business logic, and domain logic - utility functions belong in separate, reusable modules |
 
-The vertical spacing rule (3 lines between sections, 2 between functions, 1 between logical blocks within a function, etc.) is enforced in [`code-formatting.md`](code-formatting.md) - these examples illustrate the pattern, but the complete rules are in the formatting guide. This makes module files visually scannable at any size.
+The vertical spacing rule (3 lines between sections, 2 between functions, 1 between logical blocks within a function, etc.) is enforced in [`code-formatting.md`](code-formatting.md) - these examples illustrate the pattern, but the complete rules are in the formatting guide.
 
 ---
 
@@ -86,12 +86,12 @@ Helper modules provide reusable utilities and can be integrated into your projec
 
 #### Framework Structure (Reference)
 
-Helper modules live in the [`js-helper-modules`](https://github.com/superloomdev/js-helper-modules) repository and are published under `@superloomdev/*`. They are framework-level, not project-specific. See [`docs/dev/org-structure.md`](../../dev/org-structure.md) for the full multi-repo layout.
+Helper modules live in the JS implementation repository and are published under `@superloomdev/*`. They are framework-level, not project-specific. See [`docs/dev/org-structure.md`](../../dev/org-structure.md) for the full multi-repo layout.
 
-| Path (in `js-helper-modules`) | Purpose |
+| Path (in the JS implementation repository) | Purpose |
 |---|---|
-| `src/helper-modules-core/[js\|py]-helper-[name]/` | Platform-agnostic, server-safe helpers (validation, time math, structured logging) |
-| `src/helper-modules-server/[js\|py]-server-helper-[name]/` | Server-only helpers (DB drivers, cloud SDKs, filesystem) |
+| `src/helper-modules-core/js-helper-[name]/` | Platform-agnostic, server-safe helpers (validation, time math, structured logging) |
+| `src/helper-modules-server/js-server-helper-[name]/` | Server-only helpers (DB drivers, cloud SDKs, filesystem) |
 | `src/helper-modules-client/[js]-[platform]-helper-[name]/` | Platform-specific client helpers (browser, React Native, mobile) |
 
 **Naming convention:**

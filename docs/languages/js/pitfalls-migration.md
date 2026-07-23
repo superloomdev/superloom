@@ -4,8 +4,6 @@
 
 Common issues encountered when **migrating an existing helper module** to current standards, with the fix for each. Use this as a checklist when bringing a legacy module up to spec, or when a CI run fails on a freshly-migrated module.
 
-For lifecycle procedures (create, review, fix, publish) see the `/module` workflow in the `js-helper-modules` repository.
-
 ## On This Page
 
 - [Function Naming Issues](#function-naming-issues)
@@ -280,7 +278,7 @@ When renaming an entire module, also check **other modules' README and ROBOTS** 
 
 **Cause:** The module's `createInterface` does not consume every fixed slot, ESLint flags the unused trailing params, and the agent reaches for the underscore escape hatch the lint config appears to bless - without checking the skeleton. The rule was already written ("Unused fixed slots are kept, not removed" in Module Structure): keep canonical names and suppress with `// eslint-disable-line no-unused-vars` on the `createInterface` line. The gap was enforcement, not documentation - the skeleton conformance greps checked step comments and companion wiring but not parameter names.
 
-**Fix:** Restore canonical names `(Lib, CONFIG, ERRORS, Validators)`, add `// eslint-disable-line no-unused-vars` on the signature line, and fix the JSDoc `@param` names to match. The `/unify-module` workflow now greps for `createInterface = function \(.*_(CONFIG|ERRORS|Validators)` as a hard-gate violation.
+**Fix:** Restore canonical names `(Lib, CONFIG, ERRORS, Validators)`, add `// eslint-disable-line no-unused-vars` on the signature line, and fix the JSDoc `@param` names to match. A grep for `createInterface = function \(.*_(CONFIG|ERRORS|Validators)` catches this violation.
 
 **Lesson:** A lint suppression mechanism that is *permitted* by the ESLint config is not automatically *permitted* by the skeleton. When lint and skeleton appear to conflict, the skeleton doc decides - and it usually already has (search it before inventing a workaround).
 
@@ -351,4 +349,3 @@ Before completing any migration:
 - [Module Structure (JavaScript)](module-structure) - the factory pattern every helper module follows
 - [Module Testing](module-testing.md) - testing tiers, badges, and CI/CD setup
 - [Code Formatting](code-formatting.md) - naming, comments, and the conventions enforced by ESLint
-- `/module` workflow (`js-helper-modules` repository) - the lifecycle procedure that replaced the migration checklist

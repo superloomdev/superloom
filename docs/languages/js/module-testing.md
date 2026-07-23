@@ -91,7 +91,7 @@ cd _test
 npm install && npm test
 \`\`\`
 
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/testing/module-testing.md) for the full testing architecture.
+See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/languages/js/module-testing.md) for the full testing architecture.
 ```
 
 **Service-dependent modules** (2 rows - emulated + integration):
@@ -123,7 +123,7 @@ cd _test && npm install && npm test
 
 Full guide: `_test/ops/01-integration-testing/[module]-integration-setup.md`
 
-See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/testing/module-testing.md) for the full testing architecture.
+See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/languages/js/module-testing.md) for the full testing architecture.
 ```
 
 **Integration test badge values** (use whichever matches current reality):
@@ -184,31 +184,9 @@ Modules fall into two categories based on what they need to run tests:
 
 These run with just Node.js installed. No credentials, no Docker, no network.
 
-| Module | Notes | CI Job |
-|---|---|---|
-| `js-helper-utils` | Pure functions | `test-offline-modules` |
-| `js-helper-debug` | Console output | `test-offline-modules` |
-| `js-helper-time` | Date/time math | `test-offline-modules` |
-| `js-server-helper-crypto` | Node.js built-in `crypto` | `test-offline-modules` |
-| `js-server-helper-instance` | In-memory lifecycle | `test-offline-modules` |
-| `js-server-helper-http` | Real HTTP to `httpbin.org` (no credentials, no Docker) | `test-offline-modules` |
-| `js-server-helper-verify` | In-memory adapter (storage injected per-call) | `test-verify` |
-| `js-server-helper-logger` | In-memory store (multi-backend integration tests run via the module's `_test/docker-compose.yml`) | `test-logger` |
-| `js-server-helper-auth` | In-memory adapter + JWT mode (multi-backend integration tests run via the module's `_test/docker-compose.yml`) | `test-auth` |
-
 ### Service-Dependent Modules (need Docker or cloud credentials)
 
 These require external services. Each module has a `_test/docker-compose.yml` for local emulation and a dedicated CI job with `services:` container.
-
-| Module | Emulator | Docker Image | CI Job |
-|---|---|---|---|
-| `js-server-helper-nosql-aws-dynamodb` | DynamoDB Local | `amazon/dynamodb-local` | `test-nosql-aws-dynamodb` |
-| `js-server-helper-sql-postgres` | PostgreSQL | `postgres:17.9` | `test-sql-postgres` |
-| `js-server-helper-sql-mysql` | MySQL | `mysql:8.0.44` | `test-sql-mysql` |
-| `js-server-helper-nosql-mongodb` | MongoDB | `mongo:7` | `test-nosql-mongodb` |
-| `js-server-helper-storage-aws-s3` | MinIO | `minio/minio` | `test-storage-aws-s3` |
-| `js-server-helper-storage-aws-s3-url-signer` | MinIO | `minio/minio` | `test-storage-aws-s3-url-signer` |
-| `js-server-helper-queue-aws-sqs` | ElasticMQ | `softwaremill/elasticmq:1.6.9` | `test-queue-aws-sqs` |
 
 **Version pinning rule:** pin the emulator image to a specific patch version that matches the latest version of the target managed service. This keeps local testing aligned with production capabilities. Bump the pin when the managed service adds support for a newer version.
 
@@ -234,7 +212,7 @@ test-nosql-aws-dynamodb:
 
 ## Integration Testing
 
-Integration testing uses real cloud services with isolated test data. This validates behavior with features not available in emulators (e.g., DynamoDB Streams, TTL, IAM policies). Full guide: `docs/testing/integration-testing.md`.
+Integration testing uses real cloud services with isolated test data. This validates behavior with features not available in emulators (e.g., DynamoDB Streams, TTL, IAM policies). Full guide: `docs/languages/js/integration-testing.md`.
 
 ### When to Run
 
@@ -250,7 +228,7 @@ _test/ops/01-integration-testing/
 ```
 
 Typical requirements:
-1. An AWS sandbox account (see the cloud-provider runbook in `js-demo-project/ops/01-cloud-provider/`, in the `js-demo-project` repo)
+1. An AWS sandbox account (see the cloud-provider runbook in `ops/01-cloud-provider/` of the JS reference application)
 2. An IAM unit-tester user with restricted permissions (only `test_` prefixed resources)
 3. Credentials stored in `__dev__/secrets/sandbox.md` (never committed)
 4. Environment loaded via `source init-env.sh` (select `integration`)
@@ -293,7 +271,7 @@ _test/
 - **Peer Dependencies (Injected via Loader):** `@your-org/*` modules injected through `shared_libs`
 - **Direct Dependencies (Bundled):** Third-party packages in `package.json` `dependencies`
 
-See `js-server-helper-aws-dynamodb/_test/loader.js` for the reference implementation.
+See `js-server-helper-nosql-aws-dynamodb/_test/loader.js` for the reference implementation.
 
 ## Adding Tests to a New Module
 

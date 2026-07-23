@@ -38,7 +38,7 @@ npm install   # from <module>/_test
 
 Run this every time before testing. The module itself is linked via `file:../` so source changes are picked up automatically, but published peer dependencies may have been updated and `npm install` is the only safe way to refresh them. Skipping `npm install` is never worth the few seconds saved.
 
-> **During module refactoring only:** use `rm -rf node_modules package-lock.json && npm install` instead. Stale lock files from temporary `file:` swaps and version resets to `1.0.0` can cause silent wrong-version installs. See [`pitfalls.md` entry 21](pitfalls.md#21-stale-package-lockjson-causes-wrong-version-install-after-file-swap-or-version-reset) and the `/js-helper-module-refactor` workflow Step 6.
+> **During module refactoring only:** use `rm -rf node_modules package-lock.json && npm install` instead. Stale lock files from temporary `file:` swaps and version resets to `1.0.0` can cause silent wrong-version installs. See [`pitfalls.md` entry 21](pitfalls.md#21-stale-package-lockjson-causes-wrong-version-install-after-file-swap-or-version-reset).
 
 ### Step 2: Run tests
 
@@ -238,12 +238,12 @@ Stateless modules (pure functions, no shared resources) do not need this wrapper
 
 ## Known Failure Modes
 
-Every symptom, root cause, and durable fix this testing setup has ever produced is journaled in [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing). Twenty-one entries as of the last sweep, covering `ETARGET` from wrong `Cwd`, `MODULE_NOT_FOUND` from wrong scoped names, manually-started-Docker conflicts, the MySQL two-phase-init false positive, transient-ready windows, concurrent-describe race, `sleep` anti-pattern, AWS SDK metadata-chain timeouts, MongoDB replica-set PRIMARY-election race, the `verify.generateAndStore` cooldown-zero concurrency bug, stale `file:` resolved paths in lock files, and version-reset 1.0.0 tarball cache collisions.
+Every symptom, root cause, and durable fix this testing setup has ever produced is journaled in [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing).
 
-When you hit a new testing failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *Local Module Testing* (Symptom → Cause → Lesson). Do **not** add it here. This file is for positive rules only. Propagate a compact one-liner into `AGENTS.md` via `/compile-agents-md` if the rule is small enough to live there.
+When you hit a new testing failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *Local Module Testing* (Symptom → Cause → Lesson). Do **not** add it here. This file is for positive rules only. If the rule is small enough to live in `AGENTS.md`, recompile the compact one-liner into it (`AGENTS.md` is a derived artifact, never edited directly).
 
 ---
 
 ## When something does not match this guide
 
-Doc drift is the slowest bug to find. If you encounter a failure mode that this guide does not cover, do not "just fix it once". Add the entry to [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing) in the same change that fixes the underlying problem, then run `/compile-agents-md` so `AGENTS.md` reflects the new state.
+Doc drift is the slowest bug to find. If you encounter a failure mode that this guide does not cover, do not "just fix it once". Add the entry to [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing) in the same change that fixes the underlying problem, then recompile `AGENTS.md` so it reflects the new state.

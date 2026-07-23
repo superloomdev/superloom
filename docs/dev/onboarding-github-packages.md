@@ -105,7 +105,7 @@ The unified pipeline at `.github/workflows/ci-helper-modules.yml`:
 
 1. **Triggers** on every push to `main` and every PR
 2. **Tests** all changed modules (offline + DynamoDB with Docker service container)
-3. **Publishes** only modules whose `package.json` `version` field changed between `HEAD~1` and `HEAD`, and only after tests pass
+3. **Publishes** only modules whose bumped version is not yet present in the GitHub Packages registry, and only after tests pass
 4. **Uses** the built-in `GITHUB_TOKEN` - no custom secrets required
 5. **Safety net:** if the bumped version is already on the registry, `npm publish` is skipped gracefully instead of failing
 

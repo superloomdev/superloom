@@ -59,4 +59,4 @@ See [`foundations/operations-documentation.md`](../principles/operations-documen
 
 - [Operations Documentation](../principles/operations-documentation.md) - the standard these guides follow
 - [Engineering Philosophy](../principles/engineering-philosophy.md) - the broader directory layout
-- Project runbook example: see `js-demo-project/ops/` in the `js-demo-project` repo
+- Project runbook example: see the `ops/` directory of the JS reference application

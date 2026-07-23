@@ -2,6 +2,8 @@
 
 > Conventional Commits to structured CHANGELOG.md
 
+`CHANGELOG.md` is an optional companion file. It exists only when a module has a meaningful, consumer-visible change to record. Add an entry for breaking changes, new features, behavior-changing bug fixes, and security fixes; skip cosmetic or internal-only changes (renames, `var`-to-`let` swaps, spacing cleanup, function reordering, comment edits, documentation-only improvements). A same-version republish writes nothing. See [`bump-checklist.md`](bump-checklist.md) Step 4 for the full rule.
+
 ## Conventional Commits
 
 Commit messages follow [Conventional Commits](https://conventionalcommits.org/) specification:
@@ -244,26 +246,16 @@ Move entries from `Unreleased` to version section when releasing.
 | `refactor(utils): simplify logic` | ### Changed - Simplified internal implementation |
 | `test(utils): add edge cases` | ### Testing - Added edge case tests |
 
-## Automation
-
-Future consideration: Use tools like:
-
-- [standard-version](https://github.com/conventional-changelog/standard-version)
-- [semantic-release](https://github.com/semantic-release/semantic-release)
-- [release-please](https://github.com/googleapis/release-please)
-
-For now: Manual changelog maintenance ensures accuracy.
-
 ## File Location
 
-Each module has its own changelog:
+When a module has a changelog, it lives at the module root:
 
 ```
 [module-root]/
   ├── [module].js
   ├── package.json
   ├── README.md
-  └── CHANGELOG.md  ← Here
+  └── CHANGELOG.md  ← Here (optional; present only when there is a meaningful change to record)
 ```
 
 ## References

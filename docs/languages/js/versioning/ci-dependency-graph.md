@@ -77,27 +77,6 @@ Module 50 (needs Modules 1-49)
 
 No "tier 49" needed - just list the dependencies.
 
-## Current Superloom Dependency Map
-
-| Module | Dependencies | Test Job Needs |
-|--------|--------------|----------------|
-| `utils` | None | `detect` |
-| `debug` | None | `detect` |
-| `time` | `utils`, `debug` | `publish-utils`, `publish-debug` |
-| `client-crypto` | `utils`, `debug` | `publish-utils`, `publish-debug` |
-| `server-crypto` | `utils`, `debug` | `publish-utils`, `publish-debug` |
-| `http` | `utils`, `debug` | `publish-utils`, `publish-debug` |
-| `s3-url-signer` | `utils`, `debug` | `publish-utils`, `publish-debug` |
-| `instance` | `utils`, `debug` | `publish-utils`, `publish-debug` |
-| `sqlite` | `utils`, `debug`, `instance` | `publish-utils`, `publish-debug`, `publish-instance` |
-| `s3` | `utils`, `debug`, `instance` | `publish-utils`, `publish-debug`, `publish-instance` |
-| `dynamodb` | `utils`, `debug`, `instance` | `publish-utils`, `publish-debug`, `publish-instance` |
-| `mongodb` | `utils`, `debug`, `instance` | `publish-utils`, `publish-debug`, `publish-instance` |
-| `sqs` | `utils`, `debug`, `instance` | `publish-utils`, `publish-debug`, `publish-instance` |
-| `mysql` | `utils`, `debug`, `instance` | `publish-utils`, `publish-debug`, `publish-instance` |
-| `postgres` | `utils`, `debug`, `instance` | `publish-utils`, `publish-debug`, `publish-instance` |
-| `verify` | `utils`, `debug`, `instance`, `server-crypto` | `publish-utils`, `publish-debug`, `publish-instance`, `publish-server-crypto` |
-
 ## Adding a New Module
 
 ### 1. Identify Dependencies

@@ -36,10 +36,12 @@ For a developer new to the framework, in order:
 
 ## Module Repositories
 
-| Repository | Contents |
+| Repository role | Contents |
 |---|---|
-| `js-helper-modules` | All helper modules: `src/helper-modules-core/`, `src/helper-modules-server/`, `src/helper-modules-client/`, and the publish pipeline |
-| `js-demo-project` | The reference application: models, server layers, ops runbook |
+| JS implementation repository | All helper modules: `src/helper-modules-core/`, `src/helper-modules-server/`, `src/helper-modules-client/`, and the publish pipeline |
+| JS reference application | The working demo application: models, server layers, ops runbook |
+
+Repository names and the full multi-repo layout: [`org-structure.md`](../../dev/org-structure.md).
 
 ## Naming Forms (Two-Form Rule)
 

@@ -49,8 +49,6 @@ The detect job answers two questions:
 - **Steady-state version bumps** -- the new version is by definition not yet on the registry, so it gets published
 - **Fresh-state recovery** -- if the registry has been wiped (or never populated), every module's current version is "not published" and all of them get republished
 
-The previous logic compared `HEAD~1:package.json` to `HEAD:package.json` and only published when the `version` field changed. That logic broke fresh-state recovery (no diff, no publish, even though nothing was on the registry).
-
 The publish job retains a per-job safety-net that calls `npm view` again immediately before `npm publish`, so a redundant publish attempt (e.g., due to a transient registry error during detect) never overwrites a real version.
 
 ### What Gets Published When
@@ -210,9 +208,9 @@ This allows `GITHUB_TOKEN` to be granted write permissions by individual jobs.
 
 ## Known Failure Modes
 
-Every CI symptom, root cause, and durable fix this pipeline has ever uncovered is journaled in [`pitfalls.md` → CI/CD Publishing](pitfalls.md#cicd-publishing). Eleven entries as of the last sweep, covering port-allocation races, `PROTOCOL_CONNECTION_LOST`, detect-job version comparisons, `403 Forbidden`, `ETARGET`, `MODULE_NOT_FOUND` for `file:` deps, YAML block-scalar newlines, and the transitively-skipped `publish-*` chain.
+Every CI symptom, root cause, and durable fix this pipeline has ever uncovered is journaled in [`pitfalls.md` → CI/CD Publishing](pitfalls.md#cicd-publishing).
 
-When you hit a new CI failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *CI/CD Publishing* (Symptom → Cause → Lesson). Do **not** add it here. This file is for positive rules only. Propagate a compact one-liner into `AGENTS.md` via `/compile-agents-md` if the rule is small enough to live there.
+When you hit a new CI failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *CI/CD Publishing* (Symptom → Cause → Lesson). Do **not** add it here. This file is for positive rules only. If the rule is small enough to live in `AGENTS.md`, recompile the compact one-liner into it (`AGENTS.md` is a derived artifact, never edited directly).
 
 ---
 

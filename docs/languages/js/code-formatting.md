@@ -428,15 +428,7 @@ return {
 
 ## Error Handling Disposal
 
-Three categories, three disposal mechanisms. Never mix them.
-
-| Category | Disposal |
-|---|---|
-| **Programmer error** (bad arguments, wrong shape) | `throw new TypeError(...)` synchronously |
-| **Operational / state error from a helper module** | Return envelope `{ success: false, error: { type, message } }` |
-| **Domain / user-facing validation error** | Return `{ success: false, error: <DomainError> }` where `<DomainError>` is `{ code, message, status }` from `[entity].errors.js` |
-
-Full rule with rationale and worked examples: [`error-handling.md`](error-handling).
+Three categories, three disposal mechanisms. Never mix them. Full rule with rationale and worked examples: [`error-handling.md`](error-handling.md).
 
 ---
 
@@ -571,7 +563,7 @@ These rules apply to **every file** the AI or human writes - `.js` comments and 
 
 | Rule | Detail |
 |---|---|
-| **Minimize external deps** | Prefer built-in Node.js APIs over external libraries when possible |
+| **Minimize external deps** | Use built-in Node.js APIs. Add external libraries only when no built-in covers the need. |
 | **Wrap all libraries** | All external libraries are wrapped in helper modules. No direct imports in business logic |
 | **Reuse `Lib.Utils`** | Before writing a utility (type check, validation, sanitization), check if `Lib.Utils` already provides it |
 | **Pin to verified latest** | Verify the current latest version with Context7 MCP and `npm view <pkg> version` before locking a range |

@@ -242,7 +242,7 @@ The `Configuration Keys` table includes a **Required** column. Use "Yes (overrid
 
 ## Class-Specific Templates and Reusable Wording
 
-Concrete starting points per class so two modules in the same class look like near-twins. Validated across Class C (SQL + NoSQL drivers) and Class D (cloud DB + cloud storage). Class A / D / E / F sub-sections are placeholders until those migration waves run. Fill them in as the first pilot for each class lands.
+Concrete starting points per class so two modules in the same class look like near-twins. Fill in each class subsection from the first completed pilot for that class.
 
 **Principle:** *structural choices are universal, wording is class-specific, source-specific tweaks come last.* When migrating a new module, copy the closest pilot's README and adjust only the parts called out as class-specific in this section.
 
@@ -291,8 +291,6 @@ Class A does **not** carry the universal Bullet 1 (insulation against driver/SDK
 
 **No Hot-Swappable section.** Foundation modules typically don't have functional siblings. The `js-helper-crypto` server/client pair is the exception and may cross-link in Hot-Swappable form.
 
-**Pilot status:** `js-helper-utils` is the active Class A pilot.
-
 ### Class H. Extension
 
 Framework-specific binding for parent module (Class G). The parent module provides the core functionality; the extension adds framework bindings (React hooks, Vue composables, etc.). Extension imports parent; parent never knows about the extension. For the full conceptual definition see [`module-classes.md` → Class H](module-classes.md#class-h-extension).
@@ -327,8 +325,6 @@ Followed by a brief explanation of the extension pattern: extension imports pare
 
 **`docs/` folder:** `docs/api.md` (hooks/components reference), `docs/philosophy.md` (extension pattern explained). No `configuration.md` - configuration lives in the parent module.
 
-**Pilot status:** `js-client-helper-styler-ext-react` is the active Class H pilot.
-
 ### Class B. Extended Utility
 
 Depends only on the Node.js runtime (Node built-ins like `crypto`, `process`, `fetch`, `Buffer`). No third-party npm packages, no external services. Examples: `js-server-helper-instance`, `js-server-helper-crypto`, `js-server-helper-http`. Ships `docs/api.md` and `docs/configuration.md` per the [universal footprint](module-classes.md#universal-documentation-footprint). For the full conceptual definition see [`module-classes.md` → Class B](module-classes.md#class-b-extended-utility).
@@ -337,7 +333,7 @@ Depends only on the Node.js runtime (Node built-ins like `crypto`, `process`, `f
 
 **Value bullets.** Class B modules often need a substantially different bullet set because they don't wrap a third-party library and don't do I/O. Bullets 3 (human review) and 4 (observability) usually still transfer. The first migration of a Class B module sets the pattern.
 
-**Pilot status:** `js-server-helper-instance` is the Class B pilot (Wave 6). `js-server-helper-crypto` follows the same pattern. `js-server-helper-http` is the remaining unmigrated Class B.
+**Reference implementation:** `js-server-helper-instance`.
 
 ### Class C. Driver Wrapper
 
@@ -370,7 +366,7 @@ This module is part of a [SQL or NoSQL] family of database helpers that share th
 - [`@superloomdev/[sibling-2-package-name]`]([full GitHub URL]) - [one-line description]
 ```
 
-**Do NOT add a closing paragraph pointing to "the other family" (NoSQL→SQL or SQL→NoSQL).** The cross-family pointer was tried in the first wave of v2 migrations and dropped after review. It added noise without serving any persona, and the Extended Documentation section + the Superloom site already give cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
+**Do NOT add a closing paragraph pointing to "the other family" (NoSQL→SQL or SQL→NoSQL).** The Extended Documentation section and the Superloom site already give cross-discovery. Keep the Hot-Swappable section focused on direct siblings only.
 
 **`docs/api.md` structure. SQL driver variant:**
 
@@ -421,7 +417,7 @@ Reference block: same.
 
 Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g. **Replica-Set Requirement for Transactions** for MongoDB).
 
-**Pilot references.** When migrating a new Class C module, use the closest existing Class C module in `js-helper-modules` as a template: `js-server-helper-sql-mysql` for the generic SQL shape, `js-server-helper-sql-sqlite` for the embedded SQL variant, and `js-server-helper-nosql-mongodb` for the NoSQL shape.
+**Pilot references.** When migrating a new Class C module, use the closest existing Class C module in the JS implementation repository as a template: `js-server-helper-sql-mysql` for the generic SQL shape, `js-server-helper-sql-sqlite` for the embedded SQL variant, and `js-server-helper-nosql-mongodb` for the NoSQL shape.
 
 *DynamoDB lives under Class D, not Class C. See the Class D section below.*
 
@@ -464,7 +460,7 @@ Patterns block:
 4. **Worked example minimal IAM policy** (JSON)
 5. Brief note about credential rotation behavior. The module does not refresh in-flight; pass refreshed values on a new loader call
 
-**Pilot references.** Use `js-server-helper-nosql-aws-dynamodb` for the cloud database shape and `js-server-helper-storage-aws-s3` for the cloud storage shape, both in `js-helper-modules`.
+**Pilot references.** Use `js-server-helper-nosql-aws-dynamodb` for the cloud database shape and `js-server-helper-storage-aws-s3` for the cloud storage shape, both in the JS implementation repository.
 
 ### Class E. Feature Module with Adapters
 
@@ -481,8 +477,6 @@ Full-featured business-logic module. May combine Class A utilities, Class B serv
 - `docs/runtime.md`. Persistent-server vs serverless-function runtime differences only. Not a framework cookbook *(optional)*
 
 Storage-adapter detail is owned by each Class F adapter package, not by the parent's `docs/`.
-
-**Pilot status:** *not yet migrated.* `verify`, `logger`, `auth` are the planned waves (smallest to largest).
 
 ### Class G. Feature Module with Extensions
 

@@ -175,14 +175,14 @@ The suite is **not exported** through the parent module's `package.json` `export
 
 ### Reference Implementations
 
-Two modules in `js-helper-modules` implement this pattern end-to-end:
+Two modules in the JS implementation repository implement this pattern end-to-end:
 
 - **`js-server-helper-auth`** (canonical). Parent ships an in-memory fixture (`_test/memory-store.js`) and a shared contract suite (`_test/store-contract-suite.js`). Each storage adapter copies the contract suite and runs it against the real backend in its own `_test/test.js`.
 - **`js-server-helper-verify`** (same pattern, second example). Parent ships `_test/memory-store.js` and `_test/shared-store-suite.js`. Each storage adapter copies and runs the suite against its backend.
 
 The number of adapters per parent is not part of the contract and varies as new backends are added.
 
-> **Note:** The in-memory fixture for verify is currently defined inline in `_test/test.js`. It must be extracted to `_test/memory-store.js` before the adapter `_test/` directories can be created (they need to import it). This extraction is tracked in the verify adapter work plan.
+> **Note:** The in-memory fixture for verify is currently defined inline in `_test/test.js`. It must be extracted to `_test/memory-store.js` before the adapter `_test/` directories can be created (they need to import it).
 
 ---
 

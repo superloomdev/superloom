@@ -378,7 +378,7 @@ Every loader function takes a `config` argument that is merged with module defau
 
 ### Why this matters
 
-Plan 0032 mechanically replaced `Object.assign({}, defaults, config)` with `Lib.Utils.overrideObject(defaults, config)` in 18 files. These are **not equivalent**: `overrideObject` silently skips strictly-`null` values (keeps the base), while `Object.assign` honors them. Only `js-server-helper-auth` caught the regression because it was the only module that asserted on an explicit `null` override. This section codifies the four promises that every loader must pass, and the minimum test assertions that prove them.
+`Lib.Utils.overrideObject(defaults, config)` and `Object.assign({}, defaults, config)` are **not equivalent**: `overrideObject` silently skips strictly-`null` values (keeps the base), while `Object.assign` honors them. Only `js-server-helper-auth` caught the regression because it was the only module that asserted on an explicit `null` override. This section codifies the four promises that every loader must pass, and the minimum test assertions that prove them.
 
 ### The four promises
 
@@ -546,14 +546,7 @@ Every meaningful CONFIG key (connection strings, table names, bucket names, pool
 
 These modules are fully exempt at the unit tier. Do **not** add an exempt comment to the test file - the policy is documented here. Verification belongs in the module's Docker integration tests.
 
-Exempt modules in this category:
-- All DB/SQL helpers: `js-server-helper-sql-postgres`, `js-server-helper-sql-mysql`, `js-server-helper-sql-sqlite`
-- All NoSQL helpers: `js-server-helper-nosql-aws-dynamodb`, `js-server-helper-nosql-mongodb`
-- All storage helpers: `js-server-helper-storage-aws-s3`, `js-server-helper-storage-aws-s3-url-signer`
-- All queue helpers: `js-server-helper-queue-aws-sqs`
-- All store adapters: `js-server-helper-auth-store-*`, `js-server-helper-logger-store-*`, `js-server-helper-verify-store-*`
-- HTTP client: `js-server-helper-http` (TIMEOUT and USER_AGENT require a live network call)
-- HTTP gateway adapters: `js-server-helper-http-gateway-adapter-*`
+All modules in Category 4 are exempt at the unit tier. Do not list individual modules.
 
 **When to document exemption in the test file vs here**
 Only add an in-file comment (`// config absorption contract: exempt - ...`) when the exemption is **non-obvious from the category** - for example when CONFIG is accepted but silently ignored (Category 1/2), so future developers don't add a test block before checking. For Category 4 (backend-coupled), the exemption is clear from the module's purpose; no in-file comment is needed.

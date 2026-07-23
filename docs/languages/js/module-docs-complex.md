@@ -6,9 +6,9 @@ Class E feature modules (`auth`, `verify`, `logger`, `http-gateway`) and Class F
 
 ## When to Create a docs/ Folder
 
-Every helper module ships a `docs/` folder. The exception that previously applied to Class F adapters (the README's schema section is enough) was reversed during Wave 9: per-backend operational detail (DDL, indexes, TTL behavior, IaC notes) is dense enough to warrant its own pages, and keeping it out of the README lets the README stay short. The shape of the folder differs by class. See the [class-by-class table](#class-by-class-folder-shape) below.
+Every helper module ships a `docs/` folder. Per-backend operational detail (DDL, indexes, TTL behavior, IaC notes) is dense enough to warrant its own pages, and keeping it out of the README lets the README stay short. The shape of the folder differs by class, as the sections below detail.
 
-A `docs/` folder is genuinely deeper for modules with:
+Which class-specific pages a module adds depends on what it has:
 
 - **Multiple storage backends** with different configuration needs (Class E feature modules)
 - **A non-trivial data model** with 10+ record fields (Class E feature modules)
@@ -198,7 +198,7 @@ Two short code blocks: (1) adapt the platform's event into `instance.http_reques
 One short paragraph: whether `cleanupExpiredSessions` needs scheduling depends on the storage adapter (cross-link to the adapter's README). The call shape is identical in both runtimes; only the scheduling mechanism differs (cron library inside the process vs scheduled function invocation outside it).
 ```
 
-A realistic `runtime.md` is **80–120 lines**. Anything longer almost certainly contains framework cookbook material that should be deleted or moved.
+A realistic `runtime.md` is **80–120 lines**. Anything longer contains framework cookbook material that should be deleted or moved.
 
 ---
 

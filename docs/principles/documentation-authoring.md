@@ -12,6 +12,7 @@ This is the contract for writing and maintaining Superloom documentation itself:
 - [The Three-Layer Structure](#the-three-layer-structure)
 - [Derived Artifacts and the Golden Rule](#derived-artifacts-and-the-golden-rule)
 - [Cross-Reference Integrity](#cross-reference-integrity)
+- [Path Portability](#path-portability)
 - [Pitfall Journals](#pitfall-journals)
 - [Maintenance Rituals](#maintenance-rituals)
 
@@ -94,6 +95,8 @@ Some files are **compiled from** the documentation rather than authored directly
 
 Editing a derived file creates two versions of the truth, and the divergence surfaces as an agent confidently following a rule the documentation no longer states. The compile and verification workflows exist to make the correct path cheaper than the shortcut. The full mechanism is in [`ai/agent-configuration.md`](../ai/agent-configuration.md) and [`ai/workflow-authoring.md`](../ai/workflow-authoring.md).
 
+**The dependency is one-way.** Workflows are compiled from and reference documentation; documentation never references a workflow. A rule stated in a document is complete on its own - it never defers its authority, its enforcement, or any of its steps to a workflow. Workflows are renamed, renumbered, and retired freely; a document that points at one inherits that churn as dead references. The `ai/` layer is the single exception: it documents the workflow system itself as subject matter.
+
 ## Cross-Reference Integrity
 
 Whenever a rule is added, moved, renamed, or reworded:
@@ -102,6 +105,15 @@ Whenever a rule is added, moved, renamed, or reworded:
 2. Recompile derived artifacts (agent files, embedded workflow blocks).
 3. Align any code comments that quote the rule; a quoted rule matches its source verbatim.
 4. Keep published heading anchors stable; external references rely on them. Renaming a published heading requires sweeping its inbound links.
+
+## Path Portability
+
+Documentation is read on every contributor's machine and rendered on the public site. Paths in prose, examples, and links must never assume one person's filesystem.
+
+- **Never write an absolute local path** - anything rooted at `/Users/...`, `/home/...`, `C:\...`, or a specific machine or user name. These are release-blocking defects: they break on every other machine and leak the author's environment.
+- **Use repository-relative paths** for anything inside a repo (`docs/languages/js/index.md`, `src/helper-modules-core/...`), and **home-relative paths** (`~/.npmrc`, `~/.ssh/config`) or documented environment variables (`%USERPROFILE%`) for user-specific locations that are genuinely portable.
+- **Links between documents are relative**; external sites and package pages use full `https://` URLs.
+- Generated build artifacts that embed absolute paths (for example a rendering tool's cache) are never committed - they belong in `.gitignore`.
 
 ## Pitfall Journals
 

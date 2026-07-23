@@ -26,7 +26,7 @@ With these settings, you rarely need to run `npm run lint` manually during devel
 
 ### AI Assistant Integration (Windsurf)
 
-Windsurf reads `AGENTS.md` automatically at conversation start - no configuration needed. The `.devin/workflows/` directories across the workspace hold slash-command workflows; invoke them with `/module`, `/new-entity`, `/realign`, `/learn`, `/compile-agents-md`, `/validate-docs`, or `/plan`.
+Windsurf reads `AGENTS.md` automatically at conversation start - no configuration needed. Slash-command workflows live in the `.devin/workflows/` directories across the workspace; each repository's `AGENTS.md` lists its available commands and when to use them.
 
 For GitHub MCP integration (so the assistant can manage repos, Actions, and PRs), follow [`dev/mcp-github-setup.md`](../dev/mcp-github-setup.md).
 

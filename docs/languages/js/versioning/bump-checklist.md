@@ -94,9 +94,17 @@ Test `package.json` files use wildcards:
 
 `^1.0.0` automatically resolves to `1.0.2` after publish. **No manual updates required.**
 
-### Step 4: Update Changelog
+### Step 4: Update Changelog (when the change is meaningful)
 
-Edit the module's `CHANGELOG.md`:
+`CHANGELOG.md` is an **optional** companion file. Create it on the first meaningful entry, not before. Two gates decide whether this step applies:
+
+**Gate 1 - Is the version being bumped?** A same-version republish writes nothing to the changelog. No version bump means no entry.
+
+**Gate 2 - Is the change meaningful to a consumer?** Add an entry only when the bump reflects a breaking change (major), a new feature or capability (minor), a bug fix that changes observable behavior, or a security fix. Skip the entry for cosmetic or internal-only changes even when a version is bumped: variable renames inside a file, `var`-to-`let` swaps, whitespace or vertical-spacing cleanup, function reordering, comment edits, or documentation-only improvements.
+
+The test: if a consumer's behavior or API surface is unaffected, it does not belong in the changelog.
+
+When both gates pass, edit the module's `CHANGELOG.md`:
 
 ```markdown
 # Changelog
@@ -290,7 +298,7 @@ A: `0.1.0`, `0.2.0`, etc. until API stabilizes, then `1.0.0`.
 - [ ] Tests passing locally
 - [ ] Linter passing
 - [ ] `package.json` version updated
-- [ ] `CHANGELOG.md` updated
+- [ ] `CHANGELOG.md` updated (only if the change is meaningful; see Step 4)
 - [ ] Conventional Commit message written
 - [ ] Changes pushed to main
 - [ ] CI pipeline monitored

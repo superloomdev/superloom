@@ -1,6 +1,6 @@
 # README Versioning Section (Template)
 
-This page provides a copy-paste **Versioning** section that every helper module's `README.md` should include. The relative paths inside the snippet (`./ROBOTS.md`, `./CHANGELOG.md`, `../../docs/versioning/...`) resolve from the **module's own `README.md`**, not from this docs page - which is why this page renders the snippet verbatim rather than hyperlinking each reference.
+This page provides a copy-paste **Versioning** section that every helper module's `README.md` should include. The module-local paths inside the snippet (`./ROBOTS.md`, `./CHANGELOG.md`) resolve from the **module's own `README.md`**, not from this docs page - which is why this page renders the snippet verbatim rather than hyperlinking each reference. Cross-repo documentation links use absolute `https://superloom.dev` URLs so they resolve from any module in any repository.
 
 ## How to use
 
@@ -25,7 +25,7 @@ The public API is documented in [ROBOTS.md](./ROBOTS.md). All functions and conf
 
 ### Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md) for a history of changes.
+If present, [CHANGELOG.md](./CHANGELOG.md) records the module's meaningful, consumer-visible changes.
 
 ### Version Bump Procedure
 
@@ -52,9 +52,9 @@ Edit `package.json`:
 }
 ```
 
-#### 3. Update Changelog
+#### 3. Update Changelog (only if the change is meaningful)
 
-Add entry to `CHANGELOG.md`:
+`CHANGELOG.md` is optional. Add an entry only for breaking changes, new features, behavior-changing bug fixes, or security fixes. Skip it for cosmetic or internal-only changes (renames, spacing, reordering, comments, documentation). A same-version republish writes nothing.
 
 ```markdown
 ## [1.0.1] - YYYY-MM-DD
@@ -66,7 +66,7 @@ Add entry to `CHANGELOG.md`:
 #### 4. Commit with Conventional Commits
 
 ```bash
-git add package.json CHANGELOG.md
+git add package.json    # add CHANGELOG.md too when it was updated
 git commit -m "fix(module): resolve edge case in functionName()"
 git push origin main
 ```
@@ -92,12 +92,12 @@ This means patch and minor updates are automatically picked up.
 
 ### Detailed Documentation
 
-For comprehensive versioning documentation:
+For full versioning rules:
 
-- [Versioning Guide](../../docs/versioning/index.md)
-- [Semantic Versioning](../../docs/versioning/semantic-versioning.md)
-- [Version Bump Checklist](../../docs/versioning/bump-checklist.md)
-- [API Stability (JavaScript)](../../docs/versioning/api-stability-js.md)
+- [Versioning Guide](https://superloom.dev/docs/languages/js/versioning/)
+- [Semantic Versioning](https://superloom.dev/docs/languages/js/versioning/semantic-versioning)
+- [Version Bump Checklist](https://superloom.dev/docs/languages/js/versioning/bump-checklist)
+- [API Stability (JavaScript)](https://superloom.dev/docs/languages/js/versioning/api-stability-js)
 ````
 
 ## Why this is wrapped in a code fence

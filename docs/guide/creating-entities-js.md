@@ -56,7 +56,7 @@ module.exports = {
 };
 ```
 
-### `[entity].entity.js` - Entity Constructors
+### `[entity].data.js` - Entity Constructors
 
 ```javascript
 const CONFIG = require('./[entity].config');
@@ -88,7 +88,7 @@ module.exports = {
 };
 ```
 
-### `[entity].dto.js` - One Shape
+### `[entity].data.js` - One Shape
 
 ```javascript
 module.exports = {

@@ -1,6 +1,6 @@
 # Core Helper Modules
 
-`catalog-core` are the **platform-agnostic, server-safe** helper modules at the foundation of every project. They run unchanged in any JavaScript or Python runtime - browser, Node.js, React Native, Python interpreter - and are published under `@your-org/*`.
+`catalog-core` are the **platform-agnostic, server-safe** helper modules at the foundation of every project. They run unchanged in any JavaScript runtime - browser, Node.js, React Native - and are published under `@your-org/*`.
 
 ## On This Page
 
@@ -40,15 +40,15 @@ This is the layer that everything else stands on. If a function would behave dif
 | **Explicit inputs and outputs** | No magic, no hidden context |
 | **No hidden state** | Functions return everything they produce |
 | **Explicit dependencies only** | Injected via the loader, never reached for |
-| **Language-specific implementations** | One module per `[js\|py]` runtime |
+| **Language-specific implementations** | One module per JavaScript runtime |
 
 ---
 
 ## Naming Convention
 
-Module directory name: `[js|py]-helper-[module-name]`
+Module directory name: `js-helper-[module-name]`
 
-In the `js-helper-modules` repo, core helper modules live under `helper-modules-core/`. The directory name makes the platform-agnostic intent visible at the path level.
+In the JS implementation repository, core helper modules live under `helper-modules-core/`. The directory name makes the platform-agnostic intent visible at the path level.
 
 ---
 
@@ -188,7 +188,7 @@ Core helpers must operate on **generic data structures**. Avoid domain-specific 
 - No configuration needed
 - No test isolation issues since it has no dependencies
 
-All other core modules (`js-helper-debug`, `js-helper-time`, `js-helper-money`) use factory pattern to maintain testability and configuration flexibility.
+All other core modules use factory pattern. See [Factory vs Singleton](factory-vs-singleton.md) for the full decision rule.
 
 ## Testing and Reuse
 

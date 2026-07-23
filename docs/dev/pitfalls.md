@@ -2,7 +2,7 @@
 
 > **Audience:** AI coding agents (Cascade, Copilot, Cursor) and humans debugging a specific CI, test, or terminal failure. **Not first-read material.** Start with the sibling philosophy docs; come here only when a concrete failure mode needs a confirmed fix.
 >
-> **Shape:** Every entry is **Symptom → Cause → Lesson/Fix**. When a new failure mode is discovered, add the entry here first (per the Golden Rule in `AGENTS.md`), then propagate a compact rule into `AGENTS.md` via `/compile-agents-md`.
+> **Shape:** Every entry is **Symptom → Cause → Lesson/Fix**. When a new failure mode is discovered, add the entry here first (per the Golden Rule in `AGENTS.md`), then recompile the compact rule into `AGENTS.md` (a derived artifact, never edited directly).
 >
 > **Scope:** This file covers the `docs/dev/` domain: AI tool-bridge, CI/CD publishing, local module testing. Architecture-level pitfalls (module migration, refactors) live in [`docs/testing/pitfalls-migration.md`](../languages/js/pitfalls-migration.md).
 
@@ -74,7 +74,7 @@ The same rule applies to `gh pr create`, `aws ssm put-parameter`, and any other 
 
 **Cause:** Any time a `run_command` payload spans multiple lines because of an embedded quoted string, the shell-bridge sees the same `dquote>` failure mode.
 
-**Fix:** Route the multi-line content through `write_to_file` to a temp file first, then have the shell read from the file with a single-line command. This pattern is also documented in `.devin/workflows/module.md` Phase C command rules.
+**Fix:** Route the multi-line content through `write_to_file` to a temp file first, then have the shell read from the file with a single-line command.
 
 #### S4. Backticks inside a double-quoted argument
 
@@ -553,7 +553,7 @@ gh api "$BASE/versions" --jq '.[].id' | xargs -I {} gh api --method DELETE "$BAS
 gh api "$BASE/versions"                  # MUST return 404 Package not found
 ```
 
-If the verify step returns a JSON array, the delete did not work — re-check the owner type and path. The `/js-helper-module-refactor` workflow Step 10 encodes this procedure.
+If the verify step returns a JSON array, the delete did not work — re-check the owner type and path.
 
 ### 17. `git add .` bundles unrelated modules into one commit
 
@@ -568,7 +568,7 @@ git add src/helper-modules-server/js-server-helper-<name>/
 git commit -m "refactor(<name>): one-line summary"
 ```
 
-This keeps the CI publish trigger scoped to a single module, makes history bisectable, and lets one module be reverted without disturbing others. Always run `git status --short` before committing and confirm only the intended module's files are staged. The `/js-helper-module-refactor` workflow Step 11 encodes this rule.
+This keeps the CI publish trigger scoped to a single module, makes history bisectable, and lets one module be reverted without disturbing others. Always run `git status --short` before committing and confirm only the intended module's files are staged.
 
 ---
 
@@ -818,7 +818,7 @@ const HttpGatewayAdapter = require('helper-http-gateway-adapter-express');
 
 **Exception:** Internal files not exposed via the package's main entry (e.g. `parts/cookies.js`, `parts/params.js` testing internals) may continue to use relative paths. They are not addressable through the alias because they are not part of the package's public surface.
 
-**Lesson:** Treat `require()` style as part of test hygiene, not as a stylistic choice. The HTTP Gateway trio (`js-server-helper-http-gateway` + 2 adapters) is the canonical reference. Plan 0037 covers the full audit and lint to enforce this across every module.
+**Lesson:** Treat `require()` style as part of test hygiene, not as a stylistic choice. The HTTP Gateway trio (`js-server-helper-http-gateway` + 2 adapters) is the canonical reference.
 
 ### 20. Singleton pattern prevents test isolation
 
@@ -880,7 +880,7 @@ const testInstance2 = createModule({log_level: 'error'});
 rm -rf node_modules package-lock.json && npm install && npm test
 ```
 
-This clean-install form is mandatory in the `/js-helper-module-refactor` workflow Step 6. It is **not** required for general module development, where a plain `npm install` is correct and repeated lock-file deletion would be wasteful. See `testing-local-modules.md` Step 1.
+This clean-install form is mandatory during module refactoring. It is **not** required for general module development, where a plain `npm install` is correct and repeated lock-file deletion would be wasteful. See `testing-local-modules.md` Step 1.
 
 **Secondary lesson:** If `npm install` fails with `E409 Conflict / checksum mismatch` even after a clean install, the registry is temporarily inconsistent (a known GitHub Packages transient bug). Wait 30 to 60 seconds, then re-run `rm -rf node_modules package-lock.json && npm install`. Do not use `--legacy-peer-deps`. It masks the real error, writes incorrect lock entries, and creates new failures on the next run. The clean install is the correct fix.
 
@@ -913,7 +913,7 @@ Whenever a new failure mode is discovered:
 
 1. **Reproduce it once.** Confirm the root cause is what you think it is.
 2. **Add an entry to the right section above** with `Symptom`, `Cause`, `Fix/Lesson`. Keep the numbering continuous within a section.
-3. **If the rule is brief enough** to live in the `AGENTS.md` compact summaries (Safe Terminal Patterns, healthcheck rules, etc.), run `/compile-agents-md` to update the compact mirror.
+3. **If the rule is brief enough** to live in the `AGENTS.md` compact summaries (Safe Terminal Patterns, healthcheck rules, etc.), recompile the compact mirror (`AGENTS.md` is a derived artifact, never edited directly).
 4. **Commit the journal entry and the summary together** so they never drift.
 
 Doc drift is the slowest bug to find. **No exceptions.** Every new lesson goes here first, then propagates.

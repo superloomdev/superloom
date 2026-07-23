@@ -122,11 +122,11 @@ Extensions are loaded through the same loader pattern as other modules:
 
 ```js
 // loader.js
-const StylerParent = require('@superloomdev/js-client-helper-styler')({
+const StylerParent = require('helper-styler')({
   // parent config
 });
 
-const StylerExt = require('@superloomdev/js-client-helper-styler-ext-react')({
+const StylerExt = require('helper-styler-ext-react')({
   React: require('react'),
   Parent: StylerParent  // optional: pass pre-configured parent
 });
@@ -138,7 +138,7 @@ Or the extension can import the parent directly:
 
 ```js
 // extension.js
-const Parent = require('@superloomdev/js-client-helper-styler');
+const Parent = require('helper-styler');
 
 function createExtension({ React }) {
   // Use Parent internally

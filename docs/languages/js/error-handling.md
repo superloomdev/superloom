@@ -282,7 +282,6 @@ The throw-vs-return decision maps to **when** in the request lifecycle the error
 | **Construction time** (module loader, one-shot per process) | Throw `Error` | Missing `STORE` adapter, peer dependency not loaded, required `CONFIG.*` absent |
 | **Per-call argument shape** | Throw `TypeError` | Missing `options.scope`, non-integer `length`, wrong type for `value` |
 | **Per-call runtime condition** | Return envelope `{ success: false, error: { type, message } }` | Rate limit hit (`COOLDOWN_ACTIVE`), storage failed (`STORE_READ_FAILED`), business-rule rejection |
-| **Per-call validation outcome** | Return envelope with the same `{ type, message }` shape (or, under Approach B, the injected domain error directly) | `Lib.MongoDB.findOne` returning `{ success: false, error: { type: 'STORE_READ_FAILED' } }`; service translating to `Lib.User.errors.SERVICE_UNAVAILABLE`. Verify under Approach B skips the translation: `result.error` is already `Lib.Auth.errors.OTP_WRONG_VALUE`. |
 
 Construction-time and per-call-argument errors are bugs that can be eliminated by writing correct code, so they fail loudly. Per-call runtime conditions are inherent to the operation and exist no matter how careful the caller is, so they return data the caller can branch on.
 
@@ -538,7 +537,7 @@ Does NOT apply to:
 
 This rule applies to:
 
-- **Every helper module** (core, server, and client: utils, debug, time, crypto, sql-*, nosql-*, storage-*, queue-*, http, instance, verify, etc.)
+- **Every helper module** (core, server, and client)
 - **Every entity service and controller** in `[project]/src/server/`
 - **Every entity validation module** in `[project]/src/model/[entity]/[entity].validation.js`
 

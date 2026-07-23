@@ -2,7 +2,7 @@
 
 > **Language:** [JavaScript](module-structure)
 
-A comprehensive guide for choosing between factory and singleton patterns in Superloom modules. The default is factory pattern for testability, with singleton pattern reserved for rare cases.
+The default is factory pattern for testability, with singleton pattern reserved for rare cases.
 
 ## Quick Decision Matrix
 
@@ -238,18 +238,18 @@ Performance differences are negligible compared to testability benefits. Use fac
 
 ```javascript
 // js-helper-debug - takes config, needs test isolation
-const Debug = require('@superloomdev/js-helper-debug')(Lib, {
+const Debug = require('helper-debug')(Lib, {
   log_level: 'info',
   output_format: 'json'
 });
 
 // js-helper-time - takes Utils dependency and config
-const Time = require('@superloomdev/js-helper-time')(Lib, {
+const Time = require('helper-time')(Lib, {
   default_timezone: 'UTC'
 });
 
 // js-server-helper-auth - takes a ready-to-use store object
-const Auth = require('@superloomdev/js-server-helper-auth')(Lib, {
+const Auth = require('helper-auth')(Lib, {
   Store: postgresStore,
   ACTOR_TYPE: 'user'
 });
@@ -259,7 +259,7 @@ const Auth = require('@superloomdev/js-server-helper-auth')(Lib, {
 
 ```javascript
 // js-helper-utils - singleton loader, returns same Utils object
-const Utils = require('@superloomdev/js-helper-utils')({}, {});
+const Utils = require('helper-utils')({}, {});
 
 // error catalog - data only
 const Errors = require('./module.errors');

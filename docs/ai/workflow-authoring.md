@@ -117,3 +117,4 @@ The order matters: the journal entry is cheapest while the diagnosis is fresh, a
 | A workflow that both decides scope and executes it | Scope creep at execution time; scope belongs in the invocation argument and the contract |
 | Duplicating another workflow's steps inline | Two versions of one procedure drift; invoke the other workflow or extract a shared source |
 | Product-specific instructions in shared workflows | Breaks portability across agent tools; see [Agent Configuration](agent-configuration.md) |
+| Referencing a dependent repo's workflows or internals from the constitution repo | The constitution cannot know about its dependents; see [Repository Independence](agent-configuration.md#repository-independence) |

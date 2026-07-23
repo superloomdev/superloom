@@ -127,9 +127,7 @@ Main module `package.json` typically have **no runtime dependencies** (loader pa
 
 Dependencies are injected at runtime via the loader pattern, not installed via npm.
 
-### Peer Dependencies
-
-Not currently used in Superloom. Dependencies are runtime-injected, not npm-linked.
+For peer dependency conventions, see [`dependencies.md`](../dependencies.md).
 
 ## Version Resolution in CI
 

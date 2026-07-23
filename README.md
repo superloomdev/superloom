@@ -6,70 +6,85 @@
     </picture>
   </a>
   <h1>Superloom</h1>
-  <p><strong>A modular Node.js framework for backends. Build once, deploy anywhere, review anything.</strong></p>
-  <p><em>Built on patterns from two decades of production systems, wrapped around tested helper modules.</em></p>
+  <p><strong>A modular application framework and engineering reference. One way to structure data, one way to inject dependencies, one way to handle errors.</strong></p>
+  <p><em>Patterns from two decades of production systems, documented with their reasoning.</em></p>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-  [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/superloomdev/superloom/pulls)
 
 </div>
 
 ## Why Superloom
 
-- **Build once. Reuse on every new project.** Every module ships pre-tested with a stable contract, so the next codebase — and the AI agent helping build it — relies on the wrapper instead of re-discovering the plumbing each time.
+- **The documentation is the framework.** Superloom is an opinionated engineering standard expressed as documentation: universal principles with their reasoning, and per-language implementation guides precise enough to build from. Adopt it as-is, extend it to a new language, or fork it and substitute your own opinions layer by layer.
 
-- **Designed for human review of AI output.** Section banners, short functions, scoped comments, and a single response envelope let a reviewer read any module top-to-bottom and spot what an AI got wrong, without getting lost in dense logic.
+- **Opinionated enough that AI can't drift.** One loader shape, one validation contract, one error envelope, one skeleton per file archetype. Every contributor stays on the same rails, human or AI, so a six-month-old codebase still looks like a six-day-old one.
 
-- **Opinionated enough that AI can't drift.** One loader shape, one validation contract, one error envelope — every contributor stays on the same rails, human or AI, so a six-month-old codebase still looks like a six-day-old one.
+- **Designed for human review of AI output.** Section banners, short functions, scoped comments, and a single response envelope let a reviewer read any file top-to-bottom and spot what an AI got wrong, without getting lost in dense logic.
 
-- **Real modules, not an abstraction layer.** Each helper wraps one production library (Postgres, S3, MongoDB, …) so when an upstream driver changes, only the wrapper updates. Your application code stays exactly as it is.
+- **Language-independent by design.** The architecture separates universal principles from language-specific opinions. JavaScript is the current reference implementation; the same principles extend to any language.
 
-## What's in the Box
+## What's in This Repository
 
-Helper modules for databases, storage, queues, auth, verification, logging, and utilities. Each module wraps one production library so when the upstream driver changes, only the module updates. Your application code stays exactly as it is.
+This repository is the source of truth for the framework:
 
-A demo application shows how the layers fit together: model → controller → service → interfaces (Express + Lambda), with the same business logic running unchanged on both.
+| Directory | Contents |
+|---|---|
+| [`docs/`](docs/) | The complete documentation: universal principles, per-language implementation guides, and AI-assisted development standards |
+| [`website/`](website/) | The VitePress source for [superloom.dev](https://superloom.dev), which renders `docs/` |
 
-## Finding Modules
+The documentation is organized in three layers:
 
-Helper modules live in the [js-helper-modules](https://github.com/superloomdev/js-helper-modules) repository. They are organized into three categories:
+| Layer | What it holds |
+|---|---|
+| **Principles** | Universal engineering rules and the reasoning behind them, language-independent |
+| **Languages** | Each language's complete, opinionated implementation of the principles (currently JavaScript; more planned) |
+| **AI** | Standards for AI-assisted development: agent configuration, workflow authoring, model tiering |
 
-- **Core** (`js-helper-*`) — Utilities that run in any JavaScript environment
-- **Server** (`js-server-helper-*`) — Modules that need Node.js (databases, HTTP, file system)
-- **Client** (`js-client-helper-*`) — Browser and mobile environments
-
-Each module has its own README and `ROBOTS.md` (AI reference). Browse the `src/` directory or check the module READMEs for details.
+Reference implementations built from this documentation (helper modules, a demo application) live in separate repositories under the [superloomdev](https://github.com/superloomdev) organization.
 
 ## Documentation
 
-Full documentation at **[superloom.dev](https://superloom.dev)**.
+Read the documentation at **[superloom.dev](https://superloom.dev)**.
 
 | Section | Content |
 |---|---|
-| [What is Superloom?](https://superloom.dev/docs/) | The 60-second overview, the four messages above in detail, and a tour of a real module file |
-| [Getting Started](https://superloom.dev/docs/guide/getting-started) | Three integration approaches (fork, local copy, direct), running the demo project, first endpoint |
-| [Architecture](https://superloom.dev/docs/foundations/architectural-philosophy) | Layered design, request flow, validation, error handling, code-formatting standards |
-| [Developer Setup](docs/dev/README.md) | Environment, tokens, Docker, Git |
+| [What is Superloom?](https://superloom.dev/docs/) | The 60-second overview and a tour of the framework's shape |
+| [Getting Started](https://superloom.dev/docs/guide/getting-started) | From a clean machine to a running project |
+| [Engineering Philosophy](https://superloom.dev/docs/principles/engineering-philosophy) | The five convictions every other rule traces back to |
+| [JavaScript Implementation](https://superloom.dev/docs/languages/js/index) | The complete JavaScript guide: structure, formatting, testing, publishing |
+| [AI-Assisted Development](https://superloom.dev/docs/ai/index) | Agent configuration, workflow authoring, model tiering |
+
+To build the website locally:
+
+```bash
+# from website/
+npm install
+npm run dev
+```
+
+## Workflows
+
+This repository ships two agent workflows that maintain the documentation:
+
+| Workflow | Purpose |
+|---|---|
+| `/learn` | Capture new knowledge from a working session into its canonical place in `docs/` |
+| `/finalize-docs` | Validate the documentation to convergence, then propagate it into derived artifacts |
+
+The standard these workflows follow is itself documented in [Workflow Authoring](https://superloom.dev/docs/ai/workflow-authoring).
 
 ## Quick Start
 
 ```bash
-# To read documentation and understand the framework
 git clone https://github.com/superloomdev/superloom.git
-
-# To use helper modules in your project
-git clone https://github.com/superloomdev/js-helper-modules.git
-
-# To start a new application from a working example
-git clone https://github.com/superloomdev/js-demo-project.git
 ```
 
-Then follow [Getting Started](https://superloom.dev/docs/guide/getting-started) to pick one of the three integration approaches and run the demo project. The demo is a multi-package layout — each layer (`model`, `model-server`, `server`, …) is its own package, so the install steps live with the guide rather than here.
+Then start with [Getting Started](https://superloom.dev/docs/guide/getting-started) to set up a project, or [What is Superloom?](https://superloom.dev/docs/) to evaluate the framework first.
 
 ## License
 
-[MIT](LICENSE) — free for commercial use.
+[MIT](LICENSE) - free for commercial use.
 
 ---
 

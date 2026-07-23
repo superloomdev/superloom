@@ -6,7 +6,7 @@
 >
 > To change a rule:
 > 1. Update the source-of-truth file in `docs/` (`principles/`, `languages/js/`, `ai/`, `dev/`, `ops/`)
-> 2. Run `/compile-agents-md sync` to propagate into AGENTS.md
+> 2. Run `/finalize-docs` to validate and propagate into AGENTS.md
 >
 > Bypassing this causes drift: AGENTS.md asserts things `docs/` no longer says. No exceptions; even one-word fixes go through `docs/` first.
 >
@@ -46,9 +46,10 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **Skeleton conformance diff after any structural pass:** compare the module entry file element by element against its class skeleton in `docs/languages/js/module-structure.md`. Fix lists, lint, and grep sweeps do not catch a missing step comment
 - **`performanceAuditLog`:** every call passes a local `start_ms` captured at operation entry (never `instance['time_ms']`, never a same-line timestamp); each interval logged once by the layer that owns the work - drivers (`nosql-*`, `sql-*`, `queue-*`, `storage-*`, `http`) instrument their own roundtrips; non-drivers never re-log delegated I/O
 - **Two-form naming:** scope (`@superloomdev/...`) and bare (`js-...helper-...`) forms only in `package.json` and real repo-path URLs; the alias (`helper-...`) everywhere else. See `docs/languages/js/index.md`
-- Module lifecycle operations (create, review, fix, publish) go through `/module` - do not improvise the procedure
-- Use `/learn` to capture new knowledge; run `/compile-agents-md` when docs change
+- Module lifecycle operations (create, review, fix, publish) go through `/js-helper-module` - do not improvise the procedure
+- Use `/learn` to capture new knowledge; run `/finalize-docs` after any docs change (validates to convergence, then propagates to AGENTS.md and embedded workflow blocks)
 - Use Plan Mode for complex, multi-step, or risky changes; when stuck, attempt workarounds before asking; reuse existing terminals
+- **Repository independence:** the constitution repo (superloom) never references dependent repos' workflows or internals; dependent repos reference superloom docs freely. See `docs/ai/agent-configuration.md` - Repository Independence
 
 ## Safe Terminal Patterns
 
@@ -106,12 +107,11 @@ Every module: entry file + `[name].config.js` + `[name].errors.js` + `[name].val
 
 | Command | Repo | Use when |
 |---|---|---|
-| `/module [create\|review\|fix\|publish] [path]` | js-helper-modules | Any helper-module lifecycle operation; one module per run |
-| `/realign` | js-helper-modules | An agent has drifted from conventions; rebuilds context read-only and reports |
+| `/js-helper-module [create\|review\|fix\|publish] [path]` | js-helper-modules | Any helper-module lifecycle operation; one module per run. `fix` is also the retrofit verb after docs change |
+| `/module-audit` | js-helper-modules | Read-only audit of a module against the constitution; hands findings to `/js-helper-module review` |
 | `/new-entity` | js-demo-project | Adding a domain entity to the demo application |
-| `/learn` | superloom | Capturing new knowledge into its canonical doc |
-| `/compile-agents-md [sync\|rebuild\|verify]` | superloom | Propagating docs changes into AGENTS.md |
-| `/validate-docs` | superloom | After any docs or workflow change, before commit |
+| `/learn` | superloom | Capturing conversation knowledge into its canonical doc; hands off to `/finalize-docs` |
+| `/finalize-docs [check]` | superloom | After any docs or workflow change: validate to convergence, then propagate to AGENTS.md and embedded blocks. `check` = report-only |
 | `/plan` | workspace root | Long-horizon plan transitions (`show`, `new`, `step`, `done`, `backlog`, `next`) |
 
 Workflow authoring standard (seven mandatory properties, embedded-block compile rule): `docs/ai/workflow-authoring.md`. Model-tier split and token discipline: `docs/ai/model-tiering.md`.

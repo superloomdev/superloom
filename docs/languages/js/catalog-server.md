@@ -41,7 +41,7 @@ Unlike [`catalog-core`](catalog-core.md), server helpers are **not** universal -
 
 Module directory name: `[js|py]-server-helper-[module-name]`
 
-In the `js-helper-modules` repo, these live at `src/helper-modules-server/`. The `server-helper` prefix in the package name and the `helper-modules-server` directory both signal the server-only constraint at every level (file path, package name, npm scope).
+In the JS implementation repository, these live at `src/helper-modules-server/`. The `server-helper` prefix in the package name and the `helper-modules-server` directory both signal the server-only constraint at every level (file path, package name, npm scope).
 
 For category-based naming (`sql-`, `nosql-`, `nosql-aws-`, `storage-aws-`, `queue-aws-`, ...) see [`code-formatting.md`](code-formatting.md#module-naming).
 
@@ -62,18 +62,7 @@ Same structure as [core helper modules](catalog-core.md#typical-files):
 
 ## Example Modules
 
-| Module | Example Functions |
-|---|---|
-| `js-server-helper-sql-postgres` | `addRecord`, `updateRecord`, `queryRecords`, `deleteRecord` |
-| `js-server-helper-sql-mysql` | Same shape as Postgres helper |
-| `js-server-helper-nosql-aws-dynamodb` | `addRecord`, `updateRecord`, `queryRecords`, `deleteRecord`, batch operations |
-| `js-server-helper-storage-aws-s3` | `putFile`, `getFile`, `deleteFile`, signed URLs |
-| `js-server-helper-queue-aws-sqs` | `sendMessage`, `receiveMessages`, `deleteMessage` |
-| `js-server-helper-http` | Outgoing HTTP client (native `fetch` wrapper, multipart support) |
-| `js-server-helper-instance` | Per-request instance lifecycle, cleanup hooks, background tasks |
-| `js-server-helper-verify` | One-time verification codes (pin, code, token) with a storage-agnostic adapter |
-| `js-server-helper-logger` | Compliance-friendly action log with per-row retention (persistent or TTL) and optional IP encryption |
-| `js-server-helper-auth` | Session lifecycle and authentication: create, verify, list, remove. Multi-instance per actor_type. Store adapters are separate packages (`auth-store-{postgres,mysql,sqlite,mongodb,dynamodb}`). Optional JWT mode with refresh-token rotation |
+See individual module READMEs for function signatures and usage examples.
 
 ---
 
@@ -84,7 +73,6 @@ Server helper modules load base defaults from a config file and merge loader-inj
 | Pattern | When to use |
 |---|---|
 | **Pattern 2 (Multi-Instance Factory)** | All helper modules. Stateful (connection pool, persistent client, authenticated session) or stateless |
-| **Pattern 1 (Singleton Config)** | **Legacy.** Preserved for historical reference only - not used in new modules |
 
 See [`module-structure.md`](module-structure) for full templates and the rules each pattern follows.
 

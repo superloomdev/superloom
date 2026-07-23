@@ -95,22 +95,6 @@ SurveyValidation.validateCreate(title, description, questions, rules);
 
 ---
 
-## When to Consider a Third-Party Library
-
-The built-in approach works well for:
-- Small to medium projects
-- Projects where you want zero dependencies
-- Projects where validation rules are tightly coupled to domain config
-
-Consider **Joi** or **Zod** if:
-- You have very complex conditional schemas that are hard to express procedurally
-- You want automatic TypeScript type inference from schemas (Zod)
-- You need schema serialization (sending validation rules to the client)
-
-**Recommendation:** Stick with the built-in approach for this framework. It is simpler, has no dependencies, and keeps validation visible and debuggable. If a specific project needs schema-based validation, wrap Joi or Zod in a helper module (`js-helper-validation`) so it can be swapped without touching model code.
-
----
-
 ## Validation in the Request Flow
 
 ```
