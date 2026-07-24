@@ -32,6 +32,14 @@ superloomdev/
 
 The `superloom` repo is language-agnostic. It defines patterns, not implementations. Language-specific implementations live in their own repos and reference `superloom` for conventions.
 
+### Repository Root Content
+
+The root of a `[lang]-helper-modules` repository contains **only**: `src/` (the module tiers), `.github/` (CI), the agent configuration files (`AGENTS.md`, tool-specific workflow folders), `.gitignore`, `README.md`, `LICENSE`, and the environment bootstrap script (`init-env.sh`). Nothing else.
+
+In particular, the repo root never carries a `package.json`, a lockfile, or `node_modules/`. Every module is self-contained with its own `package.json` and lint config; repo-wide operations live in CI job definitions, which run per module with an explicit working directory. A root package has no consumer and drifts silently (see the orphaned-root-artifacts entry in [`pitfalls-migration.md`](../languages/js/pitfalls-migration.md)).
+
+After any repo extraction or restructure, diff the resulting root against this list and delete anything not named here.
+
 ---
 
 ## Naming Convention
@@ -39,12 +47,12 @@ The `superloom` repo is language-agnostic. It defines patterns, not implementati
 | Repo type | Pattern | Example |
 |---|---|---|
 | Core language modules | `[lang]-helper-modules` | `js-helper-modules`, `py-helper-modules` |
-| Specialised/non-core modules | `[lang]-helper-modules-specialized` | `js-helper-modules-specialized` |
+| Specialized/non-core modules | `[lang]-helper-modules-specialized` | `js-helper-modules-specialized` |
 | Demo/reference application | `[lang]-demo-project` | `js-demo-project` |
 
 `[lang]` is the lowercase language identifier: `js`, `py`, `go`, etc.
 
-A specialised repo is warranted when modules are non-core (community wrappers, niche SDKs, opinionated integrations) and should be distributed separately from the main module set.
+A specialized repo is warranted when modules are non-core (community wrappers, niche SDKs, opinionated integrations) and should be distributed separately from the main module set.
 
 ---
 

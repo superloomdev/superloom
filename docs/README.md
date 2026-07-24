@@ -90,6 +90,7 @@ docs/
     index.md                        #   The operating ideas
     agent-configuration.md          #   AGENTS.md standard, size budget, ROBOTS.md
     workflow-authoring.md           #   The seven properties of reliable workflows
+    workflow-archetypes.md          #   Language-agnostic patterns for workflow families
     model-tiering.md                #   Reasoning tier vs execution tier
 
   guide/                            # Task walkthroughs

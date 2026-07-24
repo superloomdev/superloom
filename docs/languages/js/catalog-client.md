@@ -25,8 +25,8 @@ Pure JavaScript that runs anywhere. These are technically Class A modules with a
 - Runs in Node.js, browsers, React Native, edge runtimes
 
 **Examples:**
-- `js-client-helper-crypto` — UUID, random strings, base64 using Web Crypto API
-- `js-client-helper-styler` — Theme engine with template-driven token generation
+- `js-client-helper-crypto` - UUID, random strings, base64 using Web Crypto API
+- `js-client-helper-styler` - Theme engine with template-driven token generation
 
 **Documentation:** Standard Class A pattern: `README.md` + `docs/api.md` + `docs/configuration.md` + `ROBOTS.md`.
 
@@ -110,7 +110,7 @@ This lets the application control the React version and prevents duplicate paren
 |---|---|---|
 | `README.md` | Full overview, mentions extension | Short README with "Extension vs Parent" table |
 | `docs/api.md` | Parent functions (derive, assemble) | Hooks/components (useTheme, ThemeProvider) |
-| `docs/configuration.md` | Config keys, templates | **Not present** — points to parent |
+| `docs/configuration.md` | Config keys, templates | **Not present** - points to parent |
 | `docs/philosophy.md` | Derivation concepts | Extension pattern explanation |
 | `ROBOTS.md` | Parent function signatures | Hook signatures |
 
@@ -168,6 +168,6 @@ The parent's README mentions the extension:
 
 ## See Also
 
-- [`module-classes.md`](./module-classes.md) — Class G (feature modules with extensions) and Class H (extension modules) definitions
-- [`module-docs.md`](./module-docs.md) — README templates including extension modules
-- [`module-docs-complex.md`](./module-docs-complex.md) — Parent vs extension documentation boundaries
+- [`module-classes.md`](./module-classes.md) - Class G (feature modules with extensions) and Class H (extension modules) definitions
+- [`module-docs.md`](./module-docs.md) - README templates including extension modules
+- [`module-docs-complex.md`](./module-docs-complex.md) - Parent vs extension documentation boundaries

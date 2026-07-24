@@ -8,13 +8,14 @@ Superloom treats AI agents as a permanent development audience: code and documen
 |---|---|
 | [Agent Configuration](agent-configuration.md) | The `AGENTS.md` standard, tool-specific folders, the size budget, module-level `ROBOTS.md` |
 | [Workflow Authoring](workflow-authoring.md) | How to write workflows agents execute with precision: phases, gates, evidence, convergence |
+| [Workflow Archetypes](workflow-archetypes.md) | Language-agnostic patterns that concrete workflow families are compiled from |
 | [Model Tiering](model-tiering.md) | Dividing work between expensive reasoning models and inexpensive execution models |
 
 ## The Operating Ideas
 
 Three ideas run through this section:
 
-- **Ambient rules and procedures are different things.** An agent editing existing code needs standing knowledge (`AGENTS.md`, loaded every conversation). An agent performing a lifecycle operation (create, review, publish) needs a procedure (a workflow, loaded on invocation). Splitting by access pattern keeps the standing context small and the procedures complete.
+- **Ambient rules and procedures are different things.** An agent editing existing code needs standing knowledge (`AGENTS.md`, loaded every conversation). An agent performing a lifecycle operation (create, fix, audit, publish) needs a procedure (a workflow, loaded on invocation). Splitting by access pattern keeps the standing context small and the procedures complete.
 - **Execution content is embedded, rationale is referenced.** Agents execute reliably from content inside the file they are running, and unreliably across links. Workflows therefore embed everything execution-critical, and a compile step keeps the embedded copies synchronized with their canonical sources.
 - **Evidence over trust.** Agents claim completion optimistically. Every standard in this section demands visible evidence (quotes, tables, verdict lines, convergence statements) precisely because unverifiable claims are the primary agent failure mode.
 

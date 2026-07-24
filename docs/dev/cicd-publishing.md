@@ -135,7 +135,7 @@ The pipeline processes modules in three groups, organized by dependency boundari
 ### Why This Order Matters
 
 **Dependency Direction**
-- Core modules have zero external dependencies — they must publish first
+- Core modules have zero external dependencies - they must publish first
 - Server modules can depend on Core modules
 - Client modules can depend on Core modules (and sometimes Server modules via extension pattern)
 
@@ -145,9 +145,9 @@ The pipeline processes modules in three groups, organized by dependency boundari
 - **Client**: Universal runtime (browser-focused but still pure JS)
 
 **Testing Requirements**
-- Core modules: No Docker, no external services — fast unit tests
-- Server modules: Often need databases, emulators, or Docker — integration tests
-- Client modules: No framework dependencies — pure JS tests (React/Vue/etc. bindings live in extension modules)
+- Core modules: No Docker, no external services - fast unit tests
+- Server modules: Often need databases, emulators, or Docker - integration tests
+- Client modules: No framework dependencies - pure JS tests (React/Vue/etc. bindings live in extension modules)
 
 ### Adding a New Module
 
@@ -155,8 +155,8 @@ When adding a module to the pipeline:
 
 1. **Determine its class** using [`module-classes.md`](../languages/js/module-classes.md)
 2. **Place it in the correct group** based on its directory (`helper-modules-core/`, `helper-modules-server/`, or `helper-modules-client/`)
-3. **Position within group** based on its dependencies — if Module B imports Module A, Module A must come first
-4. **Add both `test-*` and `publish-*` jobs** — they run sequentially per module
+3. **Position within group** based on its dependencies - if Module B imports Module A, Module A must come first
+4. **Add both `test-*` and `publish-*` jobs** - they run sequentially per module
 
 The workflow file groups jobs visually with comment banners showing the group boundaries. Maintain this structure when adding new modules.
 

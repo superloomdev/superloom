@@ -429,7 +429,19 @@ This is a hard gate: P4 does not run until this reports zero unmirrored rules (o
 
 ### P5 - Embedded Workflow Blocks
 
-For each workflow in every workspace repo with `.devin/workflows/`: if a `docs/` source feeding one of its embedded blocks (marked with its source path) changed this session, update the block in the same change and report it. This closes the compile rule from `docs/ai/workflow-authoring.md` - Embedded Content and the Compile Rule.
+For each workflow in every workspace repo with `.devin/workflows/`: if a `docs/` source feeding one of its embedded blocks (marked with its source path) changed this session, the block must be updated.
+
+**Two paths depending on what changed:**
+
+1. **Language docs changed** (e.g., `docs/languages/js/module-structure.md` was edited): The embedded Standard block in the target repo's Build workflow is stale. Run `/compile-workflows-from-docs [target-repo] [lang]` to regenerate the workflow family from the archetype specs and the updated language docs. The compile workflow self-verifies through a headless workshop. Do not manually patch embedded blocks when the source docs changed; the generator is the correct tool.
+
+2. **Archetype specs changed** (e.g., `docs/ai/workflow-archetypes.md` was edited): All workflow families in all implementation repos are stale. Run `/compile-workflows-from-docs [target-repo] [lang]` for each implementation repo that has `.devin/workflows/`. The generator produces the updated workflow files from the new archetypes.
+
+3. **Workflow-internal content changed** (a sweep command or gate added to a workflow file directly): If the change is not driven by a docs change, update the workflow file in place. This is the only case where manual patching is correct.
+
+**Detection:** Check whether any file under `docs/ai/workflow-archetypes.md` or `docs/languages/[lang]/` changed this session. If yes, path 1 or 2 applies. If only `.devin/workflows/` files changed, path 3 applies.
+
+This closes the compile rule from `docs/ai/workflow-authoring.md` - Embedded Content and the Compile Rule, and the archetype compile rule from `docs/ai/workflow-archetypes.md` - The Compile Rule.
 
 ### P6 - Propagate to Sibling Repositories
 

@@ -126,6 +126,14 @@ See [`module-structure.md`](module-structure#helper-module-pattern-factory) for 
 - Copy the structure exactly, then adapt the content
 - Don't try to preserve old code structure when the pattern changes
 
+### Orphaned root artifacts carried over during repo extraction
+
+**Symptom:** A repo-root `package.json` (plus its `package-lock.json` and `node_modules/`) sits at the top of the modules repository, declaring a root `lint` script that has no matching root `eslint.config.js` and has been broken since the initial commit.
+
+**Root cause:** During a repo extraction or restructure, the generic "every repo gets a root package.json" habit was applied instead of the framework's layout. Nothing consumed it: CI lints per module with `working-directory` set, and every module carries its own `package.json` and `eslint.config.js`. No audit dimension checked the repository root, so the orphan survived undetected.
+
+**Fix:** The modules repository root carries no `package.json`, lockfile, or `node_modules/`. Modules are self-contained; repo-wide tooling belongs in CI job definitions, not a root package. After any extraction or restructure, diff the new repo root against the root-content rule in [`org-structure.md`](../../dev/org-structure.md) and delete anything the rule does not name.
+
 ### Module not added to CI/CD workflow
 
 **Symptom:** New or renamed module completely missing from `ci-helper-modules.yml`.

@@ -93,9 +93,11 @@ Rules for every command an agent workflow contains, each tracing to a journaled 
 
 ## The Verb Pattern
 
-A workflow covering one lifecycle owns all of that lifecycle's operations as **verbs** (`create`, `review`, `fix`, `publish`), dispatched from the invocation text, with a dispatch table at the top of the file mapping input to verb. Ambiguous input resolves by asking, never guessing.
+A workflow covering one lifecycle owns its build operations as **verbs** (`create`, `fix`), dispatched from the invocation text, with a dispatch table at the top of the file mapping input to verb. Ambiguous input resolves by asking, never guessing.
 
-Verbs share the workflow's embedded standards, which is the point: `review` and `fix` check the same embedded checklist that `create` builds from, so the lifecycle cannot disagree with itself. The pairing rule for audit verbs: **`review` produces a cited findings report and changes nothing; `fix` is `review` plus application plus re-verification to convergence.** Both exist because sometimes the user wants the report first.
+Verbs share the workflow's embedded standards, which is the point: `fix` checks the same embedded checklist that `create` builds from, so the lifecycle cannot disagree with itself.
+
+**Workflow families.** A lifecycle that spans multiple distinct operations (deep audit, publishing) is split into a **family** of workflows, each a standalone file with its own invocation. The family pattern and its archetypes are defined in [Workflow Archetypes](workflow-archetypes.md). The naming convention is `[prefix]` (build), `[prefix]-audit` (read-only audit), `[prefix]-publish` (release). Family members hand off to each other by name, never by embedding each other's steps.
 
 ## Self-Improvement
 

@@ -1174,7 +1174,7 @@ Lib.[Parent] = require('@superloomdev/[parent]')(Lib, {
 
 This skeleton applies to any Class F adapter (`-adapter-[name]`): transport adapters (HTTP runtimes), integration adapters (notification channels, queue consumers), and any future adapter type. Adapters follow the **same injected-Lib factory shape as storage adapters** (and as every other helper module). Only three things differ: the entry-point name (`adapter.js` instead of `store.js`), the contract they implement (the parent's adapter contract instead of the store contract), and the parent config slot (`CONFIG.Adapter` instead of `CONFIG.Store`).
 
-**One shape.** Every Class F module — store or adapter, stateful or stateless — uses the injected-Lib factory shape below, identical in signature to the main factory skeleton. Statelessness only means `createInterface` closes over nothing beyond its four fixed slots; it does not change the loader, the companion files, or the file layout.
+**One shape.** Every Class F module - store or adapter, stateful or stateless - uses the injected-Lib factory shape below, identical in signature to the main factory skeleton. Statelessness only means `createInterface` closes over nothing beyond its four fixed slots; it does not change the loader, the companion files, or the file layout.
 
 #### Adapter File Structure
 

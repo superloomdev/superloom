@@ -135,17 +135,17 @@ The same rule applies to `gh pr create`, `aws ssm put-parameter`, and any other 
 
 #### P5. Background command + mismatched `CommandId` → false "command failed" conclusion
 
-**Symptom:** A short, quick command (`git commit`, `git push`, `gh api ...`) is launched. Subsequent `command_status` polls return `command <N> not found in trajectory`, and `read_terminal` returns empty. The agent concludes the command failed and asks the user to run it manually — but the command actually **succeeded** (the commit is in `git log`, already pushed to `origin`).
+**Symptom:** A short, quick command (`git commit`, `git push`, `gh api ...`) is launched. Subsequent `command_status` polls return `command <N> not found in trajectory`, and `read_terminal` returns empty. The agent concludes the command failed and asks the user to run it manually - but the command actually **succeeded** (the commit is in `git log`, already pushed to `origin`).
 
-**Cause:** The command was launched in background mode (`Blocking: false`) and the bridge returned a *Background command ID* (e.g. `506`). The agent then polled `command_status` with a **guessed or adjacent ID** (`395`, `397`, …) that never existed, producing the `not found in trajectory` error. Short commands also complete and clear before `read_terminal` can capture anything, so the terminal read comes back empty. None of this is evidence of failure — only that the command's output was never observed.
+**Cause:** The command was launched in background mode (`Blocking: false`) and the bridge returned a *Background command ID* (e.g. `506`). The agent then polled `command_status` with a **guessed or adjacent ID** (`395`, `397`, …) that never existed, producing the `not found in trajectory` error. Short commands also complete and clear before `read_terminal` can capture anything, so the terminal read comes back empty. None of this is evidence of failure - only that the command's output was never observed.
 
 **Fix:**
 
 - For short, quick commands (`git`, `gh`, `npm view`, file checks), always use `Blocking: true`. Output is returned synchronously in the tool result.
-- If a command genuinely must run in the background, poll `command_status` with the **exact** `CommandId` the launch returned — never a guessed or incremented number.
+- If a command genuinely must run in the background, poll `command_status` with the **exact** `CommandId` the launch returned - never a guessed or incremented number.
 - Before reporting that a state-changing command failed, **verify the actual state** (`git log --oneline -3`, `git status --short`, `gh api "$BASE/versions"`). Absence of captured output is not proof of failure.
 
-Reserve `Blocking: false` for genuinely long-running foreground processes (servers, `tail -f`, `docker compose logs -f`) per P2 — not for fast one-shot commands whose output you need immediately.
+Reserve `Blocking: false` for genuinely long-running foreground processes (servers, `tail -f`, `docker compose logs -f`) per P2 - not for fast one-shot commands whose output you need immediately.
 
 ### Working-directory pitfalls
 
@@ -553,7 +553,7 @@ gh api "$BASE/versions" --jq '.[].id' | xargs -I {} gh api --method DELETE "$BAS
 gh api "$BASE/versions"                  # MUST return 404 Package not found
 ```
 
-If the verify step returns a JSON array, the delete did not work — re-check the owner type and path.
+If the verify step returns a JSON array, the delete did not work - re-check the owner type and path.
 
 ### 17. `git add .` bundles unrelated modules into one commit
 
@@ -888,7 +888,7 @@ This clean-install form is mandatory during module refactoring. It is **not** re
 
 **Symptom:** `npm run lint` fails with `error 'CONFIG' is assigned a value but never used  no-unused-vars` (or similar for `Lib`, `React`, `ThemeContext`, etc.) even though the variable is deliberately kept as a reserved injection slot for future use.
 
-**Cause:** Every module in this codebase declares its full set of dependency injection slots at the top of the file as a standard structural contract — even slots that are not yet wired. This keeps the injection surface explicit, consistent, and visually scannable across every module. ESLint does not know the variable is intentionally reserved; it sees an unread assignment and flags it.
+**Cause:** Every module in this codebase declares its full set of dependency injection slots at the top of the file as a standard structural contract - even slots that are not yet wired. This keeps the injection surface explicit, consistent, and visually scannable across every module. ESLint does not know the variable is intentionally reserved; it sees an unread assignment and flags it.
 
 **Why not remove it or rename to `_CONFIG`?** Removing breaks the structural contract and creates an inconsistency when the slot gets wired later. Renaming to `_CONFIG` changes the actual variable name and deviates from the naming convention used across all modules (`Lib`, `CONFIG`, `React`, etc.).
 
@@ -901,7 +901,7 @@ let CONFIG; // eslint-disable-line no-unused-vars -- reserved for future knobs
 let React;
 ```
 
-Never use a file-level `/* eslint-disable */` for this — it suppresses the rule for the entire file and hides real bugs. The inline directive is the only correct form.
+Never use a file-level `/* eslint-disable */` for this - it suppresses the rule for the entire file and hides real bugs. The inline directive is the only correct form.
 
 **Lesson:** The module-scope injection-slot block (`let Lib; let CONFIG; ...`) is a deliberate structural pattern, not dead code. When adding a new slot that is not yet used, add `// eslint-disable-line no-unused-vars` on the same line. Remove the directive when the slot is wired.
 

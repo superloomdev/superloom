@@ -549,7 +549,7 @@ These rules apply to **every file** the AI or human writes - `.js` comments and 
 
 | Rule | Correct | Incorrect |
 |---|---|---|
-| American English (z not s) | `initialize`, `standardize`, `optimize`, `organize`, `centralize`, `authorize` | `initialise`, `standardise`, `optimise`, `organise`, `centralise`, `authorise` |
+| American English (z not s) | `initialize`, `standardize`, `optimize`, `organize`, `centralize`, `authorize`, `specialize`, `catalog` | `initialise`, `standardise`, `optimise`, `organise`, `centralise`, `authorise`, `specialise`, `catalogue` |
 | American English (or not our) | `behavior`, `color`, `favor` | `behaviour`, `colour`, `favour` |
 | American English (ize not ise) | `optimization`, `organization` | `optimisation`, `organisation` |
 | American English (license) | `license` | `licence` |
