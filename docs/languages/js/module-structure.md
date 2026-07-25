@@ -129,6 +129,7 @@ const ModuleName = {
   functionName: function (params) {
 
     // Implementation
+    // Body shape and step comments: see the factory skeleton worked example
     return result;
 
   }
@@ -254,8 +255,55 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators, state) {
     // ~~~~~~~~~~~~~~~~~~~~ [Subsection Name] ~~~~~~~~~~~~~~~~~~~~
     // One-line purpose of this subsection.
 
-    [functionName]: function () {
-      // Public functions close over CONFIG, Lib, and state
+    /********************************************************************
+    One-sentence description of what this function does.
+
+    @param {Object} instance - Request instance
+    @param {Object} options - Function options
+
+    @return {Promise<Object>} - { success, data, error }
+    *********************************************************************/
+    [functionName]: async function (instance, options) {
+
+      // Validate options (throws TypeError on programmer error)
+      Validators.validate[FunctionName](options);
+
+      // Ensure the [resource] is initialized
+      await _[ModuleName].initIfNot();
+
+      const start_ms = Lib.Utils.getUnixTimeInMilliSeconds();
+
+      try {
+
+        // Execute [operation] against the [resource]
+        const result = await state.[resource].[operation](options);
+
+        Lib.Debug.performanceAuditLog('End', '[ModuleName] [functionName]', start_ms);
+
+        // Return successful response with [result fields]
+        return {
+          success: true,
+          data: { [field]: result.[field] },
+          error: null
+        };
+
+      } catch (error) {
+
+        Lib.Debug.debug('[ModuleName] [functionName] failed', {
+          type: ERRORS.[ERROR_TYPE].type,
+          message: error.message,
+          stack: error.stack
+        });
+
+        // Return error response
+        return {
+          success: false,
+          data: { [field]: null },
+          error: ERRORS.[ERROR_TYPE]
+        };
+
+      }
+
     }
 
   };///////////////////////////Public Functions END//////////////////////////////
@@ -275,9 +323,29 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators, state) {
     *********************************************************************/
     ensureAdapter: function () {
 
+      // Load the vendor adapter on first use (module-scope cache)
       if (Lib.Utils.isNullOrUndefined([AdapterRef])) {
         [AdapterRef] = require('[vendor-package]');
       }
+
+    },
+
+
+    /********************************************************************
+    Build this instance's [resource] on first use and cache it in state.
+    *********************************************************************/
+    initIfNot: async function () {
+
+      // Already built - nothing to do
+      if (!Lib.Utils.isNullOrUndefined(state.[resource])) {
+        return;
+      }
+
+      // Adapter must be loaded before the resource is built
+      _[ModuleName].ensureAdapter();
+
+      // Build and cache the [resource] for this instance
+      state.[resource] = [build the resource from AdapterRef and CONFIG];
 
     }
 
@@ -288,6 +356,8 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators, state) {
 
 };/////////////////////////// createInterface END //////////////////////////////
 ```
+
+> **Function bodies in this skeleton are normative for comment density.** The skeleton conformance diff compares real function bodies against this shape, including the step comments. The mandatory set for I/O functions is defined in [code-formatting.md - Inline Step Comments Inside Functions](code-formatting.md#comment-style).
 
 ### createInterface Signature Variants
 
@@ -454,6 +524,7 @@ module.exports = function loader (shared_libs, config, errors) {
 
 const PartName = {
   // ... methods close over module-scope Lib, CONFIG, ERRORS
+  // Body shape and step comments: see the factory skeleton worked example
 };
 ```
 
@@ -469,6 +540,7 @@ module.exports = function loader (shared_libs, config, errors) {
 const createInterface = function (Lib, CONFIG, ERRORS) {
   const PartName = {
     // ... methods close over Lib, CONFIG, ERRORS from this call
+    // Body shape and step comments: see the factory skeleton worked example
   };
   return PartName;
 };
@@ -1100,6 +1172,7 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators) {
     methodName: async function (instance) {
       // Implementation using Lib.[Driver]
       // Return ERRORS.SERVICE_UNAVAILABLE on driver failure
+      // Body shape and step comments: see the factory skeleton worked example
     }
 
   };/////////////////////////// Public Functions END ///////////////////////////

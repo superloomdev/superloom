@@ -111,7 +111,21 @@ See [`module-structure.md`](module-structure#helper-module-pattern-factory) for 
 
 **Cause:** The verification pass answered "did I do everything on my list?" instead of "does this file match the canonical skeleton?". Fix lists are derived from point-in-time audits; the skeleton in [`module-structure.md`](module-structure) is the living standard. Anything the audit missed stays invisible to a list-scoped verification, no matter how many passes run.
 
-**Fix:** The final verification pass must include a **skeleton conformance diff**: open the class's skeleton section in `module-structure.md` (factory skeleton for Class A/B, Storage Adapter Skeleton or Adapter Skeleton for Class F, and so on) side by side with the module's entry file and compare structure element by element - info banner shape, loader statement groups and their step comments, companion-file wiring, `createInterface` slots, section banners. Structural conformance is a distinct checklist item from the fix list, the lint gate, and the sweep battery; none of those three catch a missing step comment.
+**Fix:** The final verification pass must include a **skeleton conformance diff**: open the class's skeleton section in `module-structure.md` (factory skeleton for Class A/B, Storage Adapter Skeleton or Adapter Skeleton for Class F, and so on) side by side with the module's entry file and compare structure element by element - info banner shape, loader statement groups and their step comments, companion-file wiring, `createInterface` slots, section banners, and function bodies (the skeleton's worked body is normative for comment density). Structural conformance is a distinct checklist item from the fix list, the lint gate, and the sweep battery; none of those three catch a missing step comment.
+
+### Step-comment drift on fresh module creation
+
+**Symptom:** A newly created module passes every verification gate (lint, tests, sweep battery, skeleton conformance diff) with function bodies that carry almost no inline step comments, violating [Inline Step Comments Inside Functions](code-formatting.md#comment-style). Writing the missing comments afterward can expose latent logic bugs: a block whose intent cannot be stated honestly in a comment is often a block that does the wrong thing.
+
+**Cause:** The rule existed but no gate measured function bodies. The skeleton conformance diff covers loader statement groups and their step comments only; skeleton function bodies were stubs with nothing to diff against; lint and tests cannot see comments. Fresh creation is where the standard is weakest: migrations inherit comment density from the human-refined original they diff against, but a new module has no prior version. Generation-time compliance is also unreliable across long sessions - binding rules absorbed during re-grounding do not survive summarization checkpoints - so soft properties must be enforced at check time, not generation time.
+
+**Fix:** Three enforcement layers, each generic across module classes and shapes:
+
+- The [Mandatory Step-Comment Set for I/O Functions](code-formatting.md#comment-style) enumerates the block kinds a gate can check mechanically.
+- The factory skeleton in [`module-structure.md`](module-structure#helper-module-pattern-factory) carries a worked function body whose step comments are normative, so the skeleton conformance diff covers bodies, not just loaders.
+- The build and audit workflow archetypes ([`workflow-archetypes.md`](../../ai/workflow-archetypes.md)) include a step-comment conformance gate in their verify phases, so every recompiled workflow inherits the check.
+
+Discovered while creating a NoSQL admin module (Plan 0062), where the comment pass also surfaced a created-vs-skipped classification bug that a weak disjunction assertion had masked - see the exact-value assertion rule in [`testing.md`](../../principles/testing.md).
 
 ### Patching when complete rewrite is needed
 
@@ -351,6 +365,7 @@ Before completing any migration:
 - [ ] **Every `performanceAuditLog` interval is logged once, by the owner of the work** - drivers (`nosql-*`, `sql-*`, `queue-*`, `storage-*`, `http`) instrument their own roundtrips and client init as part of their contract; non-driver modules never re-log delegated I/O and carry a call only for their own substantial in-process work. See [Duplicate audit lines from layered performance logging](#duplicate-audit-lines-from-layered-performance-logging)
 - [ ] **Skeleton conformance diff done** - the module's entry file compared element by element against its class's skeleton section in `module-structure.md` (loader statement groups + step comments, companion-file wiring, `createInterface` slots, banners). A fix list, lint, and the sweep battery do not substitute for this
 - [ ] **Every `performanceAuditLog` call passes a local `start_ms`** captured at operation entry as `reference_time` - never `instance['time_ms']` (request-start constant) and never a timestamp created on the same line as the call (see [Performance Logging Issues](#performance-logging-issues))
+- [ ] **Step-comment conformance checked on every function body** - each public I/O function carries the [Mandatory Step-Comment Set](code-formatting.md#comment-style) (validate, init, driver calls, success returns, error returns, early-return branches); this is a distinct gate from the skeleton conformance diff and applies to fresh creations, not just migrations (see [Step-comment drift on fresh module creation](#step-comment-drift-on-fresh-module-creation))
 
 ## Further Reading
 

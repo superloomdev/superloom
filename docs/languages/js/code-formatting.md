@@ -535,6 +535,19 @@ removeItem: async function (instance, id) {
 },
 ```
 
+#### Mandatory Step-Comment Set for I/O Functions
+
+Every public function that performs I/O (database, network, file, queue, external SDK) carries AT MINIMUM a step comment on each of these blocks, whichever of them the function contains:
+
+1. **Validate step.** The call into the validators singleton
+2. **Init step.** The lazy-init or ensure call (`initIfNot`, `ensureAdapter`, pool build)
+3. **Each driver or delegate call.** Every line that crosses into a vendor library or another module
+4. **Every success return.** Each `return { success: true, ... }` block
+5. **Every error return.** Each `return { success: false, ... }` block, including the catch-block return
+6. **Every early-return branch.** Idempotency short-circuits, not-found paths, no-op guards
+
+This set is the audit floor, not the ceiling: blocks outside this list still follow the universal every-logical-block rule above. The set exists so a reviewer or verification gate can check comment coverage mechanically: locate the six block kinds, confirm each is preceded by a comment. The step-comment conformance gate in the build and audit workflows checks exactly this set (see the [workflow archetypes](../../ai/workflow-archetypes.md)); the worked function body in the [factory skeleton](module-structure#helper-module-pattern-factory) demonstrates it.
+
 ### Adapter and Driver Lazy-Load Pattern
 
 - Third-party drivers, SDKs, and native clients are cached at module scope via a private helper named `ensureAdapter()`

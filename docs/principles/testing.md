@@ -45,6 +45,7 @@ A service-dependent module's suite owns its service lifecycle end to end: the te
 - **One description block per public function.** The suite's table of contents is the module's API surface; a missing block is a visible coverage gap.
 - **Behavioral names.** Every test reads as `should [expected behavior] when [condition]`. The name states the contract being verified, so a failure report is meaningful without opening the file.
 - **Arrange, act, assert.** Each test body has the three phases in order, visually separated. One behavior per test; a test asserting two behaviors is two tests.
+- **Assertions pin exact values.** An assertion states the one exact outcome the contract requires, never a range or a disjunction that multiple behaviors could satisfy. An assertion loose enough for both the correct behavior and a bug to pass was written to pass, not to verify, and it will mask the bug. If the exact value cannot be known in advance, the setup is nondeterministic and the setup is what gets fixed, not the assertion. Ranges are acceptable only for genuinely nondeterministic quantities (durations, timestamps), and then as tight as the nondeterminism allows.
 - **One example domain per module.** All tests, documentation examples, and fixtures within a module use the same domain example. Mixed example domains are noise.
 
 ## The Environment Boundary

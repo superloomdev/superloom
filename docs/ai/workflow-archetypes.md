@@ -44,12 +44,13 @@ The family pattern exists because:
 1. **Re-ground** - Re-read the constitution docs (the embedded Standard's re-ground set), re-derive the fingerprint from a clean reference module, output a binding-rules checklist with citations.
 2. **Audit** - Enumerate every file, read each twice, skeleton conformance diff, assemble gap list grouped by severity (S1 correctness, S2 consistency, S3 cosmetic, sweeps, docs, naming).
 3. **Apply** - Fix findings in severity order. Mechanical sweeps, naming, documentation in compile order (ROBOTS last).
-4. **Verify to convergence** - Lint, clean-install tests, sweep battery, JSDoc indentation, performance-audit ownership, companion and injection checks, skeleton conformance re-diff. Two consecutive clean passes required.
+4. **Verify to convergence** - Lint, clean-install tests, sweep battery, JSDoc indentation, performance-audit ownership, companion and injection checks, step-comment conformance (every function body checked against the mandatory step-comment set in the language's formatting doc), skeleton conformance re-diff. Two consecutive clean passes required.
 5. **Present** - Verification checklist, change report, explicit user approval before any mutation.
 
 **Key properties:**
 - The embedded Standard block is the compiled rules from the constitution docs. It is the single source of truth for what the workflow checks.
-- `create` runs the full audit and fix phases on the new module after generating it from skeletons.
+- `create` runs the full audit and fix phases on the new module after generating it from skeletons. Soft properties (step comments, assertion strength) are enforced at check time by the verify gates, never assumed from generation-time compliance - fresh creations have no prior version to diff against, which is exactly where soft properties drift.
+- The skeleton conformance diff includes function bodies: the language's skeleton shows a worked body whose step comments are normative.
 - `fix` is also the retrofit verb: when docs change, running `fix` on an existing module re-audits against the recompiled embedded Standard.
 - If an audit report from the Audit archetype is available, Phases 1-2 may be skipped; the report provides the re-grounding and gap list.
 
@@ -64,7 +65,7 @@ The family pattern exists because:
 **Phases:**
 1. **Re-read the constitution** - Read every doc in full, re-read sibling workflows, output binding-rules checklist.
 2. **Survey sibling modules** - Enumerate all modules, categorize, read one reference per category in full, record the convention fingerprint.
-3. **Line-by-line audit** - Read each target file twice, audit against the audit map, run gates (lint, tests, stale-name scrub). Converge: two consecutive passes with zero new deviations.
+3. **Line-by-line audit** - Read each target file twice, audit against the audit map, run gates (lint, tests, stale-name scrub, step-comment conformance). Converge: two consecutive passes with zero new deviations. Missing step comments are an S2 (consistency) finding, escalated to S1 when the uncommentable block hides a correctness issue.
 4. **Diagnose drift root cause** - Identify why drift happened, re-anchor the plan, self-improve hook.
 5. **Creator-diff (three-bucket classification)** - Classify every deviation:
    - **Bucket 1: Docs drift** - The code matched the docs when written, but the docs evolved. Action: retrofit via Build archetype.
