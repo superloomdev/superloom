@@ -7,6 +7,7 @@ How every helper module documents itself. Each module ships three files: `README
 - [`module-classes.md`](module-classes.md) - the six module classes and which class each existing module belongs to.
 - [`../../principles/documentation-authoring.md`](../../principles/documentation-authoring.md) - writing-style rules (voice, prose mechanics, em-dash ban, table-cell rules, placeholder syntax).
 - [`module-docs-complex.md`](module-docs-complex.md) - deep guide for `docs/` folders in Class E feature modules.
+- [ROBOTS.md - The AI Surface](#robotsmd---the-ai-surface) - the specification for the AI-consumption file.
 
 ## On This Page
 
@@ -15,6 +16,7 @@ How every helper module documents itself. Each module ships three files: `README
 - [Universal README Sections](#universal-readme-sections)
 - [Class-Specific Sections](#class-specific-sections)
 - [`docs/` Folder Pattern by Class](#docs-folder-pattern-by-class)
+- [ROBOTS.md - The AI Surface](#robotsmd---the-ai-surface)
 - [Class-Specific Templates and Reusable Wording](#class-specific-templates-and-reusable-wording)
 - [Cross-Cutting Patterns](#cross-cutting-patterns)
 - [Link Form](#link-form)
@@ -41,7 +43,7 @@ Each module's documentation is split across three files. Each file has one audie
 
 **The `docs/` folder is the reference layer.** Complete, exhaustive, written for someone actively integrating or maintaining the module. Every class ships at least `docs/api.md` and `docs/configuration.md`; deeper classes add more (Class D may add `iam.md`; Class E adds `data-model.md` and optional `runtime.md`; Class F stores add `schema.md` and `cleanup.md`; Class F adapters ship only the universal pair). Any module that ships a `*.validators.js` also adds `docs/schemas.md`, the validated boundary contracts.
 
-**`ROBOTS.md` is the AI surface.** Compact, structured, every exported function with its signature and return shape. See `ROBOTS.md` in each module for the existing convention.
+**`ROBOTS.md` is the AI surface.** Compact, structured, every exported function with its signature and return shape. See [ROBOTS.md - The AI Surface](#robotsmd---the-ai-surface) below for the full specification.
 
 ---
 
@@ -67,8 +69,8 @@ Every module README follows this section order, regardless of class. Two section
 
 | # | Section | Purpose |
 |---|---|---|
-| 1 | **Title + Identity Badges** | Visual identity. License + runtime version only. The CI / test status badges are NOT here. They belong with the testing block at the bottom. |
-| 2 | **Tagline** | One sentence; plain English; ends with "Part of [Superloom](https://superloom.dev)". Do NOT mention sibling backends or competitor modules in the tagline. See [Anti-Patterns](#anti-patterns-to-avoid). |
+| 1 | **Title + Identity Badges** | Visual identity. The H1 heading must be the exact published package name (e.g. `@superloomdev/js-server-helper-sql-postgres`). License + runtime version badges only. The CI / test status badges are NOT here. They belong with the testing block at the bottom. |
+| 2 | **Tagline** | One sentence; plain English; ends with "Part of [Superloom](https://superloom.dev)". Do NOT mention sibling backends or competitor modules in the tagline. See [Anti-Patterns](#anti-patterns-to-avoid). The tagline in plain text (markdown stripped, "Part of Superloom" without the link) must equal the `description` field in `package.json`. Both the npm package page and GitHub repo display that field; a mismatch reads as carelessness. |
 | 3 | **What this is** | 1-2 short paragraphs in plain English explaining the module's role. May include a tiny vertically-spaced illustration of the module's response shape. Never a full code example. |
 | 4 | **Why use this module** | Value bullets (5-7 points) - the core marketing pitch. Jargon-free, vendor-neutral. Each bullet is one sentence + at most one supporting sentence. |
 | 5 | **Hot-Swappable with Other Backends** *(class-conditional)* | Bullet list of sibling modules with the same API. Present for any module with at least one sibling (Class C drivers, some Class D cloud wrappers, some Class E feature modules). |
@@ -240,11 +242,53 @@ The `Configuration Keys` table includes a **Required** column. Use "Yes (overrid
 
 ---
 
+## ROBOTS.md - The AI Surface
+
+`ROBOTS.md` is the one file an AI assistant reads before calling the module. It is COMPILED from the module's `README.md`, `docs/*.md`, and entry-file JSDoc - it introduces no facts of its own. If a fact appears only in ROBOTS.md, that is a bug: the fact belongs in `docs/` first.
+
+### Section Order (fixed)
+
+| # | Section | Content |
+|---|---|---|
+| 1 | H1 | The exact published package name |
+| 2 | Summary block (no heading) | 2-4 lines: what the module is, hot-swap compatibility notes if any |
+| 3 | `## Type` | Class + service dependency statement (Docker for emulated, real service for integration, or none) |
+| 4 | `## Peer Dependencies` | Every injected `Lib` entry with its injection name |
+| 5 | `## Direct Dependencies` | Every bundled npm package, one line each |
+| 6 | `## Companion Files` | The config/errors/validators triple; config lists ALL keys inline; errors lists ALL error constants inline |
+| 7 | `## Loader Pattern` | Copy-paste code block showing the factory call; multi-instance shown when supported |
+| 8 | Module-specific semantic sections | Zero or more H2s for behavior an AI must know to generate correct calls (placeholder translation, insert_id semantics, safety nets, TTL behavior). Each earns its place; no padding |
+| 9 | `## Config Keys` | Full table: Key, Type, Default, Required. Must match `[name].config.js` exactly |
+| 10 | `## Exported Functions (N total)` | The core. Grouped by category (H3). Every exported function, no exceptions |
+| 11 | `## Patterns` | Implementation patterns as bold-term bullets (factory-per-loader, lazy init, performance logging, etc.) |
+
+### Function Entry Format (fixed)
+
+```text
+functionName(arg1, arg2?) → { success, data, error } | async:yes
+  One to three indented lines: what it does, when to use it, the one gotcha.
+```
+
+### Rules
+
+- Size budget 100-150 lines. Under context pressure an AI reads all of it; a 400-line ROBOTS.md defeats its purpose.
+- Zero marketing prose. No value bullets, no philosophy, no personas. Signature density is the quality metric.
+- The function count in the H2 (`(12 total)`) must equal the module's actual export count - it is the completeness checksum an auditor greps for.
+- Return shapes written as the literal envelope (`{ success, rows, count, error }`), never prose descriptions.
+- `async:yes|no` on every function - the single most common AI call-site error is a missing `await`.
+- Regeneration trigger: any change to README, `docs/*.md`, the config file, the errors file, or an exported signature regenerates ROBOTS.md in the same commit. An audit finding of "ROBOTS.md stale" is always a Bucket 2 (code drift) finding.
+- Adapter (Class F) ROBOTS.md additionally states the parent contract it implements and the provisioning it performs in `setupNewStore` (schema/DDL summary, native TTL behavior).
+- Reference exemplar: `js-server-helper-sql-postgres/ROBOTS.md`.
+
+---
+
 ## Class-Specific Templates and Reusable Wording
 
 Concrete starting points per class so two modules in the same class look like near-twins. Fill in each class subsection from the first completed pilot for that class.
 
 **Principle:** *structural choices are universal, wording is class-specific, source-specific tweaks come last.* When migrating a new module, copy the closest pilot's README and adjust only the parts called out as class-specific in this section.
+
+**Family visual consistency.** Two modules of the same class must have READMEs that differ ONLY in module-specific content. The section order, section headings, badge placement, tagline structure, and value-bullet framing are identical across same-class siblings. This uniformity is the family's visual identity - it is what makes the collection read as coming from a single respected organization rather than a loose assortment. An audit may test for this by diffing two same-class READMEs: the diff should contain only module-specific nouns and class-specific bullet 5 wording, never structural or heading differences.
 
 ### Universal "Why Use This Module" Bullets
 
@@ -565,6 +609,12 @@ All AWS-service wrappers share:
 
 When adding a new AWS-service wrapper, copy the closest existing AWS module's `docs/configuration.md` and edit the service-specific bits; the structural sections transfer near-verbatim.
 
+### Repo-Root Family Table
+
+The `codebase-js-helper-modules` root `README.md` carries a family packages table: one row per module, with the package name (linked to its directory), a one-line description, and the module class. This is the monorepo landing page - the first thing a visitor sees when they browse the repository. Every exemplar monorepo family (aws-sdk-js-v3, @jmlweb, @babel) has this table or an equivalent index.
+
+Maintenance trigger: adding a new module adds a row. This is the same trigger as the Hot-Swap sibling chore (adding a sibling updates every existing sibling's Hot-Swappable section). Both chores are checklist items in the Authoring Checklist.
+
 ### Hot-Swap Families
 
 Modules that share an API shape should reference each other in their Hot-Swappable sections. Current and planned families:
@@ -758,6 +808,9 @@ When writing or revising a module README:
 - [ ] **Testing Status table** at bottom uses the standard `Tier \| Runtime \| Status` columns
 - [ ] **For Class D cloud wrappers:** `docs/configuration.md` includes a "Credentials and IAM Permissions" section with a minimum-IAM-action table per function and a worked example IAM policy (see [Cross-Cutting Patterns → AWS Family](#aws-family-pattern-dynamodb-s3-sqs-and-any-future-aws-service-wrapper))
 - [ ] **For modules in a Hot-Swap family:** every existing sibling's README has been updated to reference this module in its Hot-Swappable section (see [Cross-Cutting Patterns → Hot-Swap Families](#hot-swap-families))
+- [ ] **H1 heading** is the exact published package name (`@superloomdev/...`)
+- [ ] **`package.json` `description` field** equals the README tagline in plain text (markdown stripped, link syntax removed)
+- [ ] **Repo-root family table** (`codebase-js-helper-modules/README.md`) has a row for this module (if adding a new module)
 - [ ] **No em dashes (`—`)** in `README.md`, `docs/*.md`, `ROBOTS.md`, or any commit message that ships with the migration (see [Writing Style and Prose Quality](#writing-style-and-prose-quality))
 - [ ] **No table cells end with a period** (cells are not sentences)
 - [ ] **No AI-sounding phrases** (`facilitate`, `leverage`, `utilize`, `comprehensive`, `robust`, `streamline`, `in order to`, `this ensures that`)
