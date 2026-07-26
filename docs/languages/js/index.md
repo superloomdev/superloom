@@ -14,6 +14,7 @@ For a developer new to the framework, in order:
 4. [Module Classes](module-classes.md) - the class taxonomy and where every module belongs
 5. [Error Handling](error-handling.md) - envelopes, catalogs, throw versus return in JavaScript
 6. [Testing Strategy](testing-strategy.md) and [Unit Test Authoring](unit-test-authoring.md)
+7. [Client Architecture](client/client-architecture.md) - the RNW/Expo stack, project layout, and bundler-agnostic rule (entry point to the `client/` section)
 
 ## Document Map
 
@@ -31,6 +32,7 @@ For a developer new to the framework, in order:
 | [`module-docs.md`](module-docs.md), [`module-docs-complex.md`](module-docs-complex.md), [`module-thoughts-file.md`](module-thoughts-file.md) | [Module Design](../../principles/module-design.md), [Documentation Authoring](../../principles/documentation-authoring.md) |
 | [`publishing.md`](publishing.md), [`versioning/`](versioning/index.md) | [Versioning and Releases](../../principles/versioning-and-releases.md) |
 | [`dto-philosophy.md`](dto-philosophy.md), [`server/`](server/server-loader.md) | [Server Architecture](../../principles/server-architecture.md) |
+| [`client/`](client/client-architecture.md) | Client-side architecture: stack, loader, theming, fonts, components, super-app shapes, module taxonomy |
 | [`catalog-core.md`](catalog-core.md), [`catalog-server.md`](catalog-server.md), [`catalog-client.md`](catalog-client.md) | The published module catalog per tier |
 | [`pitfalls-migration.md`](pitfalls-migration.md) | Pitfall journal for module migration work |
 

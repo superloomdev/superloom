@@ -70,7 +70,7 @@ For Class F stores specifically, `docs/api.md` documents the store contract (wit
 
 **Characteristics:** **No external dependencies at all.** Pure JavaScript that uses only language built-ins (`Date`, `Intl`, `Math`, `Array`, etc.) and universal Web standards available across runtimes (Web Crypto API for randomness and hashing, `console`, etc.). Runs identically in Node.js, browsers, React Native, Cloudflare Workers, Deno, Bun, and any modern JavaScript environment.
 
-In the JS implementation repository, these live under `src/helper-modules-core/` (universal modules) or `src/helper-modules-client/` (modules whose tagline targets the browser-side use case but which still run anywhere). Directory placement is for discovery; the dependency boundary is what defines the class.
+In the JS implementation repository, these live under `src/helper-modules-core/` (universal modules) or `src/helper-modules-client/` (modules whose tagline targets the browser-side use case but which still run anywhere). Directory placement is for discovery; the dependency boundary is what defines the class. Client modules that depend on a specific React variant (DOM only, native only, or the RNW universal pipeline) carry framework-tier prefixes (`js-rw-helper-*`, `js-rn-helper-*`, `js-rnw-helper-*`). The full client naming taxonomy, including the tier placement flowchart and promotion rule, lives in [`client/client-modules.md`](./client/client-modules.md).
 
 **README extras** (on top of the universal set): none. The categorized function survey lives in `docs/api.md`.
 

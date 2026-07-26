@@ -166,8 +166,36 @@ The parent's README mentions the extension:
 
 ---
 
+## Naming Taxonomy
+
+The full naming taxonomy for client-tier modules (runtime prefixes, framework-tier prefixes, suffixes, placement rules, promotion rule) lives in [`client/client-modules.md`](./client/client-modules.md). That page is the single source of truth. This catalog lists shipped modules only; planned modules are referenced below.
+
+---
+
+## Planned Modules
+
+The following client modules are planned but not yet shipped. They are tracked in plans 0066-0068.
+
+| Module | Tier | Class | Plan |
+|---|---|---|---|
+| `js-helper-idle` | Core | A | 0066 |
+| `js-helper-timer` | Core | A | 0066 |
+| `js-client-helper-storage` | Client | A + F adapters | 0066 |
+| `js-client-helper-storage-adapter-localstorage` | Client | F | 0066 |
+| `js-client-helper-storage-adapter-asyncstorage` | Client | F | 0066 |
+| `js-rnw-helper-font` | RNW | A | 0066 |
+| `js-rnw-helper-device` | RNW | A | 0066 |
+| `js-rnw-components` | RNW | Library | 0067 |
+| `js-client-helper-styler-template-carbon` | Client | Data | 0067 |
+
+The `js-rnw-components` library and the `rnw-app-template` are separate repositories (`codebase-js-rnw-components`, `codebase-rnw-app-template`), not helper modules in the `js-helper-modules` repo.
+
+---
+
 ## See Also
 
+- [`client/client-modules.md`](./client/client-modules.md) - The naming taxonomy (single source of truth)
+- [`client/`](./client/client-architecture.md) - The client documentation section
 - [`module-classes.md`](./module-classes.md) - Class G (feature modules with extensions) and Class H (extension modules) definitions
 - [`module-docs.md`](./module-docs.md) - README templates including extension modules
 - [`module-docs-complex.md`](./module-docs-complex.md) - Parent vs extension documentation boundaries

@@ -83,6 +83,8 @@ docs/
       catalog-client.md             #   Published client modules
       server/                       #   Application server layers (loader, interfaces,
                                     #   controllers, services, models, entity guide)
+      client/                       #   Client-side architecture (stack, loader, theming,
+                                    #   fonts, components, super-app shapes, module taxonomy)
       versioning/                   #   Bump checklist, changelog format, CI graph,
                                     #   API stability, dependency management
 

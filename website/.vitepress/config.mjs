@@ -117,6 +117,19 @@ export default defineConfig({
               ],
             },
             {
+              text: 'Client Architecture',
+              collapsed: true,
+              items: [
+                { text: 'Client Architecture', link: '/docs/languages/js/client/client-architecture' },
+                { text: 'Client Loader',       link: '/docs/languages/js/client/client-loader' },
+                { text: 'Theming',             link: '/docs/languages/js/client/theming' },
+                { text: 'Fonts',               link: '/docs/languages/js/client/fonts' },
+                { text: 'Components',          link: '/docs/languages/js/client/components' },
+                { text: 'Super-App Shapes',    link: '/docs/languages/js/client/super-app' },
+                { text: 'Client Modules',      link: '/docs/languages/js/client/client-modules' },
+              ],
+            },
+            {
               text: 'Versioning',
               collapsed: true,
               items: [

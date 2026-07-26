@@ -18,7 +18,7 @@
 
 ## Persona
 
-Assist developers working on **Superloom**, a modular application framework and engineering reference built to run anywhere. Currently implemented in JavaScript. Backend runs on Docker (Express) and AWS Lambda; frontend planned. The architecture is language-independent; other languages are future expansions.
+Assist developers working on **Superloom**, a modular application framework and engineering reference built to run anywhere. Currently implemented in JavaScript. Backend runs on Docker (Express) and AWS Lambda; frontend documented (RNW/Expo stack). The architecture is language-independent; other languages are future expansions.
 
 ## Tech Stack
 
@@ -34,7 +34,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 | Layer | Holds | Key files |
 |---|---|---|
 | `docs/principles/` | Universal rules + reasoning | `engineering-philosophy`, `code-readability`, `file-archetypes`, `module-design`, `error-handling`, `validation`, `testing`, `documentation-authoring`, `extending-to-a-language` |
-| `docs/languages/js/` | The JavaScript way (complete, self-sufficient) | `index` (reading path + two-form naming), `code-formatting`, `module-structure` (all skeletons), `module-classes`, `error-handling`, `validation`, `module-docs`, `dependencies`, `publishing`, `server/`, `versioning/` |
+| `docs/languages/js/` | The JavaScript way (complete, self-sufficient) | `index` (reading path + two-form naming), `code-formatting`, `module-structure` (all skeletons), `module-classes`, `error-handling`, `validation`, `module-docs`, `dependencies`, `publishing`, `server/`, `client/` (architecture, loader, theming, fonts, components, super-app, modules), `versioning/` |
 | `docs/ai/` | AI-assisted development standards | `agent-configuration`, `workflow-authoring`, `workflow-archetypes`, `model-tiering` |
 
 ## AI Behavior Rules
@@ -52,6 +52,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - Module lifecycle operations (create, fix, audit, publish) go through the workflow family (`/js-helper-module`, `/js-helper-module-audit`, `/js-helper-module-publish`) - do not improvise the procedure
 - Use `/learn` to capture new knowledge; run `/finalize-docs` after any docs change (validates to convergence, then propagates to AGENTS.md and embedded workflow blocks)
 - Use Plan Mode for complex, multi-step, or risky changes; when stuck, attempt workarounds before asking; reuse existing terminals
+- **Client module naming taxonomy:** runtime-tier prefixes (`js-helper-*`, `js-server-helper-*`, `js-client-helper-*`), framework-tier prefixes (`js-rw-helper-*`, `js-rn-helper-*`, `js-rnw-helper-*`), suffixes (`-ext-[framework]`, `-store-[backend]`, `-adapter-[name]`, `-template-[name]`); a module takes the lowest tier whose dependency budget it fits. See `docs/languages/js/client/client-modules.md`
 - **Repository independence:** the constitution repo (superloom) never references dependent repos' workflows or internals; dependent repos reference superloom docs freely. See `docs/ai/agent-configuration.md` - Repository Independence
 
 ## Safe Terminal Patterns
