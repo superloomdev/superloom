@@ -177,7 +177,7 @@ Reserve `Blocking: false` for genuinely long-running foreground processes (serve
 
 **Symptom:** `read_file({ file_path: "src/foo.js" })` fails or reads from the wrong directory.
 
-**Cause:** Most tools require absolute paths. Relative paths are undefined behaviour.
+**Cause:** Most tools require absolute paths. Relative paths are undefined behavior.
 
 **Fix:** Always pass absolute paths to file tools (`read_file`, `edit`, `write_to_file`, `find_by_name`, `grep_search`).
 
@@ -555,6 +555,8 @@ gh api "$BASE/versions"                  # MUST return 404 Package not found
 
 If the verify step returns a JSON array, the delete did not work - re-check the owner type and path.
 
+**Confirmed behavior after deletion:** GitHub Packages accepts republishing a previously-used version name once the version (or the whole package) is deleted - version names are not permanently burned. Combined with the detect job's registry-existence check, this enables a full re-baseline: wipe the packages, push to `main` (no file changes needed), and CI republishes every module at its unchanged `package.json` version. Verified across a 44-module wipe-and-republish. Round-trip proof after republish: `npm install @scope/[name]@[version]` from a scratch directory must resolve.
+
 ### 17. `git add .` bundles unrelated modules into one commit
 
 **Symptom:** A single commit touches many modules at once. CI's per-module `detect` job then schedules tests/publish for every changed module path in that commit, and git history no longer maps one module refactor to one commit ("bulk commits").
@@ -569,6 +571,16 @@ git commit -m "refactor(<name>): one-line summary"
 ```
 
 This keeps the CI publish trigger scoped to a single module, makes history bisectable, and lets one module be reverted without disturbing others. Always run `git status --short` before committing and confirm only the intended module's files are staged.
+
+### 23. Extension module's test job 404s on its base package: `needs` pointed at the base's test job, not its publish job
+
+**Symptom:** During a full-registry republish, an extension module's test job (e.g. `test-[base]-ext-[framework]`) fails with `npm error 404 Not Found ... @scope/[base]@^1.0.0` while the base module's own test and publish jobs are green in the same run.
+
+**Cause:** The extension's `_test/package.json` installs the base module from the registry (a registry semver range, not `file:`). The extension's test job was chained with `needs: [detect, test-[base]]`, so it started as soon as the base's *tests* passed - racing the base's *publish* job. On a fresh registry the base package does not exist yet when the extension's `npm install` runs.
+
+**Lesson:** A `test-*` job whose `_test/package.json` installs another in-repo package from the registry must `needs` that package's `publish-*` job, never its `test-*` job. In steady-state runs the difference is invisible (the base is already published, both orderings pass), so the bug only surfaces during bootstrap or a registry re-baseline - review every extension and adapter chain against this rule before a fresh-state push.
+
+**Coverage-sweep footnote:** when verifying that every module has CI jobs by extracting paths from the workflow file, the extraction pattern must cover the full name alphabet. A `grep -oE` character class of `[a-z-]+` silently drops any path containing a digit (`storage-aws-s3`), producing false "missing from CI" findings. Include digits (`[a-z0-9-]+`) and cross-check the extracted count against the known module total before acting on the diff.
 
 ---
 

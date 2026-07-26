@@ -83,7 +83,8 @@ The detect job will list every module whose `<name>@<version>` is not yet on the
 ### Important guidelines
 
 - **Publishing is CI-only.** Always use the pipeline rather than `npm publish` directly. The pipeline ensures tests pass before publishing and keeps version-vs-source tracking consistent.
-- **Version numbers move forward only.** Even when restoring an old build, bump the version forward. Downstream consumers rely on `^x.y.z` resolution working predictably.
+- **Version numbers move forward only** in normal operation. Even when restoring an old build, bump the version forward. Downstream consumers rely on `^x.y.z` resolution working predictably.
+- **Same-version republish after a registry wipe is the one sanctioned exception.** GitHub Packages accepts a previously-used version name once the version is deleted, so a deliberate re-baseline (wipe all packages, push to `main`, let detect republish everything at unchanged versions) works end to end. Deletion mechanics and the confirmed behavior: [pitfalls entry 16](pitfalls.md#cicd-publishing).
 
 ## Why a Single Workflow
 
@@ -157,6 +158,7 @@ When adding a module to the pipeline:
 2. **Place it in the correct group** based on its directory (`helper-modules-core/`, `helper-modules-server/`, or `helper-modules-client/`)
 3. **Position within group** based on its dependencies - if Module B imports Module A, Module A must come first
 4. **Add both `test-*` and `publish-*` jobs** - they run sequentially per module
+5. **Chain a dependent module's test job after its dependency's `publish-*` job, never its `test-*` job.** If the new module's `_test/package.json` installs another in-repo package from the registry (extension modules, store adapters), its test job must `needs` that package's publish job so the package exists on the registry before `npm install` runs. Wrong chaining passes in steady state and only fails during bootstrap or a registry re-baseline ([pitfalls entry 23](pitfalls.md#cicd-publishing))
 
 The workflow file groups jobs visually with comment banners showing the group boundaries. Maintain this structure when adding new modules.
 
