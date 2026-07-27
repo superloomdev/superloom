@@ -278,7 +278,7 @@ Tracks which modules have been restructured per [`module-docs.md`](module-docs.m
 | js-helper-debug | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Configurable Class A. Documents the canonical local-`start_ms` performance-audit pattern |
 | js-helper-time | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | 24-function pure-utility surface. Documents the plural-vs-singular Date-Data-Set key convention |
 | js-client-helper-crypto | A | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Browser-side member of the crypto runtime pair |
-| js-client-helper-styler | A | **Yes** | **Yes** (`api.md`, `configuration.md`, `template.md`, `philosophy.md`) | **Yes** | Class G pilot. First extension-based module. Four-doc pattern: api, configuration, template, philosophy |
+| js-client-helper-styler | G | **Yes** | **Yes** (`api.md`, `configuration.md`, `template.md`, `philosophy.md`) | **Yes** | Class G pilot. First extension-based module. Four-doc pattern: api, configuration, template, philosophy |
 | js-client-helper-styler-ext-react | H | **Yes** | **Yes** (`api.md`, `philosophy.md`) | **Yes** | Extension pattern pilot. Establishes naming convention `*-ext-[framework]` |
 | js-server-helper-instance | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Class B pilot. Established the lifecycle/'Behavior' section pattern |
 | js-server-helper-crypto | B | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Server-side member of the crypto runtime pair |
