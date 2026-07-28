@@ -4,14 +4,15 @@ Modules designed for browser-side use. These live in `src/helper-modules-client/
 
 ---
 
-## The Two Types
+## The Three Types
 
-Client helper modules come in two flavors:
+Client helper modules come in three flavors:
 
 | Type | Pattern | Example | Dependencies |
 |---|---|---|---|
 | **Universal core** | Pure JavaScript, no framework | `js-client-helper-crypto` | None |
 | **Framework extension** | Binds parent to React/Vue/Angular | `js-client-helper-styler-ext-react` | Parent module + React |
+| **Standalone framework module** | Framework-bound, no pure parent | `js-react-helper-idle` | React (injected) |
 
 ---
 
@@ -29,6 +30,24 @@ Pure JavaScript that runs anywhere. These are technically Class A modules with a
 - `js-client-helper-styler` - Theme engine with template-driven token generation
 
 **Documentation:** Standard Class A pattern: `README.md` + `docs/api.md` + `docs/configuration.md` + `ROBOTS.md`.
+
+---
+
+## Standalone Framework Modules
+
+Framework-bound modules with no pure parent. These are Class I modules: they depend on a UI framework (received by injection) and hold their framework-free logic in-package because that logic has no second consumer. The decision test in [`client/client-modules.md`](./client/client-modules.md#pure-core-with-extensions-or-a-single-framework-module) determines when a module is Class I versus Class G plus H.
+
+**Characteristics:**
+- Depends on a framework (`react`, `react-dom`, `react-native`, or Expo) received through the `Lib` container
+- No pure parent module above it, no extensions below it
+- Platform inputs (event sources, storage handles) arrive by injection, keeping the module framework-tier rather than runtime-tier
+- Entry point is `[name].js` (not `extension.js`, which is reserved for Class H)
+
+**Examples:**
+- `js-react-helper-idle` - Idle-state detection with `useIdle` hook
+- `js-react-helper-timer` - Countdown and interval hooks
+
+**Documentation:** Standard factory pattern: `README.md` + `docs/api.md` + `docs/configuration.md` + `ROBOTS.md`. See [`module-classes.md`](./module-classes.md#class-i-framework-module) for the full Class I definition.
 
 ---
 

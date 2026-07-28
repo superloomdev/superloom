@@ -32,7 +32,7 @@ module.exports = {
 - [How Validation Works](#how-validation-works)
 - [Return Convention](#return-convention)
 - [Validation Patterns](#validation-patterns)
-- [When to Consider a Third-Party Library](#when-to-consider-a-third-party-library)
+- [Use Utils Type-Check Primitives](#use-utils-type-check-primitives)
 - [Validation in the Request Flow](#validation-in-the-request-flow)
 - [Further Reading](#further-reading)
 
@@ -92,6 +92,50 @@ SurveyValidation.validateCreate(title, description, questions, rules);
 - Both must exist in the survey's question list
 - Self-reference (source === target) is not allowed
 - Operator and action must be from the allowed enum
+
+---
+
+## Use Utils Type-Check Primitives
+
+Hand-written validation does not mean hand-written type checks. `helper-utils` is the foundation module every other module already injects, and it owns the type-check primitives. **Type guards call those primitives; they never re-derive the check with a raw `typeof`.**
+
+The reason is correctness before consistency. Two of the primitives are strictly stronger than the `typeof` expression they replace, and the raw form silently admits a value the validator was written to reject:
+
+| Raw check | Utils primitive | Why the primitive is not merely shorter |
+|---|---|---|
+| `typeof arg !== 'number'` | `!Lib.Utils.isNumber(arg)` | `typeof NaN` is `'number'`, so the raw form accepts `NaN`. `isNumber` rejects it |
+| `typeof arg === 'object' && arg !== null` | `Lib.Utils.isObject(arg)` | `typeof null` is `'object'`, so the raw form needs a second clause that is easy to omit |
+| `typeof arg !== 'function'` | `!Lib.Utils.isFunction(arg)` | Same predicate; called for uniformity so every type guard in the file reads alike |
+| `typeof arg !== 'string'` | `!Lib.Utils.isString(arg)` | Same predicate; called for uniformity |
+| `typeof arg !== 'boolean'` | `!Lib.Utils.isBoolean(arg)` | Same predicate; called for uniformity |
+| `arg == null` | `Lib.Utils.isNullOrUndefined(arg)` | Same predicate; names the intent instead of relying on loose equality |
+
+Range and sign checks stay inline next to the primitive, because they are domain rules rather than type questions: `if (!Lib.Utils.isNumber(ms) || ms <= 0)`.
+
+### Scope
+
+The rule covers **both** validation surfaces of a module, not just the companion file:
+
+- `[module].validators.js` - load-time config assertions and per-call options assertions
+- `[module].js` - inline guards inside public functions that return an error envelope rather than throwing
+
+A module that reaches for `Lib.Utils.isNullOrUndefined` in one guard and a raw `typeof` in the next guard of the same function is the failure this rule exists to prevent. Mixed forms inside one module are a consistency violation, and the stronger primitives make them a correctness one.
+
+### Not a Type Guard: Argument-Shape Dispatch
+
+Raw `typeof` stays correct where the question is which overload the caller used, not whether a value is valid:
+
+```javascript
+start: function (key, options) {
+
+  // Normalize arguments: key is optional
+  if (typeof key === 'object' && key !== null) {
+    options = key;
+    key = 'default';
+  }
+```
+
+This is dispatch on argument shape. It rejects nothing and produces no error, so no primitive applies. The same holds for duck-typing a host-supplied collaborator (`typeof source.subscribe === 'function'`), where the test is whether a capability is present rather than whether an input is well formed.
 
 ---
 

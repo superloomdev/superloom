@@ -370,6 +370,8 @@ Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. If a new doc
 | `docs/languages/js/error-handling.md` | "Error Handling" |
 | `docs/languages/js/module-structure.md` | "Module Patterns" |
 | `docs/languages/js/module-classes.md` | "Module Classes" |
+| `docs/languages/js/validation.md` | "AI Behavior Rules" (type-guard primitive rule) |
+| `docs/languages/js/client/client-modules.md` | "AI Behavior Rules" (client naming taxonomy + loader-pattern rule) |
 | `docs/languages/js/publishing.md` | "Publishing" |
 | `docs/languages/js/module-thoughts-file.md` | "Standard Files Per Module" (THOUGHTS.md row) |
 | `docs/languages/js/dependencies.md` | "Dependency Hierarchy" |

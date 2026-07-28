@@ -92,6 +92,20 @@ The same rule applies to `gh pr create`, `aws ssm put-parameter`, and any other 
 
 **Fix:** Use `$HOME` (which is a regular variable and expands inside double quotes) or omit the surrounding quotes for the path.
 
+#### S6. Escaped brackets inside a regex character class make a sweep silently match nothing
+
+**Symptom:** A new sweep grep returns no output and is read as "clean", but the pattern it was written to catch is demonstrably present in the file. The sweep passes forever and enforces nothing.
+
+**Cause:** Inside a POSIX bracket expression a backslash is a **literal character**, not an escape. A class written as `[A-Za-z_.\[\]']` therefore closes at the first unescaped `]` - the one intended as an escaped literal - so the class becomes `{A-Za-z, _, ., \, [}` and the remaining `']` is parsed as pattern text. The regex still compiles, `grep` still exits cleanly, and nothing ever matches.
+
+**Fix:** Never put escaped brackets in a character class. Prefer a negated class that needs no escaping, and always prove a new sweep fires before trusting it:
+
+```bash
+grep -nE "typeof [^ ]+ (!==|===) '(number|function)'" path/to/file.js
+```
+
+**Lesson:** Every new sweep grep is validated against a file that is known to contain a violation, before it is added to a workflow's sweep battery. A sweep that has never been shown to produce a hit is unverified, and a silently-empty sweep is worse than no sweep because it reports the codebase as conformant. This is the inverse of the usual grep convention where empty output is the pass condition: empty output only means "pass" once the pattern has been proven capable of failing.
+
 ### Process and pager pitfalls
 
 #### P1. Output paginators (`less`, `more`, `man`, `vi`)

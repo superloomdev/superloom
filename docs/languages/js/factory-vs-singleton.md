@@ -11,6 +11,7 @@ The default is factory pattern for testability, with singleton pattern reserved 
 | **Has external dependencies** (libs, config, adapters) | ✅ **Always** | ❌ Never |
 | **Takes configuration parameters** | ✅ **Always** | ❌ Never |
 | **Needs different behavior per caller** | ✅ **Always** | ❌ Never |
+| **Exposes a React hook** (`use*` calling `useState`, `useRef`, or `useEffect`) | ✅ **Always** | ❌ Never |
 | **Pure functions with zero dependencies** | ✅ Preferred | ⚠️ Only if no test isolation needed |
 | **Foundation utility library** | ✅ Preferred | ⚠️ Only if truly dependency-free |
 
@@ -29,6 +30,7 @@ Use factory pattern when **any** of these apply:
 - Module wraps external dependencies (DB, SDK, filesystem)
 - Different callers need different configurations
 - Module holds per-instance state (connections, pools, clients)
+- Module's public surface includes a React hook; the per-consumer state a hook binds into rendering cannot be shared across callers. See [React Hook Modules Are Factories](module-structure#react-hook-modules-are-factories)
 - Test isolation is required
 
 ### Benefits
@@ -274,6 +276,7 @@ Before choosing singleton pattern, verify:
 - [ ] Module has zero external dependencies
 - [ ] Module takes no configuration parameters
 - [ ] All functions are pure (no I/O, no side effects)
+- [ ] Module exposes no React hook
 - [ ] No caller needs different behavior
 - [ ] Test isolation is not required
 - [ ] Module is truly dependency-free

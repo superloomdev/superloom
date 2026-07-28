@@ -106,6 +106,10 @@ Dependencies point from framework-bound toward pure, never the reverse.
 
 A pure module (`js-helper-*`, `js-client-helper-*`) must **never** depend on a framework module (`js-react-helper-*`, `js-rw-helper-*`, `js-rn-helper-*`, `js-rnw-helper-*`) or on a Class H extension. A pure module that needs scheduling calls the runtime's `setTimeout` directly rather than importing a framework-bound timer module. Inverting this direction makes the pure module unusable in the very environments its tier promises to support.
 
+### Loader Pattern Follows From the Surface
+
+Name and tier do not settle the loader pattern; the public surface does. A module exposing a React hook is a factory, and a hook-free computation module may be a singleton. That rule and the `js-react-helper-idle` versus `js-client-helper-styler` contrast live in [React Hook Modules Are Factories](../module-structure.md#react-hook-modules-are-factories), which this page does not restate.
+
 ### Worked Verdicts
 
 | Module | Question 1: second consumer today? | Question 2: substantial framework-free core? | Shape |
@@ -276,7 +280,7 @@ The styler React extension provides `useTheme()` and `useStyles()`. It works acr
 
 ## Further Reading
 
-- [Module Classes](../module-classes.md) - The Class A-H taxonomy and where every module belongs
+- [Module Classes](../module-classes.md) - The Class A-I taxonomy and where every module belongs
 - [Client Catalog](../catalog-client.md) - Published client modules
 - [Theming](theming.md) - Template packs as data-only modules
 - [Components](components.md) - The component library package and its naming

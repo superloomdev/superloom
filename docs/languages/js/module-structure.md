@@ -16,6 +16,7 @@ A reference for how every module in Superloom is shaped: the standard applicatio
   - [Required Rules](#required-rules)
   - [Reference Implementations](#reference-implementations)
 - [Class I Framework Module Deltas](#class-i-framework-module-deltas)
+  - [React Hook Modules Are Factories](#react-hook-modules-are-factories)
 - [Parts Pattern (Complex Helper Modules)](#parts-pattern-complex-helper-modules)
 - [Singleton Module Pattern](#singleton-module-pattern)
   - [Canonical Shape: Main Module Singleton](#canonical-shape-main-module-singleton)
@@ -472,6 +473,27 @@ A Class I framework module (see [`module-classes.md`](module-classes.md#class-i-
 
 No other structural delta exists. The `createInterface` signature, companion files, Required Rules, and documentation footprint all match the factory skeleton. Framework-free logic (state machines, tick math) lives inside `createInterface` as regular public/private functions; framework-bound logic (hooks, effects) lives there too, closing over `Lib.React`.
 
+### React Hook Modules Are Factories
+
+**A module whose public surface includes a React hook is always a factory, never a singleton.** The loader call is what creates the isolated state a hook then binds into rendering.
+
+The decision needs no judgment. Read the module's public functions: if any `use*` function calls `Lib.React.useState`, `Lib.React.useRef`, or `Lib.React.useEffect`, the module is a factory. If the module never touches a hook, it is eligible for the [Singleton Module Pattern](#singleton-module-pattern) and is then judged against the five singleton criteria like any other module.
+
+**Why a singleton breaks here.** A singleton returns the same object, and therefore the same `state`, to every caller. The state a hook module holds is exactly the state that must not be shared: a threshold registry, a keyed timer table, a subscription list. Two screens mounting the same hook would write into one registry, and the first to unmount would tear down the second's timers. The factory pattern gives each loader call its own `state`, which is the module-level equivalent of the isolation `React.createContext` provides at the tree level.
+
+**The contrast to keep in mind.** Both shapes appear in the client tier and both are correct:
+
+| | Hook module (factory) | Pure computation module (singleton) |
+|---|---|---|
+| Example | `js-react-helper-idle`, `js-react-helper-timer` | `js-client-helper-styler` |
+| Public surface | `useIdle`, `useTimer` plus imperative controls | `derive`, `generateUtilities` - no hooks |
+| Holds mutable state | Yes: handler registry, timer table, pending timeouts | No: output is a pure function of the inputs |
+| Correct instance count | One per logical consumer | Exactly one, always |
+
+The styler is a singleton because `derive(template, values)` returns the same result for the same arguments no matter who calls it, so a second instance would be indistinguishable from the first. The idle module is a factory because a second instance is the entire point. A screen that idles after thirty seconds and one that idles after two minutes are independent state machines sharing an implementation.
+
+Naming reinforces this: a framework-tier prefix (`js-react-helper-*`, `js-rnw-helper-*`) signals a hook surface and therefore a factory, while a runtime-tier prefix on a hook-free module (`js-client-helper-*`) leaves the singleton option open. The prefix tables live in [`client/client-modules.md`](client/client-modules.md#framework-tier-prefixes).
+
 ---
 
 ## Parts Pattern (Complex Helper Modules)
@@ -626,6 +648,7 @@ Some modules are **stateless, pure, and globally shared**. They need no per-inst
 - The module wraps a vendor SDK or driver → use the **factory pattern** with `ensureAdapter`
 - The module is a `parts/` sub-module **and has at least one factory dependency** → use the factory `createInterface` shape (see [Part Shape: Singleton or Factory](#part-shape-singleton-or-factory))
 - **The module takes any external dependencies** (libs, config, adapters) → use the **factory pattern** for test isolation
+- **The module's public surface includes a React hook** (any `use*` function calling `Lib.React.useState`, `useRef`, or `useEffect`) → use the **factory pattern** with `state`. A hook exists to bind per-consumer state into rendering, so the module that owns that state cannot be shared. See [React Hook Modules Are Factories](#react-hook-modules-are-factories)
 
 ### Testability Considerations
 

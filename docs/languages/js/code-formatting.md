@@ -510,6 +510,32 @@ Write comments as a teammate would explain the line, not as marketing or referen
 - Inside `try`/`catch`, the `catch` block's first comment explains the **fallback behavior**, not that the try failed
 - **No exceptions for short functions.** Even a single-block function with one `await` and one `if` still gets its opening step comment
 - Use plain, direct language in comments: `// Return a service error if the driver call failed` not `// Bubble up the error`
+- **A loop body is not one block.** The comment above the loop states what the iteration accomplishes. Once the body carries more than two operations, each distinct operation inside it gets its own step comment, separated by a blank line. A body of one or two tight operations stays dense under the loop's own comment
+
+The loop's own comment covers the sweep; the operations inside it are commented individually:
+
+```javascript
+// Count and remove all handlers
+let count = 0;
+const ids = Object.keys(state.handlers);
+
+for (let i = 0; i < ids.length; i++) {
+  const id = ids[i];
+
+  // Clear any pending timer for this handler
+  if (state.handlers[id].timeout_id) {
+    clearTimeout(state.handlers[id].timeout_id);
+  }
+
+  // Remove the handler from the registry
+  delete state.handlers[id];
+
+  // Count the removal
+  count += 1;
+}
+```
+
+Collapsing those three operations into an uncommented body is the drift this rule catches. The outer comment reads as though it covers them, so the body escapes review even though it is the part doing the work.
 
 Every block has a step comment, even a short function:
 
