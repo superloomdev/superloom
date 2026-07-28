@@ -178,15 +178,17 @@ The following client modules are planned but not yet shipped. They are tracked i
 
 | Module | Tier | Class | Plan |
 |---|---|---|---|
-| `js-helper-idle` | Core | A | 0066 |
-| `js-helper-timer` | Core | A | 0066 |
-| `js-client-helper-storage` | Client | A + F adapters | 0066 |
-| `js-client-helper-storage-adapter-localstorage` | Client | F | 0066 |
-| `js-client-helper-storage-adapter-asyncstorage` | Client | F | 0066 |
-| `js-rnw-helper-font` | RNW | A | 0066 |
-| `js-rnw-helper-device` | RNW | A | 0066 |
+| `js-react-helper-idle` | React | I | 0066 |
+| `js-react-helper-timer` | React | I | 0066 |
+| `js-client-helper-storage` | Client | E | 0066 |
+| `js-client-helper-storage-adapter-web` | Client | F | 0066 |
+| `js-client-helper-storage-adapter-rn` | Client | F | 0066 |
+| `js-rnw-helper-font` | RNW | I | 0066 |
+| `js-rnw-helper-device` | RNW | I | 0066 |
 | `js-rnw-components` | RNW | Library | 0067 |
 | `js-client-helper-styler-template-carbon` | Client | Data | 0067 |
+
+Idle and timer are Class I framework modules (standalone, `react`-only) rather than pure cores with React extensions. Both have a single framework consumer, which is what the [decision test](./client/client-modules.md#pure-core-with-extensions-or-a-single-framework-module) requires before a split is warranted.
 
 The `js-rnw-components` library and the `rnw-app-template` are separate repositories (`codebase-js-rnw-components`, `codebase-rnw-app-template`), not helper modules in the `js-helper-modules` repo.
 
@@ -196,6 +198,6 @@ The `js-rnw-components` library and the `rnw-app-template` are separate reposito
 
 - [`client/client-modules.md`](./client/client-modules.md) - The naming taxonomy (single source of truth)
 - [`client/`](./client/client-architecture.md) - The client documentation section
-- [`module-classes.md`](./module-classes.md) - Class G (feature modules with extensions) and Class H (extension modules) definitions
+- [`module-classes.md`](./module-classes.md) - Class G (feature modules with extensions), Class H (extension modules), and Class I (standalone framework modules) definitions
 - [`module-docs.md`](./module-docs.md) - README templates including extension modules
 - [`module-docs-complex.md`](./module-docs-complex.md) - Parent vs extension documentation boundaries

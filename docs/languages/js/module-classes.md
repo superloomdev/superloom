@@ -1,6 +1,6 @@
 # Module Categorization
 
-Every Superloom helper module belongs to one of six classes. The class determines the README structure, which `docs/` files (if any) accompany it, and which template to start from. This page is **the enumeration**: which module belongs to which class, and the current documentation status of each.
+Every Superloom helper module belongs to one of nine classes. The class determines the README structure, which `docs/` files (if any) accompany it, and which template to start from. This page is **the enumeration**: which module belongs to which class, and the current documentation status of each.
 
 **Companion docs.**
 
@@ -10,7 +10,7 @@ Every Superloom helper module belongs to one of six classes. The class determine
 
 ## On This Page
 
-- [The Eight Classes](#the-eight-classes)
+- [The Nine Classes](#the-nine-classes)
 - [Universal Documentation Footprint](#universal-documentation-footprint)
 - [Class A. Foundation Utility](#class-a-foundation-utility)
 - [Class B. Extended Utility](#class-b-extended-utility)
@@ -20,12 +20,13 @@ Every Superloom helper module belongs to one of six classes. The class determine
 - [Class F. Dependent Adapter](#class-f-dependent-adapter)
 - [Class G. Feature Module with Extensions](#class-g-feature-module-with-extensions)
 - [Class H. Extension](#class-h-extension)
+- [Class I. Framework Module](#class-i-framework-module)
 - [Documentation Status Matrix](#documentation-status-matrix)
 - [Migration Priority](#migration-priority)
 
 ---
 
-## The Eight Classes
+## The Nine Classes
 
 The classes form a **dependency staircase**: each step adds one more thing the module is allowed to depend on. A module belongs to the lowest class whose dependency budget it fits. The class is decided by where the dependency boundary sits, not by what the module does.
 
@@ -39,6 +40,9 @@ The classes form a **dependency staircase**: each step adds one more thing the m
 | **F. Dependent adapter** | A Class E parent module. Cannot function on its own; implements the parent's adapter contract for a single backend or runtime. The parent utilizes the adapter - adapter is the instrument, parent is boss. | `README-storage-adapter.md` (store) / `README-master-template.md` (adapter) | Store: `api.md`, `configuration.md`, `schema.md`, `cleanup.md`. Adapter: `api.md`, `configuration.md` |
 | **G. Feature module with extensions** | Anything required by the feature. May combine Class A utilities, Class B services, Class C/D backends, and Class H extensions. Provides a complete business-logic feature designed for framework integration | `README-feature-with-extensions.md` | `api.md`, `configuration.md`, `schemas.md` (when the validators file enforces real contracts), `data-model.md`, optional `runtime.md`. Extension detail lives in each Class H package |
 | **H. Extension** | A Class G parent module only. Cannot function on its own; adds framework-specific bindings (React, Vue, Angular) to a Class G parent module. The extension utilizes the parent - extension is boss. | `README-extension.md` | `api.md` (hooks/components), `philosophy.md` (extension pattern). No `configuration.md` - config lives in parent |
+| **I. Framework module** | A UI framework received by injection, plus optionally the platform APIs of one pipeline. **Standalone:** no pure parent above it and no extensions below it. Holds its framework-free logic in-package because that logic has no second consumer | `README-master-template.md` (framework variant) | `api.md`, `configuration.md`, `schemas.md` (when the validators file enforces real contracts) |
+
+*Class I versus G and H:* all three involve frameworks, and they are distinguished by whether a pure parent exists. Class G is a **pure** module that publishes extension points; Class H is the **dependent** binding that consumes a Class G parent; Class I is **standalone** and framework-bound, with no parent and no extensions. A module becomes Class G plus H only when its framework-free logic has a second consumer; otherwise it is Class I. The deciding procedure is the decision test in [`client/client-modules.md`](client/client-modules.md#pure-core-with-extensions-or-a-single-framework-module).
 
 *Reading this table:* a Class B module is allowed to use everything Class A is, plus Node built-ins. A Class C module is allowed to use everything Class B is, plus a self-hostable third-party service. And so on. F, G, and H are special cases: they cannot stand alone. Class F has two subtypes: **stores** (data persistence, named `-store-[backend]`) and **adapters** (everything else: runtimes, transports, integrations, named `-adapter-[name]`). Class H has the naming pattern `-ext-[framework]`. Both Class F subtypes share one internal shape identical to every other factory module (loader takes `(shared_libs, config)`, `Lib` picked by reference from the injected container, companion config/errors/validators files, factory `createInterface` with fixed slots); whether `createInterface` closes over per-instance state varies by adapter. See `module-structure.md` for the skeletons.
 
@@ -46,7 +50,7 @@ The classes form a **dependency staircase**: each step adds one more thing the m
 
 ## Universal Documentation Footprint
 
-Every class A through H ships the same minimum set of files:
+Every class A through I ships the same minimum set of files:
 
 | File | Audience | Purpose |
 |---|---|---|
@@ -265,6 +269,35 @@ Class H is the counterpart to Class G. Where Class G provides extension points f
 | Module | Package | Parent Module | Framework | Purpose |
 |---|---|---|---|---|
 | `js-client-helper-styler-ext-react` | `@superloomdev/js-client-helper-styler-ext-react` | `js-client-helper-styler` | React 18+ | React hooks and ThemeProvider for Styler |
+
+---
+
+## Class I. Framework Module
+
+**Characteristics:** A **standalone** module that depends on a UI framework received by injection. It has no pure parent above it and publishes no extensions below it. Its framework-free logic stays in-package, because that logic has no consumer outside the framework. A Class I module may additionally depend on the platform APIs of one pipeline, and that choice determines its prefix rather than its class.
+
+Class I exists because the Class G plus H pair is not free: it costs two packages, two CI job pairs, two publish cycles, and a version range pinned between them. That price buys framework independence, which is only worth paying when the framework-free logic actually has a second consumer. When the framework is the only consumer, Class I is the correct shape and the split would be ceremony. See the decision test in [`client/client-modules.md`](client/client-modules.md#pure-core-with-extensions-or-a-single-framework-module).
+
+**Not to be confused with:**
+
+- **Class G** is pure and publishes extension points. Class I depends on a framework directly.
+- **Class H** cannot stand alone and consumes a Class G parent. Class I stands alone and has no parent.
+
+**Naming convention:** a framework-tier prefix, never a suffix. `js-react-helper-[name]` when the module needs nothing beyond `react`; `js-rw-helper-*`, `js-rn-helper-*`, or `js-rnw-helper-*` when it is bound to the DOM, to React Native, or to the Expo/Metro pipeline respectively. The full prefix table is in [`client/client-modules.md`](client/client-modules.md#framework-tier-prefixes).
+
+**Entry point:** `[name].js`, matching every other standalone module. The `extension.js` filename is reserved for Class H, so the entry filename alone distinguishes a standalone framework module from a dependent extension.
+
+**Dependency direction:** a Class I module may depend on pure modules (Class A, B, and Class E parents). No pure module may depend on a Class I module. Dependencies point from framework-bound toward pure, never the reverse.
+
+**Framework injection:** the framework arrives through the `Lib` container (`Lib.React`), never through a direct `import React`. This keeps the dependency centralized, keeps `react` a peer dependency rather than a bundled one, and lets `_test/` inject a stub so tests run in pure Node with no Metro and no emulator.
+
+**README extras:** "Supported Renderers" (which React targets the module runs on, and what it requires to be installed). Install section lists `react` as a peer dependency.
+
+**`docs/`:** `api.md`, `configuration.md`, plus `schemas.md` when the validators file enforces real contracts. Unlike Class H, a Class I module owns its own configuration, so `configuration.md` is required.
+
+| Module | Package | Prefix tier | Framework | Purpose |
+|---|---|---|---|---|
+| _none shipped yet_ | | | | First Class I modules arrive with the client helper module wave |
 
 ---
 
