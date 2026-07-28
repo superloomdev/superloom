@@ -15,6 +15,7 @@ A reference for how every module in Superloom is shaped: the standard applicatio
   - [createInterface Signature Variants](#createinterface-signature-variants)
   - [Required Rules](#required-rules)
   - [Reference Implementations](#reference-implementations)
+- [Class I Framework Module Deltas](#class-i-framework-module-deltas)
 - [Parts Pattern (Complex Helper Modules)](#parts-pattern-complex-helper-modules)
 - [Singleton Module Pattern](#singleton-module-pattern)
   - [Canonical Shape: Main Module Singleton](#canonical-shape-main-module-singleton)
@@ -450,6 +451,26 @@ createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)
 - **Stateless (no `state` param):** `js-server-helper-http` in the JS implementation repository
 
 When extending an existing Pattern 1 (Singleton) module to Pattern 2 (Factory), treat it as a breaking change for that module: update the header comment, move all functions into `createInterface`, switch `module.exports` to the loader assignment, and document the migration in `__dev__/migration-changelog.md`.
+
+### Class I Framework Module Deltas
+
+A Class I framework module (see [`module-classes.md`](module-classes.md#class-i-framework-module)) uses the [Helper Module Pattern (Factory)](#helper-module-pattern-factory) skeleton **unchanged**. It is a regular factory module with two deltas, both in the loader:
+
+1. **The framework is picked off the injected container**, not imported directly. The loader pulls `React` from `shared_libs` alongside the other `Lib` entries:
+
+```javascript
+  const Lib = {
+    Utils: shared_libs.Utils,
+    Debug: shared_libs.Debug,
+    React: shared_libs.React
+  };
+```
+
+   This keeps `react` a peer dependency rather than a bundled one, and lets `_test/` inject a stub so tests run in pure Node with no Metro and no emulator. The same pattern applies to `shared_libs.ExpoFont`, `shared_libs.RNPlatform`, or any other framework/platform API a Class I module needs.
+
+2. **The entry filename is `[name].js`** (e.g. `idle.js`, `timer.js`), not `extension.js`. The `extension.js` filename is reserved for Class H extensions that bind to a pure parent. A Class I module is standalone, so it uses the standard entry filename.
+
+No other structural delta exists. The `createInterface` signature, companion files, Required Rules, and documentation footprint all match the factory skeleton. Framework-free logic (state machines, tick math) lives inside `createInterface` as regular public/private functions; framework-bound logic (hooks, effects) lives there too, closing over `Lib.React`.
 
 ---
 

@@ -26,6 +26,7 @@ Use this file for **what to test and which tier**; use the companion docs for **
 - [Integration Testing](#integration-testing)
 - [Test Loader Pattern](#test-loader-pattern)
 - [Adding Tests to a New Module](#adding-tests-to-a-new-module)
+- [Framework Module Testing (Class H / Class I)](#framework-module-testing-class-h--class-i)
 
 ---
 
@@ -290,3 +291,62 @@ Before writing tests, identify each external dependency the module has (storage 
 11. Verify: `npm test` from `_test/` directory
 12. All exported functions must have at least one test
 13. Update module `README.md` with badges and testing status
+
+## Framework Module Testing (Class H / Class I)
+
+Framework modules (Class H extensions and Class I standalone framework modules) test in **pure Node** with no Metro, no emulator, and no browser. The framework is injected through `shared_libs` in the test loader, exactly as server modules inject adapters and cloud SDKs.
+
+### What Gets Injected
+
+| Module tier | Injected as | Stub strategy |
+|---|---|---|
+| `js-react-helper-*` (Class I) | `shared_libs.React` | Real `react` + `react-test-renderer` from `node_modules` - no stub needed |
+| `js-rnw-helper-*` (Class I) | `shared_libs.React`, `shared_libs.ExpoFont`, etc. | Real `react` + `react-test-renderer`; Expo APIs are stub objects with the surface the module calls (e.g. `{ useFonts: () => [true] }`) |
+| `js-client-helper-*-ext-react` (Class H) | `shared_libs.React`, `shared_libs.Styler` (or other parent) | Real `react` + `react-test-renderer`; parent module loaded from registry or `file:../` |
+
+### Test Loader Shape
+
+The test loader builds the `shared_libs` container with the framework entry, then calls the module loader:
+
+```javascript
+// _test/loader.js
+'use strict';
+
+const React = require('react');
+const ReactTestRenderer = require('react-test-renderer');
+
+const Utils = require('helper-utils')();
+const Debug = require('helper-debug')();
+
+// Class I module under test - React injected via shared_libs
+const Idle = require('helper-idle')({
+  React,
+  Utils,
+  Debug
+});
+
+module.exports = { React, ReactTestRenderer, Idle, Utils, Debug };
+```
+
+For an RNW-tier module that calls `expo-font`, the loader injects a stub:
+
+```javascript
+const ExpoFont = {
+  useFonts: () => [true, null]   // [isLoaded, error]
+};
+
+const Font = require('helper-font')({
+  React,
+  ExpoFont,
+  Utils,
+  Debug
+});
+```
+
+### CI Placement
+
+Framework modules are **offline modules**. They need no Docker, no AWS credentials, and no dedicated CI job. Add the module path to the `test-offline` matrix in `.github/workflows/ci-helper-modules.yml`, and the publish job auto-detects it from the `detect` job output.
+
+### What About Component Tests?
+
+A Class I module that ships hooks (e.g. `useIdle`, `useTimer`) tests the hook's logic by calling it inside a test component rendered with `react-test-renderer`. The test asserts on the rendered output or on side effects (callback calls, state transitions). This is the same pattern used by `js-client-helper-styler-ext-react` today.
