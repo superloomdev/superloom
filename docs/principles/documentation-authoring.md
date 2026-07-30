@@ -97,6 +97,8 @@ Editing a derived file creates two versions of the truth, and the divergence sur
 
 **The dependency is one-way.** Workflows are compiled from and reference documentation; documentation never references a workflow. A rule stated in a document is complete on its own - it never defers its authority, its enforcement, or any of its steps to a workflow. Workflows are renamed, renumbered, and retired freely; a document that points at one inherits that churn as dead references. The `ai/` layer is the single exception: it documents the workflow system itself as subject matter.
 
+**Documentation never references plans.** Plans (`__dev__/plans/`) are ephemeral working artifacts outside every repository; plan numbers mean nothing to a reader of the documentation and go stale the moment a plan is archived. A document never cites a plan number, tracks work "per plan NNNN", or keeps a planned-module roster - catalogs list shipped modules used as reference examples, nothing else. When a plan produces a durable decision, the decision itself is written into the documentation with its reasoning, standing on its own without the plan as provenance. The single exception mirrors the workflow rule: the document that defines the planning system itself may describe `__dev__/plans/` as subject matter, and placement tables may name it as the home for open questions - but never a specific plan.
+
 ## Cross-Reference Integrity
 
 Whenever a rule is added, moved, renamed, or reworded:

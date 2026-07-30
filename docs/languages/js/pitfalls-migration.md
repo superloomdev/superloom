@@ -125,7 +125,7 @@ See [`module-structure.md`](module-structure#helper-module-pattern-factory) for 
 - The factory skeleton in [`module-structure.md`](module-structure#helper-module-pattern-factory) carries a worked function body whose step comments are normative, so the skeleton conformance diff covers bodies, not just loaders.
 - The build and audit workflow archetypes ([`workflow-archetypes.md`](../../ai/workflow-archetypes.md)) include a step-comment conformance gate in their verify phases, so every recompiled workflow inherits the check.
 
-Discovered while creating a NoSQL admin module (Plan 0062), where the comment pass also surfaced a created-vs-skipped classification bug that a weak disjunction assertion had masked - see the exact-value assertion rule in [`testing.md`](../../principles/testing.md).
+Discovered while creating a NoSQL admin module, where the comment pass also surfaced a created-vs-skipped classification bug that a weak disjunction assertion had masked - see the exact-value assertion rule in [`testing.md`](../../principles/testing.md).
 
 ### Patching when complete rewrite is needed
 

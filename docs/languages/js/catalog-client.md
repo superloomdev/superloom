@@ -187,29 +187,7 @@ The parent's README mentions the extension:
 
 ## Naming Taxonomy
 
-The full naming taxonomy for client-tier modules (runtime prefixes, framework-tier prefixes, suffixes, placement rules, promotion rule) lives in [`client/client-modules.md`](./client/client-modules.md). That page is the single source of truth. This catalog lists shipped modules only; planned modules are referenced below.
-
----
-
-## Planned Modules
-
-The following client modules are planned but not yet shipped. They are tracked in plans 0066-0068.
-
-| Module | Tier | Class | Plan |
-|---|---|---|---|
-| `js-react-helper-idle` | React | I | 0066 |
-| `js-react-helper-timer` | React | I | 0066 |
-| `js-client-helper-storage` | Client | E | 0066 |
-| `js-client-helper-storage-adapter-web` | Client | F | 0066 |
-| `js-client-helper-storage-adapter-rn` | Client | F | 0066 |
-| `js-rnw-helper-font` | RNW | I | 0066 |
-| `js-rnw-helper-device` | RNW | I | 0066 |
-| `js-rnw-components` | RNW | Library | 0067 |
-| `js-client-helper-styler-template-carbon` | Client | Data | 0067 |
-
-Idle and timer are Class I framework modules (standalone, `react`-only) rather than pure cores with React extensions. Both have a single framework consumer, which is what the [decision test](./client/client-modules.md#pure-core-with-extensions-or-a-single-framework-module) requires before a split is warranted.
-
-The `js-rnw-components` library and the `rnw-app-template` are separate repositories (`codebase-js-rnw-components`, `codebase-rnw-app-template`), not helper modules in the `js-helper-modules` repo.
+The full naming taxonomy for client-tier modules (runtime prefixes, framework-tier prefixes, suffixes, placement rules, promotion rule) lives in [`client/client-modules.md`](./client/client-modules.md). That page is the single source of truth. This catalog names shipped modules as reference examples of each pattern; it is not a module registry.
 
 ---
 

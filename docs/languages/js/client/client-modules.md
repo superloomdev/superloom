@@ -14,7 +14,6 @@ This page is the single source of truth for the client-side module naming taxono
 - [Tier Placement Flowchart](#tier-placement-flowchart)
 - [Promotion Rule](#promotion-rule)
 - [Boundary Rules](#boundary-rules)
-- [Planned Module Roster](#planned-module-roster)
 - [Worked Examples](#worked-examples)
 - [Worked Negative Examples](#worked-negative-examples)
 - [Further Reading](#further-reading)
@@ -45,10 +44,12 @@ The axis that separates these four prefixes is **what the module depends on**, n
 |---|---|---|
 | `js-react-helper-*` | `react` only: hooks, context, component APIs. No platform APIs, no Expo, no `react-dom`, no `react-native` imports | Every React renderer: React DOM, React Native, React Native Web |
 | `js-rw-helper-*` | `react` plus `react-dom` plus DOM APIs | Web only |
-| `js-rn-helper-*` | `react` plus `react-native` native modules | Native only |
-| `js-rnw-helper-*` | `react` plus `react-native-web` plus the **Expo SDK** (for example `expo-font`) | The Expo/Metro pipeline: web, iOS, Android |
+| `js-rn-helper-*` | `react-native` native modules (React optional: hooks/context only when present) | Native only |
+| `js-rnw-helper-*` | The **Expo SDK** (for example `expo-font`, `expo-sqlite`) plus `react-native-web` (React optional: hooks/context only when present) | The Expo/Metro pipeline: web, iOS, Android |
 
 `js-react-helper-*` is the tier for a **standalone** module that works on every React renderer because it touches nothing but React itself. Any platform input it needs (event sources, storage handles, native modules) arrives by injection through the `Lib` container, which is what keeps it out of the three narrower tiers.
+
+A framework-tier prefix does not require React when the module's dependency is a platform native module or SDK rather than a framework API. A module that wraps `react-native-mmkv` (a JSI native module with no React usage) takes `js-rn-helper-*` because nothing lower fits: the core and client tiers cannot provide the RN runtime. A module that wraps `expo-sqlite` (an Expo SDK package with no React usage) takes `js-rnw-helper-*` for the same reason. In both cases React is optional: the module may additionally use hooks or context, but the tier is earned by the platform dependency, not the framework dependency.
 
 `js-rnw-helper-*` means the module is bound to the Expo/Metro pipeline specifically. It does not mean "universal". A module that runs on web and native without needing Expo belongs in `js-react-helper-*`.
 
@@ -148,9 +149,12 @@ Does the module use Node.js built-ins or server-only packages?
   NO  -> continue
 
 Does the module use a React framework (hooks, context, components)?
-  NO  -> Does it use browser/Web APIs (window, document, localStorage)?
-           YES -> js-client-helper-*
-           NO  -> js-helper-*                      (core tier)
+  NO  -> Does it use react-native native modules or the Expo SDK?
+           YES -> Expo SDK  -> js-rnw-helper-*     (platform tier, React optional)
+                  RN native -> js-rn-helper-*      (platform tier, React optional)
+           NO  -> Does it use browser/Web APIs (window, document, localStorage)?
+                    YES -> js-client-helper-*
+                    NO  -> js-helper-*              (core tier)
 
   YES -> Run the decision test. Is it Shape 1, a binding for a pure
          parent that holds the logic?
@@ -197,26 +201,6 @@ Client-tier helper modules follow boundary rules imported from the client-utilit
 
 ---
 
-## Planned Module Roster
-
-The following modules are planned for the client helper module wave. Each is listed with its determined tier and class assignment.
-
-| Module name | Purpose | Tier | Class |
-|---|---|---|---|
-| `js-react-helper-idle` | Idle-state detection. State machine plus `useIdle`; activity sources injected by the host | React (`js-react-helper-*`) | Class I |
-| `js-react-helper-timer` | Countdown and interval hooks. Tick bookkeeping plus the render bridge; date math delegated to `js-helper-time` | React (`js-react-helper-*`) | Class I |
-| `js-client-helper-storage` | Key-value contract (get, set, remove, clear, namespacing) with the adapter pattern | Client (`js-client-helper-*`) | Class E |
-| `js-client-helper-storage-adapter-web` | localStorage, sessionStorage, and cookie strategies | Client (`js-client-helper-*`) | Class F |
-| `js-client-helper-storage-adapter-rn` | AsyncStorage plus SecureStore, through injected drivers | Client (`js-client-helper-*`) | Class F |
-| `js-rnw-helper-font` | Font manifest loader. Binds `expo-font`, so it depends on the Expo pipeline | RNW (`js-rnw-helper-*`) | Class I |
-| `js-rnw-helper-device` | Platform, viewport, safe area, network state, app state | RNW (`js-rnw-helper-*`) | Class I |
-
-Idle and timer are Class I framework modules rather than pure cores with extensions. Both fail question 1 of the [decision test](#pure-core-with-extensions-or-a-single-framework-module): every planned caller is a React view, so neither has a second consumer today. Idle keeps its activity sources injected, which is what holds it in the `js-react-helper-*` tier instead of pushing it to `js-rnw-helper-*`.
-
-The font module takes the RNW tier because it binds `expo-font`, which is specific to the Expo/Metro pipeline. Storage takes the client tier because it abstracts browser and native storage APIs; it is Class E because it owns an adapter contract, and its adapters are Class F packages carrying the `-adapter-[name]` suffix.
-
----
-
 ## Worked Examples
 
 ### Example 1: A module that detects network connectivity
@@ -249,6 +233,13 @@ If the component library later ships a Vue variant, the Promotion Rule extracts 
 - Ships an alternate template for the styler
 - Determined tier: client (it is a data pack for a client-tier module)
 - Name: `js-client-helper-styler-template-carbon`
+
+### Example 5: Key-value storage per backend
+
+- Two same-signature KV modules over different engines: browser Web Storage and `react-native-mmkv`
+- Determined pattern: driver wrapper (Class C, like the server SQL/NoSQL families), not adapter (Class E/F) - a client KV core has no meaningful work of its own, so independent same-signature modules per backend are the correct shape, swapped at the loader by platform
+- `kv-localstorage` takes the client tier (browser Web API, no React): `js-client-helper-kv-localstorage`
+- `kv-mmkv` takes the RN tier (requires the RN runtime for the JSI native module, no React usage): `js-rn-helper-kv-mmkv`
 
 ---
 
