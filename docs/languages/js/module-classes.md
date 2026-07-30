@@ -117,6 +117,8 @@ The self-hostable criterion is what separates Class C from Class D. SQLite, Post
 
 Class C modules present a unified API (`getRow`, `getRows`, `getValue`, `write`, etc.) so calling code is identical across backends. They insulate the application from upstream driver churn.
 
+Class C is not limited to server-side drivers. A client-side module that wraps a third-party storage engine (browser Web Storage, `react-native-mmkv`, `expo-sqlite`) is also Class C: the engine is third-party, self-hostable, and the module presents a unified API across backends. Client-side Class C modules take client or platform-tier prefixes (`js-client-helper-*`, `js-rn-helper-*`, `js-rnw-helper-*`) instead of `js-server-helper-*`, but the class is the same. See [`client/client-modules.md`](./client/client-modules.md) for the tier decision.
+
 **README extras:** "Common Patterns". 2-3 progressive examples (read, write, transaction); brief callout about cross-backend API compatibility.
 
 **`docs/`:** `api.md`, `configuration.md`.
@@ -127,6 +129,9 @@ Class C modules present a unified API (`getRow`, `getRows`, `getValue`, `write`,
 | `js-server-helper-sql-postgres` | `@superloomdev/js-server-helper-sql-postgres` | `pg` (node-postgres) |
 | `js-server-helper-sql-mysql` | `@superloomdev/js-server-helper-sql-mysql` | `mysql2` |
 | `js-server-helper-nosql-mongodb` | `@superloomdev/js-server-helper-nosql-mongodb` | `mongodb` (native driver) |
+| `js-client-helper-kv-localstorage` | `@superloomdev/js-client-helper-kv-localstorage` | Browser Web Storage (localStorage/sessionStorage) |
+| `js-rn-helper-kv-mmkv` | `@superloomdev/js-rn-helper-kv-mmkv` | `react-native-mmkv` (JSI, mmap-backed) |
+| `js-rnw-helper-sql-expo-sqlite` | `@superloomdev/js-rnw-helper-sql-expo-sqlite` | `expo-sqlite` (local SQLite via Expo SDK) |
 
 ---
 

@@ -53,7 +53,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - Module lifecycle operations (create, fix, audit, publish) go through the workflow family (`/js-helper-module`, `/js-helper-module-audit`, `/js-helper-module-publish`) - do not improvise the procedure
 - Use `/learn` to capture new knowledge; run `/finalize-docs` after any docs change (validates to convergence, then propagates to AGENTS.md and embedded workflow blocks)
 - Use Plan Mode for complex, multi-step, or risky changes; when stuck, attempt workarounds before asking; reuse existing terminals
-- **Client module naming taxonomy:** runtime-tier prefixes (`js-helper-*`, `js-server-helper-*`, `js-client-helper-*`), framework-tier prefixes (`js-react-helper-*`, `js-rw-helper-*`, `js-rn-helper-*`, `js-rnw-helper-*`), suffixes (`-ext-[framework]`, `-store-[backend]`, `-adapter-[name]`, `-template-[name]`); a module takes the lowest tier whose dependency budget it fits. Class I (standalone framework module) versus Class G+H (pure core plus extension) decided by the [decision test](docs/languages/js/client/client-modules.md#pure-core-with-extensions-or-a-single-framework-module). See `docs/languages/js/client/client-modules.md`
+- **Client module naming taxonomy:** runtime-tier prefixes (`js-helper-*`, `js-server-helper-*`, `js-client-helper-*`), framework-tier prefixes (`js-react-helper-*`, `js-rw-helper-*`, `js-rn-helper-*`, `js-rnw-helper-*`), suffixes (`-ext-[framework]`, `-store-[backend]`, `-adapter-[name]`, `-template-[name]`); a module takes the lowest tier whose dependency budget it fits. `js-rn-helper-*` and `js-rnw-helper-*` do not require React when the module wraps a platform native module or SDK (e.g. `react-native-mmkv`, `expo-sqlite`); the tier is earned by the platform dependency, not the framework dependency. Class I (standalone framework module) versus Class G+H (pure core plus extension) decided by the [decision test](docs/languages/js/client/client-modules.md#pure-core-with-extensions-or-a-single-framework-module). See `docs/languages/js/client/client-modules.md`
 - **React hook modules are factories, never singletons:** any `use*` function calling `Lib.React.useState`, `useRef`, or `useEffect` forces the factory pattern with `state`, because the per-consumer state a hook binds into rendering cannot be shared; hook-free pure computation modules (`js-client-helper-styler`) stay eligible for the singleton pattern. See `docs/languages/js/module-structure.md` - React Hook Modules Are Factories
 - **Repository independence:** the constitution repo (superloom) never references dependent repos' workflows or internals; dependent repos reference superloom docs freely. See `docs/ai/agent-configuration.md` - Repository Independence
 
@@ -102,7 +102,7 @@ project-superloom/                 (workspace root)
   codebase-js-helper-modules/      - all JS helper modules + publish pipeline
     src/helper-modules-core/       -   Class A/B (js-helper-*)
     src/helper-modules-server/     -   Classes B-F (js-server-helper-*)
-    src/helper-modules-client/     -   client modules (js-client-helper-*, js-react-helper-*, js-rnw-helper-*)
+    src/helper-modules-client/     -   client modules (js-client-helper-*, js-react-helper-*, js-rn-helper-*, js-rnw-helper-*)
   codebase-js-demo-project/        - reference application (model, server, ops runbook)
   __dev__/                         - personal workspace (plans/, secrets/; never committed)
   superloom.code-workspace         - multi-root workspace file
