@@ -361,36 +361,39 @@ Propagate does not run until this gate passes.
 
 Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. If a new docs section should mirror into `AGENTS.md`, extend this table first, in the same change.
 
+Actual `AGENTS.md` sections: Golden Rule callout (header), Persona, Tech Stack, Documentation Map, AI Behavior Rules, Safe Terminal Patterns, Boundaries, Directory Map, Workflow Inventory.
+
 | `docs/` source | `AGENTS.md` section |
 |---|---|
-| `docs/principles/engineering-philosophy.md` | "Core Philosophy" |
-| `docs/principles/documentation-authoring.md` | "Documentation Rules" (compressed) + the Golden Rule callout |
-| `docs/languages/js/code-formatting.md` | "Coding Standards (Mandatory)" |
-| `docs/languages/js/project-structure.md` | "Core Philosophy" + "Directory Map" |
-| `docs/languages/js/error-handling.md` | "Error Handling" |
-| `docs/languages/js/module-structure.md` | "Module Patterns" |
-| `docs/languages/js/module-classes.md` | "Module Classes" |
-| `docs/languages/js/validation.md` | "AI Behavior Rules" (type-guard primitive rule) |
-| `docs/languages/js/client/client-modules.md` | "AI Behavior Rules" (client naming taxonomy + loader-pattern rule) |
-| `docs/languages/js/publishing.md` | "Publishing" |
-| `docs/languages/js/module-thoughts-file.md` | "Standard Files Per Module" (THOUGHTS.md row) |
-| `docs/languages/js/dependencies.md` | "Dependency Hierarchy" |
-| `docs/languages/js/module-docs.md` | "README Structure" |
-| `docs/languages/js/index.md` | "Two-Form Naming Rule" |
-| `docs/languages/js/catalog-client.md` | "Client Module Patterns" |
-| `docs/languages/js/server/*` | "Server Layer Rules" |
-| `docs/languages/js/testing-strategy.md`, `unit-test-authoring.md`, `module-testing.md` | "Testing" |
-| `docs/languages/js/pitfalls-migration.md` | "Two-pass check" reference |
-| `docs/ai/agent-configuration.md` | "AI Behavior Rules" (the size budget rule lives there) |
-| `docs/ai/workflow-authoring.md` | Workflow inventory descriptions |
-| `docs/ai/model-tiering.md` | Session and token discipline lines |
-| `docs/dev/pitfalls.md` | "Safe Terminal Patterns" + entry-specific callouts |
-| `docs/dev/testing-local-modules.md` | "Module testing contract" |
-| `docs/dev/cicd-publishing.md` | "Publish-job CI rules" |
-| `docs/dev/planning.md` | "At session start" line |
-| `docs/dev/org-structure.md` | "Directory Map" |
-| `docs/languages/js/versioning/bump-checklist.md` | "Version and Publish" |
-| `docs/languages/js/versioning/dependency-management.md` | "Dependency Management" |
+| `docs/principles/engineering-philosophy.md` | Persona + Golden Rule callout |
+| `docs/principles/documentation-authoring.md` | Golden Rule callout + AI Behavior Rules (docs-never-reference-plans rule) |
+| `docs/principles/testing.md` | AI Behavior Rules (assertions pin exact values) |
+| `docs/languages/js/code-formatting.md` | AI Behavior Rules (step comments, two-pass check) |
+| `docs/languages/js/project-structure.md` | Directory Map |
+| `docs/languages/js/error-handling.md` | AI Behavior Rules (error envelope patterns folded into module-structure rules) |
+| `docs/languages/js/module-structure.md` | AI Behavior Rules (skeleton conformance, hook factories) |
+| `docs/languages/js/module-classes.md` | AI Behavior Rules (client naming taxonomy references classes) + Documentation Map |
+| `docs/languages/js/validation.md` | AI Behavior Rules (type-guard primitive rule) |
+| `docs/languages/js/client/client-modules.md` | AI Behavior Rules (client naming taxonomy + loader-pattern rule) |
+| `docs/languages/js/publishing.md` | Boundaries / Never (publish is CI-only) |
+| `docs/languages/js/module-thoughts-file.md` | Directory Map (THOUGHTS.md in standard files list) |
+| `docs/languages/js/dependencies.md` | AI Behavior Rules (peer dependencies declare full runtime contract) |
+| `docs/languages/js/module-docs.md` | Directory Map (standard files per module list) |
+| `docs/languages/js/index.md` | AI Behavior Rules (two-form naming rule) |
+| `docs/languages/js/catalog-client.md` | AI Behavior Rules (client naming taxonomy) |
+| `docs/languages/js/server/*` | Documentation Map (server/ listed in key files) |
+| `docs/languages/js/testing-strategy.md`, `unit-test-authoring.md`, `module-testing.md` | AI Behavior Rules (run tests, assertions pin exact values) + Safe Terminal Patterns (module testing contract) |
+| `docs/languages/js/pitfalls-migration.md` | AI Behavior Rules (two-pass check reference) |
+| `docs/languages/js/versioning/bump-checklist.md` | Boundaries / Never (publish is CI-only) + Safe Terminal Patterns (pre-publish gate) |
+| `docs/languages/js/versioning/dependency-management.md` | AI Behavior Rules (peer dependencies rule) |
+| `docs/ai/agent-configuration.md` | Golden Rule callout (size budget) + AI Behavior Rules (repository independence) |
+| `docs/ai/workflow-authoring.md` | Workflow Inventory (descriptions + authoring standard) |
+| `docs/ai/model-tiering.md` | Workflow Inventory (model-tier split line) |
+| `docs/dev/pitfalls.md` | Safe Terminal Patterns (all entries) |
+| `docs/dev/testing-local-modules.md` | Safe Terminal Patterns (module testing contract) |
+| `docs/dev/cicd-publishing.md` | Safe Terminal Patterns (CI chained publishes) |
+| `docs/dev/planning.md` | AI Behavior Rules (at session start) |
+| `docs/dev/org-structure.md` | Directory Map |
 | `docs/ops/**` | (referenced as "see ops/" - not embedded) |
 
 ### P2 - Session Diff and Full-Doc Audit
