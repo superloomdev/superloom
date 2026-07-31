@@ -26,7 +26,7 @@ export GITHUB_READ_PACKAGES_TOKEN=<your token>
 
 ## Running Tests
 
-All module tests live in `_test/` inside the module directory. Always run commands from `_test/` -- never from the module root or the repo root.
+All module tests live in `_test/` inside the module directory. Always run commands from `_test/` - never from the module root or the repo root.
 
 ### Step 1: Install dependencies
 
@@ -48,9 +48,9 @@ npm test
 
 That is all. For modules with Docker dependencies, `npm test` manages the full container lifecycle automatically via `pretest` and `posttest`:
 
-1. `pretest` -- tears down any leftover container and starts a fresh one, waiting for the healthcheck to pass before proceeding
-2. `test` -- runs the Node.js test suite
-3. `posttest` -- tears down the container and removes its volumes
+1. `pretest` - tears down any leftover container and starts a fresh one, waiting for the healthcheck to pass before proceeding
+2. `test` - runs the Node.js test suite
+3. `posttest` - tears down the container and removes its volumes
 
 **Never start Docker containers manually before running `npm test`.** `pretest` runs `docker compose down` first; a manually started container will conflict on port allocation or be deleted mid-run.
 
@@ -98,7 +98,7 @@ The failure mode that produced this rule is journaled in [`pitfalls.md` → CI/C
 
 ## Test Patterns You'll Encounter
 
-Most modules follow the Docker-backed pattern above. A few use other patterns that are equally valid -- knowing which is which prevents wasted debugging time.
+Most modules follow the Docker-backed pattern above. A few use other patterns that are equally valid - knowing which is which prevents wasted debugging time.
 
 ### Pattern: Real in-process server (Express adapter)
 
@@ -110,11 +110,11 @@ Why this matters: it caught **Express 5 dropping the `?` optional-parameter rout
 
 `js-server-helper-http-gateway-adapter-aws-apigateway` runs against 23 real API Gateway v2.0 event JSONs stored in `_test/fixtures/`. Six are copied verbatim from `aws/aws-lambda-go events/testdata` (the AWS SDK's own test inputs); 17 are hand-written for scenarios AWS does not publish.
 
-No Docker, no AWS SDK, no SAM, no LocalStack. Each fixture is loaded via `fs.readFileSync` and piped through the adapter. When you see `_test/fixtures/*.json`, this is the pattern. Adding a new scenario means adding a new JSON file -- no extra test boilerplate.
+No Docker, no AWS SDK, no SAM, no LocalStack. Each fixture is loaded via `fs.readFileSync` and piped through the adapter. When you see `_test/fixtures/*.json`, this is the pattern. Adding a new scenario means adding a new JSON file - no extra test boilerplate.
 
 ### Pattern: In-process stub adapter (gateway module itself)
 
-`js-server-helper-http-gateway` ships with an in-process stub adapter (`_test/stub-adapter.js`) that satisfies the 3-method adapter contract with fixed outputs. The stub is not a simulation of any real runtime -- it exists only to let the gateway exercise its own logic in isolation. Real-runtime coverage lives in the two adapter packages above.
+`js-server-helper-http-gateway` ships with an in-process stub adapter (`_test/stub-adapter.js`) that satisfies the 3-method adapter contract with fixed outputs. The stub is not a simulation of any real runtime - it exists only to let the gateway exercise its own logic in isolation. Real-runtime coverage lives in the two adapter packages above.
 
 ---
 
@@ -176,13 +176,13 @@ Each module's `_test/docker-compose.yml` defines its own healthcheck. `docker co
 
 ### Principles
 
-1. **Probe the application protocol, not the process.** `java -version`, `process exists`, or `port open` only confirm the binary started -- not that it can serve requests. Use `pg_isready`, `mongosh rs.status()`, an HTTP request that returns a body, or a query against the test schema.
+1. **Probe the application protocol, not the process.** `java -version`, `process exists`, or `port open` only confirm the binary started - not that it can serve requests. Use `pg_isready`, `mongosh rs.status()`, an HTTP request that returns a body, or a query against the test schema.
 
 2. **Probe with the credentials and database the tests will use.** A healthcheck that authenticates as `root` against a server that is still creating `test_user` is a false positive. Probe as `test_user` against `test_db`. The check then implicitly confirms init has completed.
 
 3. **Use TCP (`127.0.0.1`), not the local socket (`localhost`).** Tests connect from outside the container over TCP. A healthcheck that succeeds via Unix socket can pass while TCP listening is still being set up. Match the transport the tests use.
 
-4. **The healthcheck must work on the slowest CI runner you target.** Set `interval`, `timeout`, `retries`, and `start_period` so the total budget covers a cold-pull, cold-start initialization on a constrained runner -- not just a warm Docker Desktop on the developer's laptop. A healthcheck that passes locally and times out in CI is the same as no healthcheck.
+4. **The healthcheck must work on the slowest CI runner you target.** Set `interval`, `timeout`, `retries`, and `start_period` so the total budget covers a cold-pull, cold-start initialization on a constrained runner - not just a warm Docker Desktop on the developer's laptop. A healthcheck that passes locally and times out in CI is the same as no healthcheck.
 
 5. **`--wait` plus a real healthcheck is sufficient. Sleeps are not.** If you find yourself adding `&& sleep 5` after `docker compose up -d --wait`, the healthcheck is wrong. Fix the healthcheck.
 
@@ -190,11 +190,11 @@ Each module's `_test/docker-compose.yml` defines its own healthcheck. `docker co
 
 The official `mysql:8` image runs init in two phases:
 
-1. Start `mysqld` in temporary mode -- only `root` exists.
+1. Start `mysqld` in temporary mode - only `root` exists.
 2. Apply config, create `test_user`, create `test_db`.
 3. **Stop and restart `mysqld`** in normal mode.
 
-A healthcheck of `mysqladmin ping -u root` passes during step 1. `--wait` returns. Tests start connecting as `test_user`. Step 3 then drops every live connection with `PROTOCOL_CONNECTION_LOST`. The fix is to probe with `test_user`, which is created at the end of step 2 -- the check then succeeds only after init is genuinely complete.
+A healthcheck of `mysqladmin ping -u root` passes during step 1. `--wait` returns. Tests start connecting as `test_user`. Step 3 then drops every live connection with `PROTOCOL_CONNECTION_LOST`. The fix is to probe with `test_user`, which is created at the end of step 2 - the check then succeeds only after init is genuinely complete.
 
 This pattern (an artifact created late in init that the test relies on) generalizes. Every database image has a similar sequence somewhere; design the healthcheck around it.
 
@@ -202,7 +202,7 @@ This pattern (an artifact created late in init that the test relies on) generali
 
 ## Test Concurrency (Mandatory for Stateful Modules)
 
-The Node.js built-in test runner runs top-level `describe()` blocks **concurrently** by default. Within a single test file, this means setup hooks (`before`/`after`) and tests from different `describe` blocks interleave -- including their first calls into the module under test.
+The Node.js built-in test runner runs top-level `describe()` blocks **concurrently** by default. Within a single test file, this means setup hooks (`before`/`after`) and tests from different `describe` blocks interleave - including their first calls into the module under test.
 
 For a module that uses lazy initialization (a connection pool, an AWS SDK client, a singleton adapter), concurrent first-calls race each other. The first parallel `before` may create a half-initialized resource that the second `before` then reuses incorrectly. Symptoms range from "test did not finish before its parent and was cancelled" to spurious connection errors.
 

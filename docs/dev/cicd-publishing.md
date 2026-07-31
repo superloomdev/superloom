@@ -24,9 +24,9 @@ How helper modules are tested on every push and published to GitHub Packages. Th
 
 A single unified workflow (`.github/workflows/ci-helper-modules.yml`) handles everything:
 
-1. **`detect`** -- inspects the commit and the registry to decide which modules need testing and which need publishing
-2. **`test-*`** (per-module) -- runs lint and tests on every push and PR for any module the detect job marks
-3. **`publish-*`** (per-module) -- runs only on `main` pushes for modules the detect job marks as needing publish; includes a registry safety-net that skips if the version is already published
+1. **`detect`** - inspects the commit and the registry to decide which modules need testing and which need publishing
+2. **`test-*`** (per-module) - runs lint and tests on every push and PR for any module the detect job marks
+3. **`publish-*`** (per-module) - runs only on `main` pushes for modules the detect job marks as needing publish; includes a registry safety-net that skips if the version is already published
 
 No manual tokens are required. The `GITHUB_TOKEN` is created automatically by GitHub Actions for every workflow run and expires when the workflow finishes.
 
@@ -46,8 +46,8 @@ The detect job answers two questions:
 
 **`publish_modules`** is the set of modules whose `package.json` `version` is not currently published. This subsumes both:
 
-- **Steady-state version bumps** -- the new version is by definition not yet on the registry, so it gets published
-- **Fresh-state recovery** -- if the registry has been wiped (or never populated), every module's current version is "not published" and all of them get republished
+- **Steady-state version bumps** - the new version is by definition not yet on the registry, so it gets published
+- **Fresh-state recovery** - if the registry has been wiped (or never populated), every module's current version is "not published" and all of them get republished
 
 The publish job retains a per-job safety-net that calls `npm view` again immediately before `npm publish`, so a redundant publish attempt (e.g., due to a transient registry error during detect) never overwrites a real version.
 
@@ -241,7 +241,7 @@ When you hit a new CI failure: reproduce it, confirm the root cause, then add an
 
 ## Why Not Fine-grained PAT for Publishing
 
-GitHub fine-grained PATs do not currently include `read:packages` or `write:packages` permissions in the UI. This is a known GitHub limitation -- there is no package permission under any other category for fine-grained PATs.
+GitHub fine-grained PATs do not currently include `read:packages` or `write:packages` permissions in the UI. This is a known GitHub limitation - there is no package permission under any other category for fine-grained PATs.
 
 For publishing, we use the CI/CD approach exclusively:
 

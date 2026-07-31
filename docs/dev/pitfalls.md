@@ -362,7 +362,7 @@ Each entry below maps a CI symptom to its root cause and the durable fix. The si
 
 **Cause:** A workflow step started a container with `docker run -d --name foo -p 127.0.0.1:NNNN:NNNN ...` before the test step ran `npm test`. `pretest` then runs `docker compose down -v` (which does not touch the standalone container) followed by `docker compose up -d --wait`, which collides on the same port.
 
-**Lesson:** Pick one owner of the Docker lifecycle. `pretest` already owns it both locally and in CI. Do not duplicate it with a workflow-level `docker run` step or a `services:` declaration that targets the same port -- pick one and remove the other.
+**Lesson:** Pick one owner of the Docker lifecycle. `pretest` already owns it both locally and in CI. Do not duplicate it with a workflow-level `docker run` step or a `services:` declaration that targets the same port - pick one and remove the other.
 
 ### 2. `PROTOCOL_CONNECTION_LOST` only in CI
 
@@ -372,13 +372,13 @@ Each entry below maps a CI symptom to its root cause and the durable fix. The si
 
 ### 3. Push triggers tests but not publish, even though `version` was bumped
 
-**Cause (historical):** The previous detect logic compared `HEAD~1:package.json` to `HEAD:package.json`. After a force-push or a reset that left the version the same on both sides, the diff was empty and publish was skipped -- even when the registry did not have the package.
+**Cause (historical):** The previous detect logic compared `HEAD~1:package.json` to `HEAD:package.json`. After a force-push or a reset that left the version the same on both sides, the diff was empty and publish was skipped - even when the registry did not have the package.
 
 **Fix:** The detect job now uses `npm view <name>@<version>` to ask the registry directly. If the version is missing, publish is scheduled regardless of git history.
 
 ### 4. CI runs tests for every module on every commit
 
-**Cause:** `test_modules` was incorrectly populated -- typically because the regex used `\w+` instead of `[\w-]+` and matched module paths greedily, or because someone pushed a single commit that touched every module's `package.json`.
+**Cause:** `test_modules` was incorrectly populated - typically because the regex used `\w+` instead of `[\w-]+` and matched module paths greedily, or because someone pushed a single commit that touched every module's `package.json`.
 
 **Lesson:** Keep the path regex hyphen-aware: `src/helper-modules-[\w-]+/js-[\w-]+`. If a single commit truly does touch every module (e.g., a sweep), wide test coverage is the correct outcome.
 
@@ -400,7 +400,7 @@ Each entry below maps a CI symptom to its root cause and the durable fix. The si
 
 **Cause:** The CI step ran `npm install` from the wrong directory (typically the module root instead of `_test/`). Each `_test/` directory has its own `package.json` with its own dependency tree. The repo-root `package.json` does not declare the test deps.
 
-**Lesson:** In CI, set `working-directory:` to the module root and use `cd _test && npm install && npm test` for the test step. The same rule applies locally -- always pass `Cwd` to `_test/` for AI agents and scripts.
+**Lesson:** In CI, set `working-directory:` to the module root and use `cd _test && npm install && npm test` for the test step. The same rule applies locally - always pass `Cwd` to `_test/` for AI agents and scripts.
 
 ### 8. CI test fails with `MODULE_NOT_FOUND` for a helper that exists in the repo
 
@@ -428,7 +428,7 @@ run: |
 "
 ```
 
-YAML block scalars (`|`) require every non-empty line to be indented at least to the block's indent level. The closing `"` on its own line had zero leading spaces -- less than the block's indent -- which terminates the block scalar early and fails YAML parsing.
+YAML block scalars (`|`) require every non-empty line to be indented at least to the block's indent level. The closing `"` on its own line had zero leading spaces - less than the block's indent - which terminates the block scalar early and fails YAML parsing.
 
 **Lesson:** Never embed a literal newline inside a bash string assignment within a YAML `run: |` block. Use bash's `$'\n'` escape (or `printf '%s\n'`, or a bash array) so every line of YAML respects the block's indentation:
 
@@ -635,7 +635,7 @@ Each entry below maps a symptom to its root cause and the durable fix. The sibli
 
 **Cause:** `npm install` ran from the repo root or the module root instead of `_test/`. Each `_test/` directory has its own `package.json` with a different dependency tree.
 
-**Lesson:** Always `cd` into `_test/` first. Tools that automate this (AI agents, scripts) must always pass `Cwd` explicitly to the `_test/` directory -- omitting it silently runs from the repo root.
+**Lesson:** Always `cd` into `_test/` first. Tools that automate this (AI agents, scripts) must always pass `Cwd` explicitly to the `_test/` directory - omitting it silently runs from the repo root.
 
 ```bash
 # Wrong: from the module root
@@ -647,7 +647,7 @@ npm install && npm test
 
 ### 2. `MODULE_NOT_FOUND` for a package that should be installed
 
-**Cause:** A `require()` in the test uses the wrong scoped package name -- typically missing the category prefix (`@superloomdev/js-server-helper-postgres` instead of `@superloomdev/js-server-helper-sql-postgres`).
+**Cause:** A `require()` in the test uses the wrong scoped package name - typically missing the category prefix (`@superloomdev/js-server-helper-postgres` instead of `@superloomdev/js-server-helper-sql-postgres`).
 
 **Lesson:** The npm package name must match the full directory name, including every category prefix. Grep for the bare name (`grep -r "js-server-helper-postgres" _test/`) before assuming the install is broken.
 
@@ -655,7 +655,7 @@ npm install && npm test
 
 **Symptom:** `Bind for 127.0.0.1:NNNN failed: port is already allocated`, or tests fail immediately with `ECONNRESET` / `socket hang up`, many tests cancelled.
 
-**Cause:** `pretest` runs `docker compose down -v --remove-orphans` first. That command only manages containers from its own compose project name -- it does not touch a manually started container. Then `docker compose up` tries to bind the same port and fails. (The same conflict exists in CI when a workflow step runs `docker run` ahead of `npm test`.)
+**Cause:** `pretest` runs `docker compose down -v --remove-orphans` first. That command only manages containers from its own compose project name - it does not touch a manually started container. Then `docker compose up` tries to bind the same port and fails. (The same conflict exists in CI when a workflow step runs `docker run` ahead of `npm test`.)
 
 **Lesson:** Pick one owner of the Docker lifecycle. `pretest` already owns it. Locally and in CI, never run a separate `docker run` or `docker compose up` for the same service before `npm test`.
 
@@ -705,7 +705,7 @@ docker compose down -v --remove-orphans
 
 **Cause:** No AWS credentials are passed to the SDK. The SDK walks the default credential provider chain: env vars -> shared config file -> EC2/ECS instance metadata (`http://169.254.169.254`). On a developer machine and on a GitHub Actions runner there is no instance metadata service, so the chain times out. The 1-2 second test duration is the metadata-service connection timeout.
 
-**Lesson:** Every test that uses an AWS SDK client must inject dummy credentials, even when no real network call is made (URL signing, command construction, etc.). The dummies do not need to be valid -- they just need to exist so the SDK does not enter the default-chain code path.
+**Lesson:** Every test that uses an AWS SDK client must inject dummy credentials, even when no real network call is made (URL signing, command construction, etc.). The dummies do not need to be valid - they just need to exist so the SDK does not enter the default-chain code path.
 
 The canonical pattern is to set them in the `test` script of `_test/package.json`:
 
@@ -832,7 +832,7 @@ contains(fromJSON(needs.detect.outputs.test_modules), 'src/helper-modules-server
 
 1. Always wrap the output with `fromJSON()` to convert the JSON string back to an actual array
 2. Use the **full path** (including `src/` prefix) in the match string to ensure exact matching
-3. Never rely on `contains()` with a JSON string directly -- it performs substring matching on the serialized JSON, not element matching on the array
+3. Never rely on `contains()` with a JSON string directly - it performs substring matching on the serialized JSON, not element matching on the array
 
 This applies to any job condition checking against detect outputs:
 
