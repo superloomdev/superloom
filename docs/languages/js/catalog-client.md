@@ -1,18 +1,19 @@
 # Client Helper Modules
 
-Modules designed for browser-side use. These live in `src/helper-modules-client/` and ship code that runs in browsers, React Native, or any JavaScript environment.
+Modules designed for client-side use. These live in `src/helper-modules-client/` and ship code that runs in browsers, React Native, or any JavaScript client environment.
 
 ---
 
-## The Three Types
+## The Four Types
 
-Client helper modules come in three flavors:
+Client helper modules come in four flavors:
 
 | Type | Pattern | Example | Dependencies |
 |---|---|---|---|
 | **Universal core** | Pure JavaScript, no framework | `js-client-helper-crypto` | None |
 | **Framework extension** | Binds parent to React/Vue/Angular | `js-client-helper-styler-ext-react` | Parent module + React |
 | **Standalone framework module** | Framework-bound, no pure parent | `js-react-helper-idle` | React (injected) |
+| **Driver wrapper** | Wraps a storage engine, unified API | `js-client-helper-kv-localstorage` | Engine (injected) |
 
 ---
 
@@ -48,6 +49,26 @@ Framework-bound modules with no pure parent. These are Class I modules: they dep
 - `js-react-helper-timer` - Countdown and interval hooks
 
 **Documentation:** Standard factory pattern: `README.md` + `docs/api.md` + `docs/configuration.md` + `ROBOTS.md`. See [`module-classes.md`](./module-classes.md#class-i-framework-module) for the full Class I definition.
+
+---
+
+## Driver Wrapper Modules
+
+Client-side Class C modules that wrap a third-party storage engine and present a unified API across backends. The engine is injected via `shared_libs`; the module is constructed per loader call (factory pattern). See [`module-classes.md`](./module-classes.md#class-c-driver-wrapper) for the full Class C definition.
+
+**Characteristics:**
+- Wraps a platform-native or browser storage engine (Web Storage, MMKV, SQLite)
+- Engine arrives by injection (`shared_libs.WebStorage`, `shared_libs.MMKV`) or is resolved from the global environment
+- Same-signature modules over different engines are swapped at the loader by platform, not by adapter
+- Takes the lowest tier whose dependency budget it fits: `js-client-helper-*` for browser APIs, `js-rn-helper-*` for RN runtime modules
+
+**Examples:**
+- `js-client-helper-kv-localstorage` - Key-value store over browser Web Storage (localStorage/sessionStorage)
+- `js-rn-helper-kv-mmkv` - Key-value store over `react-native-mmkv` (JSI, mmap-backed)
+
+Both KV modules export the same 18-function API surface (9 sync + 9 async) so an application can swap between them at the loader level based on platform.
+
+**Documentation:** Standard driver pattern: `README.md` + `docs/api.md` + `docs/configuration.md` + `ROBOTS.md`.
 
 ---
 

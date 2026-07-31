@@ -131,7 +131,6 @@ Class C is not limited to server-side drivers. A client-side module that wraps a
 | `js-server-helper-nosql-mongodb` | `@superloomdev/js-server-helper-nosql-mongodb` | `mongodb` (native driver) |
 | `js-client-helper-kv-localstorage` | `@superloomdev/js-client-helper-kv-localstorage` | Browser Web Storage (localStorage/sessionStorage) |
 | `js-rn-helper-kv-mmkv` | `@superloomdev/js-rn-helper-kv-mmkv` | `react-native-mmkv` (JSI, mmap-backed) |
-| `js-rnw-helper-sql-expo-sqlite` | `@superloomdev/js-rnw-helper-sql-expo-sqlite` | `expo-sqlite` (local SQLite via Expo SDK) |
 
 ---
 
