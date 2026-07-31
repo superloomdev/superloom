@@ -276,7 +276,7 @@ See `js-server-helper-nosql-aws-dynamodb/_test/loader.js` for the reference impl
 
 ## Adding Tests to a New Module
 
-Before writing tests, identify each external dependency the module has (storage backend, runtime adapter, cloud SDK) and decide which test double pattern to use for each. See [Test Double Patterns](unit-test-authoring.md#test-double-patterns-memory-store-vs-stub-adapter) in the unit-test authoring guide - the two patterns (`memory-store` and `stub-adapter`) are not mutually exclusive and a module may need both.
+Before writing tests, identify each external dependency the module has (storage backend, runtime adapter, cloud SDK, storage engine) and decide which test double pattern to use for each. See [Test Double Patterns](unit-test-authoring.md#test-double-patterns-memory-store-vs-stub-adapter-vs-engine-stub) in the unit-test authoring guide - the three patterns (`memory-store`, `stub-adapter`, `engine-stub`) are not mutually exclusive and a module may need several.
 
 1. Create `_test/` directory in the module
 2. Create `_test/loader.js` - reads env vars, builds `Lib` container
@@ -303,7 +303,7 @@ Framework modules (Class H extensions and Class I standalone framework modules) 
 | `js-react-helper-*` (Class I) | `shared_libs.React` | Real `react` + `react-test-renderer` from `node_modules` - no stub needed |
 | `js-rnw-helper-*` (Class I) | `shared_libs.React`, `shared_libs.ExpoFont`, etc. | Real `react` + `react-test-renderer`; Expo APIs are stub objects with the surface the module calls (e.g. `{ useFonts: () => [true] }`) |
 | `js-client-helper-*-ext-react` (Class H) | `shared_libs.React`, `shared_libs.Styler` (or other parent) | Real `react` + `react-test-renderer`; parent module loaded from registry or `file:../` |
-| `js-client-helper-kv-*` (Class C) | `shared_libs.WebStorage` or `shared_libs.MMKV` | Engine stub in `_test/` implementing the engine's native interface (Web Storage or MMKV); see `engine-stub` pattern in [`unit-test-authoring.md`](unit-test-authoring.md#pattern-3-engine-stub-an-engine-fake) |
+| `js-client-helper-kv-*` / `js-rn-helper-kv-*` (Class C) | `shared_libs.WebStorage` or `shared_libs.MMKV` | Engine stub in `_test/` implementing the engine's native interface (Web Storage or MMKV); see `engine-stub` pattern in [`unit-test-authoring.md`](unit-test-authoring.md#pattern-3-engine-stub-an-engine-fake) |
 
 ### Test Loader Shape
 

@@ -13,7 +13,7 @@ The complete rule set for writing unit tests. Follow it exactly and any reviewer
 - [How to Write Tests for a New Module](#how-to-write-tests-for-a-new-module-step-by-step)
 - [Reference - Assertion Methods](#reference-assertion-methods)
 - [Reference - Test Output](#reference-test-output)
-- [Test Double Patterns: memory-store vs stub-adapter vs engine-stub](#test-double-patterns-memory-store-vs-stub-adapter)
+- [Test Double Patterns: memory-store vs stub-adapter vs engine-stub](#test-double-patterns-memory-store-vs-stub-adapter-vs-engine-stub)
 - [Config Absorption Contract](#config-absorption-contract)
 
 ---
