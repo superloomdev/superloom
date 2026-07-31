@@ -90,8 +90,11 @@ Evidence required:
 
 - Count of Markdown links scanned in blast-radius files.
 - File existence result for every relative file link.
-- Anchor existence result for every `path#anchor` link.
+- Anchor existence result for every cross-file `path#anchor` link **and** every same-file bare `#fragment` link, including a file's own `On This Page` list.
+- Anchor checks compare against slugs derived from the target file's actual headings (lowercase, punctuation and backticks stripped, spaces to hyphens). Renaming a heading invalidates every inbound anchor including those in the same file.
 - Count of absolute local path links.
+
+> A successful website build is not evidence for this pass. VitePress does not fail on unresolved same-file fragments, so anchors must be verified by slug comparison.
 
 Rules (source: `docs/principles/documentation-authoring.md` - Path Portability):
 
@@ -363,6 +366,8 @@ Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. If a new doc
 
 Actual `AGENTS.md` sections: Golden Rule callout (header), Persona, Tech Stack, Documentation Map, AI Behavior Rules, Safe Terminal Patterns, Boundaries, Directory Map, Workflow Inventory.
 
+**A row must name the section that carries the compressed rule.** A filename appearing in the Documentation Map table is a pointer, not a mirror. Sources whose content is deliberately not compressed into `AGENTS.md` are marked `not mirrored (reference material)` so P3 does not treat them as satisfied. Never invent a mirror location to make a row look complete.
+
 | `docs/` source | `AGENTS.md` section |
 |---|---|
 | `docs/principles/engineering-philosophy.md` | Persona + Golden Rule callout |
@@ -370,18 +375,18 @@ Actual `AGENTS.md` sections: Golden Rule callout (header), Persona, Tech Stack, 
 | `docs/principles/testing.md` | AI Behavior Rules (assertions pin exact values) |
 | `docs/languages/js/code-formatting.md` | AI Behavior Rules (step comments, two-pass check) |
 | `docs/languages/js/project-structure.md` | Directory Map |
-| `docs/languages/js/error-handling.md` | AI Behavior Rules (error envelope patterns folded into module-structure rules) |
+| `docs/languages/js/error-handling.md` | AI Behavior Rules (three-category error disposal + wrapper purity + service translation) |
 | `docs/languages/js/module-structure.md` | AI Behavior Rules (skeleton conformance, hook factories) |
-| `docs/languages/js/module-classes.md` | AI Behavior Rules (client naming taxonomy references classes) + Documentation Map |
+| `docs/languages/js/module-classes.md` | not mirrored (reference material; class definitions and per-class doc footprints are looked up, not memorized) |
 | `docs/languages/js/validation.md` | AI Behavior Rules (type-guard primitive rule) |
 | `docs/languages/js/client/client-modules.md` | AI Behavior Rules (client naming taxonomy + loader-pattern rule) |
 | `docs/languages/js/publishing.md` | Boundaries / Never (publish is CI-only) |
 | `docs/languages/js/module-thoughts-file.md` | Directory Map (THOUGHTS.md in standard files list) |
 | `docs/languages/js/dependencies.md` | AI Behavior Rules (peer dependencies declare full runtime contract) |
-| `docs/languages/js/module-docs.md` | Directory Map (standard files per module list) |
+| `docs/languages/js/module-docs.md` | Directory Map (standard files per module line) |
 | `docs/languages/js/index.md` | AI Behavior Rules (two-form naming rule) |
-| `docs/languages/js/catalog-client.md` | AI Behavior Rules (client naming taxonomy) |
-| `docs/languages/js/server/*` | Documentation Map (server/ listed in key files) |
+| `docs/languages/js/catalog-client.md` | not mirrored (reference material; the naming taxonomy rule is sourced from `client/client-modules.md`) |
+| `docs/languages/js/server/*` | not mirrored (reference material; server layer contracts are looked up per task) |
 | `docs/languages/js/testing-strategy.md`, `unit-test-authoring.md`, `module-testing.md` | AI Behavior Rules (run tests, assertions pin exact values) + Safe Terminal Patterns (module testing contract) |
 | `docs/languages/js/pitfalls-migration.md` | AI Behavior Rules (two-pass check reference) |
 | `docs/languages/js/versioning/bump-checklist.md` | Boundaries / Never (publish is CI-only) + Safe Terminal Patterns (pre-publish gate) |
@@ -411,6 +416,7 @@ P2 catches drift. This step catches omissions: rules that exist in `docs/` but h
 2. Every inventory item carries `source file:line`.
 3. For each item, search `AGENTS.md` for a compressed rule preserving both condition and conclusion. A conclusion without its condition is not mirrored.
 4. Add each missing compressed rule to the correct `AGENTS.md` section (or report `would update` in `check` mode).
+5. Sources whose Section Map row reads `not mirrored (reference material)` are skipped, but the skip is reported with a count. A row is never relabelled `not mirrored` to clear a finding; that decision is the user's.
 
 Output:
 
@@ -538,6 +544,8 @@ New failure modes found during a run must be added here. If no pass catches the 
 | Concept renamed but old references remain | Pass 1 |
 | Concept removed but references remain | Pass 1 and Pass 8 |
 | Heading renamed and inbound anchors break | Pass 2 |
+| Heading renamed and the file's own `On This Page` anchor breaks | Pass 2 |
+| Green website build accepted as anchor evidence | Pass 2 (build is explicitly not evidence) |
 | Local filesystem path appears in published docs | Pass 2 |
 | Summary table and detailed section disagree | Pass 3 |
 | Concept gains subtype but general docs mention only old subtype | Pass 4 |
@@ -553,5 +561,8 @@ New failure modes found during a run must be added here. If no pass catches the 
 | Workflow embedded block drifted from its source | Pass 12 |
 | `AGENTS.md` edited outside Phase P | Phase 0 Blocker |
 | `AGENTS.md` missing a source-doc rule | P3 |
+| Section Map row names a section that does not exist in `AGENTS.md` | P1 (row must name a real section) |
+| Section Map row names a real section but the rule is not actually there | P1 (a Documentation Map filename is a pointer, not a mirror) |
+| Section Map row relabelled `not mirrored` to clear a P3 finding | P3 step 5 (user decision, not the agent's) |
 | `AGENTS.md` over the size budget | P4 |
 | Sibling-repo AGENTS.md copy diverged | P6 |

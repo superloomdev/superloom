@@ -17,6 +17,7 @@
   - [Test-environment pitfalls](#test-environment-pitfalls)
   - [File-tool vs terminal pitfalls](#file-tool-vs-terminal-pitfalls)
   - [Auto-run / safety pitfalls](#auto-run--safety-pitfalls)
+  - [Verification-integrity pitfalls](#verification-integrity-pitfalls)
 - [CI/CD Publishing](#cicd-publishing)
 - [Local Module Testing](#local-module-testing)
 - [Adding a New Entry](#adding-a-new-entry)
@@ -322,6 +323,34 @@ Same root cause as S1. Always use `write_to_file` or `edit` instead.
 **Symptom:** A pre-existing `.env` file gets overwritten and the developer loses their local credentials.
 
 **Fix:** The agent's allowed write locations are spelled out in `AGENTS.md` "Boundaries". `.env` is in the **Never** category (except `__dev__/.env`, which is the user's personal workspace). For new env keys, update `.env.example` files only.
+
+### Verification-integrity pitfalls
+
+Failures where the agent's *report* is wrong rather than its code. These are the most expensive class because they consume the user's trust in every other claim.
+
+#### V1. Reporting a gate as passed without running it
+
+**Symptom:** The agent states a validation workflow is complete ("`/finalize-docs` converged", "docs verified") after having only made edits and run one adjacent command. A later audit finds defects the gate's own passes were designed to catch.
+
+**Cause:** Substituting a cheap proxy signal for the gate. A green website build gets treated as evidence for link integrity, terminology consistency, and rule mirroring, none of which it tests.
+
+**Fix:** A gate is passed only when its steps were individually executed and each produced its required evidence. If the passes were not run, the report says so. Name the specific commands and file reads that produced each count. When a workflow demands per-pass evidence, an unproduced count is a failed pass, not an assumed one.
+
+#### V2. Inventing a plausible mapping to close a finding
+
+**Symptom:** Asked to fix a table row that pointed at a non-existent target, the agent wrote a different target that exists, with a parenthetical implying the content lives there. It did not. The visible error became an invisible false assertion.
+
+**Cause:** Optimizing for a row that looks resolved instead of one that is true. A vague parenthetical ("folded into the X rules") reads as authoritative and survives review.
+
+**Fix:** Read the destination and confirm the content is actually present before asserting a mapping. When the honest answer is "not represented anywhere", write that; an explicit gap is a working input to the next gate, while a fabricated mapping silently suppresses it. Applies to any derived-artifact index: section maps, coverage tables, traceability matrices.
+
+#### V3. Green build accepted as anchor evidence
+
+**Symptom:** Renamed a heading, updated its inbound cross-file link, left the same-file `On This Page` anchor stale. The site built clean three times.
+
+**Cause:** VitePress does not fail on unresolved same-file fragments, so the build cannot detect them.
+
+**Fix:** Verify anchors by deriving slugs from the target file's actual headings and comparing, including a file's own table of contents. Renaming a heading invalidates every inbound anchor, and the ones in the same file are the easiest to miss.
 
 ---
 

@@ -22,7 +22,6 @@ Every Superloom helper module belongs to one of nine classes. The class determin
 - [Class H. Extension](#class-h-extension)
 - [Class I. Framework Module](#class-i-framework-module)
 - [Documentation Status Matrix](#documentation-status-matrix)
-- [Migration Priority](#migration-priority)
 
 ---
 
