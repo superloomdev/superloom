@@ -13,7 +13,7 @@ The complete rule set for writing unit tests. Follow it exactly and any reviewer
 - [How to Write Tests for a New Module](#how-to-write-tests-for-a-new-module-step-by-step)
 - [Reference - Assertion Methods](#reference-assertion-methods)
 - [Reference - Test Output](#reference-test-output)
-- [Test Double Patterns: memory-store vs stub-adapter](#test-double-patterns-memory-store-vs-stub-adapter)
+- [Test Double Patterns: memory-store vs stub-adapter vs engine-stub](#test-double-patterns-memory-store-vs-stub-adapter)
 - [Config Absorption Contract](#config-absorption-contract)
 
 ---
@@ -223,9 +223,9 @@ Each function is a suite. Each `it()` is a test. All results are visible in the 
 
 ---
 
-## Test Double Patterns: memory-store vs stub-adapter
+## Test Double Patterns: memory-store vs stub-adapter vs engine-stub
 
-When a module under test depends on an external contract (a storage backend, a runtime adapter, a third-party driver), its own tests must not hit the real thing. Instead, a **test double** is placed in `_test/` that satisfies the contract interface with minimal in-process code. Two named patterns exist in this project. They are **not mutually exclusive** - a module can use both if it has two different kinds of dependency.
+When a module under test depends on an external contract (a storage backend, a runtime adapter, a third-party driver, or a storage engine), its own tests must not hit the real thing. Instead, a **test double** is placed in `_test/` that satisfies the contract interface with minimal in-process code. Three named patterns exist in this project. They are **not mutually exclusive** - a module can use several if it has different kinds of dependency.
 
 ---
 
@@ -333,19 +333,21 @@ The key property: **no state persists across calls**. The stub just returns a va
 
 | Question | Answer → use |
 |---|---|
-| Does the contract involve stored state (write then read)? | `memory-store` |
+| Does the contract involve stored state (write then read)? | `memory-store` or `engine-stub` |
 | Is the contract a storage backend (SQL, NoSQL, cache)? | `memory-store` |
 | Is the contract a runtime/transport adapter (HTTP, queue, cloud SDK)? | `stub-adapter` |
-| Can the real thing be replicated in RAM with working logic? | `memory-store` |
+| Is the dependency a storage engine injected via `shared_libs` (the engine class or instance itself, not a store contract)? | `engine-stub` |
+| Can the real thing be replicated in RAM with working logic? | `memory-store` or `engine-stub` |
 | Is the real thing a runtime environment that cannot be replicated without reimplementing it? | `stub-adapter` |
-| Does the test need to assert on what was stored and read back? | `memory-store` |
+| Does the test need to assert on what was stored and read back? | `memory-store` or `engine-stub` |
 | Does the test need to assert on what was sent out (response, message, event shape)? | `stub-adapter` |
+| Does the test need to assert the module constructed the engine with specific options (id, encryptionKey)? | `engine-stub` |
 
 ---
 
-### Using Both in the Same Module
+### Using Several in the Same Module
 
-These patterns are **not exclusive**. A module can require both if it has two different kinds of dependency. For example, a hypothetical `js-server-helper-notifications` module might:
+These patterns are **not exclusive**. A module can require several if it has different kinds of dependency. For example, a hypothetical `js-server-helper-notifications` module might:
 
 - Depend on a **storage backend** (to persist notification records) → `_test/memory-store.js`
 - Depend on a **runtime adapter** (to dispatch notifications via email, SMS, push) → `_test/stub-adapter.js`
@@ -368,7 +370,82 @@ const Module = require('helper-[module-name]')(Lib, {
 });
 ```
 
-When adding a new module, identify each external dependency, classify it as "stateful storage" or "transport/runtime", and create the appropriate test double (or both).
+When adding a new module, identify each external dependency, classify it as "stateful storage", "transport/runtime", or "engine dependency", and create the appropriate test double (or several).
+
+---
+
+### Pattern 3: `engine-stub` (an Engine Fake)
+
+**File name:** `_test/[engine]-stub.js` (e.g. `mmkv-stub.js`, `web-storage-stub.js`)
+
+**What it is:** A working in-memory implementation of a storage engine's native interface (not a store contract), injected via `shared_libs` so the module under test constructs or resolves it as it would the real engine. The stub has state: writes are readable, deletes are observable, key enumeration works.
+
+**Industry term:** *Fake* - same as `memory-store`, but the interface being faked is the engine's native API (MMKV's `getString`/`set`/`delete`/`contains`/`getAllKeys`/`clearAll`, or Web Storage's `getItem`/`setItem`/`removeItem`/`key`/`length`), not a Superloom store contract.
+
+**When to use it:**
+- The module is a Class C driver wrapper that receives the engine via `shared_libs` (the engine class for construction-based wrappers like MMKV, or the engine instance for resolution-based wrappers like Web Storage)
+- The engine cannot load in the test runtime (MMKV requires the RN runtime + JSI; `localStorage` requires a browser)
+- The test needs to assert on stored values, key existence, and namespace isolation
+
+| Module | File | What it fakes |
+|---|---|---|
+| `js-client-helper-kv-localstorage` | `_test/web-storage-stub.js` | Web Storage interface (`getItem`, `setItem`, `removeItem`, `key`, `length`, `clear`) with configurable throw modes |
+| `js-rn-helper-kv-mmkv` | `_test/mmkv-stub.js` | MMKV class (`getString`, `set`, `delete`, `contains`, `getAllKeys`, `clearAll`) with configurable throw modes, constructor captures `id`/`encryptionKey` |
+
+**What an engine-stub looks like:**
+
+```js
+// _test/mmkv-stub.js
+'use strict';
+
+function createMmkvStub () {
+  const data = {};
+  let throwOnWrite = false;
+  let throwOnRead = false;
+
+  function MmkvStub (options) {
+    this._id = options.id;
+    this._encryptionKey = options.encryptionKey;
+  }
+
+  MmkvStub.prototype.getString = function (k) {
+    if (throwOnRead) { throw new Error('read error'); }
+    return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : undefined;
+  };
+  MmkvStub.prototype.set = function (k, v) {
+    if (throwOnWrite) { throw new Error('write error'); }
+    data[k] = String(v);
+  };
+  // ... delete, contains, getAllKeys, clearAll
+
+  // Test helpers (not part of the engine interface)
+  MmkvStub._setThrowOnWrite = function (v) { throwOnWrite = v; };
+  MmkvStub._reset = function () { /* clear data, reset flags */ };
+
+  return MmkvStub;
+}
+
+module.exports = createMmkvStub;
+```
+
+The stub is injected in the test loader:
+
+```js
+// _test/loader.js
+const createMmkvStub = require('./mmkv-stub');
+const MmkvStub = createMmkvStub();
+
+const Store = require('helper-kv-mmkv')({
+  Utils: Utils,
+  Debug: Debug,
+  MMKV: MmkvStub      // engine class injected; loader constructs the instance
+}, {
+  NAMESPACE: 'testapp',
+  INSTANCE_ID: 'test'
+});
+```
+
+**Key difference from `memory-store`:** A `memory-store` implements a Superloom store contract (the adapter interface the module calls). An `engine-stub` implements the engine's native API (the interface the module wraps). The module under test treats the stub exactly as it would the real engine - constructing it, calling its methods, and handling its errors.
 
 ---
 

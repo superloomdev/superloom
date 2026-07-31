@@ -294,7 +294,7 @@ Before writing tests, identify each external dependency the module has (storage 
 
 ## Framework Module Testing (Class H / Class I)
 
-Framework modules (Class H extensions and Class I standalone framework modules) test in **pure Node** with no Metro, no emulator, and no browser. The framework is injected through `shared_libs` in the test loader, exactly as server modules inject adapters and cloud SDKs.
+Framework modules (Class H extensions and Class I standalone framework modules) and client-side driver wrappers (Class C) test in **pure Node** with no Metro, no emulator, and no browser. The framework or engine is injected through `shared_libs` in the test loader, exactly as server modules inject adapters and cloud SDKs.
 
 ### What Gets Injected
 
@@ -303,6 +303,7 @@ Framework modules (Class H extensions and Class I standalone framework modules) 
 | `js-react-helper-*` (Class I) | `shared_libs.React` | Real `react` + `react-test-renderer` from `node_modules` - no stub needed |
 | `js-rnw-helper-*` (Class I) | `shared_libs.React`, `shared_libs.ExpoFont`, etc. | Real `react` + `react-test-renderer`; Expo APIs are stub objects with the surface the module calls (e.g. `{ useFonts: () => [true] }`) |
 | `js-client-helper-*-ext-react` (Class H) | `shared_libs.React`, `shared_libs.Styler` (or other parent) | Real `react` + `react-test-renderer`; parent module loaded from registry or `file:../` |
+| `js-client-helper-kv-*` (Class C) | `shared_libs.WebStorage` or `shared_libs.MMKV` | Engine stub in `_test/` implementing the engine's native interface (Web Storage or MMKV); see `engine-stub` pattern in [`unit-test-authoring.md`](unit-test-authoring.md#pattern-3-engine-stub-an-engine-fake) |
 
 ### Test Loader Shape
 
