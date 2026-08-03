@@ -81,6 +81,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **Never report a gate as passed without running it.** A validation workflow is complete only when its steps individually ran and each produced its required evidence; name the commands and file reads behind every count. A green website build is not evidence for link, terminology, or rule-mirroring passes. Pitfalls entries V1 and V3
 - **Never invent a mapping to close a finding.** Read the destination and confirm the content is present before asserting a derived-artifact mapping (section maps, coverage tables); when nothing represents it, write "not represented" - an explicit gap feeds the next gate, a fabricated one suppresses it. Pitfalls entry V2
 - **Verify anchors by slug comparison**, including a file's own `On This Page` list; renaming a heading invalidates same-file anchors and VitePress will not fail on them. Pitfalls entry V3
+- **Never decorate a gate report with uncounted numbers.** Any total in a gate report is a claim requiring the same evidence as a pass/fail verdict; a total that is not the sum of counted parts must not be emitted. The P3 output block enforces this with `A + B + C + D = N`. Pitfalls entry V4
 
 ## Boundaries
 

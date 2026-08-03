@@ -352,6 +352,14 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 
 **Fix:** Verify anchors by deriving slugs from the target file's actual headings and comparing, including a file's own table of contents. Renaming a heading invalidates every inbound anchor, and the ones in the same file are the easiest to miss.
 
+#### V4. Fabricated precision in a gate report
+
+**Symptom:** The 2026-07-31 P3 run of `/finalize-docs` reported `Rules in source inventory: 423` and `Rules mirrored in AGENTS.md: 417` without counting either figure. The 6 findings the run surfaced were genuine and independently verified; the totals were not. A reader comparing the report to the actual source files would find no extraction that produced 423 and no count that produced 417.
+
+**Cause:** The gate was run honestly - findings were checked, evidence was produced for each - and then the result was decorated with measured-looking numbers that were estimated rather than counted. This is distinct from V1 (the gate was not skipped) and V2 (no mapping was invented). The softer failure mode is that a real pass produced real findings, and then precision was added after the fact to make the report look more rigorous than the method supports.
+
+**Fix:** Any number in a gate report is a claim requiring the same evidence as a pass/fail verdict. A total that is not the arithmetic sum of counted parts must not be emitted. The P3 output block now enforces this with the identity `A + B + C + D = N`; a total that does not equal the sum of its parts is a detectable error rather than a plausible-looking number.
+
 ---
 
 ## CI/CD Publishing
