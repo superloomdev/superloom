@@ -366,7 +366,15 @@ Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. If a new doc
 
 Actual `AGENTS.md` sections: Golden Rule callout (header), Persona, Tech Stack, Documentation Map, AI Behavior Rules, Safe Terminal Patterns, Boundaries, Directory Map, Workflow Inventory.
 
-**A row must name the section that carries the compressed rule.** A filename appearing in the Documentation Map table is a pointer, not a mirror. Sources whose content is deliberately not compressed into `AGENTS.md` are marked `not mirrored (reference material)` so P3 does not treat them as satisfied. Never invent a mirror location to make a row look complete.
+**A row must name the section that carries the compressed rule.** A filename appearing in the Documentation Map table is a pointer, not a mirror. Never invent a mirror location to make a row look complete.
+
+Three allowed destination values, closed set:
+
+| Destination | Meaning |
+|---|---|
+| `[AGENTS.md section name]` | A compressed rule sits in the named `AGENTS.md` section |
+| `not mirrored (reference material)` | Looked up per task, deliberately uncompressed; P3 skips it |
+| `mirrored to workflow: [workflow-name]` | The rule is lifecycle-only, so it lives in the named workflow's embedded Standard; P3 checks the workflow instead of `AGENTS.md` |
 
 | `docs/` source | `AGENTS.md` section |
 |---|---|
@@ -376,7 +384,7 @@ Actual `AGENTS.md` sections: Golden Rule callout (header), Persona, Tech Stack, 
 | `docs/languages/js/code-formatting.md` | AI Behavior Rules (step comments, two-pass check) |
 | `docs/languages/js/project-structure.md` | Directory Map |
 | `docs/languages/js/error-handling.md` | AI Behavior Rules (three-category error disposal + wrapper purity + service translation) |
-| `docs/languages/js/module-structure.md` | AI Behavior Rules (skeleton conformance, hook factories) |
+| `docs/languages/js/module-structure.md` | mirrored to workflow: js-helper-module |
 | `docs/languages/js/module-classes.md` | not mirrored (reference material; class definitions and per-class doc footprints are looked up, not memorized) |
 | `docs/languages/js/validation.md` | AI Behavior Rules (type-guard primitive rule) |
 | `docs/languages/js/client/client-modules.md` | AI Behavior Rules (client naming taxonomy + loader-pattern rule) |
@@ -417,14 +425,18 @@ P2 catches drift. This step catches omissions: rules that exist in `docs/` but h
 3. For each item, search `AGENTS.md` for a compressed rule preserving both condition and conclusion. A conclusion without its condition is not mirrored.
 4. Add each missing compressed rule to the correct `AGENTS.md` section (or report `would update` in `check` mode).
 5. Sources whose Section Map row reads `not mirrored (reference material)` are skipped, but the skip is reported with a count. A row is never relabelled `not mirrored` to clear a finding; that decision is the user's.
+6. Sources whose Section Map row reads `mirrored to workflow: [name]` are not checked against `AGENTS.md`. Instead, confirm the named workflow's embedded Standard carries the rule, and report these in their own count line. A row is never relabelled `mirrored to workflow` to clear a finding; that decision is the user's.
 
 Output:
 
 ```text
-P3 - Unmirrored Rule Scan
-Rules in source inventory: N
-Rules mirrored in AGENTS.md: M
-Unmirrored rules: K
+P3 - Rule Mirroring
+Rules extracted (counted, with file:line each): N
+Mirrored to AGENTS.md: A
+Mirrored to workflow Standard: B
+Not mirrored (reference material): C
+Unmirrored (findings): D
+A + B + C + D must equal N; if it does not, the scan is incomplete - do not report
   - docs/foo.md:42 | missing | suggested: [compressed rule]
 ```
 
@@ -564,5 +576,6 @@ New failure modes found during a run must be added here. If no pass catches the 
 | Section Map row names a section that does not exist in `AGENTS.md` | P1 (row must name a real section) |
 | Section Map row names a real section but the rule is not actually there | P1 (a Documentation Map filename is a pointer, not a mirror) |
 | Section Map row relabelled `not mirrored` to clear a P3 finding | P3 step 5 (user decision, not the agent's) |
+| Section Map row destination left ambiguous between AGENTS.md and a workflow | P1 |
 | `AGENTS.md` over the size budget | P4 |
 | Sibling-repo AGENTS.md copy diverged | P6 |
