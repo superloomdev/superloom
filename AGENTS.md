@@ -33,7 +33,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 
 | Layer | Holds | Key files |
 |---|---|---|
-| `docs/principles/` | Universal rules + reasoning | `engineering-philosophy`, `code-readability`, `file-archetypes`, `module-design`, `error-handling`, `validation`, `testing`, `documentation-authoring`, `extending-to-a-language` |
+| `docs/principles/` | Universal rules + reasoning | `engineering-philosophy`, `code-readability`, `file-archetypes`, `module-design`, `error-handling`, `validation`, `testing`, `documentation-authoring`, `project-management`, `extending-to-a-language` |
 | `docs/languages/js/` | The JavaScript way (complete, self-sufficient) | `index` (reading path + two-form naming), `code-formatting`, `module-structure` (all skeletons), `module-classes`, `error-handling`, `validation`, `module-docs`, `dependencies`, `publishing`, `server/`, `client/` (architecture, loader, theming, fonts, components, super-app, modules), `versioning/` |
 | `docs/ai/` | AI-assisted development standards | `agent-configuration`, `workflow-authoring`, `workflow-archetypes`, `model-tiering` |
 
@@ -60,6 +60,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **Repository independence:** the constitution repo (superloom) never references dependent repos' workflows or internals; dependent repos reference superloom docs freely. See `docs/ai/agent-configuration.md` - Repository Independence
 - **Docs prose mechanics:** no em dashes (use comma, period, or ` - `); American English (`initialize`, `behavior`, `license`); table cells are fragments with no trailing periods; one term per concept, no synonym rotation; banned vocabulary list in `docs/principles/documentation-authoring.md` - Banned Vocabulary. See `docs/principles/documentation-authoring.md` - Prose Mechanics
 - **Code comments never reference `docs/` paths:** a comment must be understandable with the file alone; step comments state what and why, never how. See `docs/principles/engineering-philosophy.md`
+- **Product management layer:** every product repo has `PROJECT.md` (10 fixed sections), `CHANGELOG.md` (Keep a Changelog), and a feature ledger (permanent IDs, closed status vocabulary: `proposed`, `approved`, `building`, `shipped`, `retired`). Update triggers fire in the same change as the work. Size budget 300/400 with overflow to `FEATURES.md`. Provenance neutrality: no references to prior projects, clients, or predecessors. See `docs/principles/project-management.md`
 
 ## Safe Terminal Patterns
 
@@ -128,6 +129,7 @@ Every module: entry file + `[name].config.js` + `[name].errors.js` + `[name].val
 | `/js-helper-module-audit [path]` | js-helper-modules | Read-only deep audit with creator-diff and three-bucket drift classification; hands findings to `/js-helper-module fix` |
 | `/js-helper-module-publish [path]` | js-helper-modules | Pre-publish gate, CI registration, version bump, and release |
 | `/new-entity` | js-demo-project | Adding a domain entity to the demo application |
+| `/project-docs [create\|update\|audit]` | any product repo | Create, update, or audit the management layer (PROJECT.md, feature ledger, CHANGELOG.md) per `docs/principles/project-management.md` |
 | `/learn` | superloom | Capturing conversation knowledge into its canonical doc; hands off to `/finalize-docs` |
 | `/finalize-docs [check]` | superloom | After any docs or workflow change: validate to convergence, then propagate to AGENTS.md and embedded blocks. `check` = report-only |
 | `/compile-workflows-from-docs [repo] [lang]` | superloom | Recompile concrete workflow families for an implementation repository from archetypes + language docs; self-verifies via headless workshop |

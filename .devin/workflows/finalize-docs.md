@@ -380,6 +380,7 @@ Three allowed destination values, closed set:
 |---|---|
 | `docs/principles/engineering-philosophy.md` | Persona + Golden Rule callout |
 | `docs/principles/documentation-authoring.md` | Golden Rule callout + AI Behavior Rules (docs-never-reference-plans rule) |
+| `docs/principles/project-management.md` | AI Behavior Rules (product management layer) |
 | `docs/principles/testing.md` | AI Behavior Rules (assertions pin exact values) |
 | `docs/languages/js/code-formatting.md` | AI Behavior Rules (step comments, two-pass check) |
 | `docs/languages/js/project-structure.md` | Directory Map |
