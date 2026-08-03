@@ -63,12 +63,12 @@ Suffixes modify a module's role within its tier. A module carries at most one su
 
 | Suffix | Meaning | Class | Example |
 |---|---|---|---|
-| `-ext-[framework]` | Framework extension of a pure parent module | Class H | `js-client-helper-styler-ext-react` |
+| `-ext-[target]` | Framework or platform-engine binding of a pure parent | Class H | `js-client-helper-font-ext-web` |
 | `-store-[backend]` | Storage adapter for a parent module | Class F | `js-server-helper-auth-store-dynamodb` |
 | `-adapter-[name]` | Runtime adapter for a parent module | Class F | `js-server-helper-http-gateway-adapter-express` |
 | `-template-[name]` | Design-language data pack for the styler | Data module | `js-client-helper-styler-template-carbon` |
 
-Framework-specific bindings never live in the parent module. They are `-ext-[framework]` packages that import the pure parent and add framework-specific code. The parent never imports a framework.
+Framework-specific bindings never live in the parent module. They are `-ext-[target]` packages that import the pure parent and add framework-specific or platform-specific code. The parent never imports a framework. The target is one of: `react`, `vue`, `web`, `rn`, `expo`.
 
 ---
 
@@ -80,7 +80,7 @@ Once a module is known to need framework code, exactly two shapes are available.
 |---|---|---|
 | Packages | A pure parent (Class G) plus one `-ext-[framework]` package per framework (Class H) | One package (Class I) |
 | Names | `js-helper-[name]` or `js-client-helper-[name]`, plus `js-helper-[name]-ext-react` | `js-react-helper-[name]`, or `js-rw`/`js-rn`/`js-rnw` when platform-bound |
-| Example | `js-client-helper-styler` plus `js-client-helper-styler-ext-react` | `js-rnw-helper-font` |
+| Example | `js-client-helper-styler` plus `js-client-helper-styler-ext-react` | `js-react-helper-idle` |
 | Use when | The framework-free logic has a second consumer | The framework is the only consumer |
 
 ### The Test
@@ -118,7 +118,7 @@ Name and tier do not settle the loader pattern; the public surface does. A modul
 | `styler` | Yes. Theme output is consumed as data outside React (token export, server-rendered output) | Yes. A derivation engine over template plus values | 1: `js-client-helper-styler` plus `-ext-react` |
 | `timer` | No. Every planned caller is a React view. Node would call `setTimeout` directly | Not reached. Would fail anyway: a bookkeeping layer over `setTimeout`, with date math belonging to `js-helper-time` | 2: `js-react-helper-timer` |
 | `idle` | No. Every planned caller is a React view | Not reached. The state machine is substantial, which does **not** override question 1 | 2: `js-react-helper-idle` |
-| `font` | No | Not reached. Bound to `expo-font`, so no framework-free core exists | 2: `js-rnw-helper-font` |
+| `font` | No | Yes. `@font-face` CSS string construction is pure computation; the adapter contract (web DOM injection, RN native registration, Expo `loadAsync`) is the only platform-bound part | 1: `js-client-helper-font` plus `-ext-web`, `-ext-rn`, `-ext-expo` |
 
 The `idle` row is the one most likely to be re-litigated. It is settled: a substantial core with a single framework consumer is Shape 2. Do not split it without first naming a second consumer.
 
@@ -261,7 +261,7 @@ The question is never "where can this run". It is "what must be installed for th
 
 ### "Font is NOT `js-helper`"
 
-The font manifest module calls `expo-font.useFonts()` and `require('font.ttf')`. These are bundler-bound and Expo-specific. The module cannot run in Node or a non-Expo browser environment. Therefore it is `js-rnw-helper-font`, not `js-helper-font`.
+The font module calls `expo-font.useFonts()` and `require('font.ttf')`. These are bundler-bound and Expo-specific. The Expo binding is `-ext-expo`; the core is pure and the tier question applies per package. The core (`js-client-helper-font`) sits at the client tier because `@font-face` string construction is a client-domain concept with no platform dependency. Each extension takes the tier its platform dependency earns: `-ext-web` is client-tier (DOM), `-ext-rn` is RN-tier (native module), `-ext-expo` is RNW-tier (Expo SDK).
 
 ### "A React hook for theme access is NOT `js-rnw-helper`"
 

@@ -82,7 +82,7 @@ Lib.Themes = {
 };
 ```
 
-Font manifest lives in `fonts/` as a loader module receiving `Lib.ExpoFont`. The separation of theme data (names font families) from font manifest (loads font files) is deliberate: `require('font.ttf')` is bundler-bound, and a server-sent theme JSON cannot carry binaries. See [Fonts](fonts.md).
+Font manifest lives in `fonts/` as a loader module receiving `Lib.FontLoader` (the injected font loader adapter). The separation of theme data (names font families) from font manifest (loads font files) is deliberate: `require('font.ttf')` is bundler-bound, and a server-sent theme JSON cannot carry binaries. See [Fonts](fonts.md).
 
 ---
 

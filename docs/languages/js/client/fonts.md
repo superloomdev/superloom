@@ -48,7 +48,7 @@ Mechanisms 2 and 3 are identical at the `expo-font` level. The only difference i
 
 ## Font Manifest
 
-The font manifest is a loader module at `src/client/fonts/fonts.js`. It receives `Lib` (specifically `Lib.ExpoFont`) and returns a `useFontsReady` hook.
+The font manifest is a loader module at `src/client/fonts/fonts.js`. It receives `Lib` (specifically `Lib.FontLoader`, the injected font loader adapter) and returns a `useFontsReady` hook.
 
 The manifest assembles a `FONT_MAP` from all configured sources:
 
@@ -64,13 +64,13 @@ const FONT_MAP = Object.assign(
 
 `CustomFonts` is a spread of `require()` calls from `fonts/assets/index.js`. The assets index ships empty by default (`module.exports = {}`), preventing Metro build errors from missing files. To enable a custom font, drop the `.ttf` into `fonts/assets/` and uncomment the entry in the index.
 
-The manifest is a singleton loader. It does not call `require('expo-font')` at the top level; it receives `Lib.ExpoFont` through injection, matching the centralized dependency pattern used throughout the client.
+The manifest is a singleton loader. It does not call `require('expo-font')` at the top level; it receives `Lib.FontLoader` through injection, matching the centralized dependency pattern used throughout the client.
 
 ---
 
 ## Loading Flow
 
-1. `loader.js` builds `Lib.Fonts` by calling the font manifest loader with `Lib` (injecting `Lib.ExpoFont`)
+1. `loader.js` builds `Lib.Fonts` by calling the font manifest loader with `Lib` (injecting `Lib.FontLoader`)
 2. The root layout (`app/_layout.js`) calls `Lib.Fonts.useFontsReady()`
 3. `useFontsReady()` wraps `expo-font.useFonts(FONT_MAP)`:
    - Native: registers font faces with the OS
