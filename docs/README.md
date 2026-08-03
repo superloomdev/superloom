@@ -55,6 +55,7 @@ docs/
     third-party-libraries.md        #   Zero-dependency default and the exception criteria
     operations-documentation.md     #   Three-layer ops documentation strategy
     documentation-authoring.md      #   Voice, mechanics, placement, the Golden Rule
+    project-management.md           #   Product docs, feature ledgers, changelogs, decision logs
     extending-to-a-language.md      #   How to add or fork a language layer
 
   languages/
