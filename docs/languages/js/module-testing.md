@@ -301,7 +301,7 @@ Framework modules (Class H extensions and Class I standalone framework modules) 
 | Module tier | Injected as | Stub strategy |
 |---|---|---|
 | `js-react-helper-*` (Class I) | `shared_libs.React` | Real `react` + `react-test-renderer` from `node_modules` - no stub needed |
-| `js-rnw-helper-*` (Class I) | `shared_libs.React`, `shared_libs.ExpoFont`, etc. | Real `react` + `react-test-renderer`; Expo APIs are stub objects with the surface the module calls (e.g. `{ useFonts: () => [true] }`) |
+| `js-rnw-helper-*` (Class I) | `shared_libs.React`, `shared_libs.FontLoader`, etc. | Real `react` + `react-test-renderer`; platform APIs are stub objects with the surface the module calls (e.g. `{ useFonts: () => [true] }`) |
 | `js-client-helper-*-ext-react` (Class H) | `shared_libs.React`, `shared_libs.Styler` (or other parent) | Real `react` + `react-test-renderer`; parent module loaded from registry or `file:../` |
 | `js-client-helper-kv-*` / `js-rn-helper-kv-*` (Class C) | `shared_libs.WebStorage` or `shared_libs.MMKV` | Engine stub in `_test/` implementing the engine's native interface (Web Storage or MMKV); see `engine-stub` pattern in [`unit-test-authoring.md`](unit-test-authoring.md#pattern-3-engine-stub-an-engine-fake) |
 
@@ -329,16 +329,16 @@ const Idle = require('helper-idle')({
 module.exports = { React, ReactTestRenderer, Idle, Utils, Debug };
 ```
 
-For an RNW-tier module that calls `expo-font`, the loader injects a stub:
+For a module that needs a font-loading capability, the loader injects a stub. The slot is named for the capability, never for the vendor that happens to satisfy it, so the same module runs against an Expo-backed loader, a bare loader, or this stub with no edit:
 
 ```javascript
-const ExpoFont = {
+const FontLoader = {
   useFonts: () => [true, null]   // [isLoaded, error]
 };
 
 const Font = require('helper-font')({
   React,
-  ExpoFont,
+  FontLoader,
   Utils,
   Debug
 });

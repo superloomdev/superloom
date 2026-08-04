@@ -467,7 +467,9 @@ A Class I framework module (see [`module-classes.md`](module-classes.md#class-i-
   };
 ```
 
-   This keeps `react` a peer dependency rather than a bundled one, and lets `_test/` inject a stub so tests run in pure Node with no Metro and no emulator. The same pattern applies to `shared_libs.ExpoFont`, `shared_libs.RNPlatform`, or any other framework/platform API a Class I module needs.
+   This keeps `react` a peer dependency rather than a bundled one, and lets `_test/` inject a stub so tests run in pure Node with no Metro and no emulator. The same pattern applies to `shared_libs.FontLoader`, `shared_libs.Platform`, or any other framework/platform API a Class I module needs.
+
+   **Name the slot for the capability, never for the vendor.** `shared_libs.FontLoader` and `shared_libs.KeyValueStore` are correct; `shared_libs.ExpoFont` and `shared_libs.MMKV` are not. A vendor-named slot re-couples the module to that vendor through its own source text even though no import exists, which defeats the reason the dependency was injected. A capability-named slot lets one module run against an Expo-backed adapter, a bare adapter, or a test stub with no edit.
 
 2. **The entry filename is `[name].js`** (e.g. `idle.js`, `timer.js`), not `extension.js`. The `extension.js` filename is reserved for Class H extensions that bind to a pure parent. A Class I module is standalone, so it uses the standard entry filename.
 
