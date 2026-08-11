@@ -38,6 +38,19 @@ React Native Web is the only production-grade library that maps the React Native
 
 Styling and layout abstractions (Tamagui, NativeWind, styled-components) layer on top of RNW. They consume the same RN primitives and produce the same DOM output. Adopting one does not replace RNW; it sits above it. This is why the stack locks RNW as the foundation and treats styling layers as optional.
 
+React Native Web is a library, not a framework or a bundler. The layers are distinct:
+
+| Layer | What it is | Examples |
+|---|---|---|
+| Component API | The interface app code is written against | React Native (`View`, `Text`, `StyleSheet`) |
+| Web adapter | Maps that API onto the DOM via React DOM | React Native Web |
+| Bundler | Produces the deliverable bundle | Metro, Vite, Rspack, webpack |
+| App framework | Wraps bundler, native build, and dev workflow | Expo |
+
+Both web paths, Expo's web output and the portability harness, use React Native Web. They differ only in bundler and tooling. React Native Web was started in 2015 by Nicolas Gallagher during the development of Twitter's Progressive Web App, and is used in production by companies including Meta, Twitter, and Flipkart ([source](https://necolas.github.io/react-native-web/docs/about-project/)).
+
+Plain React web (React DOM with `div` and `span`) is a genuinely different component API and is out of scope for this project. React Native Web already produces web, so a plain React web target would add an incompatible component API with zero reuse.
+
 ---
 
 ## One Pipeline, Not Two
@@ -47,6 +60,25 @@ The reference application maintained two build pipelines: webpack for web output
 Expo bundles web through Metro (`expo.web.bundler: "metro"` in `app.json`) after installing `react-native-web` and `react-dom`. The same bundler, the same module resolution, and the same babel preset serve all three targets. One pipeline means one configuration, one asset pipeline, and one set of build-time assumptions.
 
 Prebuild and a custom dev client preserve access to native modules beyond the Expo SDK. Adopting Expo does not force giving up custom native code; it wraps the native build with a managed workflow.
+
+### Portability Harness Exception
+
+The one-pipeline rule binds **shipping pipelines**. One application ships its web, iOS, and Android artifacts through Metro. This does not change.
+
+A second bundler is permitted only for a **portability harness**: a host that exists to prove shared source carries no app-framework coupling, and whose output is not the shipped artifact. The harness host must consume the same shared source as the primary host. A harness with its own copy of screens or components proves nothing and is forbidden. The harness is web-only. Native targets are covered by prebuild, which needs no second bundler.
+
+The original pain was two pipelines producing the *same* deliverable and silently diverging. A harness produces a *different* deliverable, a pass or fail signal, and its divergence from the shipping pipeline is the very thing being measured.
+
+React Native Web's own documentation states: "If you are interested in making a multi-platform app it is strongly recommended that you use Expo... Expo includes web support and takes care of all the configuration work required" ([source](https://necolas.github.io/react-native-web/docs/multi-platform/)). The harness host exists to prove portability, not because it is a better way to ship web. Without this distinction, a reader could conclude the second host is the recommended production path, which it is not.
+
+### Portability Fence
+
+The harness enforces two rules on shared source:
+
+1. Shared source imports no `expo*` package
+2. Shared source never imports upward from a host directory
+
+Both are also checked statically, so a leak fails fast even before a bundle is attempted.
 
 ---
 
@@ -96,30 +128,36 @@ The `.native.js` extension covers both iOS and Android. For per-platform native 
 
 ## Project Layout
 
-The project layout separates routing from everything else. Two folders with distinct, non-overlapping responsibilities:
-
-| Folder | Responsibility | Rule |
-|---|---|---|
-| `app/` | Expo Router's routing layer. Every file maps to a URL or screen | Contains layouts and screen wrappers only. No business logic, no UI |
-| `src/` | Everything that is not a route. Business logic, shared config, DI container, theme engine, component library, SDK, context providers | Never imports from `app/` |
-
-The Expo project root lives at `src/client/`. Expo Router requires `app/` relative to its project root (where `package.json` lives). Making `src/client/` the project root satisfies Expo Router while keeping all source under `src/`.
+The project layout separates shared application source from host-specific configuration. Two directories with distinct, non-overlapping responsibilities:
 
 ```text
-src/
-  client/                 ← Expo project root (package.json, app.json, babel.config.js)
-    app/                  ← Expo Router routes (zero-logic wrappers)
-    contexts/             ← React context objects and hooks
-    themes/               ← Theme data (frozen JS objects)
-    fonts/                ← Font manifest and assets
-    loader.js             ← DI root: builds Lib + Config
-    config.js             ← Static configuration
-  components/             ← Component library (own package.json, peerDeps)
-  screens/                ← Screen components (own package.json, peerDeps)
-  sdk/                    ← Client SDK layer (own package.json)
+src/                    ← shared application source, consumed by every host
+  components/           ← component library written against the React Native API
+  screens/              ← screen components
+  app-core/             ← dependency-injection root, config, context providers
+  themes/               ← theme data
+  fonts/                ← font manifest and assets
+hosts/
+  expo/                 ← Metro and Expo Router, ships web, iOS, and Android
+  web/                  ← portability harness, web only
 ```
 
-Screens live in `src/screens/[app-name]/`. Each `app/[app-name]/[screen].js` file is a thin wrapper that re-exports the screen from `src/`. The wrapper is zero-logic: one line re-exporting the screen component. All params, hooks, and logic go inside the `src/screens/` component. This lets a screen be reused across two apps by pointing two wrappers at the same source.
+Two binding rules govern the layout:
+
+- **Hosts own what must differ:** bundler configuration, routing, entry file, and platform adapter injection
+- **`src/` never imports from `hosts/`.** The dependency direction is one way. A host imports shared source; shared source never reaches upward
+
+Hosts map a path alias to `src/` in their own bundler configuration. Shared source is plain source with no `package.json`, is never published, and is not an npm workspace. The alias forms:
+
+```js
+// Metro (hosts/expo): resolver.extraNodeModules
+resolver: { extraNodeModules: { '@app': path.resolve(__dirname, '../../src') } }
+
+// Vite (hosts/web): resolve.alias
+resolve: { alias: { '@app': path.resolve(__dirname, '../../src') } }
+```
+
+Screens live in `src/screens/`. Each host's router maps a route to a screen from `src/`. The route file is a thin wrapper: one line re-exporting the screen component. All params, hooks, and logic go inside the `src/screens/` component. This lets a screen be reused across two hosts by pointing both routers at the same source.
 
 ---
 
@@ -129,7 +167,7 @@ Bluesky's `social-app` is the largest open-source React Native Web application i
 
 - **Single codebase, three targets.** The app ships to web, iOS, and Android from one React Native codebase through Metro
 - **Platform-file convention.** The codebase groups platform files per component directory (`index.js`, `index.web.js`, `index.native.js`), the same convention documented above
-- **Own design system.** Bluesky built ALF (Atmosphere Layout Framework) on top of RNW rather than adopting a third-party component library. This mirrors the Superloom approach: a custom component library built on RNW primitives, with design languages shipped as styler template packs
+- **Own design system.** Bluesky built ALF (Atmosphere Layout Framework) on top of RNW rather than adopting a third-party component library. This mirrors the Superloom approach: a custom component library built on RNW primitives, with design languages shipped as themer template packs
 
 The reference is evidence that the stack scales to a production social application with millions of users.
 
@@ -137,7 +175,10 @@ The reference is evidence that the stack scales to a production social applicati
 
 ## Further Reading
 
+- [React Native Environment Setup](rn-environment-setup.md) - System prerequisites, local development, Metro bundler
+- [Expo Guide](expo-guide.md) - Expo capabilities, adapter pattern, cloud account features
+- [React Native Testing](rn-testing.md) - Testing conventions for RN and Expo modules
 - [Client Loader](client-loader.md) - The `Lib` DI container, boot chain, and React boundary rule
-- [Theming](theming.md) - The styler pipeline, template packs, and server-driven theming
+- [Theming](theming.md) - The themer, template packs, and server-driven theming
 - [Super-App Shapes](super-app.md) - Lean vs super assembly, shape registry, tree-shaking
 - [Client Modules](client-modules.md) - The naming taxonomy for client-tier helper modules

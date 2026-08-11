@@ -36,8 +36,8 @@ The `Lib` container holds every dependency the React tree needs. Each entry is e
 | `Lib.React` | The React module | `require('react')` in the loader only |
 | `Lib.Utils` | Core utility helper | `require('@superloomdev/js-helper-utils')(Lib)` |
 | `Lib.Debug` | Debug logging helper | `require('@superloomdev/js-helper-debug')(Lib)` |
-| `Lib.Styler` | Theme engine (assemble, derive, generateUtilities) | `require('@superloomdev/js-client-helper-styler')(Lib)` |
-| `Lib.ThemeTemplate` | Default styler template (data) | `require('@superloomdev/js-client-helper-styler/styler.template.js')` |
+| `Lib.Themer` | Theme engine (assemble, derive, generateUtilities) | `require('@superloomdev/js-client-helper-themer')(Lib)` |
+| `Lib.ThemeTemplate` | Default themer template (data) | `require('@superloomdev/js-client-helper-themer/themer.template.js')` |
 | `Lib.Themes` | Theme values as frozen JS objects | Direct `require` of theme data files |
 | `Lib.Fonts` | Font manifest and `useFontsReady` hook | `require('../fonts/fonts')(Lib)` |
 | `Lib.Sdk` | Client SDK (entity APIs) | `require('../../sdk')(Lib)` |
@@ -52,7 +52,7 @@ Themes are plain frozen data objects, not loaders. They are `require`d directly 
 
 Dependency injection applies at the package boundary, not inside the app's own React files. The rule:
 
-- **Helper modules and framework packages** receive dependencies through `Lib`. They never call `require('react')` directly. The loader injects `Lib.React` into the styler adapter, for example
+- **Helper modules and framework packages** receive dependencies through `Lib`. They never call `require('react')` directly. The loader injects `Lib.React` into the themer adapter, for example
 - **The app's own React files** (screens, layouts, context providers) keep idiomatic `require('react')` or `import` statements. JSX and hooks are import-time bindings; injecting React into every component adds ceremony without benefit
 
 The boundary is the package edge. Inside the app, React is a peer dependency resolved normally. Outside the app (in published helper modules and the component library), React enters through `Lib`.
@@ -103,7 +103,7 @@ src/client/contexts/lib-context.js ← provides Lib via React context
 src/client/loader.js               ← builds Lib + Config
   |
   v  mounts ThemeProvider
-src/client/contexts/theme-context.js ← calls Lib.Styler.assemble(), provides theme
+src/client/contexts/theme-context.js ← calls Lib.Themer.assemble(), provides theme
   |
   v  calls combineComponent()
 src/components/index.js            ← builds themed component library
@@ -121,6 +121,6 @@ The loader is memoized. Calling `loader()` a second time returns the same `Lib` 
 ## Further Reading
 
 - [Client Architecture](client-architecture.md) - Stack decision, project layout, bundler-agnostic rule
-- [Theming](theming.md) - The styler pipeline and runtime re-theming
+- [Theming](theming.md) - The themer and runtime re-theming
 - [Fonts](fonts.md) - Font delivery mechanisms and the theme-names/host-loads contract
 - [Server Loader](../server/server-loader.md) - The server-side counterpart (same pattern, different dependencies)

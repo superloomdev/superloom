@@ -11,7 +11,7 @@ Client helper modules come in four flavors:
 | Type | Pattern | Example | Dependencies |
 |---|---|---|---|
 | **Universal core** | Pure JavaScript, no framework | `js-client-helper-crypto` | None |
-| **Framework extension** | Binds parent to React/Vue/Angular | `js-client-helper-styler-ext-react` | Parent module + React |
+| **Framework extension** | Binds parent to React/Vue/Angular | `js-client-helper-font-ext-web` | Parent module + React |
 | **Standalone framework module** | Framework-bound, no pure parent | `js-react-helper-idle` | React (injected) |
 | **Driver wrapper** | Wraps a storage engine, unified API | `js-client-helper-kv-localstorage` | Engine (injected) |
 
@@ -28,7 +28,9 @@ Pure JavaScript that runs anywhere. These are technically Class A modules with a
 
 **Examples:**
 - `js-client-helper-crypto` - UUID, random strings, base64 using Web Crypto API
-- `js-client-helper-styler` - Theme engine with template-driven token generation
+- `js-client-helper-styler` - Theme engine with template-driven token generation (retired; superseded by `js-client-helper-themer`)
+- `js-client-helper-font` - Font family registry, manifest schema, role-to-family resolution
+- `js-client-helper-themer` - Carbon-vocabulary token engine with three-tier cascade, resolve-then-emit pipeline
 
 **Documentation:** Standard Class A pattern: `README.md` + `docs/api.md` + `docs/configuration.md` + `ROBOTS.md`.
 
@@ -47,6 +49,7 @@ Framework-bound modules with no pure parent. These are Class I modules: they dep
 **Examples:**
 - `js-react-helper-idle` - Idle-state detection with `useIdle` hook
 - `js-react-helper-timer` - Countdown and interval hooks
+- `js-rnw-helper-device` - RN platform APIs (device info, screen metrics, accessibility) injected via `shared_libs`
 
 **Documentation:** Standard factory pattern: `README.md` + `docs/api.md` + `docs/configuration.md` + `ROBOTS.md`. See [`module-classes.md`](./module-classes.md#class-i-framework-module) for the full Class I definition.
 
@@ -100,7 +103,12 @@ Parent module (pure JS) → Extension module (React hooks)
 
 **Naming convention:** `[parent-name]-ext-[framework]`
 
-Example: `js-client-helper-styler-ext-react`
+**Examples:**
+- `js-client-helper-styler-ext-react` - React hooks and ThemeProvider for Styler (retired alongside Styler)
+- `js-client-helper-themer-ext-react` - React ThemeProvider, hooks, and transform seam for `js-client-helper-themer`
+- `js-client-helper-font-ext-web` - Web `@font-face` injection for `js-client-helper-font`
+- `js-client-helper-font-ext-rn` - Bare React Native font loading for `js-client-helper-font`
+- `js-client-helper-font-ext-expo` - Expo Font (`expo-font`) adapter for `js-client-helper-font` (local only, not in CI)
 
 **Entry point:** `extension.js` (not `index.js`)
 
@@ -135,7 +143,7 @@ Extension modules use peer dependencies, not direct dependencies:
 {
   "peerDependencies": {
     "react": "^18.0.0",
-    "@superloomdev/js-client-helper-styler": "^1.0.0"
+    "@superloomdev/js-client-helper-font": "^1.0.0"
   }
 }
 ```
@@ -162,27 +170,27 @@ Extensions are loaded through the same loader pattern as other modules:
 
 ```js
 // loader.js
-const StylerParent = require('helper-styler')({
+const FontParent = require('helper-font')({
   // parent config
 });
 
-const StylerExt = require('helper-styler-ext-react')({
+const FontExt = require('helper-font-ext-web')({
   React: require('react'),
-  Parent: StylerParent  // optional: pass pre-configured parent
+  Parent: FontParent  // optional: pass pre-configured parent
 });
 
-module.exports = { StylerParent, StylerExt };
+module.exports = { FontParent, FontExt };
 ```
 
 Or the extension can import the parent directly:
 
 ```js
 // extension.js
-const Parent = require('helper-styler');
+const Parent = require('helper-font');
 
 function createExtension({ React }) {
   // Use Parent internally
-  return { useTheme, useStyles, ThemeProvider };
+  return { useFont, FontProvider };
 }
 ```
 
@@ -195,13 +203,13 @@ The extension's `docs/api.md` opens with a cross-link to the parent:
 ```markdown
 # API Reference
 
-This document covers the React hooks and components. For the parent theme engine API, see the [parent module's docs/api.md](../js-client-helper-styler/docs/api.md).
+This document covers the React hooks and components. For the parent font engine API, see the [parent module's docs/api.md](../js-client-helper-font/docs/api.md).
 ```
 
 The parent's README mentions the extension:
 
 ```markdown
-> **Want React integration?** Check out the extension module: `js-client-helper-styler-ext-react`.
+> **Want React integration?** Check out the extension module: `js-client-helper-font-ext-web`.
 ```
 
 ---

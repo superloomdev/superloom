@@ -438,7 +438,7 @@ The extension's `docs/api.md` opens with a cross-link to the parent:
 ```markdown
 # API Reference
 
-This document covers the React hooks and components. For the parent module's API, see the [parent module's docs/api.md](../js-client-helper-styler/docs/api.md).
+This document covers the React hooks and components. For the parent module's API, see the [parent module's docs/api.md](../js-client-helper-themer/docs/api.md).
 ```
 
 The extension's `docs/philosophy.md` explains the pattern:

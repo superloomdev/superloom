@@ -302,7 +302,7 @@ Framework modules (Class H extensions and Class I standalone framework modules) 
 |---|---|---|
 | `js-react-helper-*` (Class I) | `shared_libs.React` | Real `react` + `react-test-renderer` from `node_modules` - no stub needed |
 | `js-rnw-helper-*` (Class I) | `shared_libs.React`, `shared_libs.FontLoader`, etc. | Real `react` + `react-test-renderer`; platform APIs are stub objects with the surface the module calls (e.g. `{ useFonts: () => [true] }`) |
-| `js-client-helper-*-ext-react` (Class H) | `shared_libs.React`, `shared_libs.Styler` (or other parent) | Real `react` + `react-test-renderer`; parent module loaded from registry or `file:../` |
+| `js-client-helper-*-ext-react` (Class H) | `shared_libs.React`, `shared_libs.Themer` (or other parent) | Real `react` + `react-test-renderer`; parent module loaded from registry or `file:../` |
 | `js-client-helper-kv-*` / `js-rn-helper-kv-*` (Class C) | `shared_libs.WebStorage` or `shared_libs.MMKV` | Engine stub in `_test/` implementing the engine's native interface (Web Storage or MMKV); see `engine-stub` pattern in [`unit-test-authoring.md`](unit-test-authoring.md#pattern-3-engine-stub-an-engine-fake) |
 
 ### Test Loader Shape
@@ -350,4 +350,6 @@ Framework modules are **offline modules**. They need no Docker, no AWS credentia
 
 ### What About Component Tests?
 
-A Class I module that ships hooks (e.g. `useIdle`, `useTimer`) tests the hook's logic by calling it inside a test component rendered with `react-test-renderer`. The test asserts on the rendered output or on side effects (callback calls, state transitions). This is the same pattern used by `js-client-helper-styler-ext-react` today.
+A Class I module that ships hooks (e.g. `useIdle`, `useTimer`) tests the hook's logic by calling it inside a test component rendered with `react-test-renderer`. The test asserts on the rendered output or on side effects (callback calls, state transitions). This is the same pattern used by `js-client-helper-themer-ext-react` today.
+
+For the full RN and Expo testing guide, including test loader shapes for Expo-bound modules, component testing patterns, and CI placement, see [React Native Testing](client/rn-testing.md).

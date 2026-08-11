@@ -28,7 +28,7 @@ The runtime tier describes what platform APIs a module depends on. A module take
 |---|---|---|---|
 | `js-helper-*` | Core | Pure JavaScript. No browser APIs, no Node built-ins, no framework | `js-helper-utils`, `js-helper-debug`, `js-helper-money`, `js-helper-time` |
 | `js-server-helper-*` | Server | Node.js built-ins or server-only packages | `js-server-helper-http`, `js-server-helper-auth`, `js-server-helper-nosql-mongodb` |
-| `js-client-helper-*` | Client | Browser or Web APIs (`window`, `document`, `localStorage`, `IntersectionObserver`) | `js-client-helper-styler`, `js-client-helper-crypto` |
+| `js-client-helper-*` | Client | Browser or Web APIs (`window`, `document`, `localStorage`, `IntersectionObserver`) | `js-client-helper-themer`, `js-client-helper-crypto` |
 
 A module with no browser or framework dependency never carries `client`. It goes to the core tier (`js-helper-*`). A module that needs `window.localStorage` takes `js-client-helper-*`. A module that needs `fs` or `http` takes `js-server-helper-*`.
 
@@ -66,7 +66,7 @@ Suffixes modify a module's role within its tier. A module carries at most one su
 | `-ext-[target]` | Framework or platform-engine binding of a pure parent | Class H | `js-client-helper-font-ext-web` |
 | `-store-[backend]` | Storage adapter for a parent module | Class F | `js-server-helper-auth-store-dynamodb` |
 | `-adapter-[name]` | Runtime adapter for a parent module | Class F | `js-server-helper-http-gateway-adapter-express` |
-| `-template-[name]` | Design-language data pack for the styler | Data module | `js-client-helper-styler-template-carbon` |
+| `-template-[name]` | Design-language data pack for the themer | Data module | `js-client-helper-themer-template-carbon` |
 
 Framework-specific bindings never live in the parent module. They are `-ext-[target]` packages that import the pure parent and add framework-specific or platform-specific code. The parent never imports a framework. The target is one of: `react`, `vue`, `web`, `rn`, `expo`.
 
@@ -80,7 +80,7 @@ Once a module is known to need framework code, exactly two shapes are available.
 |---|---|---|
 | Packages | A pure parent (Class G) plus one `-ext-[framework]` package per framework (Class H) | One package (Class I) |
 | Names | `js-helper-[name]` or `js-client-helper-[name]`, plus `js-helper-[name]-ext-react` | `js-react-helper-[name]`, or `js-rw`/`js-rn`/`js-rnw` when platform-bound |
-| Example | `js-client-helper-styler` plus `js-client-helper-styler-ext-react` | `js-react-helper-idle` |
+| Example | `js-client-helper-themer` plus `js-client-helper-themer-ext-react` | `js-react-helper-idle` |
 | Use when | The framework-free logic has a second consumer | The framework is the only consumer |
 
 ### The Test
@@ -109,13 +109,13 @@ A pure module (`js-helper-*`, `js-client-helper-*`) must **never** depend on a f
 
 ### Loader Pattern Follows From the Surface
 
-Name and tier do not settle the loader pattern; the public surface does. A module exposing a React hook is a factory, and a hook-free computation module may be a singleton. That rule and the `js-react-helper-idle` versus `js-client-helper-styler` contrast live in [React Hook Modules Are Factories](../module-structure.md#react-hook-modules-are-factories), which this page does not restate.
+Name and tier do not settle the loader pattern; the public surface does. A module exposing a React hook is a factory, and a hook-free computation module may be a singleton. That rule and the `js-react-helper-idle` versus `js-client-helper-themer` contrast live in [React Hook Modules Are Factories](../module-structure.md#react-hook-modules-are-factories), which this page does not restate.
 
 ### Worked Verdicts
 
 | Module | Question 1: second consumer today? | Question 2: substantial framework-free core? | Shape |
 |---|---|---|---|
-| `styler` | Yes. Theme output is consumed as data outside React (token export, server-rendered output) | Yes. A derivation engine over template plus values | 1: `js-client-helper-styler` plus `-ext-react` |
+| `themer` | Yes. Theme output is consumed as data outside React (token export, server-rendered output) | Yes. A derivation engine over template plus values | 1: `js-client-helper-themer` plus `-ext-react` |
 | `timer` | No. Every planned caller is a React view. Node would call `setTimeout` directly | Not reached. Would fail anyway: a bookkeeping layer over `setTimeout`, with date math belonging to `js-helper-time` | 2: `js-react-helper-timer` |
 | `idle` | No. Every planned caller is a React view | Not reached. The state machine is substantial, which does **not** override question 1 | 2: `js-react-helper-idle` |
 | `font` | No | Yes. `@font-face` CSS string construction is pure computation; the adapter contract (web DOM injection, RN native registration, Expo `loadAsync`) is the only platform-bound part | 1: `js-client-helper-font` plus `-ext-web`, `-ext-rn`, `-ext-expo` |
@@ -227,12 +227,12 @@ If the component library later ships a Vue variant, the Promotion Rule extracts 
 - Determined tier: `js-client-helper-*`
 - Name: `js-client-helper-clipboard`
 
-### Example 4: A Carbon design-language template for the styler
+### Example 4: A Carbon design-language template for the themer
 
 - Pure data module (no code, no framework)
-- Ships an alternate template for the styler
+- Ships an alternate template for the themer
 - Determined tier: client (it is a data pack for a client-tier module)
-- Name: `js-client-helper-styler-template-carbon`
+- Name: `js-client-helper-themer-template-carbon`
 
 ### Example 5: Key-value storage per backend
 
@@ -265,7 +265,7 @@ The font module calls `expo-font.useFonts()` and `require('font.ttf')`. These ar
 
 ### "A React hook for theme access is NOT `js-rnw-helper`"
 
-The styler React extension provides `useTheme()` and `useStyles()`. It works across React DOM, React Native, and RNW. It is a binding for the pure styler parent. Therefore it is `js-client-helper-styler-ext-react`, not `js-rnw-helper-styler`. The `-ext-react` suffix captures the framework binding; the `client` prefix captures the parent's tier.
+The themer React extension provides `useTheme()` and `useStyles()`. It works across React DOM, React Native, and RNW. It is a binding for the pure themer parent. Therefore it is `js-client-helper-themer-ext-react`, not `js-rnw-helper-themer`. The `-ext-react` suffix captures the framework binding; the `client` prefix captures the parent's tier.
 
 ---
 

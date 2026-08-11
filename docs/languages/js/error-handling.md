@@ -325,7 +325,7 @@ The envelope pattern is deliberate: every function that can fail returns `{ succ
 
 ## Pure Engines: Modules With No Operational Errors
 
-The envelope exists for **operational** errors - expected outcomes of a working system (storage down, cooldown active) that correct caller code must branch on. A **pure engine** - a module that performs synchronous derivation only, with no I/O, no network, no external state (`helper-styler` is the reference) - has an **empty operational set**. Every failure it can produce is, by definition, the caller passing wrong data: a programmer error.
+The envelope exists for **operational** errors - expected outcomes of a working system (storage down, cooldown active) that correct caller code must branch on. A **pure engine** - a module that performs synchronous derivation only, with no I/O, no network, no external state (`helper-themer` is the reference) - has an **empty operational set**. Every failure it can produce is, by definition, the caller passing wrong data: a programmer error.
 
 For such a module the house rule resolves cleanly without an envelope:
 

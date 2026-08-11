@@ -2,7 +2,7 @@
 
 > **Language:** JavaScript
 
-The component library ships atoms and molecules: themeable, accessible primitives built on React Native Web. The library is own code, following Superloom's loader pattern and Lib DI throughout. Design languages arrive as styler template packs, not as separate component libraries. This page defines the component vocabulary, the authoring contract, the three-bucket exception model, and the accessibility contract.
+The component library ships atoms and molecules: themeable, accessible primitives built on React Native Web. The library is own code, following Superloom's loader pattern and Lib DI throughout. Design languages arrive as themer template packs, not as separate component libraries. This page defines the component vocabulary, the authoring contract, the three-bucket exception model, and the accessibility contract.
 
 ## On This Page
 
@@ -153,7 +153,7 @@ Every interactive component supports five states. The state names align with Car
 | `focused` | Component has keyboard or screen-reader focus | Focus ring or outline |
 | `disabled` | Component is non-interactive | `disabled` color operation (45% original + 55% white) |
 
-The styler engine derives pseudo-state colors from base colors through the template's color operations. Components resolve the active state from interaction events and select the corresponding utility class or token.
+The themer engine derives pseudo-state colors from base colors through the template's color operations. Components resolve the active state from interaction events and select the corresponding utility class or token.
 
 The `focused` state is the accessibility-visible state. It must render a visible focus indicator on every platform, including web (keyboard navigation) and native (VoiceOver/TalkBack focus).
 
@@ -202,7 +202,7 @@ The library never bundles these. Test apps inside the library pin real versions 
 
 ## Further Reading
 
-- [Theming](theming.md) - The styler pipeline that produces the tokens components consume
+- [Theming](theming.md) - The themer that produces the tokens components consume
 - [Client Loader](client-loader.md) - How `combineComponent` enters the boot chain
 - [Client Architecture](client-architecture.md) - Why the library targets React Native Web
 - [Client Modules](client-modules.md) - The naming taxonomy for the component library package

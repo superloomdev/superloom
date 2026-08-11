@@ -487,12 +487,12 @@ The decision needs no judgment. Read the module's public functions: if any `use*
 
 | | Hook module (factory) | Pure computation module (singleton) |
 |---|---|---|
-| Example | `js-react-helper-idle`, `js-react-helper-timer` | `js-client-helper-styler` |
-| Public surface | `useIdle`, `useTimer` plus imperative controls | `derive`, `generateUtilities` - no hooks |
+| Example | `js-react-helper-idle`, `js-react-helper-timer` | `js-client-helper-crypto` |
+| Public surface | `useIdle`, `useTimer` plus imperative controls | `uuid`, `randomString`, `base64Encode` - no hooks |
 | Holds mutable state | Yes: handler registry, timer table, pending timeouts | No: output is a pure function of the inputs |
 | Correct instance count | One per logical consumer | Exactly one, always |
 
-The styler is a singleton because `derive(template, values)` returns the same result for the same arguments no matter who calls it, so a second instance would be indistinguishable from the first. The idle module is a factory because a second instance is the entire point. A screen that idles after thirty seconds and one that idles after two minutes are independent state machines sharing an implementation.
+The crypto module is a singleton because `uuid()` returns the same kind of result no matter who calls it, so a second instance would be indistinguishable from the first. The idle module is a factory because a second instance is the entire point. A screen that idles after thirty seconds and one that idles after two minutes are independent state machines sharing an implementation.
 
 Naming reinforces this: a framework-tier prefix (`js-react-helper-*`, `js-rnw-helper-*`) signals a hook surface and therefore a factory, while a runtime-tier prefix on a hook-free module (`js-client-helper-*`) leaves the singleton option open. The prefix tables live in [`client/client-modules.md`](client/client-modules.md#framework-tier-prefixes).
 
@@ -637,7 +637,7 @@ Some modules are **stateless, pure, and globally shared**. They need no per-inst
 
 | Criterion | Detail |
 |---|---|
-| **Stateless** | No per-instance resource, pool, client, connection, or mutable state |
+| **Stateless** | No per-instance resource, pool, client, connection, cache, or mutable state |
 | **Pure** | Every method takes inputs, returns a result or throws (no I/O, no side effects) |
 | **Shared identity** | One instance is always correct. There is no architectural reason for two callers to have different instances |
 | **No per-caller CONFIG** | All callers need the same behavior. `CONFIG` does not vary at runtime between callers |
@@ -646,6 +646,7 @@ Some modules are **stateless, pure, and globally shared**. They need no per-inst
 **Always use the factory pattern when:**
 
 - The module holds a DB connection pool, persistent client, or any per-instance resource → use the **factory pattern** with `state`
+- The module holds a per-instance cache (LRU, memoization, computed-result store) → use the **factory pattern** with `state`. A cache is mutable state even when its contents are derived from pure inputs, because two callers with different cache configurations (capacity, TTL) need isolated state
 - Different callers legitimately need different `CONFIG` at runtime (different DB, different bucket, different queue) → use the **factory pattern**
 - The module wraps a vendor SDK or driver → use the **factory pattern** with `ensureAdapter`
 - The module is a `parts/` sub-module **and has at least one factory dependency** → use the factory `createInterface` shape (see [Part Shape: Singleton or Factory](#part-shape-singleton-or-factory))

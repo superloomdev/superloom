@@ -2,187 +2,128 @@
 
 > **Language:** JavaScript
 
-The theming pipeline takes a template and a set of values, derives a complete theme, and generates atomic utility styles. The pipeline is pure JavaScript: no CSS variables, no build-time magic, no framework dependency. React bindings arrive through an extension module. This page documents the pipeline, the vocabulary, server-driven theming, and design-language template packs.
+The theming system takes a template and a stack of layered values, derives a complete theme through a three-tier cascade, and emits platform-ready tokens. The pipeline is pure JavaScript: no CSS variables, no build-time magic, no framework dependency. React bindings arrive through an extension module with a transform seam that keeps app-specific logic in the app. This page documents the architecture, the module and extension split, runtime re-theming, and server-driven theming.
 
 ## On This Page
 
-- [Pipeline Overview](#pipeline-overview)
-- [Vocabulary](#vocabulary)
+- [Architecture: Three Tiers](#architecture-three-tiers)
+- [The Cascade: Layers, Not Modes](#the-cascade-layers-not-modes)
+- [Resolve Then Emit](#resolve-then-emit)
 - [The Template](#the-template)
-- [Theme Values: Base and Variant](#theme-values-base-and-variant)
-- [Utility Styles](#utility-styles)
+- [Module, Extension, App](#module-extension-app)
 - [Runtime Re-Theming](#runtime-re-theming)
 - [Server-Driven Theming](#server-driven-theming)
-- [React Extension](#react-extension)
-- [Design-Language Template Packs](#design-language-template-packs)
 - [Further Reading](#further-reading)
 
 ---
 
-## Pipeline Overview
+## Architecture: Three Tiers
 
-The pipeline has four stages:
+The theming system is split into three tiers, each with a distinct responsibility:
 
-1. **Template** declares which tokens exist and how each is derived
-2. **Values** (base + variant) fill the template with concrete data
-3. **Assemble** merges base and variant, then runs the template's derivation rules to produce `{ Color, Dimension, Font }`
-4. **Generate utilities** turns the theme into atomic style objects
+| Tier | Module | Class | Responsibility |
+|---|---|---|---|
+| **Engine** | `js-client-helper-themer` | G | Pure JavaScript token engine. Takes a template and layered values, resolves canonical values, emits platform-specific tokens. No framework dependency, no React, no state |
+| **Extension** | `js-client-helper-themer-ext-react` | H | React bindings for the engine. Provides `ThemeProvider`, `useTheme`, `useTokens`, `useThemeController`, and `ThemeContext`. Holds layers in React state, derives through the engine on change, exposes the result via context. Factory pattern: each loader call returns an independent instance |
+| **App** | Host code | n/a | App-specific logic inside the extension's transform seam: token vocabulary bridging, font validation, component building. The app owns everything the engine and extension do not |
 
-```text
-Template + Values (base + variant)
-  |
-  v  assemble()
-{ Color, Dimension, Font }
-  |
-  v  generateUtilities()
-{ font_size_md, background_app_primary, p_a_md, ... }
-```
-
-The engine is a pure producer. It takes data in and returns data out. It never imports a framework, never touches the DOM, and never holds state. This makes it testable in Node without a browser or React.
+The engine never imports a framework. The extension never imports the engine directly; it receives a built instance through dependency injection. The app never calls the engine directly; it passes through the extension's transform seam.
 
 ---
 
-## Vocabulary
+## The Cascade: Layers, Not Modes
 
-The vocabulary is locked. These terms appear in code, documentation, and error messages with one meaning.
+The engine resolves a theme from a stack of layers, not from a base-and-variant pair. Each layer is a sparse object with a name, a polarity (`light` or `dark`), a set of token overrides, and optional scale overrides.
 
-| Term | Meaning |
-|---|---|
-| **Engine** | The label-agnostic operations: color math (mix, lighten, darken, contrast), scale builders (modular, linear), `derive`, `extend`, `assemble`, `generateUtilities`. Knows no `primary`, no `xs`. Zero dependencies |
-| **Template** | The opinionated structure built on the engine. Declares named tokens and their derivation rules: color swatches, dimension scales, font roles. The package ships one default template; additional templates are data-only modules |
-| **Theme** | The values that fill a template. A theme is `base` + optional `variant`. Pure data, portable, server-sendable |
-| **Base** | The complete fallback theme. Every value the template needs is present |
-| **Variant** | A partial override. Only the values that differ from base. The variant wins on conflict |
-| **Swatches** | The color section's output declarations. Each swatch is a named output color with a derivation rule (`ref` or `operation`) |
-| **Scales** | The dimension section's output declarations. Each scale is a named dimension system (fontSize, space, radius) with a type (modular or linear) |
-| **Roles** | The font section's ordered list of font roles (primary, secondary). Each role resolves a family name with fallback to the previous role |
-| **Presets** | Fixed values merged into a scale as-is, outside the formula (e.g. `pill: 999` for border radius) |
-| **Constants** | Scalar values copied straight through to `Dimension` without scale derivation (e.g. `lineHeightRatio`) |
+```text
+Layer 0 (base)     - complete fallback, every seed present
+Layer 1 (variant)  - partial override, only what differs
+Layer 2 (accent)   - partial override, only the accent color
+  |
+  v  buildTheme(template, [layer0, layer1, layer2], platform)
+{ color, dimension, font, ... }  (flat emitted token map)
+```
+
+Layers merge in order: later layers win on conflict. This replaces the older base-plus-variant merge with a general cascade that handles any number of overlays. A dark mode is a layer, a tenant brand is a layer, an accent swap is a layer.
+
+The engine caches derived results by reference identity of the layers array. Passing a fresh array with equal content is a cache hit. The extension holds layers in `useState` and calls `update_layers` with a new array to trigger a re-derive.
+
+---
+
+## Resolve Then Emit
+
+The engine splits the work into two stages:
+
+1. **Resolve** produces canonical, unit-free values. A spacing token is the number `16`, not `'1rem'` and not `16`-with-an-implied-unit. Color ramps are computed, contrast pairs are selected, type sets are resolved to objects with absolute line heights.
+
+2. **Emit** projects those values onto one platform. Web wants `'1rem'` and a `box-shadow` string; React Native wants `16` and a style object.
+
+One derivation, two projections. There is no second theme to keep in step, and the difference between the platforms lives in one table rather than scattered through the token values.
 
 ---
 
 ## The Template
 
-A template is a data object with three sections. The engine reads each section through a dedicated deriver. The template is the only opinionated layer; the engine is generic.
+A template is a data object that declares which tokens exist and how each is derived. The engine reads the template through its parts system. The template is the only opinionated layer; the engine is generic.
 
 ```js
 module.exports = {
-  color:     { defaults: { ... }, swatches:  { ... } },
-  dimension: { defaults: { ... }, scales:    { ... }, constants: [ ... ] },
-  font:      { defaults: { ... }, roles:     [ ... ] }
+  color:   { ramps: { ... }, palettes: { ... } },
+  scales:  { geometric: { ... }, miniUnit: { ... } },
+  meta:    { type_sets: { ... }, shadows: { ... } },
+  emit:    { web: { ... }, native: { ... } }
 };
 ```
 
-Each section has a `defaults` block (the complete fallback values a theme overrides) and a derivation spec named in that section's vocabulary: color `swatches`, dimension `scales`, font `roles`.
-
-The default template ships with the styler module. Authoring a new template is a data-only edit: add colors to `defaults` and rules to `swatches`, add scale steps, append font roles. The engine never changes. The full authoring reference, including every color operation, scale type, and validation rule, lives in the styler module's own documentation.
+The full authoring reference, including every token type (literal, rule, alias, generator, type set, shadow), every scale type, and every validation rule, lives in the themer module's own documentation. This page cross-references it rather than duplicating the schema.
 
 ---
 
-## Theme Values: Base and Variant
+## Module, Extension, App
 
-A theme is two objects: `base` and `variant`. The `assemble` function merges them (variant wins on conflict) and runs the merged values through the template.
+The extension module owns the generic React plumbing. The app owns everything that is specific to its vocabulary, fonts, or component library. The seam between them is the `transform` prop on `ThemeProvider`.
 
-```js
-const base = {
-  color: { primary: '#0D9488', backgroundPrimary: '#FFFFFF' },
-  dimension: { fontBase: 16, fontRatio: 1.2, spaceUnit: 4 },
-  font: { primaryFamily: 'Inter' }
-};
+| | Engine | Extension | App |
+|---|---|---|---|
+| What it is | Pure JS token engine | React bindings | Host code |
+| Knows about | Templates, layers, tokens | React context, hooks, state | Token bridging, fonts, components |
+| Does not know about | React, any vocabulary | Any specific vocabulary, fonts, components | The engine internals |
+| Exports | `buildTheme`, `cacheStats`, `clearCache` | `ThemeProvider`, `useTheme`, `useTokens`, `useThemeController`, `ThemeContext` | App-shaped hooks and provider |
 
-const variant = { color: { primary: '#FF0000' } };
+The `transform` function runs inside the extension's `useMemo`, so it recomputes only when inputs change. It receives the engine's built result and the current layers, and returns an object whose fields are merged into the context value. This is where the app bridges the engine's flat token map to its own vocabulary (`{ Color, Dimension, Font }`), validates font families against the font core registry, and builds the themed component library.
 
-const theme = Styler.assemble(Styler.defaultTemplate, base, variant);
-```
-
-The variant is small. It carries only what changed. This is what makes server-driven theming practical: the server sends a partial JSON object, not a full theme.
-
----
-
-## Utility Styles
-
-`generateUtilities(theme)` turns a complete theme into a map of atomic style objects. Each utility is a single-purpose style keyed by a naming convention.
-
-| Utility pattern | Example | Produces |
-|---|---|---|
-| `font_size_[step]` | `font_size_md` | `{ fontSize: 16, lineHeight: 23 }` |
-| `font_[colorToken]` | `font_text_primary` | `{ color: '#111827' }` |
-| `background_[token]` | `background_app_primary` | `{ backgroundColor: '#0D9488' }` |
-| `p_[side]_[step]` | `p_a_md` | `{ padding: 12 }` (a = all sides) |
-| `m_[side]_[step]` | `m_t_lg` | `{ marginTop: 16 }` (t = top) |
-| `br_[step]` | `br_pill` | `{ borderRadius: 999 }` |
-
-Spacing utilities use logical sides for RTL: `s` (start) and `e` (end) map to `paddingStart`/`paddingEnd` and `marginStart`/`marginEnd`, which mirror automatically under RTL. The side codes are: `a` (all), `h` (horizontal), `v` (vertical), `t` (top), `b` (bottom), `s` (start), `e` (end).
-
-Components read utility styles by name, not by inline token lookup. Re-theming is regenerating the utility map; no component changes.
+The extension's `useThemeController()` returns the full context value, including everything the transform added. The app wraps this with its own hook that shapes the API for consumers.
 
 ---
 
 ## Runtime Re-Theming
 
-The React extension provides `useThemeController()`, which returns the current theme and an `updateTheme(newVariant)` function. Calling `updateTheme` re-derives the theme and utility styles live, triggering React re-renders throughout the tree.
+The extension's `ThemeProvider` holds the layer stack in React state. Calling `update_layers` with a new array triggers a re-derive through the engine and a re-render of the entire subtree. The app's `useThemeController()` wraps this with an `updateTheme(nextVariant)` function that converts the variant to layers and calls `update_layers` under the hood.
 
-Each app shape mounts its own `ThemeProvider` with its own base and variant. Switching shapes re-themes the entire subtree. This is the mechanism for per-tenant branding, dark mode, and live accent changes.
+Each app shape mounts its own `ThemeProvider` with its own base and variant layers. Switching shapes re-themes the entire subtree. This is the mechanism for per-tenant branding, dark mode, and live accent changes.
 
 ---
 
 ## Server-Driven Theming
 
-A variant is pure JSON. It can be stored in a database, sent over HTTP, or pushed from a server at runtime. The server `interface`/`channel` record is the runtime override source: it delivers a variant object that the client merges with its base theme.
+A layer is pure JSON. It can be stored in a database, sent over HTTP, or pushed from a server at runtime. The server delivers a layer object that the client adds to its layer stack before calling `buildTheme`.
 
-The contract is one-directional: the server sends data (color values, dimension seeds, font family names). The client owns the template (derivation rules) and the engine (math). The server never sends derivation rules or code.
+The contract is one-directional: the server sends data (color seeds, dimension seeds, font family names). The client owns the template (derivation rules) and the engine (math). The server never sends derivation rules or code.
 
-This separation is what makes the system portable. A server can push `{ color: { primary: '#FF0000' } }` to a client running any template, and the client derives the full set of swatches, pseudo-states, and contrast pairs locally.
-
----
-
-## React Extension
-
-The core styler module is pure JavaScript. React bindings live in a separate extension module (`js-client-helper-styler-ext-react`) that imports the core and adds React-specific bindings: context, hooks, lifecycle.
-
-| | Core Styler | Extension |
-|---|---|---|
-| What it is | Pure JavaScript theme engine | React bindings |
-| Dependencies | None | React 18+ |
-| Exports | Functions (assemble, derive, generateUtilities) | Hooks and provider (ThemeProvider, useTheme, useStyles, useThemeController) |
-| Where to use | Anywhere (Node, browser, RN) | React apps only |
-
-The extension is the consumer; the core is the producer. The core never imports a framework. The extension imports the core and wraps its output in React context.
-
-The adapter direction is core to adapter, the opposite of the `http-gateway` pattern (where the core calls the adapter). This means the core's unit tests need no adapter and no stub: they test pure functions with fixture themes.
-
----
-
-## Design-Language Template Packs
-
-A template pack is a data-only module that ships an alternate template for a specific design language. The first planned pack is Carbon (IBM's design system): an 8px grid, a fixed type ramp, and state specifications mapped to the styler's template schema.
-
-| Concept | What it is |
-|---|---|
-| Template pack | A data-only module exporting a template object shaped like the default template |
-| Naming | `js-client-helper-styler-template-[name]` (e.g. `js-client-helper-styler-template-carbon`) |
-| What changes | The template (swatches, scales, roles, defaults). The engine, the component library, and the utility style names stay the same |
-| What does not change | Component code, utility style naming convention, the React extension |
-
-Components never change when switching design languages. The template changes. A component reading `font_size_md` gets a Carbon-derived size under a Carbon template and a default-derived size under the default template. The component code is identical.
-
-A host app selects a template by passing it to `assemble`:
-
-```js
-const CarbonTemplate = require('@superloomdev/js-client-helper-styler-template-carbon');
-const theme = Styler.assemble(CarbonTemplate, base, variant);
-```
-
-The full template authoring reference (every key, every operation, every validation rule) lives in the styler module's own `docs/template.md`. This page cross-references it rather than duplicating the schema.
+This separation is what makes the system portable. A server can push a layer with one accent color override to a client running any template, and the client derives the full set of tokens, contrast pairs, and platform-specific projections locally.
 
 ---
 
 ## Further Reading
 
 - [Fonts](fonts.md) - The font contract: theme names families, host loads files
-- [Components](components.md) - How components consume theme tokens and utility styles
-- [Client Loader](client-loader.md) - How the styler enters the `Lib` container
-- Styler module `README.md` - Installation and quick start
-- Styler module `docs/api.md` - Full API reference
-- Styler module `docs/template.md` - Template authoring reference
-- Styler module `docs/philosophy.md` - Design philosophy
+- [Components](components.md) - How components consume theme tokens
+- [Client Loader](client-loader.md) - How the themer and extension enter the `Lib` container
+- Themer module `README.md` - Installation and quick start
+- Themer module `docs/api.md` - Full API reference
+- Themer module `docs/template.md` - Template authoring reference
+- Themer module `docs/schemas.md` - Layer and template schema validation
+- Themer module `docs/philosophy.md` - Design philosophy
+- Themer extension `README.md` - Extension quick start and transform seam
+- Themer extension `docs/api.md` - ThemeProvider, hooks, context reference
+- Themer extension `docs/philosophy.md` - Extension pattern rationale

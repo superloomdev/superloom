@@ -215,3 +215,6 @@ All personal secrets, environment files, and AI session notes live in `__dev__/`
 | Understand the server architecture pattern | [Why the Server Uses MVC](../principles/server-architecture.md) |
 | Understand the one-shape DTO rule | [DTO Philosophy (JavaScript)](../languages/js/dto-philosophy.md) |
 | Read the full entity walkthrough | [Entity Creation Guide](../languages/js/server/entity-creation-guide-js) |
+| Set up React Native and Expo | [React Native Environment Setup](../languages/js/client/rn-environment-setup.md) |
+| Understand Expo capabilities and cloud features | [Expo Guide](../languages/js/client/expo-guide.md) |
+| Test React Native modules | [React Native Testing](../languages/js/client/rn-testing.md) |

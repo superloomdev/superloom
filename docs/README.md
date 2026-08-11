@@ -85,7 +85,8 @@ docs/
       server/                       #   Application server layers (loader, interfaces,
                                     #   controllers, services, models, entity guide)
       client/                       #   Client-side architecture (stack, loader, theming,
-                                    #   fonts, components, super-app shapes, module taxonomy)
+                                    #   fonts, components, super-app shapes, module taxonomy,
+                                    #   RN environment setup, Expo guide, RN testing)
       versioning/                   #   Bump checklist, changelog format, CI graph,
                                     #   API stability, dependency management
 

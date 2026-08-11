@@ -129,7 +129,7 @@ The pipeline processes modules in three groups, organized by dependency boundari
 │  Location: src/helper-modules-client/                          │
 │  Pattern: Class A - Universal, often UI-adjacent               │
 ├─────────────────────────────────────────────────────────────────┤
-│  js-client-helper-styler → (future client modules)             │
+│  js-client-helper-themer → (future client modules)             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

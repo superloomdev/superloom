@@ -28,7 +28,7 @@ The contract is:
 - The host registers the `Inter` font family with the platform
 - If the theme names a family the host has not registered, text renders in a fallback
 
-The styler module provides `validators.findUnregisteredFamilies(theme, registered)` to catch missing fonts before they degrade the UI. The helper compares the families named in the theme against the families the host has loaded and returns the difference.
+The themer module provides `validators.findUnregisteredFamilies(theme, registered)` to catch missing fonts before they degrade the UI. The helper compares the families named in the theme against the families the host has loaded and returns the difference.
 
 ---
 
@@ -97,12 +97,13 @@ The system uses static fonts only. Variable fonts (a single font file with multi
 
 The reason is platform compatibility. `expo-font` and the underlying native font registration APIs expect individual font files per weight. A variable font file requires axis-aware parsing that the current toolchain does not provide.
 
-The guidance is 2 to 3 weights per family: regular (400), semibold (600), and optionally bold (700). The styler template's weight resolution chain falls back gracefully: `regular` defaults to `'400'`, `medium` falls back to `regular`, `semibold` defaults to `'600'`, `bold` defaults to `'700'`. A theme can supply `font.weight` to override any of these.
+The guidance is 2 to 3 weights per family: regular (400), semibold (600), and optionally bold (700). The themer template's weight resolution chain falls back gracefully: `regular` defaults to `'400'`, `medium` falls back to `regular`, `semibold` defaults to `'600'`, `bold` defaults to `'700'`. A theme can supply `font.weight` to override any of these.
 
 ---
 
 ## Further Reading
 
+- [Expo Guide](expo-guide.md) - Expo capabilities, adapter pattern, cloud account features
 - [Theming](theming.md) - How font families enter the theme and reach components
 - [Client Loader](client-loader.md) - How the font manifest enters the `Lib` container
 - [Client Architecture](client-architecture.md) - The Expo + Metro pipeline that bundles font assets

@@ -339,7 +339,7 @@ Class A does **not** carry the universal Bullet 1 (insulation against driver/SDK
 
 Framework-specific binding for parent module (Class G). The parent module provides the core functionality; the extension adds framework bindings (React hooks, Vue composables, etc.). Extension imports parent; parent never knows about the extension. For the full conceptual definition see [`module-classes.md` → Class H](module-classes.md#class-h-extension).
 
-**Naming convention:** `[parent-name]-ext-[framework]`. Example: `js-client-helper-styler-ext-react`.
+**Naming convention:** `[parent-name]-ext-[framework]`. Example: `js-client-helper-themer-ext-react`.
 
 **Entry point:** `extension.js` (not `index.js`). This makes the module type discoverable by filename.
 
@@ -535,13 +535,13 @@ Full-featured business-logic module designed for framework integration. Similar 
 
 | Extension | Framework | Purpose |
 |---|---|---|
-| `js-client-helper-styler-ext-react` | React 18+ | Hooks and ThemeProvider for React apps |
+| `js-client-helper-themer-ext-react` | React 18+ | Hooks and ThemeProvider for React apps |
 
 > **Need a different framework?** The parent module is pure JavaScript. Build your own Class H extension following the extension pattern.
 
 **`docs/` folder:** `api.md`, `configuration.md`, `data-model.md`, optional `runtime.md`. Extension documentation lives in each Class H package.
 
-**Pilot status:** `js-client-helper-styler` is the active Class G pilot.
+**Pilot status:** `js-client-helper-themer` is the active Class G pilot.
 
 ### Class F. Dependent Adapter
 

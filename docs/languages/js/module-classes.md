@@ -63,7 +63,7 @@ Every class A through I ships the same minimum set of files:
 1. **Token cost for AI tools.** A 1500-line `utils.js` file costs an order of magnitude more tokens to read than a 200-line `docs/api.md`. Every consumer (human or AI) benefits when the canonical reference is small and structured.
 2. **No per-module decisions.** If some Class A modules ship `docs/api.md` and some don't, every contributor and every reviewer has to re-evaluate the call. Making it universal removes the question entirely.
 
-Class-specific extras stack on top of the universal four. Class D adds `docs/iam.md`. Class E adds `docs/data-model.md` and an optional `docs/runtime.md`. Any module that ships a `*.validators.js` also adds `docs/schemas.md`, the page that documents every validated boundary contract (the config schema, the per-call options, the injected-dependency contract, the response envelope) and the throw-versus-return discipline; Class E and G always carry one, and a lighter class carries one only when it validates input (for example a Class A `money` module). `docs/schemas.md` (plural) documents the boundary contracts a caller and an injected dependency must satisfy and is distinct from a Class F store's `docs/schema.md` (singular), which documents backend DDL and indexes; the two cross-link and never overlap. Class F stores add `docs/schema.md` and `docs/cleanup.md`, the two documents that capture what is operationally distinctive per backend; Class F adapters ship only the universal pair (`api.md` + `configuration.md`). Class G modules ship the standard docs plus optional `runtime.md`. Extension documentation lives in each Class H package. Class H extensions ship `api.md` (hooks/components) and `philosophy.md` (extension pattern), but not `configuration.md` - configuration lives in the parent module. None of these *replace* the universal four; they add to them. Class E **does not** add a `docs/storage-adapters.md`: adapter documentation lives in each Class F package, not in the parent. The Class E README has a short "Storage Adapters" or "Transport Adapters" subsection that lists the available adapters and points to each package's own README. The Class G README has a short "Extensions" subsection listing available Class H packages.
+Class-specific extras stack on top of the universal four. Class D adds `docs/iam.md`. Class E adds `docs/data-model.md` and an optional `docs/runtime.md`. Any module that ships a `*.validators.js` also adds `docs/schemas.md`, the page that documents every validated boundary contract (the config schema, the per-call options, the injected-dependency contract, the response envelope) and the throw-versus-return discipline; Class E and G always carry one, and a lighter class carries one only when it validates input (for example a Class A `money` module). `docs/schemas.md` (plural) documents the boundary contracts a caller and an injected dependency must satisfy and is distinct from a Class F store's `docs/schema.md` (singular), which documents backend DDL and indexes; the two cross-link and never overlap. Class F stores add `docs/schema.md` and `docs/cleanup.md`, the two documents that capture what is operationally distinctive per backend; Class F adapters ship only the universal pair (`api.md` + `configuration.md`). Class G modules ship the standard docs plus optional `philosophy.md`, `template.md`, and `runtime.md`. Extension documentation lives in each Class H package. Class H extensions ship `api.md` (hooks/components) and `philosophy.md` (extension pattern), but not `configuration.md` - configuration lives in the parent module. None of these *replace* the universal four; they add to them. Class E **does not** add a `docs/storage-adapters.md`: adapter documentation lives in each Class F package, not in the parent. The Class E README has a short "Storage Adapters" or "Transport Adapters" subsection that lists the available adapters and points to each package's own README. The Class G README has a short "Extensions" subsection listing available Class H packages.
 
 For Class F stores specifically, `docs/api.md` documents the store contract (with backend-specific semantic notes); `docs/configuration.md` covers the `STORE_CONFIG` keys, peer dependencies, environment variables consumed by `_test/loader.js`, and the testing tier; `docs/schema.md` documents what `setupNewStore` creates and the backend-specific syntax notes; `docs/cleanup.md` documents the TTL behavior and the recommended cleanup mechanism. For Class F adapters, `docs/api.md` documents the adapter contract (one subsection per method with runtime-specific notes); `docs/configuration.md` covers any adapter-specific config, peer dependencies, and the testing tier. The README for both subtypes follows the **same Universal Section list as every other class**, condensed to ~70-90 lines (tagline, What This Is, Why-bullets including a backend/runtime-specific bullet 5, Hot-Swappable, Aligned with Superloom, Extended Documentation, Adding to Your Project pointing to the parent, Testing Status, License); it contains no `## Install` block and no `## Usage` / Quick Start. Each Class F package documents only its own backend or runtime. There is no cross-adapter comparison anywhere in a Class F package.
 
@@ -241,11 +241,13 @@ Class G modules provide complete solutions to problem domains (like theming, UI 
 
 **README extras:** "Architecture Overview" showing extension points, "Extensions" subsection listing available Class H packages.
 
-**`docs/`:** `api.md`, `configuration.md`, `schemas.md` (when the validators file enforces real contracts), `data-model.md`, optional `runtime.md`. Extension details live in each Class H package.
+**`docs/`:** `api.md`, `configuration.md`, `schemas.md` (when the validators file enforces real contracts), `philosophy.md` (when the module has design rationale worth documenting separately), `template.md` (when the module ships a reference template, e.g. a theme template). Extension details live in each Class H package.
 
 | Module | Package | Purpose | Extensions Available |
 |---|---|---|---|
-| `js-client-helper-styler` | `@superloomdev/js-client-helper-styler` | Theme engine with template-driven tokens | `js-client-helper-styler-ext-react` (React) |
+| `js-client-helper-styler` | `@superloomdev/js-client-helper-styler` | Theme engine with template-driven tokens (retired; superseded by `js-client-helper-themer`) | `js-client-helper-styler-ext-react` (React, retired) |
+| `js-client-helper-font` | `@superloomdev/js-client-helper-font` | Font family registry, manifest schema, role-to-family resolution | `js-client-helper-font-ext-web` (Web), `js-client-helper-font-ext-rn` (bare RN), `js-client-helper-font-ext-expo` (Expo, local only) |
+| `js-client-helper-themer` | `@superloomdev/js-client-helper-themer` | Carbon-vocabulary token engine with three-tier cascade, resolve-then-emit pipeline | `js-client-helper-themer-ext-react` (React) |
 
 ---
 
@@ -261,7 +263,7 @@ Class H is the counterpart to Class G. Where Class G provides extension points f
 - **Class E + F:** Parent utilizes adapter - adapter is instrument, parent is boss
 - **Class G + H:** Extension utilizes parent - extension is instrument, extension is boss
 
-**Naming convention:** `[parent-name]-ext-[framework]`. Example: `js-client-helper-styler-ext-react`.
+**Naming convention:** `[parent-name]-ext-[framework]`. Example: `js-client-helper-font-ext-web`.
 
 **Entry point:** `extension.js` (not `index.js`). This makes the module type discoverable by filename and keeps the extension pattern consistent with store/adapter naming conventions.
 
@@ -271,7 +273,11 @@ Class H is the counterpart to Class G. Where Class G provides extension points f
 
 | Module | Package | Parent Module | Framework | Purpose |
 |---|---|---|---|---|
-| `js-client-helper-styler-ext-react` | `@superloomdev/js-client-helper-styler-ext-react` | `js-client-helper-styler` | React 18+ | React hooks and ThemeProvider for Styler |
+| `js-client-helper-styler-ext-react` | `@superloomdev/js-client-helper-styler-ext-react` | `js-client-helper-styler` | React 18+ | React hooks and ThemeProvider for Styler (retired alongside Styler) |
+| `js-client-helper-font-ext-web` | `@superloomdev/js-client-helper-font-ext-web` | `js-client-helper-font` | Web | Web `@font-face` injection for font loading |
+| `js-client-helper-font-ext-rn` | `@superloomdev/js-client-helper-font-ext-rn` | `js-client-helper-font` | React Native | Bare React Native font loading via `@vitrion/react-native-load-fonts` |
+| `js-client-helper-font-ext-expo` | `@superloomdev/js-client-helper-font-ext-expo` | `js-client-helper-font` | Expo | Expo Font (`expo-font`) adapter (local only, not in CI) |
+| `js-client-helper-themer-ext-react` | `@superloomdev/js-client-helper-themer-ext-react` | `js-client-helper-themer` | React 18+ | React ThemeProvider, hooks, and transform seam for the themer engine |
 
 ---
 
@@ -300,7 +306,9 @@ Class I exists because the Class G plus H pair is not free: it costs two package
 
 | Module | Package | Prefix tier | Framework | Purpose |
 |---|---|---|---|---|
-| _none shipped yet_ | | | | First Class I modules arrive with the client helper module wave |
+| `js-react-helper-idle` | `@superloomdev/js-react-helper-idle` | `js-react-helper-*` | React | Idle-state detection with `useIdle` hook |
+| `js-react-helper-timer` | `@superloomdev/js-react-helper-timer` | `js-react-helper-*` | React | Countdown and interval hooks |
+| `js-rnw-helper-device` | `@superloomdev/js-rnw-helper-device` | `js-rnw-helper-*` | React Native Web | RN platform APIs (device info, screen metrics, accessibility) injected via `shared_libs` |
 
 ---
 
@@ -339,4 +347,15 @@ Tracks which modules have been restructured per [`module-docs.md`](module-docs.m
 | js-server-helper-logger-store-* (5) | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Five adapters: sqlite, postgres, mysql, mongodb, dynamodb |
 | js-server-helper-http-gateway-adapter-aws-apigateway | F | No (pending) | No (pending) | No | Transport adapter subtype. First Class F transport adapter |
 | js-server-helper-http-gateway-adapter-express | F | No (pending) | No (pending) | No | Transport adapter subtype |
+| js-client-helper-kv-localstorage | C | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Client-side Class C. Browser Web Storage |
+| js-rn-helper-kv-mmkv | C | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Client-side Class C. `react-native-mmkv` (JSI) |
+| js-react-helper-idle | I | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | First Class I module. Idle-state detection with `useIdle` hook |
+| js-react-helper-timer | I | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Class I. Countdown and interval hooks |
+| js-rnw-helper-device | I | **Yes** | **Yes** (`api.md`, `configuration.md`) | **Yes** | Class I. RN platform APIs injected via `shared_libs` |
+| js-client-helper-font | G | **Yes** | **Yes** (`api.md`, `configuration.md`, `schemas.md`) | **Yes** | Class G. Font family registry and manifest schema |
+| js-client-helper-font-ext-web | H | **Yes** | **Yes** (`api.md`, `philosophy.md`) | **Yes** | Class H. Web `@font-face` injection |
+| js-client-helper-font-ext-rn | H | **Yes** | **Yes** (`api.md`, `philosophy.md`) | **Yes** | Class H. Bare RN font loading |
+| js-client-helper-font-ext-expo | H | **Yes** | **Yes** (`api.md`, `philosophy.md`) | **Yes** | Class H. Expo Font adapter (local only, not in CI) |
+| js-client-helper-themer | G | **Yes** | **Yes** (`api.md`, `configuration.md`, `schemas.md`) | **Yes** | Class G. Carbon-vocabulary token engine, 204 tests |
+| js-client-helper-themer-ext-react | H | **Yes** | **Yes** (`api.md`, `philosophy.md`) | **Yes** | Class H. React ThemeProvider, hooks, transform seam |
 
