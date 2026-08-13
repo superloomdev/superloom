@@ -80,6 +80,7 @@ A language implementation adapts syntax; it does not renegotiate the architectur
 - The three error categories and the throw-versus-return boundary
 - JSON as the universal transport
 - Pipeline-only releases and semantic versioning
+- Testing docs written before the first module: when a language layer adds a new platform or framework tier, the testing documentation for that tier must land before the first module is created. Modules created before their testing docs exist ship without a test floor, and the gap is discovered retroactively rather than caught at creation. The testing chapter defines the test double patterns, the loader shape, and the CI placement the modules conform to; without it, each module invents its own approach.
 
 If an implementation cannot satisfy one of these, the finding goes to the principles layer as a proposed amendment, argued at the concept level. The core changes by deliberate amendment for everyone, never by one language quietly diverging.
 

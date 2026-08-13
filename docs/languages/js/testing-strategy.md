@@ -253,6 +253,7 @@ For complex layers like Models, we use a single global test runner that executes
 - **Test naming convention:** `should [expected behavior] when [condition]`
 - **No test should modify files** or have side effects outside its scope.
 - **Run all module tests** before committing: `npm test` from module root or using the global runner.
+- **Application-tier repos must have an offline test suite.** Every application repo (demo, template, product) ships a `_test/` directory that builds the `Lib` container through the real loader with stub adapters and renders shared components with `react-test-renderer`. The suite runs with `node --test` and no Metro, no emulator, and no browser. The test tier is a host: it supplies stub adapters to the real loader, never rebuilds the container by hand. See [Client Architecture](client/client-architecture.md) for the host model and [React Native Testing](client/rn-testing.md) for the RNW alias tier.
 
 ---
 

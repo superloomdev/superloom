@@ -13,7 +13,7 @@ The complete rule set for writing unit tests. Follow it exactly and any reviewer
 - [How to Write Tests for a New Module](#how-to-write-tests-for-a-new-module-step-by-step)
 - [Reference - Assertion Methods](#reference---assertion-methods)
 - [Reference - Test Output](#reference---test-output)
-- [Test Double Patterns: memory-store vs stub-adapter vs engine-stub](#test-double-patterns-memory-store-vs-stub-adapter-vs-engine-stub)
+- [Test Double Patterns: memory-store vs stub-adapter vs engine-stub vs emitter-stub](#test-double-patterns-memory-store-vs-stub-adapter-vs-engine-stub-vs-emitter-stub)
 - [Config Absorption Contract](#config-absorption-contract)
 
 ---
@@ -223,9 +223,9 @@ Each function is a suite. Each `it()` is a test. All results are visible in the 
 
 ---
 
-## Test Double Patterns: memory-store vs stub-adapter vs engine-stub
+## Test Double Patterns: memory-store vs stub-adapter vs engine-stub vs emitter-stub
 
-When a module under test depends on an external contract (a storage backend, a runtime adapter, a third-party driver, or a storage engine), its own tests must not hit the real thing. Instead, a **test double** is placed in `_test/` that satisfies the contract interface with minimal in-process code. Three named patterns exist in this project. They are **not mutually exclusive** - a module can use several if it has different kinds of dependency.
+When a module under test depends on an external contract (a storage backend, a runtime adapter, a third-party driver, or a storage engine), its own tests must not hit the real thing. Instead, a **test double** is placed in `_test/` that satisfies the contract interface with minimal in-process code. Four named patterns exist in this project. They are **not mutually exclusive** - a module can use several if it has different kinds of dependency.
 
 ---
 
@@ -342,6 +342,7 @@ The key property: **no state persists across calls**. The stub just returns a va
 | Does the test need to assert on what was stored and read back? | `memory-store` or `engine-stub` |
 | Does the test need to assert on what was sent out (response, message, event shape)? | `stub-adapter` |
 | Does the test need to assert the module constructed the engine with specific options (id, encryptionKey)? | `engine-stub` |
+| Does the injected API expose subscriptions (addEventListener returning a subscription, or a change event)? | `emitter-stub` |
 
 ---
 
@@ -446,6 +447,76 @@ const Store = require('helper-kv-mmkv')({
 ```
 
 **Key difference from `memory-store`:** A `memory-store` implements a Superloom store contract (the adapter interface the module calls). An `engine-stub` implements the engine's native API (the interface the module wraps). The module under test treats the stub exactly as it would the real engine - constructing it, calling its methods, and handling its errors.
+
+---
+
+### Pattern 4: `emitter-stub` (a Subscribable Fake)
+
+**File name:** `_test/stubs/[api]-stub.js` or `_test/emitters.js` (one file per API or a shared file, matching the existing `_test/` layout)
+
+**What it is:** A test double for an injected API that exposes subscription methods (`addEventListener`, `addListener`, or a change-event callback). The stub records listeners in a `Set` and exposes a test-side `_emit` method that fires them. It also exposes `_listenerCount` so tests can assert that unsubscribe actually detaches.
+
+**Industry term:** *Spy* with emission control. Unlike a `stub-adapter` that only records calls, an emitter stub lets the test drive the event timeline.
+
+**When to use it:**
+- The module receives a platform API through `shared_libs` that exposes subscriptions (`Dimensions.addEventListener`, `AppState.addEventListener`, `NetInfo.addEventListener`)
+- The test needs to assert on what happens when the injected value changes, when a state transition fires, or when a listener is detached
+- Static stubs (fixed return values) cannot exercise the subscription lifecycle
+
+| Module | File | What it fakes |
+|---|---|---|
+| `js-rnw-helper-device` | `_test/test-events.js` (inline) | `Dimensions`, `AppState`, `NetInfo`, `SafeArea` subscription surfaces with `_emit` and `_listenerCount` |
+
+**What an emitter-stub looks like:**
+
+```js
+// _test/stubs/dimensions-stub.js
+'use strict';
+
+function makeDimensionsStub (initial) {
+  var current = initial;
+  var listeners = new Set();
+  return {
+    get: function (key) { return current[key]; },
+    addEventListener: function (type, fn) {
+      listeners.add(fn);
+      return { remove: function () { listeners.delete(fn); } };
+    },
+    _emit: function (next) {
+      current = next;
+      listeners.forEach(function (fn) { fn(next); });
+    },
+    _listenerCount: function () { return listeners.size; }
+  };
+}
+
+module.exports = makeDimensionsStub;
+```
+
+The stub is injected in the test loader alongside other `shared_libs` entries:
+
+```js
+// _test/loader.js
+var makeDimensionsStub = require('./stubs/dimensions-stub');
+var dimensionsStub = makeDimensionsStub({ window: { width: 375, height: 812 } });
+
+var Device = require('helper-device')({
+  Utils: Utils,
+  Debug: Debug,
+  Dimensions: dimensionsStub,
+  AppState: appStateStub,
+  NetInfo: netInfoStub
+});
+```
+
+**The smart assertions this enables (each pins an exact value):**
+1. After `_emit({ window: { width: 375 } })`, the module's getter returns exactly `375`.
+2. After calling the module's unsubscribe, `_listenerCount()` returns exactly `0` - proves no leak.
+3. A state transition sequence `active -> background -> active` invokes the module's callback exactly `2` times with exact state strings.
+4. A stub whose optional slot is absent from `shared_libs` exercises the module's degraded path - assert the exact error envelope or documented fallback value.
+5. A listener registered after an emit still receives the next emit (no stale-listener bug).
+
+**Key difference from `stub-adapter`:** A `stub-adapter` records what the module sent out. An `emitter-stub` lets the test push values into the module through the same subscription surface the real API uses. Use `stub-adapter` for outbound calls; use `emitter-stub` for inbound events.
 
 ---
 
