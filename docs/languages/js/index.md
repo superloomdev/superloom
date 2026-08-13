@@ -12,12 +12,13 @@ For a developer new to the framework, in order:
 2. [Code Formatting](code-formatting.md) - spacing, banners, comments, naming, JSDoc
 3. [Module Structure](module-structure.md) - loaders, companions, patterns, and every archetype skeleton
 4. [Module Classes](module-classes.md) - the class taxonomy and where every module belongs
-5. [Error Handling](error-handling.md) - envelopes, catalogs, throw versus return in JavaScript
-6. [Testing Strategy](testing-strategy.md) and [Unit Test Authoring](unit-test-authoring.md)
-7. [Client Architecture](client/client-architecture.md) - the RNW/Expo stack, project layout, and bundler-agnostic rule (entry point to the `client/` section)
-8. [React Native Environment Setup](client/rn-environment-setup.md) - system prerequisites, local development, Metro bundler
-9. [Expo Guide](client/expo-guide.md) - Expo capabilities, adapter pattern, cloud account features
-10. [React Native Testing](client/rn-testing.md) - testing conventions for RN and Expo modules
+5. [Composition and Adapters](composition-and-adapters.md) - the four tiers in JS, host adapters, the adapter gate
+6. [Error Handling](error-handling.md) - envelopes, catalogs, throw versus return in JavaScript
+7. [Testing Strategy](testing-strategy.md) and [Unit Test Authoring](unit-test-authoring.md)
+8. [Client Architecture](client/client-architecture.md) - the RNW/Expo stack, project layout, and bundler-agnostic rule (entry point to the `client/` section)
+9. [React Native Environment Setup](client/rn-environment-setup.md) - system prerequisites, local development, Metro bundler
+10. [Expo Guide](client/expo-guide.md) - Expo capabilities, adapter pattern, cloud account features
+11. [React Native Testing](client/rn-testing.md) - testing conventions for RN and Expo modules
 
 ## Document Map
 
@@ -28,6 +29,7 @@ For a developer new to the framework, in order:
 | [`module-structure.md`](module-structure.md) | [Module Design](../../principles/module-design.md), [File Archetypes](../../principles/file-archetypes.md) |
 | [`factory-vs-singleton.md`](factory-vs-singleton.md) | [Module Design](../../principles/module-design.md) |
 | [`module-classes.md`](module-classes.md) | [Module Design](../../principles/module-design.md) |
+| [`composition-and-adapters.md`](composition-and-adapters.md) | [Composition and Adapters](../../principles/composition-and-adapters.md) |
 | [`dependencies.md`](dependencies.md) | [Module Design](../../principles/module-design.md) |
 | [`error-handling.md`](error-handling.md) | [Error Handling](../../principles/error-handling.md) |
 | [`validation.md`](validation.md) | [Validation](../../principles/validation.md) |

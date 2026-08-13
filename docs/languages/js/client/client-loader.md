@@ -2,12 +2,13 @@
 
 > **Language:** JavaScript
 
-The `loader.js` at `src/client/loader.js` is the bootstrap and dependency-injection root of the client. It builds the `Lib` container, wires helper modules, and provides the single point where cross-cutting dependencies enter the React tree. The pattern mirrors the server loader: every framework module is a factory, `Lib` is memoized, and nothing outside the loader reads environment configuration.
+The `loader.js` at `src/app-core/loader.js` is the bootstrap and dependency-injection root of the client. It builds the `Lib` container, wires helper modules, and provides the single point where cross-cutting dependencies enter the React tree. The pattern mirrors the server loader: every framework module is a factory, `Lib` is built fresh on each call, and nothing outside the loader reads environment configuration.
 
 ## On This Page
 
 - [What the Loader Builds](#what-the-loader-builds)
 - [The Lib Container](#the-lib-container)
+- [Adapters](#adapters)
 - [React Boundary Rule](#react-boundary-rule)
 - [Folder Conventions](#folder-conventions)
 - [Boot Chain](#boot-chain)
@@ -17,13 +18,15 @@ The `loader.js` at `src/client/loader.js` is the bootstrap and dependency-inject
 
 ## What the Loader Builds
 
-The loader runs once. It performs three tasks in order:
+The loader is a pure build function. It performs three tasks in order:
 
-1. **Load static config** from `config.js` and merge environment overrides
-2. **Build `Lib`** - attach helper modules, theme engine, font manifest, SDK, and React itself
+1. **Validate the adapter set** - the gate checks that every host-supplied slot is present and is a function, before anything is built
+2. **Build `Lib`** - attach helper modules, theme engine, font manifest, SDK, React itself, and host adapters
 3. **Return `Lib` and `Config`** to the React tree via a context provider
 
 After the loader returns, the rest of the client treats `Lib` as a read-only registry. No other file instantiates helper modules or reads configuration directly.
+
+The loader is not memoized. The React context provider holds the only cache, memoizing on the adapter set reference. This lets a test build a second independent container by calling the loader with a different adapter set. A memoized composition root would prevent that.
 
 ---
 
@@ -37,14 +40,40 @@ The `Lib` container holds every dependency the React tree needs. Each entry is e
 | `Lib.Utils` | Core utility helper | `require('@superloomdev/js-helper-utils')(Lib)` |
 | `Lib.Debug` | Debug logging helper | `require('@superloomdev/js-helper-debug')(Lib)` |
 | `Lib.Themer` | Theme engine (assemble, derive, generateUtilities) | `require('@superloomdev/js-client-helper-themer')(Lib)` |
+| `Lib.ThemerReact` | React extension for themer (ThemeProvider, hooks) | `require('@superloomdev/js-client-helper-themer-ext-react')({ React, Themer, Utils, Debug })` |
 | `Lib.ThemeTemplate` | Default themer template (data) | `require('@superloomdev/js-client-helper-themer/themer.template.js')` |
 | `Lib.Themes` | Theme values as frozen JS objects | Direct `require` of theme data files |
+| `Lib.Font` | Font core (family registry, role resolution) | `require('@superloomdev/js-client-helper-font')(Lib)` |
 | `Lib.Fonts` | Font manifest and `useFontsReady` hook | `require('../fonts/fonts')(Lib)` |
-| `Lib.Sdk` | Client SDK (entity APIs) | `require('../../sdk')(Lib)` |
+| `Lib.FontAdapter` | Platform font loader adapter | Supplied by a host adapter |
+| `Lib.FontManifest` | Host-owned font asset sources | Supplied by a host adapter |
+| `Lib.Navigation` | Navigation surface (Link, Redirect) | Supplied by a host adapter |
+| `Lib.Icons` | Icon glyph component | Supplied by a host adapter |
+| `Lib.ThemeContext` | React theming hub (ThemeProvider + hooks) | `require('./contexts/theme-context')(Lib)` |
+| `Lib.Client` | Client utilities (os, device info) | `require('./client')(Lib, Config)` |
+| `Lib.SuperApp` | Super-app launcher utilities | `require('./superApp')(Lib, Config)` |
+| `Lib.Sdk` | Client SDK (entity APIs) | `require('../../sdk')(Lib)` or stub |
+| `Lib.Config` | Application configuration object | Direct assignment in the loader |
 
 Every framework module follows the loader pattern: `module.exports = function (shared_libs, config) { ... }`. The loader calls each factory with `Lib`, and the factory returns its public interface. This is identical to how server-side helper modules work.
 
 Themes are plain frozen data objects, not loaders. They are `require`d directly in the loader and attached to `Lib.Themes`. A theme is a JSON-shaped value object (`base` + optional `variant`); it has no behavior and no dependencies.
+
+---
+
+## Adapters
+
+Three slots are supplied by host adapters, not by published packages:
+
+| Slot | Port defines | Adapter returns |
+|---|---|---|
+| `Navigation` | `Link`, `Redirect` | `{ Link, Redirect }` |
+| `Icons` | `Glyph` | `{ Glyph }` |
+| `Fonts` | `adapter`, `manifest` | `{ adapter, manifest }` |
+
+Each build target has its own adapter directory. The Expo host supplies adapters under `hosts/expo/adapters/`; the web host supplies adapters under `hosts/web/adapters/`. The loader calls each adapter factory with `Lib` and assigns the return value to the container slot.
+
+The adapter set is validated at boot before the container is built. A missing slot throws a `TypeError` naming every missing adapter. See [Composition and Adapters](../composition-and-adapters.md) for the full adapter doctrine, including the standard signature, the gate, and the test-tier pattern.
 
 ---
 
@@ -63,7 +92,7 @@ This keeps helper modules testable in isolation (inject a mock `Lib.React`) whil
 
 ## Folder Conventions
 
-Two folders organize React context and theme data inside `src/client/`:
+Two folders organize React context and theme data inside `src/app-core/`:
 
 | Folder | Holds | Convention |
 |---|---|---|
@@ -72,7 +101,7 @@ Two folders organize React context and theme data inside `src/client/`:
 
 Both folders use plural names, matching React community convention. A generic `context/` folder is avoided because it could be confused with non-React context code.
 
-Theme data files live in `themes/` as frozen JS objects. The loader is the single source of truth for which themes are wired:
+Theme data files live in `src/themes/` as frozen JS objects. The loader is the single source of truth for which themes are wired:
 
 ```js
 Lib.Themes = {
@@ -82,45 +111,43 @@ Lib.Themes = {
 };
 ```
 
-Font manifest lives in `fonts/` as a loader module receiving `Lib.FontLoader` (the injected font loader adapter). The separation of theme data (names font families) from font manifest (loads font files) is deliberate: `require('font.ttf')` is bundler-bound, and a server-sent theme JSON cannot carry binaries. See [Fonts](fonts.md).
+Font manifest lives in `src/fonts/` as a loader module receiving `Lib`. The separation of theme data (names font families) from font manifest (loads font files) is deliberate: `require('font.ttf')` is bundler-bound, and a server-sent theme JSON cannot carry binaries. See [Fonts](fonts.md).
 
 ---
 
 ## Boot Chain
 
-The entry chain from `package.json` to first render:
+The entry chain from the host's entry file to first render:
 
 ```text
-package.json "main": "expo-router/entry"
+hosts/expo/app/_layout.js            ← host entry file, imports host adapters
   |
-  v  Expo Router scans app/ for routes
-src/client/app/_layout.js          ← first app code to run (root layout)
+  v  declares adapter set at module scope, mounts LibProvider
+src/app-core/contexts/lib-context.js ← provides Lib via React context (memoized on adapters)
   |
-  v  mounts LibProvider
-src/client/contexts/lib-context.js ← provides Lib via React context
-  |
-  v  calls loader() (memoized singleton)
-src/client/loader.js               ← builds Lib + Config
+  v  calls loader(adapters) - pure build function, no cache
+src/app-core/loader.js               ← validates adapters, builds Lib + Config
   |
   v  mounts ThemeProvider
-src/client/contexts/theme-context.js ← calls Lib.Themer.assemble(), provides theme
+src/app-core/contexts/theme-context.js ← calls Lib.Themer, provides theme + controller
   |
-  v  calls combineComponent()
-src/components/index.js            ← builds themed component library
+  v  calls assemble()
+src/themes/assemble.js               ← builds themed component library
   |
   v
-src/client/app/index.js            ← re-exports screen from src/screens/
+src/components/index.js              ← re-exports screen from src/screens/
 ```
 
 `_layout.js` is the boot file. The loader is the DI root. Everything else is wired through `Lib`. The chain is linear: each step depends only on what precedes it.
 
-The loader is memoized. Calling `loader()` a second time returns the same `Lib` instance. This lets context providers and test harnesses call `loader()` without rebuilding the container.
+Every path in the diagram resolves on disk. The host entry file lives under `hosts/[target]/app/`; the shared source lives under `src/app-core/`.
 
 ---
 
 ## Further Reading
 
 - [Client Architecture](client-architecture.md) - Stack decision, project layout, bundler-agnostic rule
+- [Composition and Adapters](../composition-and-adapters.md) - The four tiers, host adapters, the adapter gate, the test-tier pattern
 - [Theming](theming.md) - The themer and runtime re-theming
 - [Fonts](fonts.md) - Font delivery mechanisms and the theme-names/host-loads contract
 - [Server Loader](../server/server-loader.md) - The server-side counterpart (same pattern, different dependencies)

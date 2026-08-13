@@ -386,7 +386,10 @@ Three allowed destination values, closed set:
 | `docs/languages/js/project-structure.md` | Directory Map |
 | `docs/languages/js/error-handling.md` | AI Behavior Rules (three-category error disposal + wrapper purity + service translation) |
 | `docs/languages/js/module-structure.md` | mirrored to workflow: js-helper-module |
+| `docs/principles/module-design.md` | AI Behavior Rules (class taxonomy reference, composition patterns) + Documentation Map |
+| `docs/principles/composition-and-adapters.md` | AI Behavior Rules (composition and adapters doctrine) + Documentation Map |
 | `docs/languages/js/module-classes.md` | not mirrored (reference material; class definitions and per-class doc footprints are looked up, not memorized) |
+| `docs/languages/js/composition-and-adapters.md` | AI Behavior Rules (composition and adapters doctrine, JS-specific) + Documentation Map |
 | `docs/languages/js/validation.md` | AI Behavior Rules (type-guard primitive rule) |
 | `docs/languages/js/client/client-modules.md` | AI Behavior Rules (client naming taxonomy + loader-pattern rule) |
 | `docs/languages/js/publishing.md` | Boundaries / Never (publish is CI-only) |

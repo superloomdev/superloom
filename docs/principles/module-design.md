@@ -70,20 +70,27 @@ Modules are classified by what they depend on and what depends on them. The taxo
 | **F** | Dependent adapter | Implements a class E module's storage or transport contract for one specific backend |
 | **G** | Feature with extensions | A feature module designed to be bound to frameworks by class H extensions |
 | **H** | Extension | Binds a class G module to one framework (React, Vue); imports the parent, never the reverse |
+| **I** | Framework module | Standalone and framework-bound; receives its framework by injection; has no pure parent and no extensions |
 
 The dependency direction is strict: higher classes depend on lower ones, never sideways within a class, never upward. Class A modules are the trust anchors; they are held to the highest bar because everything stands on them.
 
+A parent that publishes extension points is Class G, the binding that consumes it is Class H, and a standalone framework-bound module with neither is Class I. The distinction is whether a pure parent exists: Class G plus H splits the framework-free logic from the framework binding so that a second consumer can reuse the pure core; Class I keeps them together because the framework is the only consumer.
+
 ## Composition Patterns
 
-Three patterns cover every way modules combine:
+Five tiers cover every way modules and applications combine. The full doctrine, including the decision procedure for choosing a tier and the composition root's responsibilities, lives in [Composition and Adapters](composition-and-adapters.md).
 
 **Driver wrapping (classes C and D).** One module wraps one external client and exposes the framework's calling shape. All wrappers for the same category (for example, SQL databases) expose the same surface, making backends hot-swappable at the container level.
 
-**Adapter-backed features (classes E and F).** A feature module defines a small storage contract and works against it. Each adapter module implements that contract for one backend, calling the corresponding driver wrapper. The feature is built and tested first against an in-memory reference implementation of the contract; adapters follow one at a time, each validated by a shared contract test suite. The feature owns the error catalog; adapters receive it by injection.
+**Store adapters (classes E and F).** A feature module defines a storage contract and works against it. Each store adapter implements that contract for one backend. The feature is built and tested first against an in-memory reference; adapters follow, each validated by a shared contract suite. The feature owns the error catalog; adapters receive it by injection.
 
-**Extensions (classes G and H).** When a capability needs framework-specific bindings, the framework-neutral core is one module and each binding is a separate extension module. The extension consumes the core: it imports the parent and receives the framework at load time. The parent knows nothing about its extensions.
+**Transport adapters (classes E and F).** A feature module defines a runtime contract and works against it. Each transport adapter implements that contract for one server runtime. The pattern is identical to store adapters; the difference is what the port governs.
 
-In every pattern, the more general module never imports the more specific one. Specificity always sits at the edge.
+**Extensions (classes G and H).** When a capability needs framework-specific bindings, the framework-neutral core is one module and each binding is a separate extension. The extension consumes the core: it imports the parent and receives the framework at load time. The parent knows nothing about its extensions.
+
+**Host adapters (application tier).** An application's shared source defines ports for platform capabilities (navigation, fonts, icons). Each build target supplies its own adapter set, one file per port. The composition root validates the set at boot before building anything.
+
+In every tier, the more general unit never imports the more specific one. Specificity always sits at the edge.
 
 ## Configuration Discipline
 

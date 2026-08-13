@@ -4,6 +4,7 @@ Every Superloom helper module belongs to one of nine classes. The class determin
 
 **Companion docs.**
 
+- [`composition-and-adapters.md`](composition-and-adapters.md) - the four tiers in JS, host adapters, the adapter gate (implements [`principles/composition-and-adapters.md`](../../principles/composition-and-adapters.md))
 - [`module-docs.md`](module-docs.md) - the full documentation rubric (Universal README Sections, class-specific sections, personas, ordering, three-tier model).
 - [`../../principles/documentation-authoring.md`](../../principles/documentation-authoring.md) - writing-style rules (voice, prose mechanics, em-dash ban, table-cell rules, placeholder syntax).
 - [`module-docs-complex.md`](module-docs-complex.md) - deep guide for `docs/` folders in Class E feature modules.

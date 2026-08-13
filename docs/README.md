@@ -47,6 +47,7 @@ docs/
     code-readability.md             #   Vertical rhythm, banners, step comments, scanning model
     file-archetypes.md              #   Named file shapes and conformance
     module-design.md                #   Module contract, companions, injection, class taxonomy
+    composition-and-adapters.md     #   Ports, adapters, the four tiers, composition roots
     server-architecture.md          #   MVC + Service layers, request flow, DTO one-shape rule
     error-handling.md               #   Three categories, throw vs return, envelopes, catalogs
     validation.md                   #   Hand-written co-located validation, and why
@@ -64,7 +65,8 @@ docs/
       project-structure.md          #   Directory layout and repository conventions
       code-formatting.md            #   Exact spacing, banners, JSDoc, naming, aliases
       module-structure.md           #   Loader patterns and every archetype skeleton
-      module-classes.md             #   Class A-H assignments for every module
+      module-classes.md             #   Class A-I assignments for every module
+      composition-and-adapters.md   #   The four tiers in JS, host adapters, the adapter gate
       factory-vs-singleton.md       #   The pattern decision
       error-handling.md             #   JS envelopes, frozen catalogs, prefixes
       validation.md                 #   JS validator shapes
