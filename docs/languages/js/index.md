@@ -39,6 +39,7 @@ For a developer new to the framework, in order:
 | [`dto-philosophy.md`](dto-philosophy.md), [`server/`](server/server-loader.md) | [Server Architecture](../../principles/server-architecture.md) |
 | [`client/`](client/client-architecture.md) | Client-side architecture: stack, loader, theming, fonts, components, super-app shapes, module taxonomy, RN environment setup, Expo guide, RN testing |
 | [`catalog-core.md`](catalog-core.md), [`catalog-server.md`](catalog-server.md), [`catalog-client.md`](catalog-client.md) | The published module catalog per tier |
+| [`conventions-registry.md`](conventions-registry.md) | Settled micro-conventions lookup table |
 | [`pitfalls-migration.md`](pitfalls-migration.md) | Pitfall journal for module migration work |
 
 ## Module Repositories
