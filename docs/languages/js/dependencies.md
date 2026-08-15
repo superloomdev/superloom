@@ -134,8 +134,9 @@ Which specific modules depend on which is tracked in [`module-classes.md`](modul
   "devDependencies": {
     "@your-org/js-helper-utils": "^1.0.5",
     "@your-org/js-helper-new": "^1.0.0",
-    "eslint": "^9.0.0",
-    "@eslint/js": "^9.0.0"
+    "eslint": "^10.2.0",
+    "@eslint/js": "^10.0.1",
+    "@your-org/js-helper-eslint-config": "^1.0.0"
   }
 }
 ```

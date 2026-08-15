@@ -310,7 +310,7 @@ Same root cause as S1. Always use `write_to_file` or `edit` instead.
 
 **Cause:** The agent saw a successful test run and decided to publish.
 
-**Fix:** Publishing in this codebase is CI-only via `.github/workflows/ci-helper-modules.yml`. Bumping the `version` in `package.json` and pushing to `main` is the only trigger. The CI workflow has a safety net that skips already-published versions.
+**Fix:** Publishing in this codebase is CI-only via `.github/workflows/ci-publish-helper-modules.yml`. Bumping the `version` in `package.json` and pushing to `main` is the only trigger. The CI workflow has a safety net that skips already-published versions.
 
 #### A3. Force-pushing to a shared branch
 
@@ -453,7 +453,7 @@ This applies anywhere YAML uses block scalars: GitHub Actions `run:`, Docker Com
 
 **Cause:** GitHub Actions evaluates an **implicit `success()`** check on every job that does not start its `if:` with a status-check function (`always()`, `failure()`, `cancelled()`, `!cancelled()`). And `success()` is **transitive**. It returns `false` if **any** job in the upstream `needs` graph (not just the direct needs) has the result `skipped`, `failure`, or `cancelled`. Quote from GitHub's docs: *"If a job fails or is skipped, all jobs that need it are skipped unless they use a conditional expression that causes the job to continue."*
 
-A strictly-sequential test→publish pipeline like `ci-helper-modules.yml` mixes:
+A strictly-sequential test→publish pipeline like `ci-publish-helper-modules.yml` mixes:
 
 - `test-*` jobs that use `if: always() && !cancelled() && ...` → run regardless of upstream skips
 - `publish-*` jobs that previously used `if: >- needs.detect.outputs.publish_modules != '[]' && contains(...)` → no override, so the implicit `success()` applied
@@ -530,7 +530,7 @@ Replace with `"^<version>"` after the main module is published (step 3).
 
 1. The internal test file `_test/test-sqlite.js` still referenced the deleted `../stores/sqlite` path. It was not updated to use the npm package `@superloomdev/js-server-helper-verify-store-sqlite`.
 
-2. The five `js-server-helper-verify-store-*` adapter packages had no CI jobs at all. `ci-helper-modules.yml` skipped directly from `publish-sql-postgres` to `test-verify`. This meant the adapters were never published to the registry, so `_test/package.json` could not resolve them even after the test file was fixed.
+2. The five `js-server-helper-verify-store-*` adapter packages had no CI jobs at all. `ci-publish-helper-modules.yml` skipped directly from `publish-sql-postgres` to `test-verify`. This meant the adapters were never published to the registry, so `_test/package.json` could not resolve them even after the test file was fixed.
 
 Additionally, the adapter `package.json` files had been (incorrectly) set to `private: true`, which would have prevented `npm publish` even if CI jobs existed.
 
@@ -538,7 +538,7 @@ Additionally, the adapter `package.json` files had been (incorrectly) set to `pr
 1. In `_test/test-sqlite.js`: replace `require('../stores/sqlite')` with `require('@superloomdev/js-server-helper-verify-store-sqlite')`.
 2. In `_test/package.json`: add `"@superloomdev/js-server-helper-verify-store-sqlite": "^1.2.0"` to dependencies.
 3. In all five adapter `package.json` files: set `"private": false` so `npm publish` works.
-4. In `ci-helper-modules.yml`: insert ten new jobs (modules 17-21), one `test-verify-store-*` + `publish-verify-store-*` pair per adapter, in the sequential chain before `test-verify`. Update `test-verify`'s `needs` to `[detect, publish-verify-store-dynamodb]`.
+4. In `ci-publish-helper-modules.yml`: insert ten new jobs (modules 17-21), one `test-verify-store-*` + `publish-verify-store-*` pair per adapter, in the sequential chain before `test-verify`. Update `test-verify`'s `needs` to `[detect, publish-verify-store-dynamodb]`.
 
 **Lesson:** Deleting an internal directory (`stores/`) that is still referenced by the module's own test suite, while simultaneously introducing replacement standalone packages, requires two coordinated changes: (a) update every `require()` that pointed at the old path, and (b) ensure the new packages exist in the CI pipeline and are published before any consumer runs `npm install`. A quick grep for the deleted path before committing prevents the first problem; checking whether each new adapter has CI jobs prevents the second.
 
@@ -585,7 +585,7 @@ The reported line number is often **far below** the line that actually caused th
 2. **For verbatim copy-paste templates inside fenced code blocks, prefer the `text` language hint.** Switching ` ```markdown ` to ` ```text ` disables the secondary Vue scan and lets the placeholders survive untouched. If the syntax-highlighting loss is unacceptable for a particular block, replace the angle-bracket placeholders with square-bracket ones at template-author time and keep the `markdown` hint.
 3. **Verify documentation changes locally before pushing** when the change touches any VitePress-rendered file in `docs/`. Run `npm run build` from `website/`. That is the same pipeline CI runs (`vitepress build .` after `sync-docs`). Watch for the `Element is missing end tag` family of errors. Local build is fast (single-digit seconds) and catches the failure before it occupies a CI runner.
 
-This pitfall is distinct from the helper-modules CI chain (entries 1–14): it lives in `ci-deploy-website.yml`, not `ci-helper-modules.yml`, and a website-deploy failure does not block module publishing. The two pipelines are independent. But the same commit that triggers helper-module publishing will also trigger website deploy if it touches any `docs/` file, so a documentation-side bug is a hidden cost on every push that updates rules.
+This pitfall is distinct from the helper-modules CI chain (entries 1–14): it lives in `ci-deploy-website.yml`, not `ci-publish-helper-modules.yml`, and a website-deploy failure does not block module publishing. The two pipelines are independent. But the same commit that triggers helper-module publishing will also trigger website deploy if it touches any `docs/` file, so a documentation-side bug is a hidden cost on every push that updates rules.
 
 ### 16. Deleting a GitHub Packages package: org-scoped vs user-scoped endpoint
 
@@ -632,6 +632,28 @@ This keeps the CI publish trigger scoped to a single module, makes history bisec
 **Lesson:** A `test-*` job whose `_test/package.json` installs another in-repo package from the registry must `needs` that package's `publish-*` job, never its `test-*` job. In steady-state runs the difference is invisible (the base is already published, both orderings pass), so the bug only surfaces during bootstrap or a registry re-baseline - review every extension and adapter chain against this rule before a fresh-state push.
 
 **Coverage-sweep footnote:** when verifying that every module has CI jobs by extracting paths from the workflow file, the extraction pattern must cover the full name alphabet. A `grep -oE` character class of `[a-z-]+` silently drops any path containing a digit (`storage-aws-s3`), producing false "missing from CI" findings. Include digits (`[a-z0-9-]+`) and cross-check the extracted count against the known module total before acting on the diff.
+
+### 24. `npm error 409 Conflict - Package file checksum mismatch` after deleting and republishing a package
+
+**Symptom:** CI `test` job fails with `npm error code E409` and `npm error 409 Conflict - GET https://npm.pkg.github.com/download/@scope/package/version/hash - Package file checksum mismatch`. The package was just republished at the same version after a registry deletion.
+
+**Cause:** Lock files (`package-lock.json`) in consuming repos cache the old tarball integrity hash. When the package is deleted from the registry and republished at the same version, the new tarball has a different hash. `npm ci` compares the cached hash in the lock file against the registry tarball and rejects the mismatch.
+
+**Lesson:** After deleting and republishing a package at the same version, every consuming repo's lock file must be regenerated:
+
+```bash
+rm -rf node_modules package-lock.json && npm install
+```
+
+This applies to all lock files in the repo (root, `_test/`, `hosts/`, etc.). CI will fail until the updated lock files are committed and pushed.
+
+### 25. Shared devDependency package missing from registry breaks every downstream `npm ci`
+
+**Symptom:** Every module's CI `test` job fails with `MODULE_NOT_FOUND` for `@superloomdev/js-helper-eslint-config` or a checksum mismatch, even though only the config package was deleted and republished.
+
+**Cause:** When a shared devDependency (like `js-helper-eslint-config`) is consumed by every module, deleting it from the registry breaks all downstream installs until CI republishes it. If the config package's own `test` and `publish` jobs are not chained ahead of all other jobs in the workflow, downstream modules race the republish and fail.
+
+**Lesson:** A shared devDependency that every module installs must be the head of the CI chain. Its `test-*` and `publish-*` jobs must complete before any other module's `test-*` job starts. In `ci-publish-helper-modules.yml`, chain `test-eslint-config` and `publish-eslint-config` before the first downstream `test-*` job. Never include the config package in a bulk registry deletion without immediately repushing to trigger its CI republish.
 
 ---
 

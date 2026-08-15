@@ -150,7 +150,7 @@ Discovered while creating a NoSQL admin module, where the comment pass also surf
 
 ### Module not added to CI/CD workflow
 
-**Symptom:** New or renamed module completely missing from `ci-helper-modules.yml`.
+**Symptom:** New or renamed module completely missing from `ci-publish-helper-modules.yml`.
 
 **Root cause:** Forgetting to add test and publish jobs after module creation.
 
@@ -158,9 +158,9 @@ Discovered while creating a NoSQL admin module, where the comment pass also surf
 
 ```bash
 # Replace <module-suffix> with your suffix (e.g., nosql-mongodb)
-grep "MODULE: js-server-helper-<module-suffix>" .github/workflows/ci-helper-modules.yml
-grep "test-<module-suffix>:" .github/workflows/ci-helper-modules.yml
-grep "publish-<module-suffix>:" .github/workflows/ci-helper-modules.yml
+grep "MODULE: js-server-helper-<module-suffix>" .github/workflows/ci-publish-helper-modules.yml
+grep "test-<module-suffix>:" .github/workflows/ci-publish-helper-modules.yml
+grep "publish-<module-suffix>:" .github/workflows/ci-publish-helper-modules.yml
 ```
 
 Each new service-dependent module needs **both** a `test-*` and a `publish-*` job. Copy the structure from a similar existing module and update all paths, job names, service containers, and conditions.
@@ -242,7 +242,7 @@ echo "path" | grep -oP 'src/helper-modules-[\w-]+/js-[\w-]+'
 | `ROBOTS.md` | Function list |
 | `_test/test.js` | All function calls |
 | Migration log (`__dev__/migration-changelog.md`) | Before/after mapping |
-| `.github/workflows/ci-helper-modules.yml` | Module references |
+| `.github/workflows/ci-publish-helper-modules.yml` | Module references |
 
 ---
 
@@ -366,6 +366,7 @@ Before completing any migration:
 - [ ] **Skeleton conformance diff done** - the module's entry file compared element by element against its class's skeleton section in `module-structure.md` (loader statement groups + step comments, companion-file wiring, `createInterface` slots, banners). A fix list, lint, and the sweep battery do not substitute for this
 - [ ] **Every `performanceAuditLog` call passes a local `start_ms`** captured at operation entry as `reference_time` - never `instance['time_ms']` (request-start constant) and never a timestamp created on the same line as the call (see [Performance Logging Issues](#performance-logging-issues))
 - [ ] **Step-comment conformance checked on every function body** - each public I/O function carries the [Mandatory Step-Comment Set](code-formatting.md#comment-style) (validate, init, driver calls, success returns, error returns, early-return branches); this is a distinct gate from the skeleton conformance diff and applies to fresh creations, not just migrations (see [Step-comment drift on fresh module creation](#step-comment-drift-on-fresh-module-creation))
+- [ ] **`eslint.config.js` is the canonical three-line re-export** of `@superloomdev/js-helper-eslint-config` - no per-module rule overrides, no standalone config. See [Shared ESLint Configuration](code-formatting.md#shared-eslint-configuration)
 
 ## Further Reading
 

@@ -6,7 +6,7 @@ How a module's `package.json`, npmrc, test directory, and dependencies must be c
 
 **Companion docs.**
 
-- [`../../dev/cicd-publishing.md`](../../dev/cicd-publishing.md) - operational walkthrough of the unified `ci-helper-modules.yml` workflow, GITHUB_TOKEN permissions, fresh-state recovery, failure modes, and CI-side troubleshooting (401 / 403 / registry URL).
+- [`../../dev/cicd-publishing.md`](../../dev/cicd-publishing.md) - operational walkthrough of the unified `ci-publish-helper-modules.yml` workflow, GITHUB_TOKEN permissions, fresh-state recovery, failure modes, and CI-side troubleshooting (401 / 403 / registry URL).
 - [`versioning/bump-checklist.md`](versioning/bump-checklist.md) - the step-by-step version-bump procedure including SemVer classification, commit format, multi-module bumps, and post-publish verification.
 - [`module-docs.md`](module-docs.md) - what every module README must contain (badges, sections, ordering). This file scopes only the `package.json` and `_test/` layout.
 
@@ -83,17 +83,24 @@ Note: other languages have their own equivalent mechanisms (Python: `MANIFEST.in
 
 ## Linter Configuration
 
-Every JS module **must** have an `eslint.config.js` file at its root (ESLint flat config, required for ESLint v9+).
+Every JS module **must** have an `eslint.config.js` file at its root (ESLint flat config, required for ESLint v10+).
 
-Linter config is per-module because each module is published and lintable independently - there is no shared workspace-level config that consumers can rely on. The config must be present for `npm run lint` to work as part of the pre-publish gate.
+Linter config is a three-line re-export of the shared `@superloomdev/js-helper-eslint-config` package. The shared config is the single source of truth for all lint rules; per-module overrides are not permitted. The config must be present for `npm run lint` to work as part of the pre-publish gate.
 
-**Canonical reference:** the config is **byte-identical across every module** - copy `eslint.config.js` from `js-helper-utils` verbatim. There are no module-type variants (store adapters, clients, and core modules all carry the same file); a divergent copy is drift, not customization. Do not reproduce or embed the config contents in documentation - the module is the living reference and will stay current as ESLint evolves.
+**Canonical consumer form:**
 
-Three properties of the canonical config are policy, not preference:
+```javascript
+const { base } = require('@superloomdev/js-helper-eslint-config');
+module.exports = [ ...base ];
+```
+
+Application-tier repos with JSX and browser globals use the `app` preset instead of `base`. See [`code-formatting.md` → Shared ESLint Configuration](code-formatting.md#shared-eslint-configuration) for the full preset table.
+
+Three properties of the shared config are policy, not preference:
 
 - **`ecmaVersion: 2022`** - matches the Node.js 24+ engine floor.
-- **No `argsIgnorePattern` / `caughtErrorsIgnorePattern`.** Underscore-prefixed parameters (`_param`, `catch (_err)`) are forbidden; lint must flag them. Parity parameters keep their real name with `// eslint-disable-line no-unused-vars`; unused catch bindings use `catch {`. See [`code-formatting.md` → Parameter Naming](code-formatting.md#parameter-naming).
-- **Full rule comments retained** - the config is read by humans deciding whether a rule applies; stripped copies caused the variant drift this rule exists to prevent.
+- **No `argsIgnorePattern` / `caughtErrorsIgnorePattern`.** Underscore-prefixed parameters (`_param`, `catch (_err)`) are forbidden; lint must flag them. Parity parameters keep their real name with `// eslint-disable-line no-unused-vars`; unused catch bindings use `catch {`. See [`code-formatting.md` -> Parameter Naming](code-formatting.md#parameter-naming).
+- **`js-helper-eslint-config` is the head of the CI chain.** It must publish before any other module. The CI workflow (`ci-publish-helper-modules.yml`) chains `test-eslint-config` and `publish-eslint-config` ahead of all other test/publish jobs.
 
 Note: other languages have their own linter conventions (Python: `ruff` or `pylint` config; etc.). Each language's module structure documentation covers its own convention.
 
@@ -130,7 +137,7 @@ module-name/
 
 ## Further Reading
 
-- [CI/CD Publishing](../../dev/cicd-publishing.md) - operational details of the unified `ci-helper-modules.yml` workflow + CI troubleshooting (401 / 403 / registry URL).
+- [CI/CD Publishing](../../dev/cicd-publishing.md) - operational details of the unified `ci-publish-helper-modules.yml` workflow + CI troubleshooting (401 / 403 / registry URL).
 - [Version Bump Checklist](versioning/bump-checklist.md) - SemVer classification + step-by-step bump procedure.
 - [Peer Dependencies](dependencies.md) - the dependency strategy that publishing relies on.
 - [Module Testing](module-testing.md) - badges and the testing tiers gating publish.

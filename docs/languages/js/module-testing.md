@@ -65,12 +65,12 @@ Every module README must include **exactly 3 badges** at the top: Test, License,
 **All modules (3 badges):**
 
 ```markdown
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml)
+[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-publish-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-publish-helper-modules.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
 ```
 
-We use GitHub's **native badge endpoint** (served by GitHub, works with private repos). The label reads `Test` because the workflow is named `Test` in `ci-helper-modules.yml` (`name: Test`). The badge reflects the status of the unified `ci-helper-modules.yml` workflow on `main` - it turns red only if tests fail. Publish failures do not affect this badge because publish jobs are gated behind their test jobs and are no-ops when there is no version bump.
+We use GitHub's **native badge endpoint** (served by GitHub, works with private repos). The label reads `Test` because the workflow is named `Test` in `ci-publish-helper-modules.yml` (`name: Test`). The badge reflects the status of the unified `ci-publish-helper-modules.yml` workflow on `main` - it turns red only if tests fail. Publish failures do not affect this badge because publish jobs are gated behind their test jobs and are no-ops when there is no version bump.
 
 ### Testing Section (Standard)
 
@@ -83,7 +83,7 @@ Every module README must include a `## Testing` section **near the end** (after 
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Unit Tests** | Node.js `node --test` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| **Unit Tests** | Node.js `node --test` | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-publish-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-publish-helper-modules.yml) |
 
 Run locally:
 
@@ -102,7 +102,7 @@ See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/la
 
 | Tier | Runtime | Status |
 |---|---|---|
-| **Emulated Tests** | [Emulator] (Docker) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-helper-modules.yml) |
+| **Emulated Tests** | [Emulator] (Docker) | [![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-publish-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-publish-helper-modules.yml) |
 | **Integration Tests** | Real [Service] (sandbox) | ![Integration Tests](https://img.shields.io/badge/Integration_Tests-not_yet_tested-lightgrey) |
 
 ### Emulated (Docker)
@@ -193,9 +193,9 @@ These require external services. Each module has a `_test/docker-compose.yml` fo
 
 ### CI/CD for Service-Dependent Modules
 
-GitHub Actions supports `services:` which starts Docker containers alongside the job. Each service-dependent module gets its own CI job (not a matrix entry) because it needs a specific service container. In the unified `ci-helper-modules.yml`, this applies to **both** the test job (`test-*`) and the publish job (`publish-*`).
+GitHub Actions supports `services:` which starts Docker containers alongside the job. Each service-dependent module gets its own CI job (not a matrix entry) because it needs a specific service container. In the unified `ci-publish-helper-modules.yml`, this applies to **both** the test job (`test-*`) and the publish job (`publish-*`).
 
-Example from `.github/workflows/ci-helper-modules.yml` (`test-nosql-aws-dynamodb`):
+Example from `.github/workflows/ci-publish-helper-modules.yml` (`test-nosql-aws-dynamodb`):
 ```yaml
 test-nosql-aws-dynamodb:
   services:
@@ -286,8 +286,8 @@ Before writing tests, identify each external dependency the module has (storage 
 6. Add env vars to `docs/dev/.env.dev.example` and `.env.integration.example`
 7. For service-dependent modules: add `_test/docker-compose.yml` with emulator
 8. For service-dependent modules: add `_test/ops/` with setup docs per testing tier
-9. For service-dependent modules: add a dedicated `test-*` job in `.github/workflows/ci-helper-modules.yml` (not in the matrix) AND a matching `publish-*` job with the same service container
-10. For offline modules: add the module path to the `test-offline` matrix in `.github/workflows/ci-helper-modules.yml` - the publish job auto-detects it from the `detect` job output
+9. For service-dependent modules: add a dedicated `test-*` job in `.github/workflows/ci-publish-helper-modules.yml` (not in the matrix) AND a matching `publish-*` job with the same service container
+10. For offline modules: add the module path to the `test-offline` matrix in `.github/workflows/ci-publish-helper-modules.yml` - the publish job auto-detects it from the `detect` job output
 11. Verify: `npm test` from `_test/` directory
 12. All exported functions must have at least one test
 13. Update module `README.md` with badges and testing status
@@ -346,7 +346,7 @@ const Font = require('helper-font')({
 
 ### CI Placement
 
-Framework modules are **offline modules**. They need no Docker, no AWS credentials, and no dedicated CI job. Add the module path to the `test-offline` matrix in `.github/workflows/ci-helper-modules.yml`, and the publish job auto-detects it from the `detect` job output.
+Framework modules are **offline modules**. They need no Docker, no AWS credentials, and no dedicated CI job. Add the module path to the `test-offline` matrix in `.github/workflows/ci-publish-helper-modules.yml`, and the publish job auto-detects it from the `detect` job output.
 
 ### What About Component Tests?
 

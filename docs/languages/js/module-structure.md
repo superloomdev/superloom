@@ -375,7 +375,7 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators, state) {
 
 > Standalone store adapters (`[parent]-store-[backend]`) follow the same fixed-slots rule - they own their own `Lib`, `CONFIG`, `ERRORS`, and `Validators`. See [Storage Adapter Skeleton](#storage-adapter-skeleton).
 
-> **Unused fixed slots are kept, not removed.** When a module has an empty error catalog or a no-op validators file, the parameters stay in the signature. If a trailing parameter is unused, suppress the lint warning with `// eslint-disable-line no-unused-vars` on the `createInterface` line (the `after-used` ESLint setting already ignores unused params that precede a used one). Remove the directive the day the parameter is first consumed. `js-server-helper-crypto` is the reference precedent: its `ERRORS` catalog is empty, forwarded anyway, with a JSDoc note explaining it is kept for cross-module consistency.
+> **Unused fixed slots are kept, not removed.** When a module has an empty error catalog or a no-op validators file, the parameters stay in the signature. If a trailing parameter is unused, suppress the lint warning with `// eslint-disable-line no-unused-vars` on the `createInterface` line (the `after-used` ESLint setting, defined in `@superloomdev/js-helper-eslint-config`, already ignores unused params that precede a used one). Remove the directive the day the parameter is first consumed. `js-server-helper-crypto` is the reference precedent: its `ERRORS` catalog is empty, forwarded anyway, with a JSDoc note explaining it is kept for cross-module consistency.
 
 > **Legacy minimal shapes are deprecated.** Older modules with `createInterface()`, `createInterface(CONFIG)`, or `createInterface(Lib, CONFIG)` are brought to the fixed-slots shape during their unification pass.
 
@@ -1633,7 +1633,7 @@ Most modules follow a consistent file structure:
 | `README.md` | Human documentation (badges, usage examples, testing guides) |
 | `ROBOTS.md` | AI agent reference (compact, token-efficient) |
 | `THOUGHTS.md` | Engineering decision journal. Records why the module is designed the way it is. Not published to the package registry. See [THOUGHTS.md convention](module-thoughts-file.md) |
-| `eslint.config.js` | **Required** - ESLint flat config (ESLint v9+), **byte-identical across all modules**. Canonical copy: `js-helper-utils`. See [Linter Configuration](publishing.md#linter-configuration) |
+| `eslint.config.js` | **Required** - ESLint flat config (ESLint v10+), a three-line re-export of the shared `@superloomdev/js-helper-eslint-config` preset. No per-module rule overrides are permitted. See [Linter Configuration](publishing.md#linter-configuration) |
 | `.npmignore` | **Required** - controls what files are included in the published tarball. Canonical shape: refer to `js-helper-utils`. See [Registry Ignore File](publishing.md#registry-ignore-file-npmignore) |
 | `_test/test.js` | Tests using `node --test` and `node:assert/strict` |
 | `_test/loader.js` | Test loader (env reading, dep injection) - required for any module using DI |

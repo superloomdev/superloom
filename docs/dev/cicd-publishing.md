@@ -2,7 +2,7 @@
 
 > **Language:** JavaScript
 
-How helper modules are tested on every push and published to GitHub Packages. The framework uses a single unified workflow at `.github/workflows/ci-helper-modules.yml`. This guide is the canonical reference for that pipeline. Every positive rule below exists because a real failure taught it; those failures are journaled in [`pitfalls.md`](pitfalls.md#cicd-publishing).
+How helper modules are tested on every push and published to GitHub Packages. The framework uses a single unified workflow at `.github/workflows/ci-publish-helper-modules.yml`. This guide is the canonical reference for that pipeline. Every positive rule below exists because a real failure taught it; those failures are journaled in [`pitfalls.md`](pitfalls.md#cicd-publishing).
 
 ## On This Page
 
@@ -22,11 +22,12 @@ How helper modules are tested on every push and published to GitHub Packages. Th
 
 ## How It Works
 
-A single unified workflow (`.github/workflows/ci-helper-modules.yml`) handles everything:
+A single unified workflow (`.github/workflows/ci-publish-helper-modules.yml`) handles everything:
 
 1. **`detect`** - inspects the commit and the registry to decide which modules need testing and which need publishing
-2. **`test-*`** (per-module) - runs lint and tests on every push and PR for any module the detect job marks
-3. **`publish-*`** (per-module) - runs only on `main` pushes for modules the detect job marks as needing publish; includes a registry safety-net that skips if the version is already published
+2. **`test-eslint-config`** and **`publish-eslint-config`** - run first, ahead of all other test/publish jobs, because every module's `eslint.config.js` resolves `@superloomdev/js-helper-eslint-config` at install time. If the config package is missing from the registry, every downstream `npm ci` fails with a checksum mismatch
+3. **`test-*`** (per-module) - runs lint and tests on every push and PR for any module the detect job marks
+4. **`publish-*`** (per-module) - runs only on `main` pushes for modules the detect job marks as needing publish; includes a registry safety-net that skips if the version is already published
 
 No manual tokens are required. The `GITHUB_TOKEN` is created automatically by GitHub Actions for every workflow run and expires when the workflow finishes.
 
@@ -165,7 +166,7 @@ The workflow file groups jobs visually with comment banners showing the group bo
 ## Workflow Location
 
 ```
-.github/workflows/ci-helper-modules.yml
+.github/workflows/ci-publish-helper-modules.yml
 ```
 
 > GitHub Actions only reads workflows from `.github/workflows/` at the repository root. Placing workflow files anywhere else (e.g., `src/.github/workflows/`) is silently ignored.

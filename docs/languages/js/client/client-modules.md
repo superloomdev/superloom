@@ -32,6 +32,10 @@ The runtime tier describes what platform APIs a module depends on. A module take
 
 A module with no browser or framework dependency never carries `client`. It goes to the core tier (`js-helper-*`). A module that needs `window.localStorage` takes `js-client-helper-*`. A module that needs `fs` or `http` takes `js-server-helper-*`.
 
+### Dev-Tooling Packages
+
+A `js-helper-*` package that is consumed only as a devDependency (never at runtime) is a dev-tooling package. It carries the `js-helper-*` prefix because it has no browser, Node, or framework runtime dependency, but it is excluded from peer dependency contracts and never appears in a consumer's `dependencies`. `js-helper-eslint-config` is the reference example: every module lists it in `devDependencies`, no module lists it in `peerDependencies` or `dependencies`.
+
 ---
 
 ## Framework-Tier Prefixes

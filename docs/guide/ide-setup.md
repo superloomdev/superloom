@@ -20,7 +20,7 @@ All three IDEs share the same settings model. Apply these in your user `settings
 
 1. Install the **ESLint** extension
 2. Enable `eslint.format.enable` and `editor.codeActionsOnSave: { "source.fixAll.eslint": "always" }`
-3. ESLint v9+ requires a flat config (`eslint.config.js`) at the module root. Every Superloom module already has one
+3. ESLint v10+ requires a flat config (`eslint.config.js`) at the module root. Every Superloom module has one that re-exports the shared `@superloomdev/js-helper-eslint-config` preset
 
 With these settings, you rarely need to run `npm run lint` manually during development. CI runs it on every push regardless.
 

@@ -34,8 +34,8 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
 
 | Tool | Role | Command |
 |---|---|---|
-| **ESLint v9+** | Lint and auto-fix | `npm run lint`, `npm run lint:fix` |
-| **Flat config** | Required by ESLint v9 | Every module ships an `eslint.config.js` |
+| **ESLint v10+** | Lint and auto-fix | `npm run lint`, `npm run lint:fix` |
+| **Flat config** | Required by ESLint v10 | Every module ships an `eslint.config.js` |
 | **Editor integration** | Auto-fix on save | See [`docs/guide/ide-setup.md`](../../guide/ide-setup.md) |
 
 ESLint catches `no-var`, `prefer-const`, `no-unused-vars`, `no-useless-assignment`, and the formatting rules below. CI runs `npm run lint` on every push - fix locally before pushing.
@@ -313,8 +313,20 @@ Use category-based naming so related modules sort and group together:
 
 ### Parameter Naming
 
-- **No underscore prefix on parameters.** Use an inline `// eslint-disable-line no-unused-vars` comment on the function signature instead of `_param` to suppress ESLint's `no-unused-vars` warning
+- **No underscore prefix on parameters.** Use an inline `// eslint-disable-line no-unused-vars` comment on the function signature instead of `_param` to suppress ESLint's `no-unused-vars` warning. This rule is now mechanically enforced by the shared config's `args: 'after-used'` setting, which ignores unused params that precede a used one
 - **No `void param;` statements.** `void` executes at runtime (as a no-op expression) and is a non-standard workaround. Always use the `eslint-disable-line` approach instead
+
+### Shared ESLint Configuration
+
+`@superloomdev/js-helper-eslint-config` is the single source of truth for all lint rules across every Superloom module. Every module's `eslint.config.js` is a three-line re-export of one of its presets (`base`, `browser`, `app`). Per-module rule overrides are not permitted. If a rule value needs to change, it changes in the shared config package and propagates to all modules on the next install.
+
+The shared config defines three presets:
+
+| Preset | Use case | Key differences from `base` |
+|---|---|---|
+| `base` | Node.js CommonJS modules (all helper modules) | Node 24 globals, `sourceType: 'commonjs'` |
+| `browser` | Web-facing code that uses browser APIs | Adds browser globals (`document`, `window`, etc.) |
+| `app` | Application-tier repos with JSX and ESM | Layers on `browser` + JSX parsing, `sourceType: 'module'`, `varsIgnorePattern: '^React$'` |
 
 Clean parameter name with an inline directive when needed:
 

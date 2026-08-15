@@ -2,7 +2,7 @@
 
 ## Overview
 
-GitHub Actions runs automated workflows for testing and publishing. Superloom uses a **single unified workflow** (`ci-helper-modules.yml`) that:
+GitHub Actions runs automated workflows for testing and publishing. Superloom uses a **single unified workflow** (`ci-publish-helper-modules.yml`) that:
 
 1. Runs tests on every push and pull request
 2. Publishes helper modules to GitHub Packages only when their `package.json` version has changed (gated behind a successful test run)
@@ -37,10 +37,10 @@ All workflows live in `.github/workflows/`:
 ```
 .github/
   workflows/
-    ci-helper-modules.yml    # Unified test + publish pipeline
+    ci-publish-helper-modules.yml    # Unified test + publish pipeline
 ```
 
-Jobs inside `ci-helper-modules.yml`:
+Jobs inside `ci-publish-helper-modules.yml`:
 - `detect` - scan changed modules and version bumps
 - `test-offline` - matrix of offline modules
 - `test-dynamodb` - DynamoDB module with Docker service container

@@ -101,7 +101,7 @@ Full details: see [`npmrc-setup.md`](npmrc-setup.md).
 
 Packages are published **exclusively through CI/CD**. No manual publishing.
 
-The unified pipeline at `.github/workflows/ci-helper-modules.yml`:
+The unified pipeline at `.github/workflows/ci-publish-helper-modules.yml`:
 
 1. **Triggers** on every push to `main` and every PR
 2. **Tests** all changed modules (offline + DynamoDB with Docker service container)
