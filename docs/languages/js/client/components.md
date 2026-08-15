@@ -115,19 +115,19 @@ Adding a provider is a library change. The provider must be a Context provider, 
 
 ## Authoring Contract
 
-Every component is a loader module. The library entry point is `combineComponent(Lib, theme)`, which builds the themed component set.
+Every component is a loader module. The library entry point is `require('rnw-components-carbon')(shared_libs, config)`, which returns an interface with `build`, `rebuild`, `themeContract`, `useBreakpoint`, and `tokens`. Calling `build(theme)` produces the themed component set.
 
 The contract:
 
-1. `combineComponent(Lib, theme)` generates `CommonStyle` (the utility style map for the current theme), builds the HOC, and wires every component via `make(factory)`
-2. Each component factory is `function (Component, CommonStyle, theme, Lib)` returning a React component
+1. The loader generates `CommonStyle` (the utility style map for the current theme), builds the HOC, and wires every component via `make(factory)`
+2. Each component factory is `function (Lib, CONFIG, ERRORS, Registry, Style_)` returning a React component
 3. The component maps props to utility classes: `size` to `font_size_[step]`, `color` to `font_[token]`, `weight` to `font_weight_[name]`
 4. Molecules compose atoms through the shared `Component` object, not through direct `require`
 5. Atoms strip `isRtlActive` so it never leaks to the DOM on web
 
 The HOC (`componentHoc.js`) injects `isRtlActive` into every component. Atoms consume it for directional logic and strip it from props before rendering. Molecules consume it and pass it to child atoms.
 
-`updateComponentTheme(newTheme)` re-derives `CommonStyle` and re-wires every component without unmounting the tree. This is the runtime re-theming mechanism.
+`rebuild(theme, breakpoint?)` re-derives `CommonStyle` and returns a fresh registry. The previous registry is never mutated; callers swap the reference. This is the runtime re-theming mechanism.
 
 ---
 
@@ -162,7 +162,11 @@ Real apps need disciplined deviation and a clean way to abandon the token system
 
 ### Canonical
 
-The default. Atoms and molecules reading tokens through utility classes. This is the normal case.
+The default. Atoms, molecules, and composites reading tokens through utility classes. This is the normal case.
+
+### Provider
+
+A context-only component that renders no visual output and consumes no tokens. It lives in `Component.provider`. It does not re-theme because it has no visual output to re-theme. See [Provider Set](#provider-set) for the full list.
 
 ### Structured variant
 
@@ -244,7 +248,7 @@ The following React Native accessibility props are silent no-ops on web and must
 
 The library follows Carbon's component vocabulary but not its export shape. Four deliberate divergences:
 
-1. **Skeletons collapse to one atom plus a `loading` prop.** Carbon ships approximately 20 `<X>Skeleton` components. The library ships one `Skeleton` atom with a `variant` prop (`'text' | 'icon' | 'placeholder'`) plus `lines`, `width`, `height`. Components that need a loading state take a `loading` boolean and render `Skeleton` internally. This replaces 20 components with 1 atom and 1 prop.
+1. **Skeletons collapse to one atom plus a `loading` prop.** Carbon ships approximately 20 `<X>Skeleton` components. The library will ship one `Skeleton` atom with a `variant` prop (`'text' | 'icon' | 'placeholder'`) plus `lines`, `width`, `height`. Components that need a loading state take a `loading` boolean and render `Skeleton` internally. This replaces 20 components with 1 atom and 1 prop.
 
 2. **`Fluid*` variants collapse to a `fluid` prop.** Carbon's 10 `Fluid*` components are behaviorally identical to their non-fluid counterparts; the only difference is that the label sits inside the field. Ship one `fluid` boolean prop on `TextInput`, `TextArea`, `NumberInput`, `Search`, `Select`, `Dropdown`, `ComboBox`, `MultiSelect`, `DatePicker`, `TimePicker`.
 
@@ -281,6 +285,6 @@ The library never bundles these. Test apps inside the library pin real versions 
 ## Further Reading
 
 - [Theming](theming.md) - The themer that produces the tokens components consume
-- [Client Loader](client-loader.md) - How `combineComponent` enters the boot chain
+- [Client Loader](client-loader.md) - How the component loader enters the boot chain
 - [Client Architecture](client-architecture.md) - Why the library targets React Native Web
 - [Client Modules](client-modules.md) - The naming taxonomy for the component library package
