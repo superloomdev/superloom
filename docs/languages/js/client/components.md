@@ -2,18 +2,21 @@
 
 > **Language:** JavaScript
 
-The component library ships atoms and molecules: themeable, accessible primitives built on React Native Web. The library is own code, following Superloom's loader pattern and Lib DI throughout. Design languages arrive as themer template packs, not as separate component libraries. This page defines the component vocabulary, the authoring contract, the three-bucket exception model, and the accessibility contract.
+The component library ships atoms, molecules, composites, and providers: themeable, accessible primitives built on React Native Web. The library is own code, following Superloom's loader pattern and Lib DI throughout. Design languages arrive as themer template packs, not as separate component libraries. This page defines the component vocabulary, the authoring contract, the four-bucket exception model, and the accessibility contract.
 
 ## On This Page
 
 - [Component Vocabulary](#component-vocabulary)
 - [Atom Set](#atom-set)
 - [Molecule Set](#molecule-set)
+- [Composite Set](#composite-set)
+- [Provider Set](#provider-set)
 - [Authoring Contract](#authoring-contract)
 - [Utility-Class Mapping](#utility-class-mapping)
-- [Three-Bucket Exception Model](#three-bucket-exception-model)
+- [Four-Bucket Exception Model](#four-bucket-exception-model)
 - [Interaction States](#interaction-states)
 - [Accessibility Contract](#accessibility-contract)
+- [Divergences from Carbon](#divergences-from-carbon)
 - [Generic vs Custom](#generic-vs-custom)
 - [Peer Dependencies](#peer-dependencies)
 - [Further Reading](#further-reading)
@@ -22,16 +25,20 @@ The component library ships atoms and molecules: themeable, accessible primitive
 
 ## Component Vocabulary
 
-The library uses two levels from Brad Frost's atomic design taxonomy. The upper hierarchy (organisms, templates, pages) is deliberately excluded.
+The library uses four tiers. Atoms and molecules follow Brad Frost's atomic design taxonomy. Composites extend the hierarchy for components that compose other molecules (MenuButton composes Menu which composes MenuItem). Providers are context-only components that render no visual output.
 
-| Level | Definition | Boundary |
-|---|---|---|
-| **Atom** | An irreducible primitive wrapping one RN element with token consumption and accessibility behavior | No composition of other library components. No domain knowledge |
-| **Molecule** | A composition of atoms with interaction logic | No domain knowledge. Composes atoms only; never composes other molecules |
+| Tier | Directory | Definition | Boundary |
+|---|---|---|---|
+| **Atom** | `atom/` | An irreducible primitive wrapping one RN element with token consumption and accessibility behavior | No composition of other library components. No domain knowledge |
+| **Molecule** | `molecule/` | A composition of atoms with interaction logic | No domain knowledge. Composes atoms only; never composes other molecules |
+| **Composite** | `composite/` | A composition of atoms, molecules, and other composites with coordination logic | No domain knowledge. May compose atoms, molecules, and other composites |
+| **Provider** | `provider/` | A context-only component that renders no visual output and consumes no tokens | No visual output. Registered at `Component.provider.[name]` |
 
 **Organisms and above are not library concepts.** Anything domain-aware (a product card, a cart summary, a checkout form) is an app-side screen component or an app-registered variant. It never ships in the component library. This bounds the library and answers the question: there is no `organism/` folder because organisms are app concerns.
 
-The three-bucket exception model (below) replaces the upper hierarchy for handling components that deviate from the canonical set.
+The composite tier exists because real design systems have deeper composition chains than atom-molecule can express. A `DataTable` composes `Table` which composes `TableRow` which composes `TableCell`. The boundary that matters is unchanged: **no domain knowledge**. A composite is still generic. A product card and a checkout form remain app concerns.
+
+The four-bucket exception model (below) handles components that deviate from the canonical set.
 
 ---
 
@@ -47,10 +54,10 @@ The canonical atom set wraps primitive React Native elements. Each atom maps pro
 | `Icon` | `Text` (vector icon) | Name, size, color |
 | `Image` | `Image` | Source, resize, aspect |
 | `TextInput` | `TextInput` | Value, placeholder, state, accessibilityLabel |
-| `Switch` | `Switch` | Value, onValueChange, state |
+| `Toggle` | `Switch` | Value, onValueChange, state |
 | `Badge` | `View` | Count, color, position |
 | `Separator` | `View` | Orientation, color |
-| `ProgressIndicator` | `View` (animated) | Value, color, size |
+| `ProgressBar` | `View` (animated) | Value, color, size |
 
 Adding an atom is a library change. The atom must follow the authoring contract, consume tokens through utility classes, and include accessibility behavior.
 
@@ -69,6 +76,40 @@ Molecules compose atoms with interaction logic. A molecule coordinates state acr
 | `ListItem` | View + Text + Icon + Separator | Selection, swipe actions, accessibility role |
 
 Adding a molecule is a library change. The molecule must compose atoms only, consume tokens through utility classes, and include accessibility behavior for its interaction pattern.
+
+---
+
+## Composite Set
+
+Composites compose atoms, molecules, and other composites with coordination logic. A composite coordinates state across its children through React Context, not through prop drilling or `React.Children.map`. Examples include `Tabs`, `Accordion`, `Menu`, `DataTable`, `RadioButtonGroup`.
+
+| Composite | Composes | Coordination |
+|---|---|---|
+| `Menu` | MenuItem, View | Context for active item, roving tab index |
+| `Tabs` | Tab, TabList, TabPanel | Context for active tab, aria-controls wiring |
+| `Accordion` | AccordionItem | Context for expanded state |
+| `DataTable` | Table, TableRow, TableCell | Headless render-prop API for sort/select/expand |
+
+Adding a composite is a library change. The composite must use Context for parent-child coordination (never `React.Children.map` plus `cloneElement`, which breaks when children are wrapped in `React.memo` or `forwardRef`). Contexts are created once per loader instance, not inside `build`, so a `rebuild` does not orphan mounted Consumers.
+
+---
+
+## Provider Set
+
+Providers are context-only components that render no visual output and consume no tokens. They are registered at `Component.provider.[name]`, matching the existing `Component.variant` and `Component.freeform` namespacing. They do not count toward the flat top-level key count.
+
+| Provider | Purpose |
+|---|---|
+| `OverlayHost` | Overlay stacking and z-index management |
+| `LiveRegionProvider` | Screen reader announcements through aria-live regions |
+| `Layer` | Elevation level context for nested surfaces |
+| `Theme` | Theme override context for subtrees |
+| `FeatureFlags` | Feature flag context for conditional rendering |
+| `IdPrefix` | ID prefix context for scoped id generation |
+| `FluidForm` | Form-level context for fluid label positioning |
+| `ErrorBoundary` | Error boundary for component subtrees |
+
+Adding a provider is a library change. The provider must be a Context provider, not a visual component. `ErrorBoundary` is the one component in the package that must be a class, because `componentDidCatch` has no hook equivalent.
 
 ---
 
@@ -108,13 +149,14 @@ Spacing utilities use logical sides (`s`/`e`) for RTL. See [Theming](theming.md)
 
 ---
 
-## Three-Bucket Exception Model
+## Four-Bucket Exception Model
 
-Real apps need disciplined deviation and a clean way to abandon the token system entirely. The three-bucket model handles both.
+Real apps need disciplined deviation and a clean way to abandon the token system entirely. The four-bucket model handles both.
 
 | Bucket | Location | Token access | Registry | Re-themes |
 |---|---|---|---|---|
-| **Canonical** | `atom/` or `molecule/` | Full token access via `CommonStyle` | `Component.[name]` | Yes |
+| **Canonical** | `atom/`, `molecule/`, or `composite/` | Full token access via `CommonStyle` | `Component.[name]` | Yes |
+| **Provider** | `provider/` | No token access. Context only | `Component.provider.[name]` | No |
 | **Structured variant** | `variant/` | Full token access via `CommonStyle` | `Component.variant.[name]` | Yes |
 | **Unstructured freeform** | `freeform/` | No token access. No `CommonStyle`. Raw styles only | `Component.freeform.[name]` | No |
 
@@ -135,6 +177,7 @@ The freeform bucket exists for components that cannot conform: a marketing hero,
 The rules are testable constraints:
 
 - A canonical component must not import from `variant/` or `freeform/`
+- A provider component must register in `Component.provider` and render no visual output
 - A variant component must register in `Component.variant`
 - A freeform component must not receive `CommonStyle` or `theme`
 - A freeform component must not appear outside `Component.freeform`
@@ -143,7 +186,7 @@ The rules are testable constraints:
 
 ## Interaction States
 
-Every interactive component supports five states. The state names align with Carbon's interaction-state specifications.
+Every interactive component supports six states. The state names align with Carbon's interaction-state specifications.
 
 | State | Meaning | Visual treatment |
 |---|---|---|
@@ -152,6 +195,7 @@ Every interactive component supports five states. The state names align with Car
 | `pressed` | Component is being pressed | `pseudoPress` color operation (stronger shift than hover) |
 | `focused` | Component has keyboard or screen-reader focus | Focus ring or outline |
 | `disabled` | Component is non-interactive | `disabled` color operation (45% original + 55% white) |
+| `loading` | Component is performing an async action | Non-interactive, announces `aria-busy`, renders a `Loading` or `Skeleton` |
 
 The themer engine derives pseudo-state colors from base colors through the template's color operations. Components resolve the active state from interaction events and select the corresponding utility class or token.
 
@@ -161,18 +205,52 @@ The `focused` state is the accessibility-visible state. It must render a visible
 
 ## Accessibility Contract
 
-Components meet the accessibility contract through React Native's built-in accessibility props, which React Native Web maps to DOM ARIA attributes.
+Components meet the accessibility contract through `aria-*` props, which React Native 0.71+ accepts as first-class aliases and React Native Web forwards to the DOM. State and value semantics are expressed through `aria-*` props, never through the deprecated `accessibilityState` or `accessibilityValue` props, which React Native Web does not forward to the DOM. `accessibilityRole` and `accessibilityLabel` remain correct and are used directly.
 
 | Requirement | Implementation |
 |---|---|
 | **Roles** | `accessibilityRole` prop on every interactive component. Maps to ARIA role on web |
 | **Labels** | `accessibilityLabel` on every component lacking a visible text label |
-| **State announcement** | `accessibilityState` for selected/expanded/disabled states |
-| **Focus management** | Molecules that open/close (Modal, Dropdown) trap focus and restore on close |
+| **State announcement** | `aria-checked`, `aria-expanded`, `aria-disabled`, `aria-selected`, `aria-invalid`, `aria-pressed`, `aria-current` through the `a11y` translator |
+| **Value semantics** | `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-valuetext` through the `a11y` translator |
+| **Relationships** | `aria-controls`, `aria-labelledby`, `aria-describedby`, `aria-owns`, `aria-activedescendant` through the `a11y` translator |
+| **Focus management** | Overlays that open/close (Modal, Dropdown, Popover) trap focus and restore on close |
 | **Hit target** | Minimum 44x44 points on interactive components (iOS HIG), 48x48 dp (Android Material) |
 | **Focus indicator** | Visible focus ring or outline in the `focused` state |
 
-The accessibility patterns follow gluestack's headless component approach as a study reference: behavior and accessibility logic are separated from visual styling, so the same component works with any template pack. The library implements these patterns in its own code rather than wrapping gluestack.
+### No-op props on web
+
+The following React Native accessibility props are silent no-ops on web and must not be used. Use the `aria-*` equivalent instead.
+
+| Prop or API | Web behavior | Use instead |
+|---|---|---|
+| `accessibilityState` | Not forwarded to the DOM | `aria-checked`, `aria-expanded`, `aria-disabled`, etc. through `a11y.state()` |
+| `accessibilityValue` | Not forwarded to the DOM | `aria-valuenow`, `aria-valuemin`, `aria-valuemax` through `a11y.value()` |
+| `accessibilityHint` | Emits nothing | `aria-describedby`, pass both |
+| `accessibilityElementsHidden`, `importantForAccessibility` | Emit nothing | `aria-hidden` |
+| `accessibilityViewIsModal` | Emits nothing | `aria-modal` |
+| `AccessibilityInfo.announceForAccessibility` | Literal empty function | `useAnnounce` from `LiveRegionProvider` |
+| `AccessibilityInfo.setAccessibilityFocus` | No-op | DOM `ref.focus()` |
+| `accessibilityActions` / `onAccessibilityAction` | Unimplemented | `onKeyDown` on web |
+| `LayoutAnimation` | No-op | `Animated` with measured height |
+
+### Platform gaps
+
+`aria-*` is the one form that works on web, iOS, and Android. However, native platforms have gaps: `aria-live` is Android-only on native, `aria-modal` is iOS-only, and native has no table, tabpanel, or landmark roles. The library routes every gap through a mechanism (such as `useAnnounce` for live regions) rather than leaving it to individual component judgment.
+
+---
+
+## Divergences from Carbon
+
+The library follows Carbon's component vocabulary but not its export shape. Four deliberate divergences:
+
+1. **Skeletons collapse to one atom plus a `loading` prop.** Carbon ships approximately 20 `<X>Skeleton` components. The library ships one `Skeleton` atom with a `variant` prop (`'text' | 'icon' | 'placeholder'`) plus `lines`, `width`, `height`. Components that need a loading state take a `loading` boolean and render `Skeleton` internally. This replaces 20 components with 1 atom and 1 prop.
+
+2. **`Fluid*` variants collapse to a `fluid` prop.** Carbon's 10 `Fluid*` components are behaviorally identical to their non-fluid counterparts; the only difference is that the label sits inside the field. Ship one `fluid` boolean prop on `TextInput`, `TextArea`, `NumberInput`, `Search`, `Select`, `Dropdown`, `ComboBox`, `MultiSelect`, `DatePicker`, `TimePicker`.
+
+3. **Deprecated button aliases collapse to a `kind` prop.** Carbon's `PrimaryButton`, `SecondaryButton`, `DangerButton` are aliases. The library ships one `Button` atom with a `kind` prop.
+
+4. **Six renames to avoid collisions with React Native concepts.** Carbon's `Switch` (a segment inside `ContentSwitcher`) becomes `ContentSwitcherItem`. React Native's on/off toggle concept becomes `Toggle`. Carbon's `ProgressIndicator` (a multi-step stepper) becomes `ProgressSteps`. The determinate bar becomes `ProgressBar`. These renames are breaking but the library is unpublished, so no deprecation window is required.
 
 ---
 
