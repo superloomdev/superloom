@@ -55,8 +55,8 @@ The canonical atom set wraps primitive React Native elements. Each atom maps pro
 | `Image` | `Image` | Source, resize, aspect |
 | `TextInput` | `TextInput` | Value, placeholder, state, accessibilityLabel |
 | `Toggle` | `Switch` | Value, onValueChange, state |
-| `Badge` | `View` | Count, color, position |
-| `Separator` | `View` | Orientation, color |
+| `Tag` | `View` | Label, color, dismissible |
+| `BadgeIndicator` | `View` | Count, color, position |
 | `ProgressBar` | `View` (animated) | Value, color, size |
 
 Adding an atom is a library change. The atom must follow the authoring contract, consume tokens through utility classes, and include accessibility behavior.
@@ -69,7 +69,7 @@ Molecules compose atoms with interaction logic. A molecule coordinates state acr
 
 | Molecule | Composes | Interaction |
 |---|---|---|
-| `ButtonPrimary` | Icon + Text + Button | Hover/press/disabled state resolution, icon + label layout |
+| `Button` | Icon + Text + Pressable | Hover/press/disabled state resolution, icon + label layout, `kind` prop (`primary`, `secondary`, `tertiary`, `danger`, `ghost`) |
 | `Dropdown` | Button + View + Text | Open/close state, selection, accessibility focus management |
 | `Modal` | View + Text + Button | Visibility state, backdrop, focus trap |
 | `Card` | View + Text + Image | Layout, optional press state |
@@ -100,7 +100,7 @@ Providers are context-only components that render no visual output and consume n
 
 | Provider | Purpose |
 |---|---|
-| `OverlayHost` | Overlay stacking and z-index management |
+| `Overlay` | Overlay stacking and z-index management |
 | `LiveRegionProvider` | Screen reader announcements through aria-live regions |
 | `Layer` | Elevation level context for nested surfaces |
 | `Theme` | Theme override context for subtrees |
@@ -119,15 +119,21 @@ Every component is a loader module. The library entry point is `require('rnw-com
 
 The contract:
 
-1. The loader generates `CommonStyle` (the utility style map for the current theme), builds the HOC, and wires every component via `make(factory)`
-2. Each component factory is `function (Lib, CONFIG, ERRORS, Registry, Style_)` returning a React component
+1. The loader generates `CommonStyle` (the utility style map for the current theme) and wires every component via `make(factory)`
+2. Each component factory is `function (Lib, CONFIG, ERRORS, Parts, Registry, Style)` returning a React component
 3. The component maps props to utility classes: `size` to `font_size_[step]`, `color` to `font_[token]`, `weight` to `font_weight_[name]`
 4. Molecules compose atoms through the shared `Component` object, not through direct `require`
-5. Atoms strip `isRtlActive` so it never leaks to the DOM on web
-
-The HOC (`componentHoc.js`) injects `isRtlActive` into every component. Atoms consume it for directional logic and strip it from props before rendering. Molecules consume it and pass it to child atoms.
+5. Directional layout uses `Parts.Direction`, a context-based direction provider. Components that need the writing direction call `Parts.Direction.useDirection()`. Logical style properties (`paddingStart`, `paddingEnd`, `marginStart`, `marginEnd`) mirror automatically under RTL and require no manual intervention. Directional icons use `Parts.Direction` with a `mirror` prop and `transform: [{ scaleX: -1 }]`
 
 `rebuild(theme, breakpoint?)` re-derives `CommonStyle` and returns a fresh registry. The previous registry is never mutated; callers swap the reference. This is the runtime re-theming mechanism.
+
+### Parts and the Style Contract
+
+The loader builds `Parts` once per instance from `parts/`. Components never `require` a mechanism directly; they receive `Parts` through their factory signature. Each part loader takes the mandatory uniform signature `(shared_libs, config, errors)`.
+
+`Style` is PascalCase with no trailing underscore, following the casing table for internally-assembled namespaced containers. It carries `utilities`, `tokens`, `breakpoint`, and `allBreakpoints`.
+
+Internal constants live in `data/style-contract.json`, not in config. Unit-conversion factors, numeric style property lists, and precision values are intrinsic data, not overridable configuration.
 
 ---
 
@@ -254,7 +260,7 @@ The library follows Carbon's component vocabulary but not its export shape. Four
 
 3. **Deprecated button aliases collapse to a `kind` prop.** Carbon's `PrimaryButton`, `SecondaryButton`, `DangerButton` are aliases. The library ships one `Button` atom with a `kind` prop.
 
-4. **Six renames to avoid collisions with React Native concepts.** Carbon's `Switch` (a segment inside `ContentSwitcher`) becomes `ContentSwitcherItem`. React Native's on/off toggle concept becomes `Toggle`. Carbon's `ProgressIndicator` (a multi-step stepper) becomes `ProgressSteps`. The determinate bar becomes `ProgressBar`. These renames are breaking but the library is unpublished, so no deprecation window is required.
+4. **Six renames to avoid collisions with React Native concepts.** Carbon's `Switch` (a segment inside `ContentSwitcher`) becomes `Switch`. React Native's on/off toggle concept becomes `Toggle`. Carbon's `ProgressIndicator` (a multi-step stepper) becomes `ProgressIndicator`. The determinate bar becomes `ProgressBar`. These renames are breaking but the library is unpublished, so no deprecation window is required.
 
 ---
 
