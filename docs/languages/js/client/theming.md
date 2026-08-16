@@ -13,6 +13,7 @@ The theming system takes a template and a stack of layered values, derives a com
 - [Module, Extension, App](#module-extension-app)
 - [Runtime Re-Theming](#runtime-re-theming)
 - [Server-Driven Theming](#server-driven-theming)
+- [Theme Projection for RNW](#theme-projection-for-rnw)
 - [Further Reading](#further-reading)
 
 ---
@@ -111,6 +112,14 @@ A layer is pure JSON. It can be stored in a database, sent over HTTP, or pushed 
 The contract is one-directional: the server sends data (color seeds, dimension seeds, font family names). The client owns the template (derivation rules) and the engine (math). The server never sends derivation rules or code.
 
 This separation is what makes the system portable. A server can push a layer with one accent color override to a client running any template, and the client derives the full set of tokens, contrast pairs, and platform-specific projections locally.
+
+---
+
+## Theme Projection for RNW
+
+A React Native Web component library always consumes the **`native`** projection, on every platform including web. RNW is itself the web projection: it accepts unit-free numbers and emits CSS. Requesting the themer's `web` projection and then rendering through RNW applies two projections and yields unit strings that React Native cannot consume on iOS or Android.
+
+The correct call is always `buildTheme(template, layers, 'native')` from an RNW consumer, regardless of whether the app is running in a browser. The themer's `web` projection exists for raw-DOM consumers that write CSS directly.
 
 ---
 

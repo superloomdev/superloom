@@ -1,7 +1,12 @@
 {
   "name": "superloom-website",
   "version": "0.0.1",
+  "author": {
+    "name": "sj00"
+  },
+  "contributors": [],
   "private": true,
+  "license": "MIT",
   "scripts": {
     "sync-docs": "rsync -a --delete ../docs/ ./docs/",
     "cleanup": "rm -rf ./docs/",
