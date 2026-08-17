@@ -386,6 +386,7 @@ Three allowed destination values, closed set:
 | `docs/languages/js/project-structure.md` | Directory Map |
 | `docs/languages/js/error-handling.md` | AI Behavior Rules (three-category error disposal + wrapper purity + service translation) |
 | `docs/languages/js/module-structure.md` | mirrored to workflow: js-helper-module |
+| `docs/languages/js/factory-vs-singleton.md` | not mirrored (reference material; decision guide looked up per task, referenced by the js-helper-module workflow) |
 | `docs/principles/module-design.md` | AI Behavior Rules (class taxonomy reference, composition patterns) + Documentation Map |
 | `docs/principles/composition-and-adapters.md` | AI Behavior Rules (composition and adapters doctrine) + Documentation Map |
 | `docs/languages/js/module-classes.md` | not mirrored (reference material; class definitions and per-class doc footprints are looked up, not memorized) |
