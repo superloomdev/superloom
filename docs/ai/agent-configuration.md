@@ -13,6 +13,8 @@ How AI agents are configured across Superloom repositories: which files exist, w
 - [Repository Independence](#repository-independence)
 - [Module-Level ROBOTS.md](#module-level-robotsmd)
 - [Personal Configuration](#personal-configuration)
+- [Commit and Attribution Policy](#commit-and-attribution-policy)
+- [Version Lock During Development](#version-lock-during-development)
 
 ---
 
@@ -105,3 +107,17 @@ Every published module carries a `ROBOTS.md`: the compact, agent-facing API refe
 ## Personal Configuration
 
 Individual developers keep personal agent instructions (working style, meta-preferences, personal plan conventions) in the workspace-level tool folder, outside every repository, never committed. Framework rules never live there: anything a second developer's agent would need is by definition framework content and belongs in the committed set.
+
+---
+
+## Commit and Attribution Policy
+
+**No AI contributor attribution in commits.** Git commits must not include `Co-Authored-By`, `Generated with`, or any other attribution to AI tools or automated systems. The only author is the project maintainer. Commit messages follow Conventional Commits and contain no machine-generated boilerplate.
+
+**No AI-generated contributor entries** in `package.json` `contributors` arrays or `author` fields. These fields list human contributors only.
+
+## Version Lock During Development
+
+All packages stay at `1.0.0` until public launch. Republishing uses the delete-and-republish workflow: delete the package version from GitHub Package Registry, push to `main`, and CI republishes at the same version. This avoids version inflation during the development phase and keeps the `peerDependencies` ranges stable across the ecosystem.
+
+The delete-and-republish workflow changes the artifact tarball checksum, so any committed `package-lock.json` in a consumer repo must be regenerated after the republish. The working practice: before verifying a consumer, delete the relevant `package-lock.json` and run `npm install` fresh. Commit lockfiles only after the versioned packages are stable.

@@ -301,6 +301,8 @@ Class I exists because the Class G plus H pair is not free: it costs two package
 
 **Framework injection:** the framework arrives through the `Lib` container (`Lib.React`), never through a direct `import React`. This keeps the dependency centralized, keeps `react` a peer dependency rather than a bundled one, and lets `_test/` inject a stub so tests run in pure Node with no Metro and no emulator.
 
+**Module syntax:** Class I modules that ship component libraries or large registries consumed via bundler use the [ESM variant](module-structure.md#esm-variant-factory-with-es-modules) of the factory pattern (`import`/`export default`, `"type": "module"` in `package.json`). Class I modules consumed directly by Node.js use CommonJS. The choice follows the consumer, not the class.
+
 **README extras:** "Supported Renderers" (which React targets the module runs on, and what it requires to be installed). Install section lists `react` as a peer dependency.
 
 **`docs/`:** `api.md`, `configuration.md`, plus `schemas.md` when the validators file enforces real contracts. Unlike Class H, a Class I module owns its own configuration, so `configuration.md` is required.
@@ -310,6 +312,7 @@ Class I exists because the Class G plus H pair is not free: it costs two package
 | `js-react-helper-idle` | `@superloomdev/js-react-helper-idle` | `js-react-helper-*` | React | Idle-state detection with `useIdle` hook |
 | `js-react-helper-timer` | `@superloomdev/js-react-helper-timer` | `js-react-helper-*` | React | Countdown and interval hooks |
 | `js-rnw-helper-device` | `@superloomdev/js-rnw-helper-device` | `js-rnw-helper-*` | React Native Web | RN platform APIs (device info, screen metrics, accessibility) injected via `shared_libs` |
+| `rnw-components-carbon` | `@superloomdev/rnw-components-carbon` | `rnw-components-*` | React Native Web | Carbon-informed component library (atoms, molecules, composites, providers) using ESM factory pattern |
 
 ---
 

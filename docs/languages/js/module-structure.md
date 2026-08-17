@@ -17,6 +17,7 @@ A reference for how every module in Superloom is shaped: the standard applicatio
   - [Reference Implementations](#reference-implementations)
 - [Class I Framework Module Deltas](#class-i-framework-module-deltas)
   - [React Hook Modules Are Factories](#react-hook-modules-are-factories)
+  - [ESM Variant (Factory with ES Modules)](#esm-variant-factory-with-es-modules)
 - [Parts Pattern (Complex Helper Modules)](#parts-pattern-complex-helper-modules)
 - [Singleton Module Pattern](#singleton-module-pattern)
   - [Canonical Shape: Main Module Singleton](#canonical-shape-main-module-singleton)
@@ -495,6 +496,96 @@ The decision needs no judgment. Read the module's public functions: if any `use*
 The crypto module is a singleton because `uuid()` returns the same kind of result no matter who calls it, so a second instance would be indistinguishable from the first. The idle module is a factory because a second instance is the entire point. A screen that idles after thirty seconds and one that idles after two minutes are independent state machines sharing an implementation.
 
 Naming reinforces this: a framework-tier prefix (`js-react-helper-*`, `js-rnw-helper-*`) signals a hook surface and therefore a factory, while a runtime-tier prefix on a hook-free module (`js-client-helper-*`) leaves the singleton option open. The prefix tables live in [`client/client-modules.md`](client/client-modules.md#framework-tier-prefixes).
+
+### ESM Variant (Factory with ES Modules)
+
+The factory skeleton above uses CommonJS syntax (`require`, `module.exports`). A module may instead use **ES Modules** (`import`, `export default`) when its consumers are bundlers (Vite, Metro, webpack) that benefit from tree-shaking, or when a peer dependency requires ESM. The structural contract is identical: the loader takes `(shared_libs, config)`, merges config over defaults, wires companions, and returns `createInterface(...)`. Only the syntax changes.
+
+**Package declaration.** Set `"type": "module"` in `package.json`. This makes `.js` files ESM by default. No `.mjs` extension is needed.
+
+**What changes versus CommonJS:**
+
+| Element | CommonJS | ESM |
+|---|---|---|
+| Loader export | `module.exports = function loader (...)` | `export default function loader (...)` |
+| Config import | `const CONFIG = require('./[module].config')` | `import CONFIG from './[module].config.js'` |
+| Errors import | `const ERRORS = require('./[module].errors')` | `import ERRORS from './[module].errors.js'` |
+| Validators import | `const Validators = require('./[module].validators')(Lib, ERRORS)` | `import createValidators from './[module].validators.js'` then `const Validators = createValidators(Lib, ERRORS)` |
+| Parts import | `const partsFoo = require('./parts/foo')` | `import partsFoo from './parts/foo.js'` |
+| `'use strict'` | Required | Omitted (strict mode is implicit in ESM) |
+| Config merge | `Object.assign({}, require('./[module].config'), config \|\| {})` | `Object.assign({}, CONFIG, config \|\| {})` (CONFIG is the imported default) |
+
+**What stays the same:**
+
+- The `createInterface` signature and body are unchanged
+- The section banners (`Module-Loader START/END`, `createInterface START/END`, `Public Functions START/END`) are unchanged
+- The 3/2/1 vertical spacing rule applies identically
+- JSDoc blocks, step comments, and the Info header are unchanged
+- The Universal Companion Files rule applies: config, errors, and validators files exist even when empty
+
+**ESM loader skeleton:**
+
+```javascript
+// Info: [Module purpose in one line].
+//
+// Compatibility: [Target runtime versions]
+//
+// Factory pattern: each loader call returns an independent instance with
+// its own state and config.
+
+
+// Imports
+import DEFAULT_CONFIG from './[module].config.js';
+import ERRORS from './[module].errors.js';
+import createValidators from './[module].validators.js';
+
+
+/////////////////////////// Module-Loader START ////////////////////////////////
+
+/********************************************************************
+Factory loader. One call = one independent instance with its own
+state and config.
+
+@param {Object} shared_libs - Lib container with Utils and Debug
+@param {Object} config - Overrides merged over module config defaults
+
+@return {Object} - Public interface for this module
+*********************************************************************/
+export default function loader (shared_libs, config) {
+
+  // Dependencies for this instance
+  const Lib = {
+    Utils: shared_libs.Utils,
+    Debug: shared_libs.Debug
+  };
+
+  // Merge overrides over defaults
+  const CONFIG = Object.assign({}, DEFAULT_CONFIG, config || {});
+
+  // Validators singleton
+  const Validators = createValidators(Lib, ERRORS);
+
+  // Validate config immediately so misconfiguration fails at startup
+  Validators.validateConfig(CONFIG);
+
+  // Mutable per-instance state
+  const state = {};
+
+  return createInterface(Lib, CONFIG, ERRORS, Validators, state);
+
+};/////////////////////////// Module-Loader END /////////////////////////////////
+```
+
+**When to choose ESM versus CommonJS:**
+
+| Pattern | Use when | Example |
+|---|---|---|
+| CommonJS (default) | Server-side helper modules consumed by Node.js directly | `js-helper-utils`, `js-helper-time` |
+| ESM | Component libraries or large modules consumed via bundler, where tree-shaking or ESM-only peer dependencies matter | `rnw-components-carbon` |
+
+The choice is per-module, not per-project. A server application may consume both CommonJS helper modules and an ESM component library without conflict, because the bundler resolves each package according to its own `package.json` declaration.
+
+**Reference implementation:** `@superloomdev/rnw-components-carbon` is the canonical ESM factory module. Its entry point (`components.js`) uses `export default function loader (shared_libs, config)`, imports companion files and parts via `import`, and ships with `"type": "module"` in `package.json`. Component factory files under `component/` use `export default function (Lib, CONFIG, ERRORS, Parts, Registry, Style) { ... }`, which the loader imports and wires via `make(factory)`.
 
 ---
 
