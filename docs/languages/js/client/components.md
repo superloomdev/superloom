@@ -115,21 +115,27 @@ Adding a provider is a library change. The provider must be a Context provider, 
 
 ## Authoring Contract
 
-Every component is a loader module. The library entry point is `require('rnw-components-carbon')(shared_libs, config)`, which returns an interface with `build`, `rebuild`, `themeContract`, `useBreakpoint`, and `tokens`. Calling `build(theme)` produces the themed component set.
+Every component is a loader module. The library entry point is `import loader from 'rnw-components-carbon'` (ESM) or `require('rnw-components-carbon')` (CJS interop), called as `loader(shared_libs, config)`, which returns an interface with `build`, `rebuild`, `themeContract`, `useBreakpoint`, and `tokens`. Calling `build(theme)` produces the themed component set.
 
 The contract:
 
 1. The loader generates `CommonStyle` (the utility style map for the current theme) and wires every component via `make(factory)`
 2. Each component factory is `function (Lib, CONFIG, ERRORS, Parts, Registry, Style)` returning a React component
 3. The component maps props to utility classes: `size` to `font_size_[step]`, `color` to `font_[token]`, `weight` to `font_weight_[name]`
-4. Molecules compose atoms through the shared `Component` object, not through direct `require`
+4. Molecules compose atoms through the shared `Component` object, not through direct imports
 5. Directional layout uses `Parts.Direction`, a context-based direction provider. Components that need the writing direction call `Parts.Direction.useDirection()`. Logical style properties (`paddingStart`, `paddingEnd`, `marginStart`, `marginEnd`) mirror automatically under RTL and require no manual intervention. Directional icons use `Parts.Direction` with a `mirror` prop and `transform: [{ scaleX: -1 }]`
 
 `rebuild(theme, breakpoint?)` re-derives `CommonStyle` and returns a fresh registry. The previous registry is never mutated; callers swap the reference. This is the runtime re-theming mechanism.
 
+### ESM Consumption Pattern
+
+The carbon component library ships as an ES Module (`"type": "module"` in `package.json`). Component factory files use `export default function (Lib, CONFIG, ERRORS, Parts, Registry, Style) { ... }`, and the loader imports them via `import viewFactory from './component/atom/view.js'`. The loader itself uses `export default function loader (shared_libs, config)`. See [ESM Variant](../module-structure.md#esm-variant-factory-with-es-modules) for the full skeleton.
+
+Consumers that use a bundler (Vite, Metro) import the loader directly. Consumers in a CommonJS environment use `require()` with Node.js CJS-ESM interop, which resolves the default export automatically.
+
 ### Parts and the Style Contract
 
-The loader builds `Parts` once per instance from `parts/`. Components never `require` a mechanism directly; they receive `Parts` through their factory signature. Each part loader takes the mandatory uniform signature `(shared_libs, config, errors)`.
+The loader builds `Parts` once per instance from `parts/`. Components never import a mechanism directly; they receive `Parts` through their factory signature. Each part loader takes the mandatory uniform signature `(shared_libs, config, errors)`.
 
 `Style` is PascalCase with no trailing underscore, following the casing table for internally-assembled namespaced containers. It carries `utilities`, `tokens`, `breakpoint`, and `allBreakpoints`.
 

@@ -8,6 +8,7 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
 
 - [Tooling](#tooling)
 - [Source Style](#source-style)
+- [ESM Formatting](#esm-formatting)
 - [Vertical Spacing (3/2/1 Rule)](#vertical-spacing-321-rule)
 - [Section Header Hierarchy](#section-header-hierarchy)
 - [Private Functions Enclosure](#private-functions-enclosure)
@@ -64,6 +65,33 @@ ESLint catches `no-var`, `prefer-const`, `no-unused-vars`, `no-useless-assignmen
 | Object brace spacing | `{ key: value }` not `{key:value}` |
 | Array bracket spacing | `[1, 2, 3]` not `[ 1, 2, 3 ]` |
 | Comma spacing | `[1, 2, 3]` not `[1 ,2 ,3]` |
+
+---
+
+## ESM Formatting
+
+Modules declared with `"type": "module"` in `package.json` follow all Source Style rules above, plus these ESM-specific rules. See [ESM Variant](module-structure.md#esm-variant-factory-with-es-modules) for the loader skeleton.
+
+| Rule | CommonJS | ESM |
+|---|---|---|
+| Module declaration | Implicit (CommonJS) | `"type": "module"` in `package.json` |
+| Strict mode | `'use strict';` required | Omitted (implicit in ESM) |
+| Import syntax | `const X = require('./x')` | `import X from './x.js'` |
+| Export syntax | `module.exports = function loader (...)` | `export default function loader (...)` |
+| Named exports | `module.exports = { foo, bar }` | `export { foo, bar }` or `export function foo () {}` |
+| Import labels | `// Imports` followed by `require` calls | `// Imports` followed by `import` statements |
+| File extensions in imports | Optional (`'./config'`) | Include `.js` (`'./config.js'`) for clarity and bundler compatibility |
+
+**Rules that apply identically to ESM and CommonJS:**
+
+- The 3/2/1 vertical spacing rule
+- Section banners (`Module-Loader START/END`, `createInterface START/END`, `Public Functions START/END`)
+- JSDoc blocks and step comments
+- The Info header
+- Private `_Name` object enclosure
+- All naming conventions
+
+**Component factory files** in an ESM module use `export default function (Lib, CONFIG, ERRORS, Parts, Registry, Style) { ... }` with the same internal structure as any factory: `Static Constants START/END`, `Public Functions START/END`, and `Private Functions START/END` sections separated by `///` banners. The `return Name;` at the factory bottom and the `}/////////////////////////// Component Factory END /////////////////////////////` closing banner are unchanged.
 
 ---
 
