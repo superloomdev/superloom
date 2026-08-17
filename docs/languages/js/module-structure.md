@@ -15,7 +15,7 @@ A reference for how every module in Superloom is shaped: the standard applicatio
   - [createInterface Signature Variants](#createinterface-signature-variants)
   - [Required Rules](#required-rules)
   - [Reference Implementations](#reference-implementations)
-- [Class I Framework Module Deltas](#class-i-framework-module-deltas)
+  - [Class I Framework Module Deltas](#class-i-framework-module-deltas)
   - [React Hook Modules Are Factories](#react-hook-modules-are-factories)
   - [ESM Variant (Factory with ES Modules)](#esm-variant-factory-with-es-modules)
 - [Parts Pattern (Complex Helper Modules)](#parts-pattern-complex-helper-modules)
@@ -508,7 +508,7 @@ The factory skeleton above uses CommonJS syntax (`require`, `module.exports`). A
 | Element | CommonJS | ESM |
 |---|---|---|
 | Loader export | `module.exports = function loader (...)` | `export default function loader (...)` |
-| Config import | `const CONFIG = require('./[module].config')` | `import CONFIG from './[module].config.js'` |
+| Config import | `const CONFIG = require('./[module].config')` | `import DEFAULT_CONFIG from './[module].config.js'` (then merge into `CONFIG`) |
 | Errors import | `const ERRORS = require('./[module].errors')` | `import ERRORS from './[module].errors.js'` |
 | Validators import | `const Validators = require('./[module].validators')(Lib, ERRORS)` | `import createValidators from './[module].validators.js'` then `const Validators = createValidators(Lib, ERRORS)` |
 | Parts import | `const partsFoo = require('./parts/foo')` | `import partsFoo from './parts/foo.js'` |
