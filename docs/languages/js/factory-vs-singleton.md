@@ -2,7 +2,7 @@
 
 > **Language:** [JavaScript](module-structure)
 
-The default is factory pattern for testability, with singleton pattern reserved for rare cases.
+The default is factory pattern for testability, with singleton pattern reserved for rare cases. The factory pattern has two syntax variants: CommonJS (the default for Node.js-consumed modules) and ESM (for bundler-consumed modules where tree-shaking matters). The structural contract is identical; only the import/export syntax changes. See [ESM Variant](module-structure#esm-variant-factory-with-es-modules) in `module-structure.md`.
 
 ## Quick Decision Matrix
 
@@ -15,7 +15,7 @@ The default is factory pattern for testability, with singleton pattern reserved 
 | **Pure functions with zero dependencies** | ✅ Preferred | ⚠️ Only if no test isolation needed |
 | **Foundation utility library** | ✅ Preferred | ⚠️ Only if truly dependency-free |
 
-**Rule of thumb:** If a module takes any external dependencies (libs, config, adapters), use factory pattern. Only consider singleton for pure utility modules with zero dependencies.
+**Rule of thumb:** If a module takes any external dependencies (libs, config, adapters), use factory pattern. Only consider singleton for pure utility modules with zero dependencies. The factory pattern has two syntax variants: CommonJS (default for Node.js) and ESM (for bundler-consumed modules). The choice between CommonJS and ESM follows the consumer, not the module's logic.
 
 ---
 
@@ -86,6 +86,29 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators) {
 ```
 
 See [Universal Companion Files](module-structure#universal-companion-files) - the four fixed slots (`Lib`, `CONFIG`, `ERRORS`, `Validators`) are always wired, even when a companion file is empty today.
+
+### ESM Syntax Variant
+
+The factory pattern above uses CommonJS (`require`, `module.exports`). A module consumed via bundler (Vite, Metro, webpack) may instead use ES Modules (`import`, `export default`) with `"type": "module"` in `package.json`. The structural contract is identical: the loader takes `(shared_libs, config)`, wires companions, and returns `createInterface(...)`. Only the syntax changes:
+
+```javascript
+import DEFAULT_CONFIG from './[module].config.js';
+import ERRORS from './[module].errors.js';
+import createValidators from './[module].validators.js';
+
+export default function loader (shared_libs, config) {
+  const Lib = { Utils: shared_libs.Utils };
+  const CONFIG = Object.assign({}, DEFAULT_CONFIG, config || {});
+  const Validators = createValidators(Lib, ERRORS);
+  Validators.validateConfig(CONFIG);
+
+  return createInterface(Lib, CONFIG, ERRORS, Validators);
+}
+```
+
+Key differences: no `'use strict'` (implicit in ESM), `import` instead of `require`, `export default` instead of `module.exports`, and `.js` extensions in import paths. See [ESM Variant](module-structure#esm-variant-factory-with-es-modules) for the full skeleton and the CommonJS-to-ESM comparison table.
+
+**When to choose ESM:** component libraries or large modules consumed via bundler where tree-shaking or ESM-only peer dependencies matter (e.g. `rnw-components-carbon`). **When to choose CommonJS:** server-side helper modules consumed by Node.js directly (e.g. `js-helper-utils`, `js-helper-time`). The choice is per-module, not per-project.
 
 ---
 
@@ -321,6 +344,7 @@ module.exports = {
 
 ## Further Reading
 
-- [Module Structure (JavaScript)](module-structure) - Implementation patterns
+- [Module Structure (JavaScript)](module-structure) - Implementation patterns, including [ESM Variant](module-structure#esm-variant-factory-with-es-modules)
+- [Code Formatting](code-formatting) - [ESM Formatting](code-formatting#esm-formatting) rules
 - [Core Helper Modules](catalog-core) - Factory pattern guidance
 - [Module Testing](module-testing) - Testing strategies and isolation
