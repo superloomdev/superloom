@@ -175,6 +175,8 @@ The workflow file groups jobs visually with comment banners showing the group bo
 
 The step-by-step bump procedure (SemVer classification, commit format, multi-module bumps, post-publish verification) lives in [`../languages/js/versioning/bump-checklist.md`](../languages/js/versioning/bump-checklist.md). This page covers the **pipeline mechanics**; the checklist covers **the contributor's procedure**.
 
+**Before pushing:** the [Pre-Commit Protocol](testing-local-modules.md#pre-commit-protocol-all-repos) must pass locally (fresh install, lint, tests). CI is the second line of defense, not the first. A CI run that fails on something testable locally is wasted pipeline time and a polluted git log.
+
 ## GITHUB_TOKEN Permissions
 
 The `detect` job needs `packages: read` so it can call `npm view` to check the registry. The `publish-*` jobs need `packages: write`:

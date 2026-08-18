@@ -990,6 +990,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Lesson:** The module-scope injection-slot block (`let Lib; let CONFIG; ...`) is a deliberate structural pattern, not dead code. When adding a new slot that is not yet used, add `// eslint-disable-line no-unused-vars` on the same line. Remove the directive when the slot is wired.
 
+### 23. CI fails after push - local tests ran against stale `node_modules`
+
+**Symptom:** All tests pass locally. Code is committed and pushed. CI fails immediately with `MODULE_NOT_FOUND`, version mismatch, or checksum errors that were never seen on the developer's machine.
+
+**Cause:** Local `node_modules/` contained hoisted dependencies from a previous repo session or a `file:` link that masked a missing peer dependency. CI does a fresh `npm ci` from a clean checkout, so it sees the real dependency state. The local test "passed" only because the stale `node_modules/` happened to have the right files from a previous install.
+
+**Lesson:** Always run `rm -rf node_modules package-lock.json && npm install` before running tests locally. This is the default, not an exception. The few seconds saved by skipping the fresh install are never worth a broken CI run, a fix commit, and wasted pipeline time. See [`testing-local-modules.md` - Pre-Commit Protocol](testing-local-modules.md#pre-commit-protocol-all-repos) for the full protocol.
+
 ---
 
 ## Adding a New Entry

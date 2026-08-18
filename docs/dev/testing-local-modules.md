@@ -28,17 +28,17 @@ export GITHUB_READ_PACKAGES_TOKEN=<your token>
 
 All module tests live in `_test/` inside the module directory. Always run commands from `_test/` - never from the module root or the repo root.
 
-### Step 1: Install dependencies
+### Step 1: Fresh install (mandatory every time)
 
-Navigate to the module's `_test/` directory and run:
+Navigate to the module's `_test/` directory and run a **clean install** - wiping `node_modules/` and `package-lock.json` first:
 
 ```bash
-npm install   # from <module>/_test
+rm -rf node_modules package-lock.json && npm install   # from <module>/_test
 ```
 
-Run this every time before testing. The module itself is linked via `file:../` so source changes are picked up automatically, but published peer dependencies may have been updated and `npm install` is the only safe way to refresh them. Skipping `npm install` is never worth the few seconds saved.
+This is the default, not an exception. A plain `npm install` on top of an existing `node_modules/` can silently use stale lock files, hoisted dependencies from a previous repo, or `file:` links that do not reflect the current registry state. CI does a fresh checkout every time - local testing must match that condition or the results are meaningless.
 
-> **During module refactoring only:** use `rm -rf node_modules package-lock.json && npm install` instead. Stale lock files from temporary `file:` swaps and version resets to `1.0.0` can cause silent wrong-version installs. See [`pitfalls.md` entry 21](pitfalls.md#21-stale-package-lockjson-causes-wrong-version-install-after-file-swap-or-version-reset).
+The few seconds saved by skipping the wipe are never worth a broken CI run, a fix commit, and wasted pipeline time. See [`pitfalls.md` entry 21](pitfalls.md#21-stale-package-lockjson-causes-wrong-version-install-after-file-swap-or-version-reset) and [`pitfalls.md` entry 23](pitfalls.md#23-ci-fails-after-push--local-tests-ran-against-stale-node_modules) for the failure modes this prevents.
 
 ### Step 2: Run tests
 
@@ -53,6 +53,76 @@ That is all. For modules with Docker dependencies, `npm test` manages the full c
 3. `posttest` - tears down the container and removes its volumes
 
 **Never start Docker containers manually before running `npm test`.** `pretest` runs `docker compose down` first; a manually started container will conflict on port allocation or be deleted mid-run.
+
+---
+
+## Pre-Commit Protocol (All Repos)
+
+The Pre-Publish Checklist below covers helper modules. The same principle applies to **every repo** in the Superloom ecosystem: helper modules, the components library, the demo client, and the demo server. No commit or push happens until all three gates pass locally.
+
+### The three gates
+
+| Gate | What | Command shape |
+|---|---|---|
+| 1. Fresh install | Wipe `node_modules/` and `package-lock.json`, install from registry | `rm -rf node_modules package-lock.json && npm install` |
+| 2. Lint | ESLint with the shared config, exit 0, zero warnings | `npm run lint` |
+| 3. Tests | Unit tests or e2e tests, exit 0, zero failures | `npm test` or `npx playwright test` |
+
+Everything must come from the registry. No `file:` links except the module under test itself (helper module `_test/` directories use `file:../` for the module being tested - that is the only permitted `file:` link).
+
+### Per-repo commands
+
+**Helper modules** (`codebase-js-helper-modules`):
+
+```bash
+# Gate 1 + 3: from <module>/_test
+rm -rf node_modules package-lock.json && npm install && npm test
+
+# Gate 2: from <module> root
+npm run lint
+```
+
+**Components library** (`codebase-rnw-components-carbon`):
+
+```bash
+# Gate 1 + 3: from _test/
+rm -rf node_modules package-lock.json && npm install && npm test
+
+# Gate 2: from repo root
+npm run lint
+```
+
+**Demo client** (`codebase-demo-client-rnw`):
+
+```bash
+# Gate 1: from hosts/web/
+cd hosts/web && rm -rf node_modules package-lock.json && npm install
+
+# Gate 2: from repo root
+npm run lint
+
+# Gate 3: start web host, then run Playwright
+npm run dev &   # from hosts/web/
+sleep 5
+npx playwright test   # from repo root
+kill %1
+```
+
+**Demo server** (`codebase-demo-server-js`):
+
+```bash
+# Gate 1 + 3: from the appropriate _test/ directory
+rm -rf node_modules package-lock.json && npm install && npm test
+
+# Gate 2: from repo root
+npm run lint
+```
+
+### Why this is mandatory
+
+CI is the second line of defense, not the first. A CI run that fails on something testable locally is wasted pipeline time, a polluted git log with fix commits, and delayed feedback. The fresh install is the critical step: it guarantees the local environment matches what CI will see. Stale `node_modules/` can mask missing dependencies, version mismatches, and broken `file:` links that only surface in a clean checkout.
+
+See [`pitfalls.md` entry 23](pitfalls.md#23-ci-fails-after-push--local-tests-ran-against-stale-node_modules) for the failure mode this prevents.
 
 ---
 
@@ -79,14 +149,14 @@ Fix all lint issues before proceeding.
 
 ```bash
 # From the module's _test/ directory
-npm install && npm test
+rm -rf node_modules package-lock.json && npm install && npm test
 ```
 
 Must exit `0` with `fail 0`. See [Running Tests](#running-tests) above for the full contract.
 
 ### Then commit
 
-Only after both gates pass:
+Only after all three gates of the [Pre-Commit Protocol](#pre-commit-protocol-all-repos) pass (fresh install, lint, tests):
 
 1. Bump `version` in the module root `package.json` (patch / minor / major as appropriate)
 2. `git add` only the files belonging to the module being published
