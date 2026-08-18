@@ -178,8 +178,13 @@ git grep -nE "Object\.keys\([^)]+\)\.length === 0" -- ':(glob)[module-path]/**/*
 # .indexOf(x) > -1 should use Lib.Utils.inArray or native .includes()
 git grep -nE "\.indexOf\([^)]+\) (>|<)=? -1" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*' ':!*/_test/*'
 ```
+// turbo
+```bash
+# JSDoc content indentation - @param/@return lines must be flush-left (0 spaces from /* column)
+git grep -nE "^    @param|^    @return|^    @description" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*'
+```
 
-The last three enforce the two-form rule and the type-guard primitive rule; sole permitted bare-name hits are URLs addressing a real repo path, and sole permitted `@superloomdev/` hits are real `require()` calls in `eslint.config.js` - judge each manually. Each `typeof` hit is either a violation to convert to a `Lib.Utils` primitive, or one of two permitted forms: argument-shape dispatch or capability duck-typing. The peer-dep utilization sweeps catch inline reimplementations of functions available in peer dependencies; judge each hit by the variable type (string -> `isEmptyString`, array -> `isEmptyArray`) and by whether the peer dep offers a wrapper for that operation.
+The last three enforce the two-form rule and the type-guard primitive rule; sole permitted bare-name hits are URLs addressing a real repo path, and sole permitted `@superloomdev/` hits are real `require()` calls in `eslint.config.js` - judge each manually. Each `typeof` hit is either a violation to convert to a `Lib.Utils` primitive, or one of two permitted forms: argument-shape dispatch or capability duck-typing. The peer-dep utilization sweeps catch inline reimplementations of functions available in peer dependencies; judge each hit by the variable type (string -> `isEmptyString`, array -> `isEmptyArray`) and by whether the peer dep offers a wrapper for that operation. The JSDoc content indentation sweep catches `@param`/`@return`/`@description` lines indented 4+ spaces inside `/*...*/` blocks; the correct indentation is flush-left (0 spaces from the `/*` column), matching every reference module.
 
 **Sweep result reporting (hard gate):** For each sweep, state one of:
 - `[sweep name]: clean` (zero hits)
@@ -321,6 +326,7 @@ If a deviation cannot be classified confidently, mark it `UNCLASSIFIED` and inve
 - [ ] Peer-dep primitive utilization sweeps run (stringReverse, isEmptyString/Array, isEmptyObject, inArray); every hit judged
 - [ ] Peer-dep utilization review done (read peerDeps + ROBOTS.md, cross-reference source); verdict line output
 - [ ] Plan-reference sweep run (code comments must not reference plan numbers)
+- [ ] JSDoc content indentation sweep run (flush-left @param/@return lines, no 4-space indent inside /*...*/)
 - [ ] Stale-name / cross-reference scrub run
 - [ ] Drift root cause diagnosed; plan re-anchored; new failure modes captured via `/learn` if any
 - [ ] Creator-diff: every deviation classified into Bucket 1, 2, or 3 (or UNCLASSIFIED with reason)

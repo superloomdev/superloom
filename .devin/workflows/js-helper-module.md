@@ -195,12 +195,13 @@ Run everything. Any finding returns to Phase C, then the ENTIRE phase re-runs. E
    - `[sweep name]: N hits -> [file:line for each]` (with judgment per hit)
 
    A sweep that returned hits but is reported as "clean" is a convergence failure. Paste the raw grep output into the conversation, then classify each hit. Sweeps may not be silently skipped.
-4. JSDoc indentation (must print nothing; `eslint --fix` does NOT fix comment indentation). Run per source `.js` file:
+4. JSDoc content indentation (must print nothing; `eslint --fix` does NOT fix comment indentation). JSDoc content (`@param`, `@return`, `@description`, notes) must be flush-left: 0 spaces from the `/*` column. No leading spaces on any line between `/*` and `*/`.
    // turbo
    ```bash
-   awk '/\*{8,}\/[ ]*$/{match($0,/^[ ]*/); c=RLENGTH; f=1; next} f&&/[^ ]/{match($0,/^[ ]*/); if(RLENGTH!=c) print FILENAME" line "NR": JSDoc closer at "c" sp, code at "RLENGTH" sp"; f=0}' [module-path]/*.js
+   # JSDoc content indentation - @param/@return lines must be flush-left (0 spaces from /* column)
+   git grep -nE "^    @param|^    @return|^    @description" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*'
    ```
-   On any hit: re-indent the ENTIRE block to the declaration's column, re-run until silent.
+   On any hit: remove the 4-space prefix from every indented line inside the ENTIRE JSDoc block, re-run until silent.
 5. Performance-audit checks (must print nothing, then judge remaining calls per the Standard):
    // turbo
    ```bash
