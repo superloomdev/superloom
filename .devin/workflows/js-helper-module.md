@@ -195,18 +195,26 @@ Run everything. Any finding returns to Phase C, then the ENTIRE phase re-runs. E
    - `[sweep name]: N hits -> [file:line for each]` (with judgment per hit)
 
    A sweep that returned hits but is reported as "clean" is a convergence failure. Paste the raw grep output into the conversation, then classify each hit. Sweeps may not be silently skipped.
-4. JSDoc content indentation (must print nothing; `eslint --fix` does NOT fix comment indentation). JSDoc content (description text, `@param`, `@return`, notes) must be flush-left: 0 spaces from the `/*` column. No leading spaces on any line between `/*` and `*/`. A simple grep for `^    @param` is insufficient because it misses description prose lines that do not start with `@`. The awk below tracks `/*...*/` block context and catches ANY line indented 4 spaces inside a JSDoc block.
+4. JSDoc content indentation (must print nothing; `eslint --fix` does NOT fix comment indentation). JSDoc content (description text, `@param`, `@return`, notes, and the closing `*****/`) must be at the same column as the `/*` delimiter. The indentation is relative to the `/*` column, not absolute: a JSDoc block at column 0 has all content at column 0; a JSDoc block nested at column 4 has all content at column 4. Continuation lines (indented more than `/*` col + 4 for readability alignment) are left as-is. A hardcoded grep or awk that assumes a fixed column misses nested blocks. The awk below detects the `/*` column per block, then flags any content or closer not at that column.
    // turbo
    ```bash
-   # JSDoc content indentation - ALL lines inside /*...*/ blocks must be flush-left
-   # The awk tracks JSDoc block context: enters on /****, exits on ****/, flags any line starting with exactly 4 spaces inside
+   # JSDoc content indentation - ALL lines inside /*...*/ blocks must be at the same column as /*
    find [module-path] -name "*.js" -not -path "*/node_modules/*" -exec awk '
-   /\/\*{8,}/ { in_jsdoc=1 }
-   in_jsdoc && /^    [^ ]/ && !/\/\*{8,}/ && !/\*{8,}\// { print FILENAME":"NR": "$0 }
-   /\*{8,}\// { in_jsdoc=0 }
+   /\/\*{8,}/ { match($0,/^ */); jsdoc_col=RLENGTH; in_jsdoc=1; next }
+   in_jsdoc && /\*{8,}\// { match($0,/^ */); c=RLENGTH; if(c!=jsdoc_col) print FILENAME":"NR": CLOSER col "c" (should be "jsdoc_col")"; in_jsdoc=0; next }
+   in_jsdoc && /[^ ]/ { match($0,/^ */); c=RLENGTH; if(c!=jsdoc_col && c<=jsdoc_col+4) print FILENAME":"NR": CONTENT col "c" (should be "jsdoc_col")" }
    ' {} +
    ```
-   On any hit: remove the 4-space prefix from every indented line inside the ENTIRE JSDoc block, re-run until silent.
+   On any hit: re-indent the content line or closer to the `/*` column. The fix awk normalizes all content and closers to the `/*` column:
+   ```bash
+   awk '
+   /\/\*{8,}/ { match($0,/^ */); jsdoc_col=RLENGTH; in_jsdoc=1; print; next }
+   in_jsdoc && /\*{8,}\// { match($0,/^ */); c=RLENGTH; if(c!=jsdoc_col){sub(/^ */,"");i="";for(j=0;j<jsdoc_col;j++)i=i" ";print i$0}else{print}; in_jsdoc=0; next }
+   in_jsdoc && /[^ ]/ { match($0,/^ */); c=RLENGTH; if(c!=jsdoc_col&&c<=jsdoc_col+4){sub(/^ */,"");i="";for(j=0;j<jsdoc_col;j++)i=i" ";print i$0}else{print}; next }
+   { print }
+   ' [file] > [file].tmp && mv [file].tmp [file]
+   ```
+   Re-run the sweep until silent.
 5. Performance-audit checks (must print nothing, then judge remaining calls per the Standard):
    // turbo
    ```bash

@@ -507,7 +507,7 @@ Every exported function carries a JSDoc block. Document the action, then the par
 
 ### Body Indentation
 
-All lines inside a JSDoc block (description, `@param`, `@return`, notes) are flush-left: they start at the same column as the `/*` delimiter. No leading spaces on any line between `/*` and `*/`. This matches every reference module (`money.js`, `utils.js`, `debug.js`).
+All lines inside a JSDoc block (description, `@param`, `@return`, notes, and the closing `*****/`) start at the same column as the `/*` delimiter. The indentation is relative to the `/*` column, not absolute: a JSDoc block at column 0 has all content at column 0; a JSDoc block nested inside an object literal at column 4 has all content at column 4. Continuation lines (multi-line descriptions aligned for readability beyond `/*` col + 4) are left as-is. This matches every reference module (`money.js`, `utils.js`, `debug.js`).
 
 ### Nested Object Params and Returns
 
@@ -525,6 +525,25 @@ Validate every key in the options map.
 @return {String} .name - Name of the item
 @return {String[]} .tags - List of associated tags
 *********************************************************************/
+```
+
+When the JSDoc block is nested inside an indented context (e.g. a method inside an object literal), the `/*` and all content share the same column:
+
+```javascript
+  const Interface = {
+
+    /********************************************************************
+    Return the current value.
+
+    @return {String} - The current value
+    *********************************************************************/
+    getValue: function () {
+
+      return this.value;
+
+    }
+
+  };
 ```
 
 ---
