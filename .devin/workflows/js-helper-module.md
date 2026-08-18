@@ -195,11 +195,16 @@ Run everything. Any finding returns to Phase C, then the ENTIRE phase re-runs. E
    - `[sweep name]: N hits -> [file:line for each]` (with judgment per hit)
 
    A sweep that returned hits but is reported as "clean" is a convergence failure. Paste the raw grep output into the conversation, then classify each hit. Sweeps may not be silently skipped.
-4. JSDoc content indentation (must print nothing; `eslint --fix` does NOT fix comment indentation). JSDoc content (`@param`, `@return`, `@description`, notes) must be flush-left: 0 spaces from the `/*` column. No leading spaces on any line between `/*` and `*/`.
+4. JSDoc content indentation (must print nothing; `eslint --fix` does NOT fix comment indentation). JSDoc content (description text, `@param`, `@return`, notes) must be flush-left: 0 spaces from the `/*` column. No leading spaces on any line between `/*` and `*/`. A simple grep for `^    @param` is insufficient because it misses description prose lines that do not start with `@`. The awk below tracks `/*...*/` block context and catches ANY line indented 4 spaces inside a JSDoc block.
    // turbo
    ```bash
-   # JSDoc content indentation - @param/@return lines must be flush-left (0 spaces from /* column)
-   git grep -nE "^    @param|^    @return|^    @description" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*'
+   # JSDoc content indentation - ALL lines inside /*...*/ blocks must be flush-left
+   # The awk tracks JSDoc block context: enters on /****, exits on ****/, flags any line starting with exactly 4 spaces inside
+   find [module-path] -name "*.js" -not -path "*/node_modules/*" -exec awk '
+   /\/\*{8,}/ { in_jsdoc=1 }
+   in_jsdoc && /^    [^ ]/ && !/\/\*{8,}/ && !/\*{8,}\// { print FILENAME":"NR": "$0 }
+   /\*{8,}\// { in_jsdoc=0 }
+   ' {} +
    ```
    On any hit: remove the 4-space prefix from every indented line inside the ENTIRE JSDoc block, re-run until silent.
 5. Performance-audit checks (must print nothing, then judge remaining calls per the Standard):
