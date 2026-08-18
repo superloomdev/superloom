@@ -1353,7 +1353,7 @@ module.exports = {
 
 | Rule | Detail |
 |---|---|
-| **Injected Lib** | The loader takes `(shared_libs, config)` like every other factory module and picks its dependencies by reference (`Utils`, `Debug`, and the backend driver - see the driver-injection rule above). Constructing `Lib` inside the loader (`require('helper-utils')(Lib, {})`) is a violation: it duplicates instances, breaks mock injection, and creates a signature exception. Framework helpers therefore do not appear in the adapter's `peerDependencies` - the application supplies them through the container |
+| **Injected Lib** | The loader takes `(shared_libs, config)` like every other factory module and picks its dependencies by reference (`Utils`, `Debug`, and the backend driver - see the driver-injection rule above). Constructing `Lib` inside the loader (`require('helper-utils')(Lib, {})`) is a violation: it duplicates instances, breaks mock injection, and creates a signature exception. Framework helpers still appear in the adapter's `peerDependencies` (see `dependencies.md` - Injected Dependencies Are Peer Dependencies): the host needs the manifest signal to know what to install and inject into the container |
 | **Own CONFIG** | Merge `config` over `require('./store.config')` defaults; pass the merged `CONFIG` forward, never the raw `config` |
 | **Own ERRORS** | Load from `store.errors.js`; never receive from parent |
 | **Own Validators** | Load from `store.validators.js` with `(Lib, ERRORS)` injected; call `Validators.validateConfig(CONFIG)` in the loader. Inline `if`/`throw` validation in the loader is a violation |
