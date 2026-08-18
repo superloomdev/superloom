@@ -1006,6 +1006,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Lesson:** Generated reference data lives in `data/` as pure JSON (see `module-structure.md` - Static Data Files). Dev scripts that produce generated data live in `scripts/` (see `module-structure.md` - Dev Scripts). The `_data/` directory is not a recognized archetype and must not be used. When a module needs generated data, the generator script outputs JSON to `data/`, the JSON file is committed and required at runtime, and the script is excluded from the published tarball.
 
+### 25. Repo-bound workflows miss code quality issues in other repos
+
+**Symptom:** The `js-helper-module` audit workflow catches Lib.Utils gaps, step-comment gaps, and type-guard violations in `codebase-js-helper-modules`. But the same gaps exist in `codebase-rnw-components-carbon/parts/a11y.js` (19 raw `!== null && !== undefined` checks, no step comments) and were never caught.
+
+**Cause:** The workflow files lived in `codebase-js-helper-modules/.devin/workflows/`, so they could only be invoked when working inside that repo. The components library has the same module structure (entry file, companion files, `parts/` factories with `shared_libs`) but the workflow was never run against it.
+
+**Lesson:** Workflows that apply to any repo with the Superloom module structure belong in the constitution repo (`codebase-superloom/.devin/workflows/`), not in a single dependent repo. Repo-specific workflows stay in their repo; repo-agnostic workflows move to the constitution. When a workflow is moved, its language must be generalized (Cwd references, module path examples) so it works from any repo root.
+
 ---
 
 ## Adding a New Entry
