@@ -180,16 +180,17 @@ git grep -nE "\.indexOf\([^)]+\) (>|<)=? -1" -- ':(glob)[module-path]/**/*.js' '
 ```
 // turbo
 ```bash
-# JSDoc content indentation - ALL lines inside /*...*/ blocks must be flush-left (0 spaces from /* column)
-# The awk tracks JSDoc block context: enters on /****, exits on ****/, flags any line starting with exactly 4 spaces inside
+# JSDoc content indentation - ALL lines inside /*...*/ blocks must be at the same column as /*
+# The awk detects the /* column per block, then flags any content or closer not at that column
+# Continuation lines (indented more than /* col + 4 for readability alignment) are excluded
 find [module-path] -name "*.js" -not -path "*/node_modules/*" -exec awk '
-/\/\*{8,}/ { in_jsdoc=1 }
-in_jsdoc && /^    [^ ]/ && !/\/\*{8,}/ && !/\*{8,}\// { print FILENAME":"NR": "$0 }
-/\*{8,}\// { in_jsdoc=0 }
+/\/\*{8,}/ { match($0,/^ */); jsdoc_col=RLENGTH; in_jsdoc=1; next }
+in_jsdoc && /\*{8,}\// { match($0,/^ */); c=RLENGTH; if(c!=jsdoc_col) print FILENAME":"NR": CLOSER col "c" (should be "jsdoc_col")"; in_jsdoc=0; next }
+in_jsdoc && /[^ ]/ { match($0,/^ */); c=RLENGTH; if(c!=jsdoc_col && c<=jsdoc_col+4) print FILENAME":"NR": CONTENT col "c" (should be "jsdoc_col")" }
 ' {} +
 ```
 
-The last three enforce the two-form rule and the type-guard primitive rule; sole permitted bare-name hits are URLs addressing a real repo path, and sole permitted `@superloomdev/` hits are real `require()` calls in `eslint.config.js` - judge each manually. Each `typeof` hit is either a violation to convert to a `Lib.Utils` primitive, or one of two permitted forms: argument-shape dispatch or capability duck-typing. The peer-dep utilization sweeps catch inline reimplementations of functions available in peer dependencies; judge each hit by the variable type (string -> `isEmptyString`, array -> `isEmptyArray`) and by whether the peer dep offers a wrapper for that operation. The JSDoc content indentation sweep uses awk to track `/*...*/` block context and catches ANY line (description text, `@param`, `@return`, notes) indented 4 spaces inside a JSDoc block; the correct indentation is flush-left (0 spaces from the `/*` column), matching every reference module. A simple grep for `^    @param` is insufficient because it misses description prose lines that do not start with `@`.
+The last three enforce the two-form rule and the type-guard primitive rule; sole permitted bare-name hits are URLs addressing a real repo path, and sole permitted `@superloomdev/` hits are real `require()` calls in `eslint.config.js` - judge each manually. Each `typeof` hit is either a violation to convert to a `Lib.Utils` primitive, or one of two permitted forms: argument-shape dispatch or capability duck-typing. The peer-dep utilization sweeps catch inline reimplementations of functions available in peer dependencies; judge each hit by the variable type (string -> `isEmptyString`, array -> `isEmptyArray`) and by whether the peer dep offers a wrapper for that operation. The JSDoc content indentation sweep uses awk to detect the `/*` column for each block, then flags any content line or closer not at that column. The indentation is relative to the `/*` column, not absolute: a JSDoc block at column 0 has all content at column 0; a JSDoc block nested at column 4 has all content at column 4. Continuation lines (indented more than `/*` col + 4 for readability alignment) are excluded. A hardcoded grep or awk that assumes a fixed column misses nested blocks.
 
 **Sweep result reporting (hard gate):** For each sweep, state one of:
 - `[sweep name]: clean` (zero hits)
