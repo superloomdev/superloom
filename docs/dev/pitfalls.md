@@ -1014,6 +1014,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Lesson:** Workflows that apply to any repo with the Superloom module structure belong in the constitution repo (`codebase-superloom/.devin/workflows/`), not in a single dependent repo. Repo-specific workflows stay in their repo; repo-agnostic workflows move to the constitution. When a workflow is moved, its language must be generalized (Cwd references, module path examples) so it works from any repo root.
 
+### 26. JSDoc content indentation drifts to 4 spaces when the docs say 4 but reference modules use 0
+
+**Symptom:** JSDoc blocks across ~90+ files in `codebase-js-helper-modules` and ~14 files in `codebase-rnw-components-carbon` use 4-space indentation for `@param` and `@return` lines. The docs (`code-formatting.md`) said "4 spaces from the `/*` delimiter" but every reference module (`money.js`, `utils.js`, `debug.js`) uses 0-space (flush-left) indentation.
+
+**Cause:** The docs were written with a 4-space rule that was never followed by the reference modules. The create/fix workflow's JSDoc awk check only verified the code after the JSDoc closer matched the closer's indentation, not the content inside the block. The audit workflow had no JSDoc content indentation check at all. Both gaps meant the 4-space drift was never caught.
+
+**Lesson:** JSDoc content is flush-left (0 spaces from the `/*` column). The docs must match the reference modules, not the other way around. When a doc rule contradicts the reference modules, the reference modules win - fix the docs. The audit workflow must include a grep sweep for indented `@param`/`@return` lines (`git grep -nE "^    @param|^    @return|^    @description"`). The create/fix workflow's JSDoc check must verify content indentation inside the block, not just the closer-to-code alignment.
+
 ---
 
 ## Adding a New Entry

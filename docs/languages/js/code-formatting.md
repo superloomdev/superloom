@@ -507,7 +507,7 @@ Every exported function carries a JSDoc block. Document the action, then the par
 
 ### Body Indentation
 
-All lines inside a JSDoc block (description, `@param`, `@return`, notes) are indented **4 spaces** from the column of the `/*` delimiter. This applies even when the JSDoc block sits inside an object literal that is itself indented 4 spaces.
+All lines inside a JSDoc block (description, `@param`, `@return`, notes) are flush-left: they start at the same column as the `/*` delimiter. No leading spaces on any line between `/*` and `*/`. This matches every reference module (`money.js`, `utils.js`, `debug.js`).
 
 ### Nested Object Params and Returns
 
@@ -515,15 +515,15 @@ Use JSDoc dot-notation - one `@param` or `@return` line per nested field. Never 
 
 ```javascript
 /********************************************************************
-    Validate every key in the options map.
+Validate every key in the options map.
 
-    @param {Object} [options] - Map of option names to their rule definitions
-    @param {Set} options[key].error - Error object for this key
-    @param {Boolean} [options[key].not_null] - (Optional) Reject null values
+@param {Object} [options] - Map of option names to their rule definitions
+@param {Set} options[key].error - Error object for this key
+@param {Boolean} [options[key].not_null] - (Optional) Reject null values
 
-    @return {Object} - Result data object
-    @return {String} .name - Name of the item
-    @return {String[]} .tags - List of associated tags
+@return {Object} - Result data object
+@return {String} .name - Name of the item
+@return {String[]} .tags - List of associated tags
 *********************************************************************/
 ```
 
