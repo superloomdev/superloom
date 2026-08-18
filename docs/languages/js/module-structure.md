@@ -1720,6 +1720,7 @@ Most modules follow a consistent file structure:
 | `[name].errors.js` | **Required** - frozen error catalog for operational errors; empty frozen object when the module has none yet (see [Module Error File Policy](#module-error-file-policy)) |
 | `[name].validators.js` | **Required** - singleton validators module; no-op `validateConfig` when the module has nothing to validate yet (see [Universal Companion Files](#universal-companion-files) and [Singleton Module Pattern](#singleton-module-pattern)) |
 | `data/` | (Optional) Static intrinsic reference data shipped with the module - see [Static Data Files](#static-data-files) |
+| `scripts/` | (Optional) Developer tooling scripts - data generators, fixture builders, migration helpers. Not published to the registry (excluded via `.npmignore`). Not part of the module's public surface. See [Dev Scripts](#dev-scripts) |
 | `package.json` | Module metadata and dependencies |
 | `README.md` | Human documentation (badges, usage examples, testing guides) |
 | `ROBOTS.md` | AI agent reference (compact, token-efficient) |
@@ -1830,6 +1831,40 @@ Some modules ship with **intrinsic reference data** - facts that are immutable, 
 **Reference Implementation**
 
 The `js-helper-money` module in the JS implementation repository ships `data/currencies.json` with ISO codes, English names, symbols, decimal precision, and transactional units for each supported currency. Required once at module scope in `money.js` and injected into the validators singleton by the loader.
+
+### Dev Scripts
+
+Some modules need **developer tooling scripts** - programs that run at build or development time but are not part of the module's runtime. Examples: data generators that extract reference data from upstream packages, fixture builders for test setup, migration helpers for format changes.
+
+When a module needs dev scripts, they live in a `scripts/` directory at the module root:
+
+```
+[module-root]/
+  [module].js
+  [module].config.js
+  [module].errors.js
+  [module].validators.js
+  data/
+    [name].json
+  scripts/
+    generate-[name].js
+  _test/
+```
+
+**Rules:**
+
+| Rule | Detail |
+|---|---|
+| **Not published** | `scripts/` is excluded from the published tarball via `.npmignore`. It is dev-only tooling, never shipped to consumers |
+| **Not part of the public surface** | Scripts are not `require()`d by the module, not exported, not referenced in ROBOTS.md or README.md. They are build-time tools only |
+| **One script per file** | Each script is a standalone program with a clear name: `generate-[name].js`, `build-[name].js`, `migrate-[name].js` |
+| **Invoked via npm scripts** | Add a `"generate"` or `"build-data"` entry to `package.json` scripts so the script is discoverable and reproducible: `"generate": "node scripts/generate-[name].js"` |
+| **Generated output goes to `data/`** | If a script produces reference data, the output is a pure JSON file in `data/` (see [Static Data Files](#static-data-files)). The script produces JSON, not JavaScript. The generated JSON file is committed to the repo so consumers do not need to run the script |
+| **No `_data/` directory** | The `_data/` directory is not a recognized archetype. Generated data lives in `data/` (as JSON); the scripts that produce it live in `scripts/`. Mixing the two in one directory is a violation of the single-concern rule |
+
+**Reference Implementation**
+
+The `js-helper-contact-phone-adapter-basic` module ships `scripts/generate-country-data.js` which reads libphonenumber-js metadata and writes `data/basic.country-data.json`. The JSON file is committed and required at runtime via `require('./data/basic.country-data.json')`. The script is excluded from the tarball via `.npmignore` and is re-runnable via `npm run generate`.
 
 ---
 
