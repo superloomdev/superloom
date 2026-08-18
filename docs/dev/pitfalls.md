@@ -998,6 +998,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Lesson:** Always run `rm -rf node_modules package-lock.json && npm install` before running tests locally. This is the default, not an exception. The few seconds saved by skipping the fresh install are never worth a broken CI run, a fix commit, and wasted pipeline time. See [`testing-local-modules.md` - Pre-Commit Protocol](testing-local-modules.md#pre-commit-protocol-all-repos) for the full protocol.
 
+### 24. `_data/` directory mixes dev scripts with generated data, violating the single-concern rule
+
+**Symptom:** A module has a `_data/` directory containing both `generate.js` (a dev script) and `basic.country-data.js` (a generated data file). The generated file is a CommonJS module (`module.exports = {...}`), not pure JSON. The `_data/` directory is not a recognized archetype in `file-archetypes.md` or `module-structure.md`.
+
+**Cause:** The module was created without consulting the existing `data/` convention. The `_data/` directory was invented ad-hoc to hold both the generator script and its output, mixing two concerns (dev tooling and runtime data) in one directory.
+
+**Lesson:** Generated reference data lives in `data/` as pure JSON (see `module-structure.md` - Static Data Files). Dev scripts that produce generated data live in `scripts/` (see `module-structure.md` - Dev Scripts). The `_data/` directory is not a recognized archetype and must not be used. When a module needs generated data, the generator script outputs JSON to `data/`, the JSON file is committed and required at runtime, and the script is excluded from the published tarball.
+
 ---
 
 ## Adding a New Entry
