@@ -100,7 +100,7 @@ docs/
     model-tiering.md                #   Reasoning tier vs execution tier
 
   guide/                            # Task walkthroughs
-  dev/                              # Contributor setup, onboarding, planning, pitfalls.md
+  dev/                              # Contributor setup, onboarding, planning, autonomous execution, pitfalls.md
   ops/                              # Infrastructure reference (vendor-agnostic folders,
                                     # vendor-prefixed files)
 ```
