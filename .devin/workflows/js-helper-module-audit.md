@@ -198,6 +198,8 @@ The last three enforce the two-form rule and the type-guard primitive rule; sole
 
 A sweep that returned hits but is reported as "clean" is a convergence failure. Paste the raw grep output into the conversation, then classify each hit. Sweeps may not be silently skipped.
 
+Before trusting any sweep that returned zero hits, prove the sweep can fire: plant a deliberate violation in a scratch file, confirm the sweep matches it, delete the scratch file, then run for real. A zero-hit sweep that has never been shown to match anything is not evidence. Sweeps whose rule depends on enclosing context must read that context; a line-oriented grep cannot enforce a block-scoped rule.
+
 Stale-name and cross-reference scrub. Renamed symbols and leftover legacy or branding tokens are a classic drift signature; hunt them across code, tests, and docs:
 
 // turbo

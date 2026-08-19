@@ -121,3 +121,7 @@ Individual developers keep personal agent instructions (working style, meta-pref
 All packages stay at `1.0.0` until public launch. Republishing uses the delete-and-republish workflow: delete the package version from GitHub Package Registry, push to `main`, and CI republishes at the same version. This avoids version inflation during the development phase and keeps the `peerDependencies` ranges stable across the ecosystem.
 
 The delete-and-republish workflow changes the artifact tarball checksum, so any committed `package-lock.json` in a consumer repo must be regenerated after the republish. The working practice: before verifying a consumer, delete the relevant `package-lock.json` and run `npm install` fresh. Commit lockfiles only after the versioned packages are stable.
+
+## Autonomous Execution
+
+When plans execute unattended through a lower-tier LLM, the autonomous execution protocol in `docs/dev/autonomous-execution.md` is standing doctrine. It defines the authorization boundary (what the executor may do without asking), the convergence loop (run, fix, re-run until two consecutive clean passes), the escalation log (park and continue, never halt), the progress journal (resume from file, not from memory), and the registry ordering rules (delete before push, never `rerun --failed`). The protocol is binding for any plan chain that references it.

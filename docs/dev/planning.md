@@ -53,7 +53,7 @@ __dev__/plans/
 
 The folder lives at `__dev__/plans/` at the **workspace root** (the parent directory containing all repo clones, e.g. `project-superloom/__dev__/plans/`). It is outside any git repository and is never committed. Plans span all repos in the workspace - not just one. The **rules** (this file) are tracked in `superloom`; the plan files themselves are personal and local only.
 
-**There is no index file.** Any number of plans can coexist in `plans/` - this explicitly supports multiple agents or work streams running in parallel. The plan file's own `**Status:**` field is the source of truth. At session start, the AI picks up the most recently modified plan file (by mtime) and confirms it with the user before proceeding.
+**There is no index file.** Any number of plans can coexist in `plans/` - this explicitly supports multiple agents or work streams running in parallel. The plan file's own `**Status:**` field is the source of truth. At session start, read `__dev__/RUNBOOK.md` first (if it exists), then `PROGRESS.md`, then `ESCALATIONS.md`, then the plan named as `CURRENT`. Never select a plan by mtime when a `RUNBOOK.md` exists.
 
 Plan numbers are zero-padded and **monotonic**: once `0023` exists, the next plan is `0024`, even if `0023` is later deleted. Numbers are never reused. The slug is a short kebab-case description.
 
@@ -66,32 +66,71 @@ Examples:
 
 ## Plan File Format
 
-Every plan file uses the same shape. Sections in order:
+Every plan file uses the same shape. Plans are authored by an expensive model and executed by a cheaper one that will not ask clarifying questions and will improvise if a gap appears. The format exists because of that asymmetry: every section is mandatory because a missing section becomes a question the executor cannot ask.
+
+Sections in order:
+
+| Section | Contains |
+|---|---|
+| Header block | Status, Created, Last touched, Chain position, Repo, Depends on, Governing protocol, Execution tier, Runtime estimate |
+| **Provenance** | Parent plan, the chain of events that created this plan, what was already tried and failed and why, rules the failure produced, what this plan supersedes |
+| Purpose | One paragraph. What done looks like |
+| Out of scope | Aggressive. Names the adjacent work that is explicitly not included |
+| **Dry Run** | Every read-only command executed at authoring time with real output pasted |
+| Parts and Steps | Each step: Cwd, exact command, pass signature, and an explicit on-failure action |
+| Ledger | Present whenever the plan iterates over more than five targets |
+| Steps checklist | Coarse checkboxes |
+| **Loop-backs** | Table mapping every anticipated failure to an action |
+| Completion checklist | Machine-verifiable where possible |
+| Close-out part | Update `PROGRESS.md`, edit status, move to `history/`, start the next plan |
 
 ```markdown
-# Plan NNNN: <Title>
+# Plan NNNN - <Title>
 
-**Status:** active | completed | discarded
-**Created:** YYYY-MM-DD
-**Last touched:** YYYY-MM-DD
+> **Status:** active | completed | discarded
+> **Created:** YYYY-MM-DD  **Last touched:** YYYY-MM-DD
+> **Chain position:** N of M (`NNNN` -> `NNNN` -> `NNNN`). Entry point is `__dev__/RUNBOOK.md`.
+> **Repo:** <repo>
+> **Depends on:** <plan or "none">
+> **Governing protocol:** `docs/dev/autonomous-execution.md`, binding
+> **Execution tier:** lower-tier LLM. Every command dry-run at authoring time.
+> **Runtime estimate:** <estimate>
 
-## Goal
-One paragraph. What success looks like, observable from outside.
+## PROVENANCE - where this came from
+
+**Parent:** <plan>
+**The chain of events that created this plan:**
+1. ...
+**Rules this incident produced:** ...
+**Superseded:** <plan or "none">
+
+## Purpose
+One paragraph. What done looks like.
 
 ## Out of scope
 - Things explicitly not being done in this plan, even if tempting
 
+## DRY RUN - executed at authoring time
+Every read-only command was run against the live repo. Actual output is pasted.
+
+## PART 1 - <title>
+### Step 1.1 - <title>
+**Cwd:** <directory>
+**Action:** <exact command>
+**Pass signature:** <exit code, exact string, or emptiness check>
+**On failure:** <explicit action>
+
 ## Steps
-- [x] Step 1 - <short description> (completed YYYY-MM-DD)
-- [ ] Step 2 - <short description> (in progress)
-- [ ] Step 3 - <short description>
-- [ ] Step 4 - <short description>
+- [ ] Step 1 - <description>
+- [ ] Step 2 - <description>
 
-## Discoveries
-- YYYY-MM-DD: <what was discovered, where it went> (e.g. "found stale lib/ reference -> fixed inline; pushed createSchema gap to backlog")
+## Loop-backs
+| Situation | Action |
+|---|---|
+| <anticipated failure> | <action> |
 
-## Notes
-Freeform working notes - design sketches, file paths, mid-edit state, anything that helps a future session resume without re-thinking.
+## Completion Checklist
+- [ ] <machine-verifiable item>
 ```
 
 **Status values:**
@@ -105,6 +144,10 @@ Freeform working notes - design sketches, file paths, mid-edit state, anything t
 **Step granularity:** each step is something a single focused session could finish. If a step takes more than ~2 hours, split it. Steps are not git commits; one step often produces multiple commits or none at all.
 
 **Out of scope is mandatory** even if empty. Naming what is *not* being done now is the single most effective drift-prevention tool. If a tempting side-task arises, check the "Out of scope" line first - if it is in there, push it to the backlog and keep going.
+
+**Provenance is mandatory** because a plan that does not say what was already tried will have it tried again. Name what failed and why; name what is superseded.
+
+**Dry Run is mandatory** because a command the author never executed is a guess. Paste real output so the executor never meets an untested command.
 
 ---
 
@@ -223,11 +266,15 @@ Two rituals make the system actually work. The AI follows them automatically; a 
 
 ### Start of session
 
-1. List plan files in `__dev__/plans/` sorted by modification time, most recent first.
-2. Read the most recently modified plan file.
-3. State - in one sentence - what that plan is and which step appears to be in progress.
-4. Confirm with the user: continue this plan, or pick a different one?
-5. If the user's request diverges from the plan in progress, ask whether to capture as backlog or start a new plan.
+1. Read `__dev__/RUNBOOK.md` (if it exists), otherwise list plan files in `__dev__/plans/` sorted by modification time, most recent first.
+2. Read `__dev__/PROGRESS.md` (if it exists).
+3. Read `__dev__/ESCALATIONS.md` (if it exists).
+4. Read the plan named as `CURRENT` in `PROGRESS.md`, or the most recently modified plan file if no `PROGRESS.md` exists.
+5. State - in one sentence - what that plan is and which step appears to be in progress.
+6. Confirm with the user: continue this plan, or pick a different one?
+7. If the user's request diverges from the plan in progress, ask whether to capture as backlog or start a new plan.
+
+Never select a plan by mtime when a `RUNBOOK.md` exists. Never trust a conversation summary over `PROGRESS.md`.
 
 ### End of significant step
 
@@ -243,6 +290,27 @@ The moment a side-task is detected, surface it. Two options:
 - **New plan:** if the side-task warrants its own goal and steps, create a new plan file. The original plan stays `active` - both plans coexist in `plans/` until one is archived.
 
 Never silently abandon an in-progress plan. Drift detection is the single most important behavior of this system.
+
+---
+
+## Orchestration State Files
+
+When plans execute as a chain (multiple plans that must run in sequence), four state files coordinate the run. They live in `__dev__/` at the workspace root, outside any git repository, and are never committed.
+
+| File | Purpose |
+|---|---|
+| `__dev__/RUNBOOK.md` | Single entry point. Plan chain, hard stops, park-and-continue list |
+| `__dev__/PROGRESS.md` | State machine. Current plan, current step, completed work, baseline facts |
+| `__dev__/ESCALATIONS.md` | Parked items. Written to, then the loop continues |
+| `__dev__/WORKFLOW-GAPS.md` | Findings the blind audit pass caught that the workflow missed |
+
+Read order at session start: `RUNBOOK.md`, `PROGRESS.md`, `ESCALATIONS.md`, then the plan named `CURRENT`. Never trust a conversation summary over `PROGRESS.md`.
+
+---
+
+## Two-Pass Audit
+
+A workflow that is trusted but never measured drifts silently. To measure it, audit a target twice: once by running the workflow, once by an independent pass that has no knowledge of the first result. Diff the findings. Anything the independent pass caught that the workflow missed is a workflow gap, and it is recorded in `__dev__/WORKFLOW-GAPS.md` rather than merely fixed. Independence is the whole mechanism, so the second pass must not be able to see the first pass's output; run it in a fresh agent with no shared context.
 
 ---
 

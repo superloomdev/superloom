@@ -39,7 +39,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 
 ## AI Behavior Rules
 
-- **At session start:** list `__dev__/plans/` by mtime at the workspace root, read the most recent plan, state plan + in-progress step, confirm with user. Use `/plan` for transitions. Full rules: `docs/dev/planning.md`
+- **At session start:** read `__dev__/RUNBOOK.md` first (if it exists), then `PROGRESS.md`, then `ESCALATIONS.md`, then the plan named `CURRENT`. Never select a plan by mtime when a `RUNBOOK.md` exists. Use `/plan` for transitions. Full rules: `docs/dev/planning.md`
 - Read a module's `README.md` before modifying it; **read `ROBOTS.md` before calling any module's functions** (compact signature reference)
 - Always run tests before returning: `npm install && npm test` from the module's `_test/` directory
 - **Two-pass check after any refactor touching 3+ functions:** Pass 1 logic + lint; Pass 2 re-read the full file (step comments, 3/2/1 spacing, banner widths, multi-line return objects, `};` combined with END banners, JSDoc indentation matching declarations), lint again. See `docs/languages/js/pitfalls-migration.md`
@@ -71,6 +71,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **ESM variant for bundler-consumed modules:** modules consumed via bundler (Vite, Metro) use `import`/`export default` with `"type": "module"` in `package.json`; omit `'use strict'` (implicit in ESM); include `.js` extensions in import paths. The factory skeleton, banners, spacing, and JSDoc are unchanged. Choose ESM when tree-shaking matters or a peer requires it; CommonJS for Node.js-direct consumers. See `docs/languages/js/module-structure.md` - ESM Variant
 - **No AI attribution in commits:** no `Co-Authored-By`, `Generated with`, or any AI tool attribution in commit messages or `package.json` contributor fields. The only author is the project maintainer. See `docs/ai/agent-configuration.md` - Commit and Attribution Policy
 - **Version lock at 1.0.0 until public launch:** republishing uses delete-and-republish (delete from GitHub Package Registry, push to `main`, CI republishes at same version). Consumer lockfiles must be regenerated after each republish. See `docs/ai/agent-configuration.md` - Version Lock During Development
+- **Autonomous execution protocol:** when plans execute unattended, `docs/dev/autonomous-execution.md` is standing doctrine - authorization boundary, convergence loop, escalation log, progress journal, registry ordering rules (delete before push, never `rerun --failed`). Binding for any plan chain that references it
 
 ## Safe Terminal Patterns
 
@@ -143,6 +144,6 @@ Every module: entry file + `[name].config.js` + `[name].errors.js` + `[name].val
 | `/learn` | superloom | Capturing conversation knowledge into its canonical doc; hands off to `/finalize-docs` |
 | `/finalize-docs [check]` | superloom | After any docs or workflow change: validate to convergence, then propagate to AGENTS.md and embedded blocks. `check` = report-only |
 | `/compile-workflows-from-docs [repo] [lang]` | superloom | Recompile concrete workflow families for an implementation repository from archetypes + language docs; self-verifies via headless workshop |
-| `/plan` | workspace root | Long-horizon plan transitions (`show`, `new`, `step`, `done`, `backlog`, `next`) |
+| `/plan` | workspace root | Plan transitions (`new`, `next`, `done`, `revive`, `supersede`, `status`); mandatory sections, no-questions authoring contract |
 
 Workflow authoring standard (seven mandatory properties, embedded-block compile rule): `docs/ai/workflow-authoring.md`. Workflow archetypes (family pattern, compile rule): `docs/ai/workflow-archetypes.md`. Model-tier split and token discipline: `docs/ai/model-tiering.md`.
