@@ -321,6 +321,8 @@ return Lib.Functions.errorResponse(result.error, result.error.status);
 
 The envelope pattern is deliberate: every function that can fail returns `{ success: true, data }` or `{ success: false, error }`. The caller checks `result.success` before accessing data. This is more verbose than throwing, but it makes the error path explicit. You cannot accidentally ignore a failure because you forgot a `try/catch`.
 
+Which verbs return an envelope and which return a bare value is settled in [`function-naming.md`](function-naming.md) - Return Shape by Verb Class. The short form: predicates (`is`, `has`) return a bare Boolean; getters (`get`, `list`, `load`) return bare when the call cannot fail and an envelope when it can; mutators (`set`, `update`, `write`, `delete`, `remove`, `clear`, `cleanup`) return an envelope when they touch a persistent store.
+
 ---
 
 ## Pure Engines: Modules With No Operational Errors

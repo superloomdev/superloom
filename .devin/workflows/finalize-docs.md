@@ -395,6 +395,7 @@ Three allowed destination values, closed set:
 | `docs/languages/js/client/client-modules.md` | AI Behavior Rules (client naming taxonomy + loader-pattern rule) |
 | `docs/languages/js/client/components.md` | AI Behavior Rules (component accessibility aria-* rule) |
 | `docs/languages/js/conventions-registry.md` | not mirrored (reference material; lookup table scanned per task) |
+| `docs/languages/js/function-naming.md` | AI Behavior Rules (verb-first naming rule, banned verbs) |
 | `docs/languages/js/publishing.md` | Boundaries / Never (publish is CI-only) |
 | `docs/languages/js/module-thoughts-file.md` | Directory Map (THOUGHTS.md in standard files list) |
 | `docs/languages/js/dependencies.md` | AI Behavior Rules (peer dependencies declare full runtime contract) |
