@@ -171,6 +171,7 @@ The data model is deep enough to warrant a dedicated `docs/data-model.md`. The d
 | `js-server-helper-verify` | `@superloomdev/js-server-helper-verify` | One-time verification codes (pin, code, token) |
 | `js-server-helper-logger` | `@superloomdev/js-server-helper-logger` | Compliance-friendly action log with per-row retention and optional IP encryption |
 | `js-server-helper-http-gateway` | `@superloomdev/js-server-helper-http-gateway` | Runtime-agnostic HTTP request/response gateway with pluggable transport adapters |
+| `js-server-helper-cache` | `@superloomdev/js-server-helper-cache` | Application-level cache with TTL and namespacing (cache-aside pattern) |
 
 ---
 
@@ -222,6 +223,12 @@ Class F has two subtypes, distinguished by **what they adapt**:
 | `js-server-helper-logger-store-mysql` | `@superloomdev/...logger-store-mysql` | MySQL | `logger` |
 | `js-server-helper-logger-store-mongodb` | `@superloomdev/...logger-store-mongodb` | MongoDB | `logger` |
 | `js-server-helper-logger-store-dynamodb` | `@superloomdev/...logger-store-dynamodb` | DynamoDB | `logger` |
+
+### Cache Store Adapters
+
+| Module | Package | Backend | Parent |
+|---|---|---|---|
+| `js-server-helper-cache-store-valkey` | `@superloomdev/...cache-store-valkey` | Valkey/Redis | `cache` |
 
 ### HTTP Gateway Transport Adapters
 
