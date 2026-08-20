@@ -1027,6 +1027,16 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ---
 
+### 27. Engine TTL sentinels (-1, -2) leak through wrapper purity when the driver returns them as-is
+
+**Symptom:** A `getTtl` call on a key with no expiry returns `-1`, and on an absent key returns `-2`. These are Redis/Valkey engine sentinels, not application values. A caller that receives `-1` cannot tell whether it means "no expiry" or "the TTL is literally minus one second" (impossible, but the type is Number). A caller that receives `-2` may interpret it as a real TTL.
+
+**Cause:** The `ioredis` client returns the raw `TTL` command response, which is `-1` for "key exists, no expiry" and `-2` for "key does not exist". The wrapper passes these through without translation, violating wrapper purity (the envelope must not leak engine-specific sentinels).
+
+**Fix/Lesson:** The driver maps both sentinels to `null` before returning. `null` means "no TTL known" for both cases. A caller that needs to distinguish "no expiry" from "absent" calls `getKeyExists`. The same principle applies to any engine that uses sentinel values for exceptional states: the wrapper translates them to `null` or a boolean, never passes them through. The test suite includes a regression test that asserts `ttl_seconds` is never `-1` or `-2`.
+
+---
+
 ## Adding a New Entry
 
 Whenever a new failure mode is discovered:

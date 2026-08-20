@@ -129,6 +129,7 @@ Class C is not limited to server-side drivers. A client-side module that wraps a
 | `js-server-helper-sql-postgres` | `@superloomdev/js-server-helper-sql-postgres` | `pg` (node-postgres) |
 | `js-server-helper-sql-mysql` | `@superloomdev/js-server-helper-sql-mysql` | `mysql2` |
 | `js-server-helper-nosql-mongodb` | `@superloomdev/js-server-helper-nosql-mongodb` | `mongodb` (native driver) |
+| `js-server-helper-kv-valkey` | `@superloomdev/js-server-helper-kv-valkey` | `ioredis` (Valkey/Redis OSS 7.2-) |
 | `js-client-helper-kv-localstorage` | `@superloomdev/js-client-helper-kv-localstorage` | Browser Web Storage (localStorage/sessionStorage) |
 | `js-rn-helper-kv-mmkv` | `@superloomdev/js-rn-helper-kv-mmkv` | `react-native-mmkv` (JSI, mmap-backed) |
 
@@ -150,6 +151,7 @@ The surface domain does not change the classification. DynamoDB looks like a dat
 | `js-server-helper-storage-aws-s3` | `@superloomdev/js-server-helper-storage-aws-s3` | S3 | File storage |
 | `js-server-helper-storage-aws-s3-url-signer` | `@superloomdev/js-server-helper-storage-aws-s3-url-signer` | S3 | Presigned URL generation |
 | `js-server-helper-queue-aws-sqs` | `@superloomdev/js-server-helper-queue-aws-sqs` | SQS | Message queue |
+| `js-server-helper-kv-aws-elasticache` | `@superloomdev/js-server-helper-kv-aws-elasticache` | ElastiCache | Key-value (IAM auth wrapper over `kv-valkey`) |
 
 ---
 
