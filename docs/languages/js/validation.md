@@ -143,7 +143,9 @@ When an identifier reaches a wire format that is parsed back into parts, prefer 
 
 The technique is **fixed-width right-anchored parsing**. If the trailing segments have known lengths and character sets, the parser reads from the right: the last `N` characters are the final segment, the `M` characters before that are the middle segment, and everything remaining is the leading segment. No delimiter-based `split` is needed, and the leading segment may contain any character, including ones a naive split would treat as delimiters.
 
-`auth.parseAuthId` uses this technique. `token_key` is exactly 16 characters from an alphanumeric charset, `token_secret` is exactly 48 from the same charset, and `actor_id` is everything before them. A standard UUID containing hyphens parses correctly because the parser never splits on `-`. The `#` character remains reserved in `actor_id` because it is used as a prefix delimiter in adapter queries, and allowing it would break actor isolation: the prefix for actor `a` would also match actor `a#b`. That is a correctness property, not a parsing convenience.
+`auth.parseAuthId` uses this technique. `token_key` is exactly 16 characters from an alphanumeric charset, `token_secret` is exactly 48 from the same charset, and `actor_id` is everything before them. A standard UUID containing hyphens parses correctly because the parser never splits on `-`.
+
+For composite internal keys (DynamoDB sort keys, MongoDB `_id` composites), the separator is `\u001F` (ASCII Unit Separator), a non-printable control character that cannot appear in any human-readable identifier. This eliminates the need for a caller-facing constraint on `actor_id` or `tenant_id`: `begins_with` queries on `actor_id + '\u001F'` are inherently safe because `\u001F` cannot appear in `actor_id`. This follows the precedent set by `helper-distinct-queue-store-dynamodb`, which uses `\u001F` as its sort key delimiter for the same reason. A belt-and-braces validation remains: callers must not include `\u001F` in any identifier, even though the character is not typeable through normal input methods.
 
 ---
 
