@@ -104,6 +104,7 @@ Ambiguous verb or missing module path: ask, never guess.
 1. Declare the target module and its class. Write one line: "Re-grounding from files; ignoring prior summaries until reconfirmed."
 2. Re-read the **Re-ground set** (embedded Standard above) for this module's class.
    **Proof-of-read (hard gate):** for each document, quote ONE rule verbatim with its section, read from disk THIS run. No quotes, no Phase A.
+   **Registry search:** search `docs/languages/js/conventions-registry.md` for every name, config key, and return field this module introduces. Record the row numbers consulted. A module whose author cannot name the rows they consulted has not done the step.
 3. Re-derive the fingerprint: read this module's class skeleton in `module-structure.md` verbatim, then one clean same-class reference module in full (`s3`, `dynamodb`, `verify`, `verify-store-*`, `styler` - never `utils`). If skeleton and reference disagree, STOP and report; do not pick one silently.
 4. Output a binding-rules checklist, every line citing its source.
 

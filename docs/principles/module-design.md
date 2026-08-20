@@ -27,6 +27,8 @@ Every module, regardless of what it does, satisfies the same contract:
 
 The contract is what makes modules interchangeable, mockable, and individually publishable. A consumer knows how to initialize, call, and test any module before reading a line of it.
 
+When naming a module's functions, config keys, or return fields, search the settled conventions registry before inventing a new convention; see [Before Inventing, Search](engineering-philosophy.md#before-inventing-search). A module never ships a second answer to a question the catalog has already settled.
+
 ## Universal Companion Files
 
 A module is not one file. It is an entry file plus three companions, present even when nearly empty:

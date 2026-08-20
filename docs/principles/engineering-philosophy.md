@@ -39,6 +39,14 @@ The rule: **one way to structure data, one way to inject dependencies, one way t
 
 This conviction is what makes the framework durable under high-volume AI-assisted development. Code generators drift when a codebase offers them choices. A codebase with one visible answer per question gives them nothing to drift toward.
 
+### Before Inventing, Search
+
+When a module needs a name, a config key, a return shape, or a testing approach for a problem another module has already solved, it adopts that module's answer. Searching for the precedent is part of writing the module, not an optional courtesy.
+
+When the existing answer is wrong, it is changed everywhere at once, and the new answer is recorded in the conventions registry. A module never ships a second answer to a settled question. "The old one is wrong" is a reason to run a migration, not a license to diverge.
+
+Two answers to one question is a defect of the same severity as a broken test, because it is the mechanism by which a codebase stops looking like one careful person wrote it.
+
 ---
 
 ## Modularity and Decoupling
