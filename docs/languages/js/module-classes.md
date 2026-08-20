@@ -151,7 +151,7 @@ The surface domain does not change the classification. DynamoDB looks like a dat
 | `js-server-helper-storage-aws-s3` | `@superloomdev/js-server-helper-storage-aws-s3` | S3 | File storage |
 | `js-server-helper-storage-aws-s3-url-signer` | `@superloomdev/js-server-helper-storage-aws-s3-url-signer` | S3 | Presigned URL generation |
 | `js-server-helper-queue-aws-sqs` | `@superloomdev/js-server-helper-queue-aws-sqs` | SQS | Message queue |
-| `js-server-helper-kv-aws-elasticache` | `@superloomdev/js-server-helper-kv-aws-elasticache` | ElastiCache | Key-value (IAM auth wrapper over `kv-valkey`) |
+| `js-server-helper-kv-aws-elasticache` | `@superloomdev/js-server-helper-kv-aws-elasticache` | ElastiCache | Key-value (standalone driver with IAM auth, not a wrapper over `kv-valkey`) |
 
 ---
 
