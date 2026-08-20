@@ -47,6 +47,12 @@ When the existing answer is wrong, it is changed everywhere at once, and the new
 
 Two answers to one question is a defect of the same severity as a broken test, because it is the mechanism by which a codebase stops looking like one careful person wrote it.
 
+### Reserved Vocabulary
+
+When a widely-standardized term exists for a concept, the framework does not reuse that term for a different concept. The collision is permanent: every reader who already knows the standard meaning will misread the framework's usage, and every reader who learns the framework's usage first will misread the standard. The cost is paid by every future reader, not just the one who made the decision.
+
+`scope` is the standing example. RFC 6749 defines it as an OAuth permission set carried in a token. A module that uses `scope` to mean a tenancy boundary or a namespace segment forces every reader to unlearn the standard meaning in this one context, then relearn it everywhere else. The framework reserves the word and uses `tenant_id` for the isolation boundary and `namespace` for a composite-key segment with no domain meaning.
+
 ---
 
 ## Modularity and Decoupling

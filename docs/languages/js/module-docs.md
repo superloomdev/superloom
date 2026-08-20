@@ -213,6 +213,10 @@ The canonical reasoning, audience map, and per-class footprint are documented in
 
 For the long-form structure of feature-module `docs/` folders see [`module-docs-complex.md`](module-docs-complex.md).
 
+### `docs/data-model.md` Key Field Semantics
+
+Every module's `docs/data-model.md` must state what its key fields mean in terms that do not conflict with another module's use of the same word. When two modules ship the same field name for different concepts, each one's data-model page is where a reader discovers the distinction. A field name that is reused across modules with different meanings is a reserved-vocabulary violation (see [Engineering Philosophy - Reserved Vocabulary](../../principles/engineering-philosophy.md#reserved-vocabulary)); the data-model page is where the module's chosen meaning is stated plainly, so that a reader who encounters the word in another module knows to check rather than assume.
+
 ### `docs/api.md`
 
 Full function reference. One subsection per function with:
