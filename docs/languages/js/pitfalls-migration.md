@@ -21,6 +21,8 @@ Common issues encountered when **migrating an existing helper module** to curren
 
 ## Function Naming Issues
 
+The full verb catalog, return shapes, confusable pairs, and banned verbs are settled in [`function-naming.md`](function-naming.md). The pitfalls below cover the specific failure modes that motivated those rules.
+
 ### Generic name doesn't distinguish multiple HTTP methods
 
 **Symptom:** `generateUploadUrl()` exists but the API has both PUT and POST upload variants.
@@ -345,6 +347,7 @@ When renaming an entire module, also check **other modules' README and ROBOTS** 
 Before completing any migration:
 
 - [ ] Function names use the [Multi-HTTP-Method Pattern](#function-naming-issues) when applicable
+- [ ] Function names begin with a verb from the [function-naming.md](function-naming.md) catalog
 - [ ] Every logical block within a function has a single-line comment explaining intent
 - [ ] Module name follows the category-based strategy (`sql-`, `nosql-`, `nosql-aws-`, `storage-aws-`, `queue-aws-`)
 - [ ] Vendor name is an infix for cloud-specific services (not a prefix)

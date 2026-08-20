@@ -11,14 +11,15 @@ For a developer new to the framework, in order:
 1. [Project Structure](project-structure.md) - the directory layout and repository conventions
 2. [Code Formatting](code-formatting.md) - spacing, banners, comments, naming, JSDoc
 3. [Module Structure](module-structure.md) - loaders, companions, patterns, and every archetype skeleton
-4. [Module Classes](module-classes.md) - the class taxonomy and where every module belongs
-5. [Composition and Adapters](composition-and-adapters.md) - the four tiers in JS, host adapters, the adapter gate
-6. [Error Handling](error-handling.md) - envelopes, catalogs, throw versus return in JavaScript
-7. [Testing Strategy](testing-strategy.md) and [Unit Test Authoring](unit-test-authoring.md)
-8. [Client Architecture](client/client-architecture.md) - the RNW/Expo stack, project layout, and bundler-agnostic rule (entry point to the `client/` section)
-9. [React Native Environment Setup](client/rn-environment-setup.md) - system prerequisites, local development, Metro bundler
-10. [Expo Guide](client/expo-guide.md) - Expo capabilities, adapter pattern, cloud account features
-11. [React Native Testing](client/rn-testing.md) - testing conventions for RN and Expo modules
+4. [Function Naming](function-naming.md) - the verb catalog, return shapes, confusable pairs, and banned verbs
+5. [Module Classes](module-classes.md) - the class taxonomy and where every module belongs
+6. [Composition and Adapters](composition-and-adapters.md) - the four tiers in JS, host adapters, the adapter gate
+7. [Error Handling](error-handling.md) - envelopes, catalogs, throw versus return in JavaScript
+8. [Testing Strategy](testing-strategy.md) and [Unit Test Authoring](unit-test-authoring.md)
+9. [Client Architecture](client/client-architecture.md) - the RNW/Expo stack, project layout, and bundler-agnostic rule (entry point to the `client/` section)
+10. [React Native Environment Setup](client/rn-environment-setup.md) - system prerequisites, local development, Metro bundler
+11. [Expo Guide](client/expo-guide.md) - Expo capabilities, adapter pattern, cloud account features
+12. [React Native Testing](client/rn-testing.md) - testing conventions for RN and Expo modules
 
 ## Document Map
 
@@ -27,6 +28,7 @@ For a developer new to the framework, in order:
 | [`project-structure.md`](project-structure.md) | [Engineering Philosophy](../../principles/engineering-philosophy.md) |
 | [`code-formatting.md`](code-formatting.md) | [Code Readability](../../principles/code-readability.md) |
 | [`module-structure.md`](module-structure.md) | [Module Design](../../principles/module-design.md), [File Archetypes](../../principles/file-archetypes.md) |
+| [`function-naming.md`](function-naming.md) | [Code Readability](../../principles/code-readability.md) |
 | [`factory-vs-singleton.md`](factory-vs-singleton.md) | [Module Design](../../principles/module-design.md) |
 | [`module-classes.md`](module-classes.md) | [Module Design](../../principles/module-design.md) |
 | [`composition-and-adapters.md`](composition-and-adapters.md) | [Composition and Adapters](../../principles/composition-and-adapters.md) |

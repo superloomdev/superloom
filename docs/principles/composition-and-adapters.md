@@ -143,6 +143,8 @@ Three rules bind every tier:
 
 The three rules work together. The first rule keeps the port clean. The second rule makes the adapter's name informative. The third rule confines the vendor to the adapter. A violation of any one rule leaks the vendor into a place it does not belong, and the leak spreads: a vendor-named slot in the port forces every adapter to reference the vendor, and a generic adapter name forces every consumer to read the source to learn what it wraps.
 
+The JavaScript layer's function verb catalog, including the `build` / `create` / `generate` distinction that governs adapter factory naming, lives in [`languages/js/function-naming.md`](../languages/js/function-naming.md).
+
 ---
 
 ## Contract Tests

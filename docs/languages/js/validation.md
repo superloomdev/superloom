@@ -157,5 +157,6 @@ Interface (Express/Lambda)
 ## Further Reading
 
 - [Error Handling](error-handling) - the three error categories and how validation errors fit
+- [Function Naming](function-naming.md) - the `validate` / `assert` / `check` verb split
 - [Model Modules](server/model-modules.md) - where `[entity].validation.js` lives and how it loads
 - [Entity Creation Guide (JavaScript)](server/entity-creation-guide-js) - end-to-end example including a validation module

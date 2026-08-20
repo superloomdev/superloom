@@ -303,6 +303,10 @@ Do not initialize a variable with a placeholder value if it will be reassigned b
 
 ### Function Naming
 
+Function verbs, return shapes, confusable pairs, and banned verbs are settled in [`function-naming.md`](function-naming.md). That document is the single source of truth for which verb to use and what each verb returns.
+
+The Multi-HTTP-Method Pattern is the one function-naming rule that lives here, because it is a suffix convention rather than a verb choice:
+
 - **Standard pattern:** descriptive verb-noun, no HTTP method suffix - `createUser()`, `deleteFile()`, `sendEmail()`
 - **Multi-HTTP-method pattern:** when 2+ functions do the same thing with different HTTP methods, suffix with the method:
   - `generateUploadUrlPut()` - PUT method (simple URL)

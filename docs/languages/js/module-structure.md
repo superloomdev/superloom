@@ -447,6 +447,8 @@ createInterface(Lib, CONFIG, ERRORS, Validators, Parts, store)
 | **No factory singletons** | Factory modules (`createInterface` pattern with `state`) must not be used as singletons. Callers hold the returned interface reference per logical instance. For genuinely stateless, shared concerns use the [Singleton Module Pattern](#singleton-module-pattern) instead |
 | **Header documents the pattern** | Top-of-file block comment describes factory pattern, lazy-load behavior, and version compatibility |
 
+> When naming a public or private function, the verb must come from the [function-naming.md](function-naming.md) catalog. The "Prescriptive private helper names" row above names the private helpers this skeleton uses; every other function follows the verb catalog.
+
 ### Reference Implementations
 
 - **Stateful (full shape):** `js-server-helper-sql-mysql` in the JS implementation repository
