@@ -94,6 +94,12 @@ Five tiers cover every way modules and applications combine. The full doctrine, 
 
 In every tier, the more general unit never imports the more specific one. Specificity always sits at the edge.
 
+### Index Budget
+
+An index on a high-volume table is a budget, defended per adapter, not extended casually. The cost of a secondary index is not uniform across adapters: on a wide-column store, a global secondary index is a full second copy of every item, while on a relational store, an index is key columns plus a row pointer. A shared store contract must be designed for the most expensive adapter, because adding an index to the contract forces the wide-column adapter to pay the full cost on every write.
+
+When a query pattern serves only a fraction of a percent of the table's row population, indexing it densely pays the full firehose cost for a rare access. A sparse index over a marked subset is cheaper but still pays per marked row. Before either is proposed, ask whether the event that triggers the query should instead trigger its own workflow at the moment it occurs. A log is a record, not a queue; a detection capability belongs at the moment of the event, not in a later scan.
+
 ## Configuration Discipline
 
 - **Configuration is plain data.** Values only: strings, numbers, booleans, lists. Never functions, clients, or other live objects.

@@ -47,6 +47,10 @@ A lookup table of settled micro-conventions. One row per settled question, with 
 | 34 | Banned verbs with zero uses | `read`, `ensure`, `transform` are banned from new code. Each has a settled alternative in `function-naming.md` - Banned Verbs | 0 uses across 65 modules at settlement time; ESLint rule added by Plan 0121 |
 | 35 | `validate` / `assert` / `check` split | Already consistent. `validate*` = config/contract validation; `assert*` = throws `TypeError` on programmer error; `check*` = domain logic. Documented in `function-naming.md`, not migrated | Verified consistent across all modules |
 | 36 | `Sync` suffix, `instance`/`options` params, `_ModuleName` helpers, `async:yes/no` accuracy | Already 100% consistent. `Sync` suffix only when both variants exist; `instance` first for I/O; `options` for function options; `_ModuleName` for private helpers. Documented in `function-naming.md`, not migrated | Verified consistent across all modules |
+| 37 | What is the top isolation boundary called? | `tenant_id`, in every module. Never `scope`, never `org_id`, never `workspace_id`. A single-tenant deployment uses the reserved literal `'system'`, never the empty string | `auth` partition key; `logger` leading index column |
+| 38 | What does `scope` mean? | An OAuth permission set carried in a token, per RFC 6749. **Reserved.** It is never a tenancy or namespace field | `verify` and `logger` both vacated the word |
+| 39 | What is a composite-key segment with no domain meaning called? | `namespace`. Used when a key segment groups records but is not the tenant and the module places no constraint on what it holds | `verify.namespace` |
+| 40 | What characters may an identifier that reaches a wire format contain? | Any, when the format is parsed by fixed-width right-anchored segments. A reserved character is justified only when relaxing it would break a correctness property such as prefix-query isolation, never merely to make parsing easier | `auth.parseAuthId` accepts a UUID but still reserves `#` |
 
 ## Config Keys
 

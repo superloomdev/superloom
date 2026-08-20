@@ -137,6 +137,14 @@ start: function (key, options) {
 
 This is dispatch on argument shape. It rejects nothing and produces no error, so no primitive applies. The same holds for duck-typing a host-supplied collaborator (`typeof source.subscribe === 'function'`), where the test is whether a capability is present rather than whether an input is well formed.
 
+### Identifier Format and Wire Parsing
+
+When an identifier reaches a wire format that is parsed back into parts, prefer a parse that cannot be ambiguous over a constraint on the caller's data. A reserved character is justified only when relaxing it would break a correctness property, never merely to make parsing easier.
+
+The technique is **fixed-width right-anchored parsing**. If the trailing segments have known lengths and character sets, the parser reads from the right: the last `N` characters are the final segment, the `M` characters before that are the middle segment, and everything remaining is the leading segment. No delimiter-based `split` is needed, and the leading segment may contain any character, including ones a naive split would treat as delimiters.
+
+`auth.parseAuthId` uses this technique. `token_key` is exactly 16 characters from an alphanumeric charset, `token_secret` is exactly 48 from the same charset, and `actor_id` is everything before them. A standard UUID containing hyphens parses correctly because the parser never splits on `-`. The `#` character remains reserved in `actor_id` because it is used as a prefix delimiter in adapter queries, and allowing it would break actor isolation: the prefix for actor `a` would also match actor `a#b`. That is a correctness property, not a parsing convenience.
+
 ---
 
 ## Validation in the Request Flow
