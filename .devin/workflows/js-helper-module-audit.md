@@ -222,6 +222,7 @@ These are the *dimensions* to audit, each paired with where its rules actually l
 | Validation | `languages/js/validation.md` |
 | Documentation files and their content | `principles/documentation-authoring.md`, `languages/js/module-docs.md` |
 | Naming consistency (no stale or legacy tokens anywhere) | the cross-reference scrub above + the reference modules |
+| Function naming doctrine (verb catalog, return shapes, banned verbs, config key casing) | `languages/js/function-naming.md` - list every exported function, name its doctrine verb and return shape, compare to actual. A module with zero lines of output has not run this check |
 
 This table is a starting set, not a closed list. If the target needs a dimension not shown, find its governing document yourself and audit against that.
 

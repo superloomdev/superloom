@@ -55,12 +55,13 @@ Ambiguous verb or missing module path: ask, never guess.
 1. `docs/principles/documentation-authoring.md` - voice, banned vocabulary, no em dashes
 2. `docs/languages/js/code-formatting.md` - 3/2/1 spacing, banners, JSDoc, step comments, aliases, spelling, ESM formatting
 3. `docs/languages/js/module-structure.md` + `factory-vs-singleton.md` - loader shapes, companions, archetype skeletons, ESM variant
-4. `docs/languages/js/module-docs.md` + `module-docs-complex.md` - README/ROBOTS/docs structure
-5. `docs/languages/js/error-handling.md` + `validation.md` - envelopes, catalogs, validators
-6. `docs/dev/testing-local-modules.md` + `docs/dev/pitfalls.md` - test contract, terminal safety
-7. `docs/languages/js/unit-test-authoring.md` + `docs/languages/js/module-testing.md` - test double patterns, testing tiers, framework module testing
-8. `docs/languages/js/module-classes.md` - this module's class
-9. `docs/languages/js/index.md` - the two-form naming rule
+4. `docs/languages/js/function-naming.md` - verb catalog, return shapes, confusable pairs, banned verbs, config key casing
+5. `docs/languages/js/module-docs.md` + `module-docs-complex.md` - README/ROBOTS/docs structure
+6. `docs/languages/js/error-handling.md` + `validation.md` - envelopes, catalogs, validators
+7. `docs/dev/testing-local-modules.md` + `docs/dev/pitfalls.md` - test contract, terminal safety
+8. `docs/languages/js/unit-test-authoring.md` + `docs/languages/js/module-testing.md` - test double patterns, testing tiers, framework module testing
+9. `docs/languages/js/module-classes.md` - this module's class
+10. `docs/languages/js/index.md` - the two-form naming rule
 
 **Structural invariants** (each verifiable; source in parentheses):
 
@@ -119,8 +120,9 @@ Ambiguous verb or missing module path: ask, never guess.
 2. **Read every file in full, twice.** Formatting and structural issues hide on pass 1. Never rely on offsets, summaries, or search hits as a substitute.
    **Read-evidence table (hard gate):** output `file | lines | pass 1 | pass 2 | one pass-2-only observation` per file. The observation must be something a grep cannot find. No table, no Phase C.
 3. **Skeleton conformance diff:** compare the entry file element by element against the class skeleton - info banner, loader statement groups AND their step comments, companion wiring, validators loader signature `(Lib, ERRORS)`, `createInterface` slots, section banners, and function bodies (the skeleton's worked body is normative for comment density). Record every mismatch.
-4. Assemble the gap list as `file:line -> rule (citation) -> action`, grouped: S1 correctness -> S2 consistency -> S3 cosmetic -> mechanical sweeps -> docs -> naming. Mark anything uncitable as `VERIFY` and read the source before acting.
-5. **Audit report output.** Output the report: binding rules, read-evidence table, gap list with citations, and the verdict line `Audit verdict: [clean | N findings]`. A report in this shape (whether produced here or by `/js-helper-module-audit`) is what allows a subsequent `fix` run to skip Phases A-B.
+4. **Verb doctrine check:** list every exported function name. For each, name the doctrine verb it uses and the return shape the doctrine assigns that verb (from `function-naming.md`), then compare to what the function actually returns. Output one line per function: `functionName | verb | doctrine return shape | actual return shape | verdict`. A module with zero lines of output has not run this check. Also check: no banned verbs (`construct`, `deconstruct`, `read`, `ensure`, `transform`), no `xToY` conversion names, no verb-in-the-middle names, no noun-first names, config keys are `SCREAMING_SNAKE_CASE` (data) or `PascalCase` (injected live objects only).
+5. Assemble the gap list as `file:line -> rule (citation) -> action`, grouped: S1 correctness -> S2 consistency -> S3 cosmetic -> mechanical sweeps -> docs -> naming. Mark anything uncitable as `VERIFY` and read the source before acting.
+6. **Audit report output.** Output the report: binding rules, read-evidence table, gap list with citations, and the verdict line `Audit verdict: [clean | N findings]`. A report in this shape (whether produced here or by `/js-helper-module-audit`) is what allows a subsequent `fix` run to skip Phases A-B.
 
 ### Phase C - Apply (order is binding)
 
