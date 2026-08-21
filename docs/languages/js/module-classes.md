@@ -229,6 +229,7 @@ Class F has two subtypes, distinguished by **what they adapt**:
 | Module | Package | Backend | Parent |
 |---|---|---|---|
 | `js-server-helper-cache-store-valkey` | `@superloomdev/...cache-store-valkey` | Valkey/Redis | `cache` |
+| `js-server-helper-cache-store-dynamodb` | `@superloomdev/...cache-store-dynamodb` | AWS DynamoDB | `cache` |
 
 ### HTTP Gateway Transport Adapters
 
@@ -371,4 +372,7 @@ Tracks which modules have been restructured per [`module-docs.md`](module-docs.m
 | js-client-helper-font-ext-expo | H | **Yes** | **Yes** (`api.md`, `philosophy.md`) | **Yes** | Class H. Expo Font adapter (local only, not in CI) |
 | js-client-helper-themer | G | **Yes** | **Yes** (`api.md`, `configuration.md`, `schemas.md`) | **Yes** | Class G. Carbon-vocabulary token engine, 204 tests |
 | js-client-helper-themer-ext-react | H | **Yes** | **Yes** (`api.md`, `philosophy.md`) | **Yes** | Class H. React ThemeProvider, hooks, transform seam |
+| js-server-helper-cache | E | **Yes** | **Yes** (`api.md`, `configuration.md`, `data-model.md`, `runtime.md`) | **Yes** | Class E. Cache-aside pattern with getOrFetch and distributed lock support |
+| js-server-helper-cache-store-valkey | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Class F store adapter. Valkey/Redis backend for `cache` |
+| js-server-helper-cache-store-dynamodb | F | **Yes** | **Yes** (`api.md`, `configuration.md`, `schema.md`, `cleanup.md`) | **Yes** | Class F store adapter. AWS DynamoDB backend for `cache` |
 
