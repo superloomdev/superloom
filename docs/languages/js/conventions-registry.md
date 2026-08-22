@@ -62,6 +62,14 @@ A lookup table of settled micro-conventions. One row per settled question, with 
 | 16 | Inject a driver into a store adapter | `Lib.[Family]` picked from `shared_libs`. Family-generic key when the API is interchangeable (`Lib.SQL`), backend-specific when it is not (`Lib.MongoDB`) | Already doctrine in `module-structure.md`; row exists so the lookup succeeds |
 | 17 | Pass a live object through config | Never. A `lib_*` config key is a deprecated shape | Already doctrine in `module-structure.md` |
 
+## Time and Expiry
+
+| # | Question | Settled answer | Evidence |
+|---|---|---|---|
+| 42 | Compose an absolute expiry timestamp (entry TTL, lock TTL) | From `instance['time']` (unix seconds, captured at request start), never wall clock. Every read inside one request then agrees on what is expired | `cache-store-dynamodb` `setCache`/`setCacheLock`/`isExpired`, `cache` memory-store fake |
+| 43 | Measure elapsed duration inside a request (retry loop, poll deadline) | Deltas of `Lib.Utils.getUnixTimeInMilliSeconds()`. `instance['time']` is frozen at request start and cannot measure it | `cache.waitForLockAndFetch`, `nosql-aws-dynamodb-admin.waitForTableActive` |
+| 44 | Read the current clock | Through `Lib.Utils.getUnixTimeInMilliSeconds()` or `Lib.Utils.getUnixTime()`. Raw `Date.now()` is not written directly, except where no `Lib` is in scope | `helper-instance` `initialize` - "Set initiation timestamps using Lib.Utils (DRY - not raw Date.now)" |
+
 ## Testing
 
 | # | Question | Settled answer | Evidence |
