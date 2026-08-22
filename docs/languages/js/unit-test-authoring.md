@@ -269,6 +269,8 @@ module.exports = function createMemoryStore () {
 
 The key property: **state persists across calls within the same test**. A `setSession` followed by a `getSession` in the same test returns the record that was set.
 
+A `memory-store` mirrors the semantics of the adapters it stands in for, not merely their method signatures. If the real adapter derives an expiry timestamp from `instance['time']`, the fake derives it the same way. A fake that reads a different clock than the adapter it replaces produces green tests that prove nothing about production, and it hides the divergence behind a passing suite.
+
 ---
 
 ### Pattern 2: `stub-adapter` (a Stub)
