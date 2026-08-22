@@ -342,6 +342,20 @@ When renaming an entire module, also check **other modules' README and ROBOTS** 
 
 ---
 
+## Audit Tooling Issues
+
+### Broken regex pattern reported a clean pass that hid stale references
+
+**Symptom:** A post-rename audit sweep for stale `setLock`/`releaseLock` references reported "(clean)" across the entire module. Five stale references were actually present in `cache.config.js` and `THOUGHTS.md`. The sweep used `git grep -nwE "\b(setLock|releaseLock)\b"`.
+
+**Cause:** In POSIX Extended Regular Expressions (`-E`), `\b` is not a word-boundary escape - it matches a literal backspace character, not a zero-width word boundary. The pattern matched nothing in every file. The sweep script used `|| echo "(clean)"` as a fallback, so an empty result from a broken pattern was indistinguishable from a genuine zero-match. The agent trusted the empty output without first proving the pattern could match a known-bad string.
+
+**Fix:** Use `[[:<:]]` and `[[:>:]]` for word boundaries in POSIX ERE, or use `-P` (PCRE) where `\b` works as expected. Always verify a grep pattern against a known-matching string before trusting an empty result - plant a deliberate stale reference in a scratch file, confirm the pattern matches it, delete the scratch file, then run for real. This is the same principle as governing protocol section 2.5 (prove every check fires before trusting an empty result), applied to the audit tool itself rather than the code under audit.
+
+**Lesson:** A broken regex and a genuine zero-match produce identical output. The `|| echo "(clean)"` fallback masks the difference. When a sweep reports zero findings, the first question is not "what did it find" but "could it have found anything" - and the answer requires proving the pattern matches a known-bad input, not merely reading the empty output.
+
+---
+
 ## Prevention Checklist
 
 Before completing any migration:
@@ -370,6 +384,7 @@ Before completing any migration:
 - [ ] **Every `performanceAuditLog` call passes a local `start_ms`** captured at operation entry as `reference_time` - never `instance['time_ms']` (request-start constant) and never a timestamp created on the same line as the call (see [Performance Logging Issues](#performance-logging-issues))
 - [ ] **Step-comment conformance checked on every function body** - each public I/O function carries the [Mandatory Step-Comment Set](code-formatting.md#comment-style) (validate, init, driver calls, success returns, error returns, early-return branches); this is a distinct gate from the skeleton conformance diff and applies to fresh creations, not just migrations (see [Step-comment drift on fresh module creation](#step-comment-drift-on-fresh-module-creation))
 - [ ] **`eslint.config.js` is the canonical three-line re-export** of `@superloomdev/js-helper-eslint-config` - no per-module rule overrides, no standalone config. See [Shared ESLint Configuration](code-formatting.md#shared-eslint-configuration)
+- [ ] **Grep patterns proven against a known-bad input** before trusting an empty result - use `[[:<:]]`/`[[:>:]]` for word boundaries in POSIX ERE (`-E`), or `-P` (PCRE) with `\b`. A broken pattern and a genuine zero-match produce identical output. See [Broken regex pattern reported a clean pass](#broken-regex-pattern-reported-a-clean-pass-that-hid-stale-references)
 
 ## Further Reading
 
