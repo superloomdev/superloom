@@ -8,6 +8,7 @@ The `loader.js` at `src/server/common/loader.js` is the **bootstrap and dependen
 
 - [What the Loader Does](#what-the-loader-does)
 - [Runtime Objects](#runtime-objects)
+- [Lifecycle Configuration](#lifecycle-configuration)
 - [Why Dependency Injection](#why-dependency-injection)
 - [Dependency Injection Rules](#dependency-injection-rules)
 - [Scope Boundaries](#scope-boundaries)
@@ -20,12 +21,13 @@ The `loader.js` at `src/server/common/loader.js` is the **bootstrap and dependen
 
 ## What the Loader Does
 
-The loader runs once per process. It performs four tasks in order:
+The loader runs once per process. It performs five tasks in order:
 
 1. **Load static config** from `config.js`
 2. **Merge environment variables** over the static config (env overrides static)
-3. **Build runtime objects** - the `Lib` dependency container and the `Config` configuration
-4. **Wire entities** - load each model package, execute it with `Lib`, build service and controller layers
+3. **Apply entry-point policy** from the loader argument
+4. **Build runtime objects** - the `Lib` dependency container and the `Config` configuration
+5. **Wire entities** - load each model package, execute it with `Lib`, build service and controller layers
 
 After the loader returns, the rest of the server runtime treats `Lib` as a read-only registry.
 
@@ -46,6 +48,30 @@ The full merged configuration (static + env). Modules should not read `process.e
 - **Immutable** after load
 - **Explicitly passed** to consumers
 - **Centralized and auditable** - the loader is the only place that reads env vars
+
+---
+
+## Lifecycle Configuration
+
+The entry point calls the loader with its runtime policy. The loader uses that value when it constructs `Lib.Instance`:
+
+```javascript
+const buildLib = function (runtime_config) {
+
+  const Lib = {};
+
+  Lib.Utils = require('helper-utils')(Lib, {});
+  Lib.Debug = require('helper-debug')(Lib, {});
+  Lib.Instance = require('helper-instance')(Lib, {
+    CLOSE_ON_CLEANUP: runtime_config.CLOSE_ON_CLEANUP
+  });
+
+  return Lib;
+
+};
+```
+
+The persistent entry point passes `false`; the request-isolated entry point passes `true`. The loader constructs `Lib.Instance` once, so every module registers against the same process cleanup queue.
 
 ---
 
@@ -96,7 +122,7 @@ The loader is plumbing. It wires things up and gets out of the way.
 // src/server/common/loader.js
 'use strict';
 
-const loader = async function () {
+const loader = async function (runtime_config) {
 
   // Step 1: Load static config and merge with environment variables
   const static_config = require('./config');
@@ -109,9 +135,14 @@ const loader = async function () {
   // Step 2: Build dependency container
   const Lib = {};
 
-  // Step 3: Load helper modules (platform-agnostic, no config needed)
-  Lib.Utils = require('@your-org/js-helper-utils')();
-  Lib.Debug = require('@your-org/js-helper-debug')(Lib, Config.debug);
+  // Step 3: Load foundation helpers
+  Lib.Utils = require('helper-utils')(Lib, {});
+  Lib.Debug = require('helper-debug')(Lib, Config.debug);
+
+  // Step 4: Load one lifecycle manager with entry-point policy
+  Lib.Instance = require('helper-instance')(Lib, {
+    CLOSE_ON_CLEANUP: runtime_config.CLOSE_ON_CLEANUP
+  });
 
   // Optional: Uncomment and configure as needed
   // Lib.DB = require('@your-org/js-server-helper-sql-postgres')(Lib, Config.database);
@@ -186,18 +217,20 @@ module.exports = loader;
 
 The example above demonstrates the rules every loader follows:
 
-1. **Package indices loaded once** - `const Models = require('../../model')` is the entry point
-2. **Each entity executed individually** - `Models.Entity(Lib, {})` returns the entity's APIs
-3. **Dependencies available in `Lib` for subsequent entities** - Contact loads first because User depends on it
-4. **Extended models load after the base is assigned to `Lib`** - so the extension can reference its own base
-5. **`_config` stays private** - never exposed on `Lib.Entity`, only passed to service and controller
-6. **Service and controller receive their config via parameters** - not from a global
+1. **Lifecycle manager loaded once** - every cleanup registration reaches the same queue
+2. **Package indices loaded once** - `const Models = require('../../model')` is the entry point
+3. **Each entity executed individually** - `Models.Entity(Lib, {})` returns the entity's APIs
+4. **Dependencies available in `Lib` for subsequent entities** - Contact loads first because User depends on it
+5. **Extended models load after the base is assigned to `Lib`** - so the extension can reference its own base
+6. **`_config` stays private** - never exposed on `Lib.Entity`, only passed to service and controller
+7. **Service and controller receive their config via parameters** - not from a global
 
 ---
 
 ## Further Reading
 
 - [Server Common](server-common.md) - the directory `loader.js` lives in and what else lives there
+- [Connection Lifecycle](connection-lifecycle.md) - runtime policy and cleanup ownership
 - [Server Service Modules](server-service-modules.md) - what services do once the loader builds them
 - [Server Controller Modules](server-controller-modules.md) - what controllers do once the loader builds them
 - [Module Structure (JavaScript)](../module-structure) - the model package index and the server-extension merge mechanics

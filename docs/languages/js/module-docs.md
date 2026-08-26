@@ -469,7 +469,7 @@ Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g
 
 *DynamoDB lives under Class D, not Class C. See the Class D section below.*
 
-**Connection Lifecycle requirement.** Any module that holds a persistent connection (pool or long-lived client) must document, in its `docs/api.md` Connection Lifecycle section, that it registers a process cleanup routine via `addProcessCleanupRoutine` and does not decide when it runs. The deployment's `CLOSE_ON_CLEANUP` config decides. This applies to every SQL driver, NoSQL driver, and KV driver. See [Connection Lifecycle](server/connection-lifecycle.md) for the doctrine.
+**Connection Lifecycle requirement.** A module that holds a shared resource documents its ownership in `docs/api.md`. The Connection Lifecycle section names the cleanup function, its `addProcessCleanupRoutine` registration, and the `CLOSE_ON_CLEANUP` deployment policy. See [Connection Lifecycle](server/connection-lifecycle.md) for the doctrine.
 
 ### Class D. Cloud Service Wrapper
 

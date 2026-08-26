@@ -64,16 +64,16 @@ File names are **role-based**, not feature-based. There is no `user.js` here - u
 
 ## Connection Lifecycle in the Loader
 
-The loader loads `helper-instance` into `Lib` exactly once. Each loader call owns its own process cleanup queue, so loading it twice produces two independent queues and a driver that registers into the wrong one. The load-once rule is structural, not a preference.
+The composition root loads `helper-instance` into `Lib` once. Each load creates an independent process cleanup queue. Loading it more than once splits registrations across queues and makes shutdown incomplete.
 
-The one value that differs between a Lambda and a persistent composition root is `CLOSE_ON_CLEANUP`. The entry point supplies it:
+The entry point supplies the runtime policy when it calls the loader:
 
-| Entry point | `CLOSE_ON_CLEANUP` | Effect |
+| Runtime profile | `CLOSE_ON_CLEANUP` | Effect |
 |---|---|---|
-| Express (persistent) | `false` | Pools stay open across requests, close on SIGTERM |
-| Lambda (serverless) | `true` | Pools close after every request via `runInstanceCleanup` |
+| Persistent process | `false` | Shared resources stay open across requests and close during graceful shutdown |
+| Request-isolated process | `true` | Shared resources close during `runInstanceCleanup` |
 
-The loader does not read `process.env` to detect its platform. The entry point passes the value explicitly. See [Connection Lifecycle](connection-lifecycle.md) for the full doctrine.
+The composition root reads the environment and converts it into explicit configuration. Modules receive configuration through the loader and do not detect the platform themselves. See [Connection Lifecycle](connection-lifecycle.md) for the full doctrine.
 
 ---
 

@@ -30,7 +30,7 @@ In Domain-Driven Design terminology, this is the layer often called "Application
 | Principle | Detail |
 |---|---|
 | **All business rules and orchestration here** | Nowhere else |
-| **Receives validated DTOs from controllers** | Never raw request data |
+| **Receives `(instance, dto)` from controllers** | Execution context first, validated data second; never raw request data |
 | **Interacts with infrastructure only through `Lib`** | DBs, queues, cloud APIs are reached via injected helper modules |
 | **Stateless per request** | No hidden global state |
 | **Returns structured envelopes** | `{ success, data }` on success, `{ success, error }` on failure |
@@ -96,16 +96,16 @@ const loader = function (shared_libs, config) {
 
 const UserService = {
 
-  createUser: async function (data) {
+  createUser: async function (instance, data) {
 
     // Business rule: check if email already exists
-    const existing = await Lib.DB.queryRecords('users', { email: data.email });
+    const existing = await Lib.DB.queryRecords(instance, 'users', { email: data.email });
     if (existing.length > 0) {
       return { success: false, error: Lib.User.errors.EMAIL_ALREADY_EXISTS };
     }
 
     // Create record
-    const record = await Lib.DB.addRecord('users', data);
+    const record = await Lib.DB.addRecord(instance, 'users', data);
 
     // Return structured result
     return { success: true, data: record };
@@ -139,6 +139,7 @@ module.exports = function (shared_libs, config) {
 
 ### Services may
 
+- Receive the request instance as the first argument and pass it unchanged to helper modules
 - Use `catalog-core` (via `Lib`)
 - Use `catalog-server` (via `Lib`)
 - Use `base-model` and `server-model` (via `Lib`)

@@ -35,9 +35,9 @@
 | **No direct calls to external providers** | Wrappers live in helper modules |
 | **Explicit inputs and outputs** | Standard request format in, standard response out |
 | **Stateless and request-scoped** | No long-lived state inside the controller |
-| **Consistent shape across controllers** | Every controller takes and returns the same standardized format |
+| **Consistent shape across controllers** | Every controller receives `(instance, request)` and returns the same standardized response |
 
-The interface layer converts the protocol-specific request (Express request, Lambda event, webhook payload) into the standard format. The interface layer also converts the standard response back into the protocol-specific format. Controllers see only the standard shapes.
+The interface layer converts the protocol-specific request (Express request, Lambda event, webhook payload) into the standard format. It passes execution context separately as the first argument. Controllers pass that same instance into services and helper modules.
 
 ---
 
@@ -62,10 +62,10 @@ For example, the user controller lives at `src/server/controller/user.controller
 
 ### Typical Function Names
 
-- `getDataByID(request)` - fetch a single record
-- `create(request)` - create a new record
-- `update(request)` - partial update
-- `sendOtp(request)` - trigger a one-time-pin flow
+- `getDataByID(instance, request)` - fetch a single record
+- `create(instance, request)` - create a new record
+- `update(instance, request)` - partial update
+- `sendOtp(instance, request)` - trigger a one-time-pin flow
 
 ---
 
@@ -77,7 +77,7 @@ Each controller function does exactly six things, in this order:
 2. **Basic typecasting and trimming** - normalize before validation
 3. **Construct input DTOs for the service** - using model-provided DTO builders
 4. **Run domain validation** - via `Lib.[Entity].validation.validate*`
-5. **Invoke the corresponding service function** - with validated DTOs
+5. **Invoke the corresponding service function** - with `instance` first and the validated DTO second
 6. **Map service results and errors to the standard response format** - attach request metadata (request time, correlation ID)
 
 If a function does anything beyond these six steps, that work belongs in the service layer.
@@ -128,6 +128,7 @@ Both the request and response shapes are documented in [`server-interfaces.md`](
 
 ### Controllers may
 
+- Receive the request instance as the first argument and pass it unchanged to services
 - Read input from the standardized request object
 - Run validation via the model layer
 - Build DTOs via the model layer

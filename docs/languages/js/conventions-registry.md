@@ -74,10 +74,10 @@ A lookup table of settled micro-conventions. One row per settled question, with 
 
 | # | Question | Settled answer | Evidence |
 |---|---|---|---|
-| 45 | Where does teardown for a shared connection live? | `addProcessCleanupRoutine`, and the deployment decides when it runs via `CLOSE_ON_CLEANUP` | `docs/languages/js/server/connection-lifecycle.md` - Three Lifetimes |
-| 46 | Where does teardown for a borrowed connection live? | `addInstanceCleanupRoutine`, and it runs every request via `runInstanceCleanup` | `docs/languages/js/server/connection-lifecycle.md` - Three Lifetimes |
-| 47 | How does a module know whether it is serverless? | It does not. `CLOSE_ON_CLEANUP` is supplied by the entry point; a module never reads the environment | `docs/languages/js/server/connection-lifecycle.md` - The Deployment Rule |
-| 48 | May a teardown wait have a timeout? | No. Abandoning a routine silently drops data | `docs/languages/js/server/connection-lifecycle.md` - The Background-Routine Gate |
+| 45 | Where does teardown for a shared resource live? | `addProcessCleanupRoutine`, and the deployment decides when it runs via `CLOSE_ON_CLEANUP` | `docs/languages/js/server/connection-lifecycle.md` - Three Lifetimes |
+| 46 | Where does teardown for a request-owned resource live? | `addInstanceCleanupRoutine`, and it runs every request via `runInstanceCleanup` | `docs/languages/js/server/connection-lifecycle.md` - Three Lifetimes |
+| 47 | How does a module choose its runtime profile? | It does not. The entry point supplies `CLOSE_ON_CLEANUP`; the module receives the lifecycle API | `docs/languages/js/server/connection-lifecycle.md` - Deployment Policy |
+| 48 | May the background-routine gate have a timeout? | No. Abandoning in-flight work can lose durable state or leave a state transition incomplete | `docs/languages/js/server/connection-lifecycle.md` - Cleanup Order |
 
 ## Testing
 

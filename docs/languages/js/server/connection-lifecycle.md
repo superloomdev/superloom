@@ -2,103 +2,113 @@
 
 > **Language:** JavaScript
 
-A connection-holding driver manages a resource whose lifetime outlives a single request. The doctrine here governs when that resource opens, when it closes, and who decides. It applies to every driver that holds a pool or long-lived client: SQL (`sql-postgres`, `sql-sqlite`, `sql-mysql`), NoSQL (`nosql-mongodb`, `nosql-mongodb-admin`, `nosql-aws-dynamodb-admin`), and KV (`kv-valkey`, `kv-aws-elasticache`).
+This page implements [Server Architecture](../../../principles/server-architecture.md) for resources that outlive one operation. It defines ownership and cleanup for shared resources, request-scoped resources, and resources opened by a test suite.
 
 ## On This Page
 
 - [Three Lifetimes](#three-lifetimes)
-- [The Deployment Rule](#the-deployment-rule)
-- [The Background-Routine Gate](#the-background-routine-gate)
-- [Upstream Landmines](#upstream-landmines)
+- [Shared Resources](#shared-resources)
+- [Request-Scoped Resources](#request-scoped-resources)
+- [Deployment Policy](#deployment-policy)
+- [Cleanup Order](#cleanup-order)
+- [Entry-Point Contract](#entry-point-contract)
+- [Test Contract](#test-contract)
 - [Further Reading](#further-reading)
 
 ---
 
 ## Three Lifetimes
 
-Every connection resource belongs to exactly one of three lifetimes. Each has its own registry and its own closure trigger.
+The host assigns every open resource to one lifetime. The lifetime determines the registration API and the code that triggers cleanup.
 
-| Lifetime | Covers | Registry | Closed by |
+| Lifetime | Covers | Registration | Cleanup trigger |
 |---|---|---|---|
-| Process or container | The pool or long-lived client itself | `addProcessCleanupRoutine` | `runProcessCleanup` on SIGTERM, or per request when `CLOSE_ON_CLEANUP` is true |
-| Request | A connection borrowed via `getClient` | `addInstanceCleanupRoutine` | `runInstanceCleanup`, every request |
-| Test | The pool, so the process can exit | The suite's `after()` hook | The test author |
+| Process or container | A pool, long-lived client, or shared handle | `addProcessCleanupRoutine(instance, cleanup)` | Persistent shutdown, or the owning request when `CLOSE_ON_CLEANUP` is `true` |
+| Request | A borrowed connection, temporary file, or request-owned handle | `addInstanceCleanupRoutine(instance, cleanup)` | `runInstanceCleanup(instance)` |
+| Test | A real resource opened by a test suite | The suite's teardown hook | The suite's `after()` hook |
 
-A pool belongs to the process lifetime. A borrowed connection belongs to the request lifetime. A test fixture belongs to the test lifetime. No resource appears in two registries at once.
-
-### Process lifetime
-
-The driver creates its pool or client lazily in `initIfNot(instance)`. On first creation, it registers `close` as a process-scoped cleanup routine via `Lib.Instance.addProcessCleanupRoutine(instance, Module.close)`. The registration happens exactly once, guarded by the early return that checks whether the client already exists.
-
-The driver never calls `close` itself. It never decides when the pool shuts down. That decision belongs to the entry point.
-
-### Request lifetime
-
-SQL drivers expose `getClient(instance)` and `releaseClient(instance, client)` for manual transactions. `getClient` borrows a connection from the pool and registers its release into the instance cleanup queue via `addInstanceCleanupRoutine`. `releaseClient` releases the connection back to the pool and removes the routine so it does not fire twice.
-
-If the caller forgets `releaseClient`, the instance cleanup queue releases it at the end of the request. This is a safety net, not a license to skip the explicit release.
-
-### Test lifetime
-
-A test that opens a real pool must close it in an `after()` hook. If the pool stays open, the Node process hangs: the event loop never empties because the pool holds a socket reference. A test whose assertions all pass but whose process never exits is a **failing** test. The `node --test` summary line is the signal; the checkmarks are not.
+The resource owner declares the lifetime. The entry point supplies deployment policy and triggers cleanup.
 
 ---
 
-## The Deployment Rule
+## Shared Resources
 
-The single config key `CLOSE_ON_CLEANUP` on `helper-instance` decides when process-scoped teardown runs. The entry point supplies it. The driver never reads it.
+A module registers shared-resource cleanup immediately after it opens the resource successfully. Registration occurs once per open cycle, after the guard that returns when the resource already exists.
 
-| Deployment | `CLOSE_ON_CLEANUP` | When `close` runs |
+The cleanup routine closes the resource and clears the module's stored reference. A later operation can then open a new resource and register a new cleanup routine.
+
+Runtime code reaches shared-resource cleanup through `addProcessCleanupRoutine`. Tests may call the public cleanup function directly from suite teardown.
+
+---
+
+## Request-Scoped Resources
+
+A function that lends a resource registers a fallback cleanup routine before returning it. For example, `getClient(instance)` registers `releaseClient(instance, client)` through `addInstanceCleanupRoutine`.
+
+The caller still releases the resource explicitly in `finally`. The fallback remains queued, so release must be idempotent. If explicit release is omitted, `runInstanceCleanup` returns the resource at request completion.
+
+---
+
+## Deployment Policy
+
+`CLOSE_ON_CLEANUP` belongs to `helper-instance`. The composition root supplies it when it builds `Lib.Instance`; connection-holding modules receive the resulting lifecycle API and do not inspect the environment.
+
+| Runtime profile | `CLOSE_ON_CLEANUP` | Shared-resource behavior |
 |---|---|---|
-| Persistent (Express, Docker) | `false` | On SIGTERM, via `runProcessCleanup` |
-| Serverless (Lambda) | `true` | After every request, via `runInstanceCleanup` |
+| Persistent process | `false` | `addProcessCleanupRoutine` stores cleanup in the process queue; requests reuse the resource |
+| Request-isolated process | `true` | `addProcessCleanupRoutine` stores cleanup in the current instance queue; request cleanup closes the resource |
 
-Five rules follow from this:
+The persistent profile favors connection reuse and closes shared resources during graceful shutdown. The request-isolated profile favors deterministic teardown after each request and accepts the cost of reopening resources later.
 
-- A driver declares **what kind of resource** it holds and never decides when it closes
-- The single config key `CLOSE_ON_CLEANUP` on `helper-instance` decides, and the entry point supplies it
-- A module **never reads the environment** to detect its platform. The boundary is already structural: a deployment has a Lambda entry point or a server entry point
-- Closing a pool per request on a persistent server is an anti-pattern: it pays a TCP, TLS, and authentication handshake on every request
-- Leaving a handle open on a serverless runtime keeps the worker alive and billable until the function times out, and marks it busy so it refuses new requests meanwhile
+The module declares what it owns. The composition root decides how long that ownership lasts.
 
 ---
 
-## The Background-Routine Gate
+## Cleanup Order
 
-Background routines are a **gate** on teardown, not a member of it. `runInstanceCleanup` waits for them before draining the instance cleanup queue. It does not check a count and skip.
+`runInstanceCleanup(instance)` executes a fixed sequence:
 
-There is deliberately **no timeout** on that wait. Abandoning a routine would silently drop an audit row, or leave a consumed one-time verification code reusable. A routine that never signals is a defect and must surface as a platform timeout.
+1. Wait until every registered background routine signals completion
+2. Drain the instance cleanup queue in registration order
+3. Run the process cleanup queue when `CLOSE_ON_CLEANUP` is `true`
 
-The order is fixed:
+Under the request-isolated profile, shared-resource routines are filed in the instance queue when they register. They normally run during step 2. Step 3 remains the final process-queue sweep performed by the lifecycle API.
 
-1. Wait for background routines to signal completion
-2. Drain the instance cleanup queue (request-scoped resources)
-3. Run process cleanup routines if `CLOSE_ON_CLEANUP` is true
+Background routines gate cleanup; they are not cleanup routines. A module that starts deferred work registers it with `addBackgroundRoutine(instance)` and calls the returned signal from `finally`.
 
-A driver registers a background routine when it starts work that must complete before teardown: a log flush, a verification code consumption, a cache invalidation. The routine signals completion via the callback returned by `addBackgroundRoutine(instance)`.
+The wait has no timeout. Abandoning in-flight work can lose durable state or leave a state transition incomplete. A routine that never signals is a defect and remains visible as a host timeout.
+
+Each cleanup routine is awaited. One cleanup failure is logged and does not prevent later routines from running.
 
 ---
 
-## Upstream Landmines
+## Entry-Point Contract
 
-Two driver defects were verified against upstream source during the doctrine's development. Both are the kind of thing a future author repeats if the mechanism is not recorded.
+Every server entry point follows the same contract:
 
-### mysql2: silent idle-eviction disablement
+1. Build `Lib.Instance` once in the composition root with the runtime profile
+2. Create one instance for each request
+3. Pass the instance as the first argument through controllers, services, and helper calls
+4. Call `runInstanceCleanup(instance)` from `finally`
+5. On persistent shutdown, stop accepting work, wait for active requests, then call `runProcessCleanup()`
 
-The idle reaper in `mysql2` starts only when `maxIdle < connectionLimit`, and `maxIdle` defaults to `connectionLimit`. Leaving `maxIdle` unset silently disables eviction. An `idleTimeout` setting becomes dead configuration: the reaper never runs, so idle connections are never closed.
+A request instance is execution context, not transport data. It stays separate from the standardized request object.
 
-The fix is to pass `maxIdle` explicitly from a config key (`POOL_MAX_IDLE`) and validate that it is less than `POOL_MAX`. A module that omits `maxIdle` is not "using the default" - it is silently disabling a feature.
+A request-isolated entry point does not depend on a shutdown signal. The host may freeze or terminate the runtime without an application shutdown phase, so request completion owns teardown.
 
-### node-postgres: pool holds the event loop
+---
 
-The `node-postgres` pool holds a socket reference that keeps the Node event loop alive until every client is closed. A test runner that opens a pool and never closes it will hang: the process never exits because the pool's idle clients keep the loop non-empty.
+## Test Contract
 
-The fix is `allowExitOnIdle: true`, which releases the socket reference when all clients are idle. This is what a test runner needs. A persistent server may also set it, since the pool reopens on the next request.
+A suite that opens a real resource closes it in `after()`, even when the runtime profile could let the process exit with an idle handle. Teardown proves the public cleanup path and keeps the suite independent of driver-specific event-loop behavior.
+
+A test run is complete only when `node --test` prints its summary and exits. Passing assertions without process exit indicates an open handle and is a failing run.
 
 ---
 
 ## Further Reading
 
-- [Server Interfaces](server-interfaces.md) - the Express and Lambda entry points where cleanup is called
-- [Server Common](server-common.md) - the composition root where `helper-instance` is loaded
-- [Module Docs](../module-docs.md) - the required `docs/api.md` section for connection-holding modules
+- [Server Interfaces](server-interfaces.md) - request completion and persistent shutdown patterns
+- [Server Common](server-common.md) - composition-root lifecycle configuration
+- [Server Loader](server-loader.md) - one-time construction of `Lib.Instance`
+- [Module Docs](../module-docs.md) - lifecycle documentation required for connection-holding modules

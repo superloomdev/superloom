@@ -691,11 +691,12 @@ const EntityService = {
   /********************************************************************
   Create a new entity
 
+  @param {Object} instance - Request execution context
   @param {Object} data - Create data
 
   @return {Object} - { success, data } or { success, error }
   *********************************************************************/
-  createEntity: async function (data) {
+  createEntity: async function (instance, data) { // eslint-disable-line no-unused-vars
 
     // Validate via model
     const validation = Lib.[Entity].validation.validateCreate(data);
@@ -767,16 +768,17 @@ const EntityController = {
   /********************************************************************
   Handle create request
 
+  @param {Object} instance - Request execution context
   @param {Object} request - Standardized request { body, auth, meta }
 
   @return {Object} - Standardized response { success, status, data, error }
   *********************************************************************/
-  create: async function (request) {
+  create: async function (instance, request) {
 
     const { name, status } = request.body;
 
     // Delegate to service
-    const result = await Lib.[Entity].service.createEntity({
+    const result = await Lib.[Entity].service.createEntity(instance, {
       name: name,
       status: status
     });
