@@ -8,6 +8,7 @@
 - [Design Principles](#design-principles)
 - [File Organization](#file-organization)
 - [Standard Files](#standard-files)
+- [Connection Lifecycle in the Loader](#connection-lifecycle-in-the-loader)
 - [Boundary Rules](#boundary-rules)
 - [Mental Model](#mental-model)
 - [Further Reading](#further-reading)
@@ -61,6 +62,21 @@ File names are **role-based**, not feature-based. There is no `user.js` here - u
 
 ---
 
+## Connection Lifecycle in the Loader
+
+The loader loads `helper-instance` into `Lib` exactly once. Each loader call owns its own process cleanup queue, so loading it twice produces two independent queues and a driver that registers into the wrong one. The load-once rule is structural, not a preference.
+
+The one value that differs between a Lambda and a persistent composition root is `CLOSE_ON_CLEANUP`. The entry point supplies it:
+
+| Entry point | `CLOSE_ON_CLEANUP` | Effect |
+|---|---|---|
+| Express (persistent) | `false` | Pools stay open across requests, close on SIGTERM |
+| Lambda (serverless) | `true` | Pools close after every request via `runInstanceCleanup` |
+
+The loader does not read `process.env` to detect its platform. The entry point passes the value explicitly. See [Connection Lifecycle](connection-lifecycle.md) for the full doctrine.
+
+---
+
 ## Boundary Rules
 
 ### `server-common` must NOT
@@ -101,6 +117,7 @@ If the answer touches the domain (users, orders, surveys, ...), it does not belo
 ## Further Reading
 
 - [Server Loader](server-loader.md) - the full bootstrap and dependency injection contract
-- [Server Interfaces](server-interfaces) - how the standardized request/response shapes are wired
+- [Server Interfaces](server-interfaces.md) - how the standardized request/response shapes are wired
+- [Connection Lifecycle](connection-lifecycle.md) - three lifetimes, two teardown scopes, the deployment rule
 - [Server Service Modules](server-service-modules.md) - where the business logic actually lives
 - [Architectural Philosophy](../project-structure.md) - the high-level rules

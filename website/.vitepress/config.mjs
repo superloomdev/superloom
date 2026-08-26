@@ -109,6 +109,7 @@ export default defineConfig({
               items: [
                 { text: 'Server Loader',         link: '/docs/languages/js/server/server-loader' },
                 { text: 'Server Interfaces',     link: '/docs/languages/js/server/server-interfaces' },
+                { text: 'Connection Lifecycle',  link: '/docs/languages/js/server/connection-lifecycle' },
                 { text: 'Controllers',           link: '/docs/languages/js/server/server-controller-modules' },
                 { text: 'Services',              link: '/docs/languages/js/server/server-service-modules' },
                 { text: 'Server Common',         link: '/docs/languages/js/server/server-common' },

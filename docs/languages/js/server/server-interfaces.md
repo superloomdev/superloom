@@ -151,7 +151,11 @@ const express = require('express');
 const router = express.Router();
 
 // POST /user/create
-router.post('/user/create', function (req, res) {
+router.post('/user/create', async function (req, res) {
+
+  // Build a per-request instance. The loader was configured with
+  // CLOSE_ON_CLEANUP: false, so pools stay open across requests.
+  const instance = Lib.Instance.initialize();
 
   // Convert Express request to standard format
   const standard_request = {
@@ -170,11 +174,30 @@ router.post('/user/create', function (req, res) {
   };
 
   // Call shared controller
-  const result = Lib.User.controller.create(standard_request);
+  const result = await Lib.User.controller.create(standard_request, instance);
 
   // Convert standard response to Express response
   res.status(result.status).json(result);
 
+  // Release request-scoped resources (borrowed connections, background
+  // routines). The pool itself stays open.
+  await Lib.Instance.runInstanceCleanup(instance);
+
+});
+```
+
+The Express entry point is a persistent server. Its composition root sets `CLOSE_ON_CLEANUP: false`, so `runInstanceCleanup` releases borrowed connections and waits for background routines, but does not close the pool. The pool closes on shutdown:
+
+```javascript
+// src/server/interfaces/api/express/server.js
+const server = app.listen(CONFIG.PORT);
+
+// SIGTERM closes the server and drains all pools. This handler
+// belongs to the persistent entry point only.
+process.on('SIGTERM', async function () {
+  server.close();
+  await Lib.Instance.runProcessCleanup();
+  process.exit(0);
 });
 ```
 
@@ -185,6 +208,10 @@ router.post('/user/create', function (req, res) {
 ```javascript
 // src/server/interfaces/api/lambda-aws/user/create.js
 module.exports.handler = async function (event, context) {
+
+  // Build a per-request instance. The loader was configured with
+  // CLOSE_ON_CLEANUP: true, so pools close after every request.
+  const instance = Lib.Instance.initialize();
 
   // Convert Lambda event to standard format
   const standard_request = {
@@ -203,17 +230,28 @@ module.exports.handler = async function (event, context) {
   };
 
   // Call the entity's controller
-  const result = await Lib.User.controller.create(standard_request);
+  const result = await Lib.User.controller.create(standard_request, instance);
 
   // Convert standard response to Lambda response
-  return {
+  const response = {
     statusCode: result.status,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(result)
   };
 
+  // Background work lands, then every connection closes. Leaving a
+  // handle open holds the worker alive and billable until the
+  // function times out.
+  await Lib.Instance.runInstanceCleanup(instance);
+
+  return response;
+
 };
 ```
+
+The Lambda entry point has **no SIGTERM handler**. The container freezes rather than shutting down, so there is no signal to catch. Cleanup happens per request via `runInstanceCleanup`, which drains background routines, releases borrowed connections, and closes the pool because `CLOSE_ON_CLEANUP` is `true`.
+
+**Warning:** an `async` handler must not also accept a `callback` argument. Mixing the two reintroduces callback semantics, under which the response is withheld until the event loop drains and an open pool holds the invocation to its timeout. If a handler is `async`, return the response. If it needs `callback`, it is not `async`.
 
 Each entity gets its own per-endpoint handler files under `src/server/interfaces/api/lambda-aws/[entity]/` and a corresponding `serverless.yml` under `src/server/_deploy/serverless-aws/[entity]/`. Different endpoints can have different memory, timeout, and IAM settings.
 

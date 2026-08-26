@@ -86,8 +86,9 @@ docs/
       catalog-core.md               #   Published core modules
       catalog-server.md             #   Published server modules
       catalog-client.md             #   Published client modules
-      server/                       #   Application server layers (loader, interfaces,
-                                    #   controllers, services, models, entity guide)
+      server/                       #   Application server layers (connection lifecycle,
+                                    #   loader, interfaces, controllers, services,
+                                    #   models, entity guide)
       client/                       #   Client-side architecture (stack, loader, theming,
                                     #   fonts, components, super-app shapes, module taxonomy,
                                     #   RN environment setup, Expo guide, RN testing)

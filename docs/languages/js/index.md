@@ -16,10 +16,13 @@ For a developer new to the framework, in order:
 6. [Composition and Adapters](composition-and-adapters.md) - the four tiers in JS, host adapters, the adapter gate
 7. [Error Handling](error-handling.md) - envelopes, catalogs, throw versus return in JavaScript
 8. [Testing Strategy](testing-strategy.md) and [Unit Test Authoring](unit-test-authoring.md)
-9. [Client Architecture](client/client-architecture.md) - the RNW/Expo stack, project layout, and bundler-agnostic rule (entry point to the `client/` section)
-10. [React Native Environment Setup](client/rn-environment-setup.md) - system prerequisites, local development, Metro bundler
-11. [Expo Guide](client/expo-guide.md) - Expo capabilities, adapter pattern, cloud account features
-12. [React Native Testing](client/rn-testing.md) - testing conventions for RN and Expo modules
+9. [Server Common](server/server-common.md) - the composition root, loader, and shared runtime foundation
+10. [Server Interfaces](server/server-interfaces.md) - the Express and Lambda entry points
+11. [Connection Lifecycle](server/connection-lifecycle.md) - three lifetimes, two teardown scopes, the deployment rule
+12. [Client Architecture](client/client-architecture.md) - the RNW/Expo stack, project layout, and bundler-agnostic rule (entry point to the `client/` section)
+13. [React Native Environment Setup](client/rn-environment-setup.md) - system prerequisites, local development, Metro bundler
+14. [Expo Guide](client/expo-guide.md) - Expo capabilities, adapter pattern, cloud account features
+15. [React Native Testing](client/rn-testing.md) - testing conventions for RN and Expo modules
 
 ## Document Map
 
@@ -38,7 +41,7 @@ For a developer new to the framework, in order:
 | [`testing-strategy.md`](testing-strategy.md), [`unit-test-authoring.md`](unit-test-authoring.md), [`module-testing.md`](module-testing.md), [`integration-testing.md`](integration-testing.md) | [Testing](../../principles/testing.md) |
 | [`module-docs.md`](module-docs.md), [`module-docs-complex.md`](module-docs-complex.md), [`module-thoughts-file.md`](module-thoughts-file.md) | [Module Design](../../principles/module-design.md), [Documentation Authoring](../../principles/documentation-authoring.md) |
 | [`publishing.md`](publishing.md), [`versioning/`](versioning/index.md) | [Versioning and Releases](../../principles/versioning-and-releases.md) |
-| [`dto-philosophy.md`](dto-philosophy.md), [`server/`](server/server-loader.md) | [Server Architecture](../../principles/server-architecture.md) |
+| [`dto-philosophy.md`](dto-philosophy.md), [`server/`](server/server-loader.md), [`server/connection-lifecycle.md`](server/connection-lifecycle.md) | [Server Architecture](../../principles/server-architecture.md) |
 | [`client/`](client/client-architecture.md) | Client-side architecture: stack, loader, theming, fonts, components, super-app shapes, module taxonomy, RN environment setup, Expo guide, RN testing |
 | [`catalog-core.md`](catalog-core.md), [`catalog-server.md`](catalog-server.md), [`catalog-client.md`](catalog-client.md) | The published module catalog per tier |
 | [`conventions-registry.md`](conventions-registry.md) | Settled micro-conventions lookup table |

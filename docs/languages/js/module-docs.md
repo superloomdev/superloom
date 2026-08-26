@@ -423,9 +423,9 @@ This module is part of a [SQL or NoSQL] family of database helpers that share th
 - `insert_id` Semantics
 - Read Helpers (`getRow`, `getRows`, `getValue`, `get`)
 - Write Helper (`write`)
-- Manual Transactions (`getClient`, `releaseClient`)
+- Manual Transactions (`getClient(instance)`, `releaseClient(instance, client)`)
 - Query Builders (`buildQuery`, `buildRawText`, `buildMultiCondition`)
-- Lifecycle (`close`)
+- Connection Lifecycle (`close(instance)`, `addProcessCleanupRoutine`, `CLOSE_ON_CLEANUP`)
 
 **`docs/api.md` structure. NoSQL driver variant:**
 
@@ -436,7 +436,7 @@ This module is part of a [SQL or NoSQL] family of database helpers that share th
 - Batch Operations
 - Transactions
 - Indexes *(if applicable)*
-- Lifecycle (`close`)
+- Connection Lifecycle (`close(instance)`, `addProcessCleanupRoutine`, `CLOSE_ON_CLEANUP`)
 
 **`docs/configuration.md` structure. SQL driver (server-required):**
 
@@ -469,6 +469,8 @@ Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g
 
 *DynamoDB lives under Class D, not Class C. See the Class D section below.*
 
+**Connection Lifecycle requirement.** Any module that holds a persistent connection (pool or long-lived client) must document, in its `docs/api.md` Connection Lifecycle section, that it registers a process cleanup routine via `addProcessCleanupRoutine` and does not decide when it runs. The deployment's `CLOSE_ON_CLEANUP` config decides. This applies to every SQL driver, NoSQL driver, and KV driver. See [Connection Lifecycle](server/connection-lifecycle.md) for the doctrine.
+
 ### Class D. Cloud Service Wrapper
 
 **Tagline template:**
@@ -488,7 +490,7 @@ Patterns block: replace SSL + Pool Tuning with the domain-specific concerns (e.g
 - Command Builders *(pure, no I/O)*
 - Command Executors *(async I/O)*
 - Domain operations *(convenience layer: single-record CRUD, file ops, etc.)*
-- Lifecycle *(if applicable. Many SDK-managed clients don't need `close()`)*
+- Connection Lifecycle *(if the module holds a persistent client: `close(instance)`, `addProcessCleanupRoutine`, `CLOSE_ON_CLEANUP`)*
 
 **`docs/configuration.md` structure. AWS-flavour cloud wrapper:**
 

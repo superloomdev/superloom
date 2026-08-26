@@ -70,6 +70,15 @@ A lookup table of settled micro-conventions. One row per settled question, with 
 | 43 | Measure elapsed duration inside a request (retry loop, poll deadline) | Deltas of `Lib.Utils.getUnixTimeInMilliSeconds()`. `instance['time']` is frozen at request start and cannot measure it | `cache.waitForLockAndFetch`, `nosql-aws-dynamodb-admin.waitForTableActive` |
 | 44 | Read the current clock | Through `Lib.Utils.getUnixTimeInMilliSeconds()` or `Lib.Utils.getUnixTime()`. Raw `Date.now()` is not written directly, except where no `Lib` is in scope | `helper-instance` `initialize` - "Set initiation timestamps using Lib.Utils (DRY - not raw Date.now)" |
 
+## Connection Lifecycle
+
+| # | Question | Settled answer | Evidence |
+|---|---|---|---|
+| 45 | Where does teardown for a shared connection live? | `addProcessCleanupRoutine`, and the deployment decides when it runs via `CLOSE_ON_CLEANUP` | `docs/languages/js/server/connection-lifecycle.md` - Three Lifetimes |
+| 46 | Where does teardown for a borrowed connection live? | `addInstanceCleanupRoutine`, and it runs every request via `runInstanceCleanup` | `docs/languages/js/server/connection-lifecycle.md` - Three Lifetimes |
+| 47 | How does a module know whether it is serverless? | It does not. `CLOSE_ON_CLEANUP` is supplied by the entry point; a module never reads the environment | `docs/languages/js/server/connection-lifecycle.md` - The Deployment Rule |
+| 48 | May a teardown wait have a timeout? | No. Abandoning a routine silently drops data | `docs/languages/js/server/connection-lifecycle.md` - The Background-Routine Gate |
+
 ## Testing
 
 | # | Question | Settled answer | Evidence |
