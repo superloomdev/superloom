@@ -34,7 +34,7 @@ The `superloom` repo is language-agnostic. It defines patterns, not implementati
 
 ### Repository Root Content
 
-The root of a `[lang]-helper-modules` repository contains **only**: `src/` (the module tiers), `.github/` (CI), the agent configuration files (`AGENTS.md`, tool-specific workflow folders), `.gitignore`, `README.md`, `LICENSE`, and the environment bootstrap script (`init-env.sh`). Nothing else.
+The root of a `[lang]-helper-modules` repository contains **only**: `src/` (the module tiers), `.github/` (CI), tool-specific workflow folders, `.gitignore`, `README.md`, `LICENSE`, and the environment bootstrap script (`init-env.sh`). Nothing else. The canonical `AGENTS.md` remains in the constitution repository.
 
 In particular, the repo root never carries a `package.json`, a lockfile, or `node_modules/`. Every module is self-contained with its own `package.json` and lint config; repo-wide operations live in CI job definitions, which run per module with an explicit working directory. A root package has no consumer and drifts silently (see the orphaned-root-artifacts entry in [`pitfalls-migration.md`](../languages/js/pitfalls-migration.md)).
 

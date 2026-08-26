@@ -89,7 +89,7 @@ When language treatments of one concept are structurally similar, the principles
 
 ## Derived Artifacts and the Golden Rule
 
-Some files are **compiled from** the documentation rather than authored directly: the repository `AGENTS.md` files, and the embedded rule blocks inside workflows. For these:
+Some files are **compiled from** the documentation rather than authored directly: the canonical root `AGENTS.md` and the embedded rule blocks inside workflows. For these:
 
 > **Never edit a derived artifact directly. Change the source document, then recompile.**
 

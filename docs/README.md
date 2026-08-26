@@ -32,7 +32,7 @@ Two support sections sit beside the layers:
 | **New contributor** | [`dev/README.md`](dev/README.md) |
 | **Architect evaluating the framework** | [`principles/engineering-philosophy.md`](principles/engineering-philosophy.md) |
 | **JavaScript module author** | [`languages/js/index.md`](languages/js/index.md) |
-| **AI agent** | Repository `AGENTS.md`, then module-level `ROBOTS.md` files |
+| **AI agent** | Root `AGENTS.md`, then module-level `ROBOTS.md` files |
 | **Extending to a new language** | [`principles/extending-to-a-language.md`](principles/extending-to-a-language.md) |
 | **Starting a new product from zero** | [`building-a-product/README.md`](building-a-product/README.md) |
 | **DevOps / infrastructure** | [`ops/README.md`](ops/README.md) |
@@ -112,7 +112,7 @@ docs/
 
 Every file here follows [`principles/documentation-authoring.md`](principles/documentation-authoring.md): rule first, reason second, example third; prescriptive, generic, DRY, compact; no em dashes; American English.
 
-Two derived artifacts are compiled from this tree and never edited directly: the repository `AGENTS.md` files and the embedded rule blocks in workflows. See [`ai/agent-configuration.md`](ai/agent-configuration.md).
+Two derived artifact classes are compiled from this tree and never edited directly: the canonical root `AGENTS.md` and the embedded rule blocks in workflows. See [`ai/agent-configuration.md`](ai/agent-configuration.md).
 
 ### Pitfall Journals
 

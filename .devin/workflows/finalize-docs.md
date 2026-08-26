@@ -1,10 +1,10 @@
 ---
-description: Finalize documentation - validate docs to convergence, fix findings, then propagate to AGENTS.md and embedded workflow blocks. Optional check mode is report-only.
+description: Finalize documentation - validate docs to convergence, fix findings, then propagate to the canonical AGENTS.md and embedded workflow blocks. Optional check mode is report-only.
 ---
 
 # Finalize Docs Workflow
 
-The one workflow that makes a documentation change official. It validates the docs with evidence-based passes, fixes what the passes find, re-validates until the state converges, and only then propagates the clean state into every derived artifact: `AGENTS.md` (both copies) and the embedded rule blocks inside workflows across the workspace.
+The one workflow that makes a documentation change official. It validates the docs with evidence-based passes, fixes what the passes find, re-validates until the state converges, and only then propagates the clean state into every derived artifact: the canonical `AGENTS.md` and the embedded rule blocks inside workflows across the workspace.
 
 Invoke as: `/finalize-docs` (full loop) or `/finalize-docs check` (report-only; no file writes anywhere).
 
@@ -474,21 +474,11 @@ For each workflow in every workspace repo with `.devin/workflows/`: if a `docs/`
 
 This closes the compile rule from `docs/ai/workflow-authoring.md` - Embedded Content and the Compile Rule, and the archetype compile rule from `docs/ai/workflow-archetypes.md` - The Compile Rule.
 
-### P6 - Propagate to Sibling Repositories
+### P6 - Verify Canonical AGENTS.md Placement
 
-If a sibling repository maintains a copy of this `AGENTS.md` (a real file, not a symlink), update it after propagation; diverged copies give agents in that workspace stale rules. For each sibling repository that holds a copy:
+`AGENTS.md` exists only at the constitution repository root. Inspect every sibling repository in the workspace for a copied file or symlink.
 
-```bash
-# Cwd = codebase-superloom
-cp AGENTS.md ../[sibling-repo]/AGENTS.md
-```
-
-Then commit the copy in the sibling repository (mutation - never auto-run):
-
-```bash
-# Cwd = [sibling-repo]
-git add AGENTS.md && git commit -m "chore: sync AGENTS.md from codebase-superloom"
-```
+A sibling `AGENTS.md` is drift, not a propagation target. Report its repository and file type. Remove it only with explicit user approval, then verify that the canonical file remains unchanged.
 
 ### Compression Discipline
 
@@ -586,4 +576,4 @@ New failure modes found during a run must be added here. If no pass catches the 
 | Section Map row relabelled `not mirrored` to clear a P3 finding | P3 step 5 (user decision, not the agent's) |
 | Section Map row destination left ambiguous between AGENTS.md and a workflow | P1 |
 | `AGENTS.md` over the size budget | P4 |
-| Sibling-repo AGENTS.md copy diverged | P6 |
+| Sibling repository contains an AGENTS.md copy or symlink | P6 |

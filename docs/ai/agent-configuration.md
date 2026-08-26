@@ -1,6 +1,6 @@
 # Agent Configuration
 
-How AI agents are configured across Superloom repositories: which files exist, what each carries, how they stay synchronized with the documentation, and the size discipline that keeps them affordable. The configuration is tool-neutral by design; it works unchanged across agent products and their configuration conventions.
+How AI agents are configured across the Superloom workspace: which files exist, what each carries, and the size discipline that keeps standing context affordable. The configuration is tool-neutral by design; it works unchanged across agent products and their configuration conventions.
 
 ## On This Page
 
@@ -22,20 +22,21 @@ How AI agents are configured across Superloom repositories: which files exist, w
 
 | File | Scope | Committed | Purpose |
 |---|---|---|---|
-| `AGENTS.md` | Repository root | Yes | Standing rules an agent loads at every conversation start |
+| `AGENTS.md` | Constitution repository root | Yes | Canonical standing rules for the workspace |
 | `ROBOTS.md` | Each module | Yes | Compact per-module API reference: signatures, return shapes, critical behavior |
-| Workflow files | Tool folder in each repository | Yes | Step-by-step procedures invoked on demand; see [Workflow Authoring](workflow-authoring.md) |
+| Workflow files | Tool folder in the repository that owns the procedure | Yes | Step-by-step procedures invoked on demand; see [Workflow Authoring](workflow-authoring.md) |
 | Personal meta-instructions | Workspace root tool folder | No | Individual operating preferences, not framework rules |
 
 ## AGENTS.md: the Open Standard
 
-`AGENTS.md` is a cross-vendor open convention: a Markdown file at the repository root that agent tools read automatically at conversation start. Superloom adopts it as the single standing-configuration file per repository.
+`AGENTS.md` is a cross-vendor open convention: a Markdown file that agent tools load as standing context. Superloom keeps one canonical file at the constitution repository root.
 
 Rules:
 
-- **One `AGENTS.md` per repository**, at the root.
-- **Vendor-neutral content.** Nothing in the file assumes a specific agent product. Product-specific needs are handled by pointers (see [Tool-Specific Folders](#tool-specific-folders)), never by duplicating content per product.
-- **The file serves the ambient case**: an agent asked to edit, fix, or extend existing code needs the house rules without invoking anything. Lifecycle operations (creating a module, publishing, reviewing) are workflow territory and stay out of it.
+- **One canonical `AGENTS.md` in the workspace**, at the constitution repository root
+- **No copies or symlinks in dependent repositories.** A second path creates a second distribution surface and can drift from the source
+- **Vendor-neutral content.** Nothing in the file assumes a specific agent product. Product-specific needs are handled by pointers (see [Tool-Specific Folders](#tool-specific-folders)), not duplicated content
+- **The file serves the ambient case.** Lifecycle operations (creating a module, publishing, reviewing) remain workflow territory
 
 ## AGENTS.md Is Compiled, Never Authored
 
@@ -92,7 +93,8 @@ Rules:
 
 - **The constitution repository's workflows, README, and docs never invoke, name, or describe a dependent repository's workflows or internal structure.** The constitution does not know which implementations exist.
 - **The constitution repository may name dependent repositories as organizational context** (for example, in `dev/org-structure.md`) but never describes their internals or invokes their workflows.
-- **Dependent repositories reference the constitution's docs freely.** Their workflows embed standards compiled from `docs/`; their READMEs link to the published documentation.
+- **Dependent repositories reference the constitution's docs freely.** Their workflows embed standards compiled from `docs/`; their READMEs link to the published documentation
+- **Dependent repositories do not carry `AGENTS.md`.** The constitution file is the only standing-rule artifact; repository-specific procedures remain in the owning repository's workflows
 - **Documentation is the prime guide.** Everything language-specific (patterns, skeletons, catalogs, pitfalls) lives in `docs/languages/[lang]/` so that any team can build its own implementation from the same source. A helper modules repository is one implementation that validates the docs against real-world use; it does not own the knowledge.
 - **This is an architectural constraint, not a style preference.** A violation couples the constitution to one implementation and breaks the language-independent design.
 

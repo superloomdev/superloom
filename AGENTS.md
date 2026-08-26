@@ -4,9 +4,11 @@
 >
 > **AGENTS.md is a derived, compact summary of `docs/`. Never edit AGENTS.md directly.**
 >
+> This is the workspace's only `AGENTS.md`. Dependent repositories do not copy or symlink it.
+>
 > To change a rule:
 > 1. Update the source-of-truth file in `docs/` (`principles/`, `languages/js/`, `ai/`, `dev/`, `ops/`)
-> 2. Run `/finalize-docs` to validate and propagate into AGENTS.md
+> 2. Run `/finalize-docs` to validate and propagate into the canonical AGENTS.md
 >
 > Bypassing this causes drift: AGENTS.md asserts things `docs/` no longer says. No exceptions; even one-word fixes go through `docs/` first.
 >
@@ -57,9 +59,8 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **Before inventing, search the settled conventions registry:** when a module needs a name, config key, return shape, or testing approach that another module has already solved, it adopts that answer. A module never ships a second answer to a settled question; "the old one is wrong" is a reason to run a migration, not a license to diverge. See `docs/principles/engineering-philosophy.md` - Before Inventing, Search
 - **Reserved vocabulary:** when a widely-standardized term exists for a concept, the framework does not reuse that term for a different concept. `scope` is reserved for OAuth permission sets (RFC 6749); use `tenant_id` for the isolation boundary and `namespace` for a composite-key segment with no domain meaning. See `docs/principles/engineering-philosophy.md` - Reserved Vocabulary
 - **Peer dependencies declare the full runtime contract:** every Superloom module consumed at runtime, including modules received only by injection through `shared_libs`, appears in `peerDependencies` with caret ranges (`^1.0.0`, never `>=`); the module's own `ROBOTS.md` and `[module]/docs/configuration.md` peer lists must match `package.json` exactly. See `docs/languages/js/dependencies.md`
-- **Connection lifecycle: three lifetimes, two teardown scopes:** a driver registers its pool or client teardown via `addProcessCleanupRoutine(instance, close)` on first creation, and the deployment's `CLOSE_ON_CLEANUP` config on `helper-instance` decides when it runs, not the driver. A borrowed connection from `getClient` registers its release via `addInstanceCleanupRoutine`. A module never reads the environment to detect its platform. See `docs/languages/js/server/connection-lifecycle.md`
 - Module lifecycle operations (create, fix, audit, publish) go through the workflow family (`/js-helper-module`, `/js-helper-module-audit`, `/js-helper-module-publish`) - do not improvise the procedure
-- Use `/learn` to capture new knowledge; run `/finalize-docs` after any docs change (validates to convergence, then propagates to AGENTS.md and embedded workflow blocks)
+- Use `/learn` to capture new knowledge; run `/finalize-docs` after any docs change (validates to convergence, then propagates to the canonical AGENTS.md and embedded workflow blocks)
 - **Documentation never references plans or workflows.** Plans are ephemeral; plan numbers go stale. Documents never cite plan numbers, keep planned-module rosters, or defer to workflows - catalogs list shipped modules as reference examples only. See `docs/principles/documentation-authoring.md`
 - Use Plan Mode for complex, multi-step, or risky changes; when stuck, attempt workarounds before asking; reuse existing terminals
 - **Client module naming taxonomy:** runtime-tier prefixes (`js-helper-*`, `js-server-helper-*`, `js-client-helper-*`), framework-tier prefixes (`js-react-helper-*`, `js-rw-helper-*`, `js-rn-helper-*`, `js-rnw-helper-*`), suffixes (`-ext-[framework]`, `-store-[backend]`, `-adapter-[name]`, `-template-[name]`); a module takes the lowest tier whose dependency budget it fits. `js-rn-helper-*` and `js-rnw-helper-*` do not require React when the module wraps a platform native module or SDK (e.g. `react-native-mmkv`, `expo-sqlite`); the tier is earned by the platform dependency, not the framework dependency. Dev-tooling packages (`js-helper-eslint-config`) carry the `js-helper-*` prefix but are devDependency-only, excluded from peer dependency contracts. Class I (standalone framework module) versus Class G+H (pure core plus extension) decided by the [decision test](docs/languages/js/client/client-modules.md#pure-core-with-extensions-or-a-single-framework-module). See `docs/languages/js/client/client-modules.md`
@@ -149,7 +150,7 @@ Every module: entry file + `[name].config.js` + `[name].errors.js` + `[name].val
 | `/new-entity` | js-demo-project | Adding a domain entity to the demo application |
 | `/project-docs [create\|update\|audit]` | any product repo | Create, update, or audit the management layer (PROJECT.md, feature ledger, CHANGELOG.md) per `docs/principles/project-management.md` |
 | `/learn` | superloom | Capturing conversation knowledge into its canonical doc; hands off to `/finalize-docs` |
-| `/finalize-docs [check]` | superloom | After any docs or workflow change: validate to convergence, then propagate to AGENTS.md and embedded blocks. `check` = report-only |
+| `/finalize-docs [check]` | superloom | After any docs or workflow change: validate to convergence, then propagate to the canonical AGENTS.md and embedded blocks. `check` = report-only |
 | `/compile-workflows-from-docs [repo] [lang]` | superloom | Recompile concrete workflow families for an implementation repository from archetypes + language docs; self-verifies via headless workshop |
 | `/plan` | workspace root | Plan transitions (`new`, `next`, `done`, `revive`, `supersede`, `status`); mandatory sections, no-questions authoring contract |
 
