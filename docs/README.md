@@ -21,6 +21,7 @@ Two support sections sit beside the layers:
 | [`guide/`](guide/) | Task walkthroughs: getting started, creating entities, IDE setup |
 | [`dev/`](dev/) | Contributor machine setup, onboarding, planning system, pitfall journal |
 | [`ops/`](ops/) | Generic, vendor-agnostic infrastructure setup guides |
+| [`building-a-product/`](building-a-product/) | How a new product goes from idea to designed, reviewed, buildable system |
 
 ## Who Should Read What
 
@@ -33,6 +34,7 @@ Two support sections sit beside the layers:
 | **JavaScript module author** | [`languages/js/index.md`](languages/js/index.md) |
 | **AI agent** | Repository `AGENTS.md`, then module-level `ROBOTS.md` files |
 | **Extending to a new language** | [`principles/extending-to-a-language.md`](principles/extending-to-a-language.md) |
+| **Starting a new product from zero** | [`building-a-product/README.md`](building-a-product/README.md) |
 | **DevOps / infrastructure** | [`ops/README.md`](ops/README.md) |
 
 ## Directory Tree
