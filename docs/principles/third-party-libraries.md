@@ -50,14 +50,14 @@ A third-party dependency is acceptable **only** when **all** of the following ar
 
 ## Where Third-Party Code Is Allowed to Live
 
-Even within an accepted third-party dependency, the `require()` call is confined to specific layers. This confinement is what makes a dependency reversible - swapping a library costs one PR against one file, not N PRs scattered across application code.
+Even within an accepted third-party dependency, the `import` is confined to specific layers. This confinement is what makes a dependency reversible - swapping a library costs one PR against one file, not N PRs scattered across application code.
 
 | Layer | Allowed to import third-party code directly? |
 |---|---|
-| **Helper module wrappers** (`parts/*.js` inside any helper module) | **Yes** - this is the only layer where a third-party `require()` belongs. The whole reason the library exists in this codebase is to be wrapped here |
+| **Helper module wrappers** (`parts/*.js` inside any helper module) | **Yes** - this is the only layer where a third-party `import` belongs. The whole reason the library exists in this codebase is to be wrapped here |
 | **Helper module loaders / validators / config / errors** | No - these files compose the wrapper; they must not reach around it |
 | **Adapter packages** (e.g. `js-server-helper-http-gateway-adapter-aws-apigateway`) | **Yes**, but only for the runtime SDK the adapter targets (e.g. AWS SDK for the AWS adapter, `express` for the Express adapter). Not for cross-cutting utilities |
-| **Application service / controller / model layers** | No - application code consumes wrappers via `Lib.*`, never `require()`s a third-party package directly |
+| **Application service / controller / model layers** | No - application code consumes wrappers via `Lib.*`, never imports a third-party package directly |
 | **Test fixtures** (`_test/**/*.js`) | No, with rare exception. Tests should reflect production import patterns; if a test needs functionality, the production wrapper should expose it |
 
 ---

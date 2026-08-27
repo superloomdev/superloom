@@ -2,7 +2,7 @@
 
 > **Language:** [JavaScript](module-structure)
 
-The default is factory pattern for testability, with singleton pattern reserved for rare cases. The factory pattern has two syntax variants: CommonJS (the default for Node.js-consumed modules) and ESM (for bundler-consumed modules where tree-shaking matters). The structural contract is identical; only the import/export syntax changes. See [ESM Variant](module-structure#esm-variant-factory-with-es-modules) in `module-structure.md`.
+The default is factory pattern for testability, with singleton pattern reserved for rare cases. All modules use ESM (`import`, `export default`) with `"type": "module"` in `package.json`.
 
 ## Quick Decision Matrix
 
@@ -15,7 +15,7 @@ The default is factory pattern for testability, with singleton pattern reserved 
 | **Pure functions with zero dependencies** | ✅ Preferred | ⚠️ Only if no test isolation needed |
 | **Foundation utility library** | ✅ Preferred | ⚠️ Only if truly dependency-free |
 
-**Rule of thumb:** If a module takes any external dependencies (libs, config, adapters), use factory pattern. Only consider singleton for pure utility modules with zero dependencies. The factory pattern has two syntax variants: CommonJS (default for Node.js) and ESM (for bundler-consumed modules). The choice between CommonJS and ESM follows the consumer, not the module's logic.
+**Rule of thumb:** If a module takes any external dependencies (libs, config, adapters), use factory pattern. Only consider singleton for pure utility modules with zero dependencies. All modules use ESM (`import`, `export default`).
 
 ---
 
@@ -66,11 +66,14 @@ const tenantBAuth = createAuthModule({ store: tenantBStore });
 ### Implementation Pattern
 
 ```javascript
-module.exports = function loader (shared_libs, config) {
+import DEFAULT_CONFIG from './[module].config.js';
+import ERRORS from './[module].errors.js';
+import createValidators from './[module].validators.js';
+
+export default function loader (shared_libs, config) {
   const Lib = { Utils: shared_libs.Utils };
-  const CONFIG = Object.assign({}, require('./[module].config'), config || {});
-  const ERRORS = require('./[module].errors');
-  const Validators = require('./[module].validators')(Lib, ERRORS);
+  const CONFIG = Object.assign({}, DEFAULT_CONFIG, config || {});
+  const Validators = createValidators(Lib, ERRORS);
   Validators.validateConfig(CONFIG);
 
   return createInterface(Lib, CONFIG, ERRORS, Validators);
@@ -86,29 +89,6 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators) {
 ```
 
 See [Universal Companion Files](module-structure#universal-companion-files) - the four fixed slots (`Lib`, `CONFIG`, `ERRORS`, `Validators`) are always wired, even when a companion file is empty today.
-
-### ESM Syntax Variant
-
-The factory pattern above uses CommonJS (`require`, `module.exports`). A module consumed via bundler (Vite, Metro, webpack) may instead use ES Modules (`import`, `export default`) with `"type": "module"` in `package.json`. The structural contract is identical: the loader takes `(shared_libs, config)`, wires companions, and returns `createInterface(...)`. Only the syntax changes:
-
-```javascript
-import DEFAULT_CONFIG from './[module].config.js';
-import ERRORS from './[module].errors.js';
-import createValidators from './[module].validators.js';
-
-export default function loader (shared_libs, config) {
-  const Lib = { Utils: shared_libs.Utils };
-  const CONFIG = Object.assign({}, DEFAULT_CONFIG, config || {});
-  const Validators = createValidators(Lib, ERRORS);
-  Validators.validateConfig(CONFIG);
-
-  return createInterface(Lib, CONFIG, ERRORS, Validators);
-}
-```
-
-Key differences: no `'use strict'` (implicit in ESM), `import` instead of `require`, `export default` instead of `module.exports`, and `.js` extensions in import paths. See [ESM Variant](module-structure#esm-variant-factory-with-es-modules) for the full skeleton and the CommonJS-to-ESM comparison table.
-
-**When to choose ESM:** component libraries or large modules consumed via bundler where tree-shaking or ESM-only peer dependencies matter (e.g. `rnw-components-carbon`). **When to choose CommonJS:** server-side helper modules consumed by Node.js directly (e.g. `js-helper-utils`, `js-helper-time`). The choice is per-module, not per-project.
 
 ---
 
@@ -129,10 +109,11 @@ Use singleton pattern only when **all** criteria are met:
 #### Foundation Utilities
 ```javascript
 // js-helper-utils - pure utility functions, loader initializes Validators
+import createValidators from './utils.validators.js';
 let Validators;
 
-module.exports = function loader (shared_libs, config) {
-  Validators = require('./utils.validators')(shared_libs);
+export default function loader (shared_libs, config) {
+  Validators = createValidators(shared_libs);
   return Utils;
 };
 
@@ -146,7 +127,7 @@ const Utils = {
 #### Data-Only Modules
 ```javascript
 // error catalogs, config defaults
-module.exports = Object.freeze({
+export default Object.freeze({
   INVALID_INPUT: 'Invalid input provided',
   MISSING_REQUIRED: 'Required field is missing'
 });
@@ -156,7 +137,7 @@ module.exports = Object.freeze({
 
 ```javascript
 // No loader needed for pure singletons
-module.exports = {
+export default {
   methodName: function (params) {
     // Pure function, no external deps
   }
@@ -263,18 +244,21 @@ Performance differences are negligible compared to testability benefits. Use fac
 
 ```javascript
 // js-helper-debug - takes config, needs test isolation
-const Debug = require('helper-debug')(Lib, {
+import createDebug from 'helper-debug';
+const Debug = createDebug(Lib, {
   log_level: 'info',
   output_format: 'json'
 });
 
 // js-helper-time - takes Utils dependency and config
-const Time = require('helper-time')(Lib, {
+import createTime from 'helper-time';
+const Time = createTime(Lib, {
   default_timezone: 'UTC'
 });
 
 // js-server-helper-auth - takes a ready-to-use store object
-const Auth = require('helper-auth')(Lib, {
+import createAuth from 'helper-auth';
+const Auth = createAuth(Lib, {
   Store: postgresStore,
   ACTOR_TYPE: 'user'
 });
@@ -284,10 +268,11 @@ const Auth = require('helper-auth')(Lib, {
 
 ```javascript
 // js-helper-utils - singleton loader, returns same Utils object
-const Utils = require('helper-utils')({}, {});
+import createUtils from 'helper-utils';
+const Utils = createUtils({}, {});
 
 // error catalog - data only
-const Errors = require('./module.errors');
+import Errors from './module.errors.js';
 ```
 
 ---
@@ -315,7 +300,7 @@ If any answer is "no", use factory pattern.
 ```javascript
 // WRONG: Takes config but uses singleton pattern
 let CONFIG;
-module.exports = function loader (config) {
+export default function loader (config) {
   CONFIG = config;  // Last caller wins!
   return singletonInstance;
 };
@@ -330,7 +315,7 @@ module.exports = function loader (config) {
 ```javascript
 // WRONG: Global state in singleton
 let globalCache = {};
-module.exports = {
+export default {
   get: function(key) { return globalCache[key]; },
   set: function(key, value) { globalCache[key] = value; }
 };
@@ -344,7 +329,7 @@ module.exports = {
 
 ## Further Reading
 
-- [Module Structure (JavaScript)](module-structure) - Implementation patterns, including [ESM Variant](module-structure#esm-variant-factory-with-es-modules)
-- [Code Formatting](code-formatting) - [ESM Formatting](code-formatting#esm-formatting) rules
+- [Module Structure (JavaScript)](module-structure) - Implementation patterns and module skeletons
+- [Code Formatting](code-formatting) - [Additional Formatting Rules](code-formatting#additional-formatting-rules)
 - [Core Helper Modules](catalog-core) - Factory pattern guidance
 - [Module Testing](module-testing) - Testing strategies and isolation

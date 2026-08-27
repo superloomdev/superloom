@@ -176,24 +176,24 @@ Each new service-dependent module needs **both** a `test-*` and a `publish-*` jo
 **Fix:** Every helper module that uses dependency injection needs `_test/loader.js`. The loader is the **only** file allowed to read `process.env`.
 
 ```javascript
-module.exports = function loader () {
+export default function loader () {
   // Step 1: Load config from environment (process.env ONLY here)
   const Config = { /* ... */ };
   const config_module = { /* ... */ };
 
   // Step 2: Load peer dependencies
-  const Utils = require('@your-org/js-helper-utils')();
-  const Debug = require('@your-org/js-helper-debug')(Lib, config_debug);
-  const Instance = require('@your-org/js-server-helper-instance');
+  const Utils = (await import('@your-org/js-helper-utils')).default();
+  const Debug = (await import('@your-org/js-helper-debug')).default(Lib, config_debug);
+  const Instance = (await import('@your-org/js-server-helper-instance')).default;
 
-  // Step 3: Create module instance - require by `_test/package.json` alias,
+  // Step 3: Create module instance - import by `_test/package.json` alias,
   // not relative source path. Aliases keep loader code identical between
   // local-source and published-package contexts.
-  const Module = require('helper-[module-name]')({ Utils, Debug, Instance }, config_module);
+  const Module = (await import('helper-[module-name]')).default({ Utils, Debug, Instance }, config_module);
 
   // Step 4: Return Lib container and Config
   return { Lib: { Utils, Debug, Instance, Module }, Config };
-};
+}
 ```
 
 ---
@@ -356,6 +356,26 @@ When renaming an entire module, also check **other modules' README and ROBOTS** 
 
 ---
 
+## ESM Migration Issues
+
+### `scripts/` files left as CJS inside a `"type": "module"` package throw at startup
+
+**Symptom:** A module is converted to ESM (`"type": "module"` in `package.json`, all source files use `import`/`export`), but a `scripts/generate.js` or `scripts/build-data.js` file is left using CJS import and export syntax. Running the script throws `ReferenceError: require is not defined` or `SyntaxError: Cannot use import statement outside a module` before any code executes.
+
+**Cause:** `"type": "module"` in `package.json` applies to **every** `.js` file in the package, including `scripts/`. A CJS script inside an ESM package is not silently treated as CJS - it is parsed as ESM and fails at the first CJS syntax the parser encounters. The conversion pass focused on the module's source and test files and missed the `scripts/` directory because it is excluded from the published tarball.
+
+**Fix:** Convert every file in `scripts/` to ESM in the same change as the module conversion. `scripts/` files are part of the module and follow the package's module type. If a script genuinely cannot be converted (e.g. it is a third-party tool wrapper), rename it to `.cjs` so Node applies CJS parsing despite the package-level `"type": "module"`.
+
+### CJS import of an ESM package returns a module namespace object, not the default export
+
+**Symptom:** A test loader wraps a peer dependency import in `try/catch` to handle optional dependencies. After migrating the peer dependency to ESM, the `try/catch` silently swallows a `TypeError` and the dependency is set to `null`. Tests pass against the `null` value (they skip the dependent tests) instead of failing loudly on the missing dependency.
+
+**Cause:** The CJS import function of an ESM package returns a module namespace object, not the default export. Calling the namespace object as a function throws `TypeError: ... is not a function`. When the loader wraps the call in `try/catch`, the `TypeError` is caught and the dependency is set to `null` - the loader interprets the caught error as "package not installed" rather than "package installed but called incorrectly". The failure is silent because the `catch` block was designed for `MODULE_NOT_FOUND`, not for `TypeError`.
+
+**Fix:** Never wrap a required peer dependency import in `try/catch`. Absence is a setup error and must fail loudly. When migrating a test loader from CJS to ESM, replace the CJS import function with `await import()` and access `.default` for the default export. Verify that every `try/catch` around an import is removed - a peer dependency that is absent should produce an `ERR_MODULE_NOT_FOUND` at load time, not a silent `null`.
+
+---
+
 ## Prevention Checklist
 
 Before completing any migration:
@@ -376,7 +396,7 @@ Before completing any migration:
 - [ ] **Module added to CI/CD workflow** (both `test-*` and `publish-*` jobs for service-dependent modules)
 - [ ] **CI/CD paths use the new module directory name**
 - [ ] **Documentation cross-references use new module names**
-- [ ] **No `exports` field in single-entrypoint packages** - if `main` already points to the only entry file, `exports` is redundant and should be omitted. Only add `exports` when the package exposes multiple entry points or needs explicit subpath exports
+- [ ] **`exports` map present and `"main"` removed** - every module uses `"type": "module"` with an `"exports"` map. The legacy `"main"` field is not used. See [Publishing](publishing.md#the-exports-map)
 - [ ] **Two-pass check done after any refactor** touching 3+ functions or renaming variables: logic pass first, then a dedicated formatting read (step comments, 3/2/1 spacing, stale comment text, banner widths, return objects multi-line, private helpers in `_Name` enclosure, `};` combined with END banners, JSDoc-block indentation matches declaration indentation)
 - [ ] **Comment indentation matches code** after any nesting-depth change - every JSDoc `/***` block and single-line comment sits at the exact column of the next non-comment line. `eslint --fix` does NOT fix comment indentation; check manually or via the leading-space comparison in [JSDoc blocks left at old indentation](#jsdoc-blocks-left-at-old-indentation-after-nesting-depth-change)
 - [ ] **Every `performanceAuditLog` interval is logged once, by the owner of the work** - drivers (`nosql-*`, `sql-*`, `queue-*`, `storage-*`, `http`) instrument their own roundtrips and client init as part of their contract; non-driver modules never re-log delegated I/O and carry a call only for their own substantial in-process work. See [Duplicate audit lines from layered performance logging](#duplicate-audit-lines-from-layered-performance-logging)

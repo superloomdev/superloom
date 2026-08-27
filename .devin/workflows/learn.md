@@ -132,7 +132,7 @@ If this run exposed a knowledge kind the Harvest table misses, or a destination 
 
 ## Invocation Examples
 
-- `/learn helper modules must use const CONFIG = require(...) with comment "Base configuration (overridden by loader-injected config)"`
+- `/learn helper modules must use import CONFIG from '...' with comment "Base configuration (overridden by loader-injected config)"`
 - `/learn never use module-specific examples in framework docs`
 - `/learn add new ops category for caching: docs/ops/caching/`
 - `/learn` - harvest mode: extract everything documentation-worthy from this conversation

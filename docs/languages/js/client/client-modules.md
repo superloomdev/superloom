@@ -265,7 +265,7 @@ The question is never "where can this run". It is "what must be installed for th
 
 ### "Font is NOT `js-helper`"
 
-The font module calls `expo-font.useFonts()` and `require('font.ttf')`. These are bundler-bound and Expo-specific. The Expo binding is `-ext-expo`; the core is pure and the tier question applies per package. The core (`js-client-helper-font`) sits at the client tier because `@font-face` string construction is a client-domain concept with no platform dependency. Each extension takes the tier its platform dependency earns: `-ext-web` is client-tier (DOM), `-ext-rn` is RN-tier (native module), `-ext-expo` is RNW-tier (Expo SDK).
+The font module calls `expo-font.useFonts()` and imports `.ttf` assets. These are bundler-bound and Expo-specific. The Expo binding is `-ext-expo`; the core is pure and the tier question applies per package. The core (`js-client-helper-font`) sits at the client tier because `@font-face` string construction is a client-domain concept with no platform dependency. Each extension takes the tier its platform dependency earns: `-ext-web` is client-tier (DOM), `-ext-rn` is RN-tier (native module), `-ext-expo` is RNW-tier (Expo SDK).
 
 ### "A React hook for theme access is NOT `js-rnw-helper`"
 

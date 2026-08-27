@@ -95,7 +95,7 @@ If validation delegates to another model (e.g., `User` validating an email via `
 const result = Lib.Contact.validation.validateEmail(email);
 ```
 
-Never directly `require()` another entity's model from inside a validation file - it bypasses the loader and breaks dependency injection.
+Never directly `import` another entity's model from inside a validation file - it bypasses the loader and breaks dependency injection.
 
 ### DTO Terminology
 

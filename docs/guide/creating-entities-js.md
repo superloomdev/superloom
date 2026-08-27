@@ -39,7 +39,7 @@ A Superloom entity is a vertical slice across the layered architecture. The mand
 ### `[entity].config.js` - Domain Constants
 
 ```javascript
-module.exports = {
+export default {
   NAME_MIN_LENGTH: 1,
   NAME_MAX_LENGTH: 100,
   STATUS_VALUES: ['active', 'inactive', 'archived'],
@@ -50,7 +50,7 @@ module.exports = {
 ### `[entity].errors.js` - Error Catalog
 
 ```javascript
-module.exports = {
+export default {
   NAME_REQUIRED: { code: 'ENTITY_NAME_REQUIRED', message: 'Name is required', status: 400 },
   NOT_FOUND: { code: 'ENTITY_NOT_FOUND', message: 'Entity not found', status: 404 }
 };
@@ -59,9 +59,9 @@ module.exports = {
 ### `[entity].data.js` - Entity Constructors
 
 ```javascript
-const CONFIG = require('./[entity].config');
+import CONFIG from './[entity].config.js';
 
-module.exports = {
+export default {
   createEntity: function (name, status) {
     return {
       name: name ? name.trim() : null,
@@ -76,10 +76,10 @@ module.exports = {
 ### `[entity].validation.js` - Pure Validation
 
 ```javascript
-const CONFIG = require('./[entity].config');
-const ERRORS = require('./[entity].errors');
+import CONFIG from './[entity].config.js';
+import ERRORS from './[entity].errors.js';
 
-module.exports = {
+export default {
   validateCreate: function (name) {
     const errors = [];
     if (!name || typeof name !== 'string') { errors.push(ERRORS.NAME_REQUIRED); }
@@ -91,7 +91,7 @@ module.exports = {
 ### `[entity].data.js` - One Shape
 
 ```javascript
-module.exports = {
+export default {
   // ONE canonical builder - same shape for create, update, read
   buildEntityData: function (id, name, status, created_at, updated_at) {
     const data = {};
@@ -142,8 +142,8 @@ Lib.[Entity] = {
 const [Entity]Config = { ...[Entity]Model._config, ...[Entity]ServerModel._config };
 
 // Build service and controller layers
-Lib.[Entity].service = require('../service/[entity].service')(Lib, [Entity]Config);
-Lib.[Entity].controller = require('../controller/[entity].controller')(Lib, [Entity]Config);
+Lib.[Entity].service = (await import('../service/[entity].service.js')).default(Lib, [Entity]Config);
+Lib.[Entity].controller = (await import('../controller/[entity].controller.js')).default(Lib, [Entity]Config);
 ```
 
 Full merge mechanics live in [`server/model-modules.md`](../languages/js/server/model-modules.md).
@@ -155,7 +155,7 @@ Full merge mechanics live in [`server/model-modules.md`](../languages/js/server/
 **Express** - register a route file in the Express interface:
 
 ```javascript
-app.use('/[entity]', require('./routes/[entity]')(Lib));
+app.use('/[entity]', (await import('./routes/[entity].js')).default(Lib));
 ```
 
 **AWS Lambda** - create one handler file per endpoint under `src/server/interfaces/api/lambda-aws/[entity]/` and a corresponding `serverless.yml` under `src/server/_deploy/serverless-aws/[entity]/`. Each entity is its own deployable Serverless service.

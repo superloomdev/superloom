@@ -59,9 +59,8 @@ mkdir -p src/model/[entity]/_test
 ```javascript
 // Info: Domain constants and rules for [Entity] entity
 // Pattern: Plain object export (no loader needed)
-'use strict';
 
-module.exports = {
+export default {
 
   // Entity-specific limits
   MAX_NAME_LENGTH: 100,
@@ -84,9 +83,8 @@ module.exports = {
 ```javascript
 // Info: Error catalog for [Entity] entity
 // Pattern: Plain object export (no loader needed)
-'use strict';
 
-module.exports = {
+export default {
 
   NAME_REQUIRED: {
     code: 'ENTITY_NAME_REQUIRED',
@@ -117,7 +115,6 @@ module.exports = {
 // Info: [Entity] Data Module - Canonical entity constructors and DTOs
 // Pattern: Standard Module Structure
 // Dependencies: Lib.Utils, CONFIG
-'use strict';
 
 let Lib;
 let CONFIG;
@@ -144,7 +141,7 @@ let CONFIG;
 
 
 ///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config) {
+export default function (shared_libs, config) {
 
   loader(shared_libs, config);
 
@@ -253,7 +250,6 @@ const EntityData = {
 // Info: [Entity] Process Module - Pure business logic
 // Pattern: Standard Module Structure
 // Dependencies: Lib.Utils, CONFIG
-'use strict';
 
 let Lib;
 let CONFIG;
@@ -280,7 +276,7 @@ let CONFIG;
 
 
 ///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config) {
+export default function (shared_libs, config) {
 
   loader(shared_libs, config);
 
@@ -335,7 +331,6 @@ const EntityProcess = {
 // Info: [Entity] Validation Module - Input validation
 // Pattern: Standard Module Structure
 // Dependencies: Lib.Utils, CONFIG, ERRORS
-'use strict';
 
 let Lib;
 let CONFIG;
@@ -365,7 +360,7 @@ let ERRORS;
 
 
 ///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config, errors) {
+export default function (shared_libs, config, errors) {
 
   loader(shared_libs, config, errors);
 
@@ -441,26 +436,31 @@ const EntityValidation = {
 // Info: Public export surface for [Entity] base model module
 // Dependencies: none (or list if any: Contact, User, etc.)
 // Standard pattern: Loader receives Lib and Config Override, returns { data, errors, process, validation, _config }
-'use strict';
+
+import entityConfig from './[entity].config.js';
+import EntityErrors from './[entity].errors.js';
+import buildEntityData from './[entity].data.js';
+import buildEntityProcess from './[entity].process.js';
+import buildEntityValidation from './[entity].validation.js';
 
 
 ///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config_override) {
+export default function (shared_libs, config_override) {
 
   // Merge domain config with env overrides
   const EntityConfig = Object.assign(
     {},
-    require('./[entity].config'),
+    entityConfig,
     config_override || {}
   );
 
   // Load Error Catalog (independent, not attached to config)
-  const EntityErrors = require('./[entity].errors');
+  // EntityErrors imported at top level
 
   // Load sub-modules with merged module-specific config
-  const EntityData = require('./[entity].data')(shared_libs, EntityConfig);
-  const EntityProcess = require('./[entity].process')(shared_libs, EntityConfig);
-  const EntityValidation = require('./[entity].validation')(shared_libs, EntityConfig, EntityErrors);
+  const EntityData = buildEntityData(shared_libs, EntityConfig);
+  const EntityProcess = buildEntityProcess(shared_libs, EntityConfig);
+  const EntityValidation = buildEntityValidation(shared_libs, EntityConfig, EntityErrors);
 
 
   // Return Public APIs as object { data, errors, process, validation, _config }
@@ -485,13 +485,17 @@ Add the new entity to the exports:
 ```javascript
 // Info: Public export surface for the model package
 // Each entity module is exported as a named property
-'use strict';
 
-module.exports = {
-  Contact: require('./contact'),
-  User: require('./user'),
-  Survey: require('./survey'),
-  [Entity]: require('./[entity]')  // Add here
+import Contact from './contact/index.js';
+import User from './user/index.js';
+import Survey from './survey/index.js';
+import [Entity] from './[entity]/index.js';  // Add here
+
+export default {
+  Contact,
+  User,
+  Survey,
+  [Entity]  // Add here
 };
 ```
 
@@ -515,7 +519,6 @@ mkdir -p src/model-server/[entity]
 // Info: [Entity] Server Data Module - Server-only extensions
 // Pattern: Standard Module Structure
 // Dependencies: Lib (can reference Lib.[Entity] for base methods)
-'use strict';
 
 let Lib;
 let CONFIG;
@@ -542,7 +545,7 @@ let CONFIG;
 
 
 ///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config) {
+export default function (shared_libs, config) {
 
   loader(shared_libs, config);
 
@@ -587,26 +590,31 @@ const EntityServerData = {
 // Info: Server-only model extensions for [Entity] entity
 // Dependencies: [Entity] base (may reference Lib.[Entity] via loader)
 // Standard pattern: Loader receives Lib and Config Override, returns { data, errors, process, validation, _config }
-'use strict';
+
+import entityConfig from './[entity].config.js';
+import EntityErrors from './[entity].errors.js';
+import buildEntityData from './[entity].data.js';
+import buildEntityProcess from './[entity].process.js';
+import buildEntityValidation from './[entity].validation.js';
 
 
 ///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config_module) {
+export default function (shared_libs, config_module) {
 
   // Merge domain config with env overrides
   const EntityConfig = Object.assign(
     {},
-    require('./[entity].config'),
+    entityConfig,
     config_module || {}
   );
 
   // Load Error Catalog (independent, not attached to config)
-  const EntityErrors = require('./[entity].errors');
+  // EntityErrors imported at top level
 
   // Load sub-modules with merged module-specific config
-  const EntityData = require('./[entity].data')(shared_libs, EntityConfig);
-  const EntityProcess = require('./[entity].process')(shared_libs, EntityConfig);
-  const EntityValidation = require('./[entity].validation')(shared_libs, EntityConfig, EntityErrors);
+  const EntityData = buildEntityData(shared_libs, EntityConfig);
+  const EntityProcess = buildEntityProcess(shared_libs, EntityConfig);
+  const EntityValidation = buildEntityValidation(shared_libs, EntityConfig, EntityErrors);
 
 
   // Return Public APIs as object { data, errors, process, validation, _config }
@@ -628,11 +636,13 @@ module.exports = function (shared_libs, config_module) {
 
 ```javascript
 // Info: Server-side model extensions package
-'use strict';
 
-module.exports = {
-  Survey: require('./survey'),
-  [Entity]: require('./[entity]')  // Add here
+import Survey from './survey/index.js';
+import [Entity] from './[entity]/index.js';  // Add here
+
+export default {
+  Survey,
+  [Entity]  // Add here
 };
 ```
 
@@ -648,7 +658,6 @@ module.exports = {
 // Info: [Entity] Service Module - Business logic and orchestration
 // Pattern: Standard Module Structure
 // Dependencies: Lib, Config (receives entity config from loader)
-'use strict';
 
 let Lib;
 let Config;
@@ -675,7 +684,7 @@ let Config;
 
 
 ///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config) {
+export default function (shared_libs, config) {
 
   loader(shared_libs, config);
 
@@ -725,7 +734,6 @@ const EntityService = {
 // Info: [Entity] Controller Module - Thin adapter
 // Pattern: Standard Module Structure
 // Dependencies: Lib, Config
-'use strict';
 
 let Lib;
 let Config;
@@ -752,7 +760,7 @@ let Config;
 
 
 ///////////////////////////// Module Exports START /////////////////////////////
-module.exports = function (shared_libs, config) {
+export default function (shared_libs, config) {
 
   loader(shared_libs, config);
 
@@ -806,11 +814,13 @@ const EntityController = {
 Add to entity namespaces section:
 
 ```javascript
-  // ==================== ENTITY NAMESPACES START ====================== //
+  // Top of loader.js (static imports):
+  // import Models from '../../model/index.js';
+  // import ModelsExtended from '../../model-server/index.js';
+  // import build[Entity]Service from '../service/[entity].service.js';
+  // import build[Entity]Controller from '../controller/[entity].controller.js';
 
-  // Load model packages (non-executed; each entity executed individually)
-  const Models = require('../../model');
-  const ModelsExtended = require('../../model-server');
+  // ==================== ENTITY NAMESPACES START ====================== //
 
   // ... existing entities ...
 
@@ -833,12 +843,12 @@ Add to entity namespaces section:
     validation: { ...Lib.[Entity].validation, ...[Entity]ModelExtended.validation }
   };
   const [Entity]Config = { ...[Entity]Model._config, ...[Entity]ModelExtended._config };
-  Lib.[Entity].service = require('../service/[entity].service')(Lib, [Entity]Config);
-  Lib.[Entity].controller = require('../controller/[entity].controller')(Lib, [Entity]Config);
+  Lib.[Entity].service = build[Entity]Service(Lib, [Entity]Config);
+  Lib.[Entity].controller = build[Entity]Controller(Lib, [Entity]Config);
 
   // If no server extensions:
-  // Lib.[Entity].service = require('../service/[entity].service')(Lib, [Entity]Model._config);
-  // Lib.[Entity].controller = require('../controller/[entity].controller')(Lib, [Entity]Model._config);
+  // Lib.[Entity].service = build[Entity]Service(Lib, [Entity]Model._config);
+  // Lib.[Entity].controller = build[Entity]Controller(Lib, [Entity]Model._config);
 ```
 
 ---

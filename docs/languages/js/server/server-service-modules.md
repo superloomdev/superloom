@@ -82,7 +82,6 @@ Services receive `Lib` and `Config` via the loader. They use `Lib` to access hel
 
 ```javascript
 // src/server/service/user.service.js
-'use strict';
 
 let Lib;
 let Config;
@@ -114,7 +113,7 @@ const UserService = {
 
 };
 
-module.exports = function (shared_libs, config) {
+export default function (shared_libs, config) {
 
   loader(shared_libs, config);
   return UserService;

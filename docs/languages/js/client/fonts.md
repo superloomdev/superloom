@@ -20,7 +20,7 @@ The font system separates font identity (family names and weights, which are dat
 
 The rule: the theme names font families; the host loads them.
 
-The reason is architectural. A theme is pure JSON. It travels from a server, through a database, across a wire. It cannot carry binary font files. A `require('font.ttf')` call is bundler-bound: it resolves at build time through Metro or webpack, producing a binary asset reference. A server-sent JSON theme cannot perform that resolution.
+The reason is architectural. A theme is pure JSON. It travels from a server, through a database, across a wire. It cannot carry binary font files. A bundler asset import for a `.ttf` file is bundler-bound: it resolves at build time through Metro or webpack, producing a binary asset reference. A server-sent JSON theme cannot perform that resolution.
 
 The contract is:
 
@@ -39,8 +39,8 @@ React Native supports three font delivery mechanisms. All three funnel through t
 | Mechanism | Example family | How it loads | Where the module comes from |
 |---|---|---|---|
 | **System** | `System` | Native platform font, nothing to load | Built into the OS |
-| **Google package** | `Poppins_400Regular` | `@expo-google-fonts/[name]` package export | `require('@expo-google-fonts/poppins')` |
-| **Bundled TTF** | `Lora` | Raw `.ttf` file in `fonts/assets/` | `require('./Lora-Regular.ttf')` |
+| **Google package** | `Poppins_400Regular` | `@expo-google-fonts/[name]` package export | `import { Poppins_400Regular } from '@expo-google-fonts/poppins'` |
+| **Bundled TTF** | `Lora` | Raw `.ttf` file in `fonts/assets/` | `import LoraRegular from './Lora-Regular.ttf'` |
 
 Mechanisms 2 and 3 are identical at the `expo-font` level. The only difference is where the font module originates: a published package or a local asset. Both produce a font map entry that `useFonts` registers with the OS (native) or injects as `@font-face` CSS (web).
 
@@ -62,9 +62,9 @@ const FONT_MAP = Object.assign(
 );
 ```
 
-`CustomFonts` is a spread of `require()` calls from `fonts/assets/index.js`. The assets index ships empty by default (`module.exports = {}`), preventing Metro build errors from missing files. To enable a custom font, drop the `.ttf` into `fonts/assets/` and uncomment the entry in the index.
+`CustomFonts` is a spread of asset imports from `fonts/assets/index.js`. The assets index ships empty by default (`export default {}`), preventing Metro build errors from missing files. To enable a custom font, drop the `.ttf` into `fonts/assets/` and uncomment the entry in the index.
 
-The manifest is a singleton loader. It does not call `require('expo-font')` at the top level; it receives `Lib.FontLoader` through injection, matching the centralized dependency pattern used throughout the client.
+The manifest is a singleton loader. It does not import `expo-font` at the top level; it receives `Lib.FontLoader` through injection, matching the centralized dependency pattern used throughout the client.
 
 ---
 

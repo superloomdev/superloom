@@ -311,7 +311,7 @@ Class I exists because the Class G plus H pair is not free: it costs two package
 
 **Framework injection:** the framework arrives through the `Lib` container (`Lib.React`), never through a direct `import React`. This keeps the dependency centralized, keeps `react` a peer dependency rather than a bundled one, and lets `_test/` inject a stub so tests run in pure Node with no Metro and no emulator.
 
-**Module syntax:** Class I modules that ship component libraries or large registries consumed via bundler use the [ESM variant](module-structure.md#esm-variant-factory-with-es-modules) of the factory pattern (`import`/`export default`, `"type": "module"` in `package.json`). Class I modules consumed directly by Node.js use CommonJS. The choice follows the consumer, not the class.
+**Module syntax:** Class I modules use the [factory pattern](module-structure.md) (`import`/`export default`, `"type": "module"` in `package.json`).
 
 **README extras:** "Supported Renderers" (which React targets the module runs on, and what it requires to be installed). Install section lists `react` as a peer dependency.
 

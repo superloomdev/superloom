@@ -169,7 +169,7 @@ Staging and production environments are managed by the application project, not 
 The contract every module follows:
 
 - **Runner:** Node.js built-in test runner (`node --test`)
-- **Assertions:** `require('node:assert/strict')`
+- **Assertions:** `import assert from 'node:assert/strict'`
 - **Location:** `_test/test.js` inside each module
 - **Naming:** `should [expected behavior] when [condition]`
 - **Coverage:** Every exported function must have at least one test
@@ -249,7 +249,7 @@ Every module's `_test/` directory should use a **loader.js** that mirrors the ma
 - Builds the `Lib` dependency container (Utils, Debug, module under test)
 - Returns `{ Lib, Config }` - `Lib` for the dependency container, `Config` for resolved env values
 - **No fallback defaults** (`||`) - the module's own `config.js` handles defaults
-- **Inline export:** Use `module.exports = function loader () {` - no separate `const` declaration followed by `module.exports = loader`. This matches the factory pattern used in main module files
+- **Inline export:** Use `export default function loader () {` - no separate `const` declaration followed by `export default loader`. This matches the factory pattern used in main module files
 
 **Test file rules (`_test/test.js`):**
 - Imports `{ Lib, Config }` from loader
@@ -311,32 +311,37 @@ The test loader builds the `shared_libs` container with the framework entry, the
 
 ```javascript
 // _test/loader.js
-'use strict';
 
-const React = require('react');
-const ReactTestRenderer = require('react-test-renderer');
+import React from 'react';
+import ReactTestRenderer from 'react-test-renderer';
 
-const Utils = require('helper-utils')();
-const Debug = require('helper-debug')();
+import helperUtils from 'helper-utils';
+import helperDebug from 'helper-debug';
+
+const Utils = helperUtils();
+const Debug = helperDebug();
 
 // Class I module under test - React injected via shared_libs
-const Idle = require('helper-idle')({
+import helperIdle from 'helper-idle';
+const Idle = helperIdle({
   React,
   Utils,
   Debug
 });
 
-module.exports = { React, ReactTestRenderer, Idle, Utils, Debug };
+export default { React, ReactTestRenderer, Idle, Utils, Debug };
 ```
 
 For a module that needs a font-loading capability, the loader injects a stub. The slot is named for the capability, never for the vendor that happens to satisfy it, so the same module runs against an Expo-backed loader, a bare loader, or this stub with no edit:
 
 ```javascript
+import helperFont from 'helper-font';
+
 const FontLoader = {
   useFonts: () => [true, null]   // [isLoaded, error]
 };
 
-const Font = require('helper-font')({
+const Font = helperFont({
   React,
   FontLoader,
   Utils,

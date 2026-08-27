@@ -115,7 +115,7 @@ Adding a provider is a library change. The provider must be a Context provider, 
 
 ## Authoring Contract
 
-Every component is a loader module. The library entry point is `import loader from 'rnw-components-carbon'` (ESM) or `require('rnw-components-carbon')` (CJS interop), called as `loader(shared_libs, config)`, which returns an interface with `build`, `rebuild`, `themeContract`, `useBreakpoint`, and `tokens`. Calling `build(theme)` produces the themed component set.
+Every component is a loader module. The library entry point is `import loader from 'rnw-components-carbon'`, called as `loader(shared_libs, config)`, which returns an interface with `build`, `rebuild`, `themeContract`, `useBreakpoint`, and `tokens`. Calling `build(theme)` produces the themed component set.
 
 The contract:
 
@@ -127,11 +127,11 @@ The contract:
 
 `rebuild(theme, breakpoint?)` re-derives `CommonStyle` and returns a fresh registry. The previous registry is never mutated; callers swap the reference. This is the runtime re-theming mechanism.
 
-### ESM Consumption Pattern
+### Consumption Pattern
 
-The carbon component library ships as an ES Module (`"type": "module"` in `package.json`). Component factory files use `export default function (Lib, CONFIG, ERRORS, Parts, Registry, Style) { ... }`, and the loader imports them via `import viewFactory from './component/atom/view.js'`. The loader itself uses `export default function loader (shared_libs, config)`. See [ESM Variant](../module-structure.md#esm-variant-factory-with-es-modules) for the full skeleton.
+Component factory files use `export default function (Lib, CONFIG, ERRORS, Parts, Registry, Style) { ... }`, and the loader imports them via `import viewFactory from './component/atom/view.js'`. The loader itself uses `export default function loader (shared_libs, config)`. See [Module Structure](../module-structure.md) for the full skeleton.
 
-Consumers that use a bundler (Vite, Metro) import the loader directly. Consumers in a CommonJS environment use `require()` with Node.js CJS-ESM interop, which resolves the default export automatically.
+Consumers that use a bundler (Vite, Metro) import the loader directly.
 
 ### Parts and the Style Contract
 

@@ -36,28 +36,28 @@ The `Lib` container holds every dependency the React tree needs. Each entry is e
 
 | `Lib` key | What it holds | How it enters |
 |---|---|---|
-| `Lib.React` | The React module | `require('react')` in the loader only |
-| `Lib.Utils` | Core utility helper | `require('@superloomdev/js-helper-utils')(Lib)` |
-| `Lib.Debug` | Debug logging helper | `require('@superloomdev/js-helper-debug')(Lib)` |
-| `Lib.Themer` | Theme engine (assemble, derive, generateUtilities) | `require('@superloomdev/js-client-helper-themer')(Lib)` |
-| `Lib.ThemerReact` | React extension for themer (ThemeProvider, hooks) | `require('@superloomdev/js-client-helper-themer-ext-react')({ React, Themer, Utils, Debug })` |
-| `Lib.ThemeTemplate` | Default themer template (data) | `require('@superloomdev/js-client-helper-themer/themer.template.js')` |
-| `Lib.Themes` | Theme values as frozen JS objects | Direct `require` of theme data files |
-| `Lib.Font` | Font core (family registry, role resolution) | `require('@superloomdev/js-client-helper-font')(Lib)` |
-| `Lib.Fonts` | Font manifest and `useFontsReady` hook | `require('../fonts/fonts')(Lib)` |
+| `Lib.React` | The React module | `import React from 'react'` in the loader only |
+| `Lib.Utils` | Core utility helper | `import utils from '@superloomdev/js-helper-utils'`; `utils(Lib)` |
+| `Lib.Debug` | Debug logging helper | `import debug from '@superloomdev/js-helper-debug'`; `debug(Lib)` |
+| `Lib.Themer` | Theme engine (assemble, derive, generateUtilities) | `import themer from '@superloomdev/js-client-helper-themer'`; `themer(Lib)` |
+| `Lib.ThemerReact` | React extension for themer (ThemeProvider, hooks) | `import themerReact from '@superloomdev/js-client-helper-themer-ext-react'`; `themerReact({ React, Themer, Utils, Debug })` |
+| `Lib.ThemeTemplate` | Default themer template (data) | `import themerTemplate from '@superloomdev/js-client-helper-themer/themer.template.js'` |
+| `Lib.Themes` | Theme values as frozen JS objects | Direct `import` of theme data files |
+| `Lib.Font` | Font core (family registry, role resolution) | `import font from '@superloomdev/js-client-helper-font'`; `font(Lib)` |
+| `Lib.Fonts` | Font manifest and `useFontsReady` hook | `import fonts from '../fonts/fonts.js'`; `fonts(Lib)` |
 | `Lib.FontAdapter` | Platform font loader adapter | Supplied by a host adapter |
 | `Lib.FontManifest` | Host-owned font asset sources | Supplied by a host adapter |
 | `Lib.Navigation` | Navigation surface (Link, Redirect) | Supplied by a host adapter |
 | `Lib.Icons` | Icon glyph component | Supplied by a host adapter |
-| `Lib.ThemeContext` | React theming hub (ThemeProvider + hooks) | `require('./contexts/theme-context')(Lib)` |
-| `Lib.Client` | Client utilities (os, device info) | `require('./client')(Lib, Config)` |
-| `Lib.SuperApp` | Super-app launcher utilities | `require('./superApp')(Lib, Config)` |
-| `Lib.Sdk` | Client SDK (entity APIs) | `require('../../sdk')(Lib)` or stub |
+| `Lib.ThemeContext` | React theming hub (ThemeProvider + hooks) | `import themeContext from './contexts/theme-context.js'`; `themeContext(Lib)` |
+| `Lib.Client` | Client utilities (os, device info) | `import client from './client.js'`; `client(Lib, Config)` |
+| `Lib.SuperApp` | Super-app launcher utilities | `import superApp from './superApp.js'`; `superApp(Lib, Config)` |
+| `Lib.Sdk` | Client SDK (entity APIs) | `import sdk from '../../sdk.js'`; `sdk(Lib)` or stub |
 | `Lib.Config` | Application configuration object | Direct assignment in the loader |
 
-Every framework module follows the loader pattern: `module.exports = function (shared_libs, config) { ... }`. The loader calls each factory with `Lib`, and the factory returns its public interface. This is identical to how server-side helper modules work.
+Every framework module follows the loader pattern: `export default function (shared_libs, config) { ... }`. The loader calls each factory with `Lib`, and the factory returns its public interface. This is identical to how server-side helper modules work.
 
-Themes are plain frozen data objects, not loaders. They are `require`d directly in the loader and attached to `Lib.Themes`. A theme is a JSON-shaped value object (`base` + optional `variant`); it has no behavior and no dependencies.
+Themes are plain frozen data objects, not loaders. They are imported directly in the loader and attached to `Lib.Themes`. A theme is a JSON-shaped value object (`base` + optional `variant`); it has no behavior and no dependencies.
 
 ---
 
@@ -81,8 +81,8 @@ The adapter set is validated at boot before the container is built. A missing sl
 
 Dependency injection applies at the package boundary, not inside the app's own React files. The rule:
 
-- **Helper modules and framework packages** receive dependencies through `Lib`. They never call `require('react')` directly. The loader injects `Lib.React` into the themer adapter, for example
-- **The app's own React files** (screens, layouts, context providers) keep idiomatic `require('react')` or `import` statements. JSX and hooks are import-time bindings; injecting React into every component adds ceremony without benefit
+- **Helper modules and framework packages** receive dependencies through `Lib`. They never import React directly. The loader injects `Lib.React` into the themer adapter, for example
+- **The app's own React files** (screens, layouts, context providers) keep idiomatic `import` statements. JSX and hooks are import-time bindings; injecting React into every component adds ceremony without benefit
 
 The boundary is the package edge. Inside the app, React is a peer dependency resolved normally. Outside the app (in published helper modules and the component library), React enters through `Lib`.
 
@@ -104,14 +104,18 @@ Both folders use plural names, matching React community convention. A generic `c
 Theme data files live in `src/themes/` as frozen JS objects. The loader is the single source of truth for which themes are wired:
 
 ```js
+import baseTheme from '../themes/base-theme.js';
+import tasksTheme from '../themes/tasks-theme.js';
+import notesTheme from '../themes/notes-theme.js';
+
 Lib.Themes = {
-  base:  require('../themes/base-theme'),
-  tasks: require('../themes/tasks-theme'),
-  notes: require('../themes/notes-theme')
+  base:  baseTheme,
+  tasks: tasksTheme,
+  notes: notesTheme
 };
 ```
 
-Font manifest lives in `src/fonts/` as a loader module receiving `Lib`. The separation of theme data (names font families) from font manifest (loads font files) is deliberate: `require('font.ttf')` is bundler-bound, and a server-sent theme JSON cannot carry binaries. See [Fonts](fonts.md).
+Font manifest lives in `src/fonts/` as a loader module receiving `Lib`. The separation of theme data (names font families) from font manifest (loads font files) is deliberate: bundler asset imports for `.ttf` files are bundler-bound, and a server-sent theme JSON cannot carry binaries. See [Fonts](fonts.md).
 
 ---
 

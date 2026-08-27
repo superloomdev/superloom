@@ -74,13 +74,27 @@ Each module with dependencies follows this pattern:
 
 ### Injected Dependencies Are Peer Dependencies
 
-Every module MUST declare in `peerDependencies` every Superloom module it consumes at runtime, INCLUDING modules received only by injection through the `shared_libs` container and never `require()`d directly.
+Every module MUST declare in `peerDependencies` every Superloom module it consumes at runtime, INCLUDING modules received only by injection through the `shared_libs` container and never imported directly.
 
 **Why.** The manifest is the contract. Hosts must install these packages to inject them into `shared_libs`. If a module picks `Utils` or `Debug` from the injected `Lib` container, the host needs `js-helper-utils` and `js-helper-debug` installed - and the only signal the host has is `peerDependencies`. Omitting them produces a runtime `TypeError` on a missing injection with no manifest-level warning.
 
 **Consequence.** `ROBOTS.md` and `docs/configuration.md` peer-dependency lists MUST match `package.json` exactly. A mismatch between what the docs list and what the manifest declares is a docs-vs-manifest drift finding in audit.
 
 **Version ranges.** All peer entries use caret style: `^1.0.0`. Not `>=1.0.0`.
+
+### Module Acquisition Rules
+
+1. A module acquires its dependencies with static `import`. `createRequire` is reserved for a genuinely CJS-only vendor package or a local JSON file, and is **never** used in client-tier code.
+
+2. A required peer dependency is never wrapped in `try/catch`. Absence is a setup error and must fail loudly.
+
+3. CJS named-export detection through `cjs-module-lexer` is heuristic and unreliable; only `default` is dependable.
+
+4. A test double matches the module format **and** export shape of the package it replaces, verified against the real package rather than assumed.
+
+5. `scripts/` files are part of the module and follow the package's module type.
+
+6. A module's published documentation ships in the tarball, so a documentation-only change still requires a republish to reach consumers.
 
 ---
 

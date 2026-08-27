@@ -20,14 +20,14 @@ test-sql-sqlite:
 Read the module's `loader.js`:
 
 ```javascript
-module.exports = function loader (shared_libs, config) {
+export default function loader (shared_libs, config) {
   const Lib = {
     Utils: shared_libs.Utils,
     Debug: shared_libs.Debug,
     InstanceManager: shared_libs.InstanceManager
   };
   // ...
-};
+}
 ```
 
 Dependencies: `Utils`, `Debug`, `InstanceManager`

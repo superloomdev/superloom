@@ -21,8 +21,8 @@ The complete rule set for writing unit tests. Follow it exactly and any reviewer
 ## Tools
 
 - **Runner:** Node.js built-in test runner (`node --test`)
-- **Assertions:** `require('node:assert/strict')`
-- **Test API:** `describe` and `it` from `require('node:test')`
+- **Assertions:** `import assert from 'node:assert/strict'`
+- **Test API:** `describe` and `it` from `import { describe, it } from 'node:test'`
 - **No external dependencies.** No Mocha, Jest, Chai, or Sinon. Only Node.js built-ins.
 
 ---
@@ -55,16 +55,14 @@ The module's `package.json` must have:
 ```javascript
 // Tests for [module-name]
 // Covers all exported functions with automated assertions
-'use strict';
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 
-const assert = require('node:assert/strict');
-const { describe, it } = require('node:test');
-
-// Require the module under test by its `_test/package.json` alias
+// Import the module under test by its `_test/package.json` alias
 // (which resolves to `file:../`), not by relative source path. Aliases
 // keep the loader identical between local-source and published-package
 // contexts. Internal `parts/*.js` testing internals may stay relative.
-const ModuleName = require('helper-[module-name]');
+import ModuleName from 'helper-[module-name]';
 
 
 
@@ -256,7 +254,7 @@ When a module under test depends on an external contract (a storage backend, a r
 
 ```js
 // _test/memory-store.js
-module.exports = function createMemoryStore () {
+export default function createMemoryStore () {
   const _map = new Map();
   return {
     getSession: async function (instance, t, a, k) { ... },
@@ -298,7 +296,7 @@ A `memory-store` mirrors the semantics of the adapters it stands in for, not mer
 
 ```js
 // _test/stub-adapter.js
-module.exports = function createStubAdapter () {
+export default function createStubAdapter () {
   const sent = [];
   return {
     adapter: {
@@ -359,21 +357,29 @@ The tests then build both, pass the memory-store where a store is expected, and 
 
 ```js
 // _test/test.js - module with both patterns
-const { Lib }    = require('./loader')();
-const MemStore   = require('./memory-store');
-const StubAdapt  = require('./stub-adapter');
+import createLoader from './loader.js';
+import MemStore   from './memory-store.js';
+import StubAdapt  from './stub-adapter.js';
+import ModuleName from 'helper-[module-name]';
 
+const { Lib } = createLoader();
 const { adapter, sent } = StubAdapt();
 const store = MemStore();
 
-// Require the module under test by its `_test/package.json` alias.
-const Module = require('helper-[module-name]')(Lib, {
+// Import the module under test by its `_test/package.json` alias.
+const Module = ModuleName(Lib, {
   STORE:   store,
   ADAPTER: function () { return adapter; }
 });
 ```
 
 When adding a new module, identify each external dependency, classify it as "stateful storage", "transport/runtime", or "engine dependency", and create the appropriate test double (or several).
+
+---
+
+### ESM Interop in Test Loaders
+
+A test loader imports helper packages with `import`, never `createRequire`. A required peer dependency is never wrapped in `try/catch` - absence is a setup error and must fail loudly. `require()` of an ESM package returns a module namespace object, not the default export; calling it as a function throws.
 
 ---
 
@@ -399,8 +405,6 @@ When adding a new module, identify each external dependency, classify it as "sta
 
 ```js
 // _test/mmkv-stub.js
-'use strict';
-
 function createMmkvStub () {
   const data = {};
   let throwOnWrite = false;
@@ -428,17 +432,18 @@ function createMmkvStub () {
   return MmkvStub;
 }
 
-module.exports = createMmkvStub;
+export default createMmkvStub;
 ```
 
 The stub is injected in the test loader:
 
 ```js
 // _test/loader.js
-const createMmkvStub = require('./mmkv-stub');
+import createMmkvStub from './mmkv-stub.js';
 const MmkvStub = createMmkvStub();
 
-const Store = require('helper-kv-mmkv')({
+import Store from 'helper-kv-mmkv';
+const store = Store({
   Utils: Utils,
   Debug: Debug,
   MMKV: MmkvStub      // engine class injected; loader constructs the instance
@@ -473,8 +478,6 @@ const Store = require('helper-kv-mmkv')({
 
 ```js
 // _test/stubs/dimensions-stub.js
-'use strict';
-
 function makeDimensionsStub (initial) {
   var current = initial;
   var listeners = new Set();
@@ -492,17 +495,18 @@ function makeDimensionsStub (initial) {
   };
 }
 
-module.exports = makeDimensionsStub;
+export default makeDimensionsStub;
 ```
 
 The stub is injected in the test loader alongside other `shared_libs` entries:
 
 ```js
 // _test/loader.js
-var makeDimensionsStub = require('./stubs/dimensions-stub');
-var dimensionsStub = makeDimensionsStub({ window: { width: 375, height: 812 } });
+import makeDimensionsStub from './stubs/dimensions-stub.js';
+const dimensionsStub = makeDimensionsStub({ window: { width: 375, height: 812 } });
 
-var Device = require('helper-device')({
+import Device from 'helper-device';
+const device = Device({
   Utils: Utils,
   Debug: Debug,
   Dimensions: dimensionsStub,
@@ -682,7 +686,7 @@ The loader accepts `config` for interface uniformity but the parameter is never 
 Examples: `js-helper-utils`, `js-server-helper-crypto`, `js-server-helper-instance`, `js-helper-time`
 
 **Category 2 - Config is empty**
-The `.config.js` file defines no keys (`module.exports = {}`). The merge succeeds but there is nothing to override.
+The `.config.js` file defines no keys (`export default {}`). The merge succeeds but there is nothing to override.
 
 Examples: `js-server-helper-instance` (empty config), any future module before its first configurable key is added.
 

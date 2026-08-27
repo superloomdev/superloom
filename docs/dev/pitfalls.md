@@ -410,11 +410,11 @@ Each entry below maps a CI symptom to its root cause and the durable fix. The si
 
 **Lesson:** In CI, set `working-directory:` to the module root and use `cd _test && npm install && npm test` for the test step. The same rule applies locally - always pass `Cwd` to `_test/` for AI agents and scripts.
 
-### 8. CI test fails with `MODULE_NOT_FOUND` for a helper that exists in the repo
+### 8. CI test fails with `ERR_MODULE_NOT_FOUND` for a helper that exists in the repo
 
-**Symptom:** A `test-*` CI job fails with a Node.js `MODULE_NOT_FOUND` stack trace pointing to a file inside another helper module (e.g. `js-server-helper-nosql-mongodb/mongodb.js`), despite that module being present in `src/`. The error occurs even though `file:../../js-server-helper-nosql-mongodb` is listed in the `_test/package.json` dependencies.
+**Symptom:** A `test-*` CI job fails with a Node.js `ERR_MODULE_NOT_FOUND` stack trace pointing to a file inside another helper module (e.g. `js-server-helper-nosql-mongodb/mongodb.js`), despite that module being present in `src/`. The error occurs even though `file:../../js-server-helper-nosql-mongodb` is listed in the `_test/package.json` dependencies.
 
-**Cause:** `file:` path dependencies copy the directory contents at `npm install` time but **do not run `npm install` inside the linked package**. In CI, the runner checks out a fresh clone; the linked helper's own `node_modules/` are absent, so any `require()` inside it that needs its own npm deps (e.g. the `mongodb` driver) fails immediately with `MODULE_NOT_FOUND`.
+**Cause:** `file:` path dependencies copy the directory contents at `npm install` time but **do not run `npm install` inside the linked package**. In CI, the runner checks out a fresh clone; the linked helper's own `node_modules/` are absent, so any `import` inside it that needs its own npm deps (e.g. the `mongodb` driver) fails immediately with `ERR_MODULE_NOT_FOUND`.
 
 This works locally only because the helper was previously installed in its own directory during development. CI never does that.
 
@@ -524,7 +524,7 @@ Replace with `"^<version>"` after the main module is published (step 3).
 
 ### 14. `test-verify` CI fails with `Cannot find module '../stores/sqlite'` after stores/ was deleted
 
-**Symptom:** `test-verify` in CI fails with `MODULE_NOT_FOUND` pointing to `../stores/sqlite` inside the verify module's own `_test/test-sqlite.js`. The `stores/` directory was intentionally deleted as dead code in the same commit that introduced standalone `js-server-helper-verify-store-*` packages.
+**Symptom:** `test-verify` in CI fails with `ERR_MODULE_NOT_FOUND` pointing to `../stores/sqlite` inside the verify module's own `_test/test-sqlite.js`. The `stores/` directory was intentionally deleted as dead code in the same commit that introduced standalone `js-server-helper-verify-store-*` packages.
 
 **Cause:** Two related problems compounded:
 
@@ -535,12 +535,12 @@ Replace with `"^<version>"` after the main module is published (step 3).
 Additionally, the adapter `package.json` files had been (incorrectly) set to `private: true`, which would have prevented `npm publish` even if CI jobs existed.
 
 **Fix:**
-1. In `_test/test-sqlite.js`: replace `require('../stores/sqlite')` with `require('@superloomdev/js-server-helper-verify-store-sqlite')`.
+1. In `_test/test-sqlite.js`: replace `import('../stores/sqlite')` with `import('@superloomdev/js-server-helper-verify-store-sqlite')`.
 2. In `_test/package.json`: add `"@superloomdev/js-server-helper-verify-store-sqlite": "^1.2.0"` to dependencies.
 3. In all five adapter `package.json` files: set `"private": false` so `npm publish` works.
 4. In `ci-publish-helper-modules.yml`: insert ten new jobs (modules 17-21), one `test-verify-store-*` + `publish-verify-store-*` pair per adapter, in the sequential chain before `test-verify`. Update `test-verify`'s `needs` to `[detect, publish-verify-store-dynamodb]`.
 
-**Lesson:** Deleting an internal directory (`stores/`) that is still referenced by the module's own test suite, while simultaneously introducing replacement standalone packages, requires two coordinated changes: (a) update every `require()` that pointed at the old path, and (b) ensure the new packages exist in the CI pipeline and are published before any consumer runs `npm install`. A quick grep for the deleted path before committing prevents the first problem; checking whether each new adapter has CI jobs prevents the second.
+**Lesson:** Deleting an internal directory (`stores/`) that is still referenced by the module's own test suite, while simultaneously introducing replacement standalone packages, requires two coordinated changes: (a) update every `import` that pointed at the old path, and (b) ensure the new packages exist in the CI pipeline and are published before any consumer runs `npm install`. A quick grep for the deleted path before committing prevents the first problem; checking whether each new adapter has CI jobs prevents the second.
 
 ### 13. CI fails on lint after local tests pass: pre-publish checklist not followed
 
@@ -649,7 +649,7 @@ This applies to all lock files in the repo (root, `_test/`, `hosts/`, etc.). CI 
 
 ### 25. Shared devDependency package missing from registry breaks every downstream `npm ci`
 
-**Symptom:** Every module's CI `test` job fails with `MODULE_NOT_FOUND` for `@superloomdev/js-helper-eslint-config` or a checksum mismatch, even though only the config package was deleted and republished.
+**Symptom:** Every module's CI `test` job fails with `ERR_MODULE_NOT_FOUND` for `@superloomdev/js-helper-eslint-config` or a checksum mismatch, even though only the config package was deleted and republished.
 
 **Cause:** When a shared devDependency (like `js-helper-eslint-config`) is consumed by every module, deleting it from the registry breaks all downstream installs until CI republishes it. If the config package's own `test` and `publish` jobs are not chained ahead of all other jobs in the workflow, downstream modules race the republish and fail.
 
@@ -675,9 +675,9 @@ npm test
 npm install && npm test
 ```
 
-### 2. `MODULE_NOT_FOUND` for a package that should be installed
+### 2. `ERR_MODULE_NOT_FOUND` for a package that should be installed
 
-**Cause:** A `require()` in the test uses the wrong scoped package name - typically missing the category prefix (`@superloomdev/js-server-helper-postgres` instead of `@superloomdev/js-server-helper-sql-postgres`).
+**Cause:** An `import` in the test uses the wrong scoped package name - typically missing the category prefix (`@superloomdev/js-server-helper-postgres` instead of `@superloomdev/js-server-helper-sql-postgres`).
 
 **Lesson:** The npm package name must match the full directory name, including every category prefix. Grep for the bare name (`grep -r "js-server-helper-postgres" _test/`) before assuming the install is broken.
 
@@ -800,20 +800,20 @@ Applies anywhere a rate-limit, throttle, TTL, or cooldown is configurable with a
 
 ---
 
-### 15. Repo-wide `MODULE_NOT_FOUND` after a "remove scope prefix" style commit
+### 15. Repo-wide `ERR_MODULE_NOT_FOUND` after a "remove scope prefix" style commit
 
-**Symptom:** All `_test/` suites fail immediately at `require('js-helper-utils')` with `MODULE_NOT_FOUND`. No code logic has changed; only `require('@superloomdev/...')` calls were rewritten to `require('...')` in a mass search-and-replace commit. `node_modules/` still contains only scoped packages (`@superloomdev/js-helper-utils`, etc.); the unscoped names simply don't exist.
+**Symptom:** All `_test/` suites fail immediately at `import 'js-helper-utils'` with `ERR_MODULE_NOT_FOUND`. No code logic has changed; only `import ... from '@superloomdev/...'` statements were rewritten to `import ... from '...'` in a mass search-and-replace commit. `node_modules/` still contains only scoped packages (`@superloomdev/js-helper-utils`, etc.); the unscoped names simply don't exist.
 
-**Cause:** npm installs packages under their full published name (the `"name"` field in `package.json`, which includes the `@superloomdev/` scope). A `require()` call must use that exact name. Removing the scope prefix from `require()` calls without simultaneously adding npm aliases (or renaming the packages on the registry) breaks every module that was changed.
+**Cause:** npm installs packages under their full published name (the `"name"` field in `package.json`, which includes the `@superloomdev/` scope). An `import` statement must use that exact name. Removing the scope prefix from `import` statements without simultaneously adding npm aliases (or renaming the packages on the registry) breaks every module that was changed.
 
-**Lesson:** Never strip scope prefixes from `require()` calls unless the packages are also republished without the scope (or aliased via `package.json` `imports` map). The safe rule: **`require()` strings must always match `"name"` in the target package's `package.json` exactly.** Fix is a single `sed` to restore the `@superloomdev/` prefix across all `.js` files under `src/`, excluding `node_modules/`.
+**Lesson:** Never strip scope prefixes from `import` statements unless the packages are also republished without the scope (or aliased via `package.json` `imports` map). The safe rule: **`import` specifiers must always match `"name"` in the target package's `package.json` exactly.** Fix is a single `sed` to restore the `@superloomdev/` prefix across all `.js` files under `src/`, excluding `node_modules/`.
 
 ```bash
 find src/ -name "*.js" -not -path "*/node_modules/*" | \
   xargs sed -i '' \
-    "s/require('js-helper-/require('@superloomdev\/js-helper-/g; \
-     s/require('js-server-helper-/require('@superloomdev\/js-server-helper-/g; \
-     s/require('js-client-helper-/require('@superloomdev\/js-client-helper-/g"
+    "s/from 'js-helper-/from '@superloomdev\/js-helper-/g; \
+     s/from 'js-server-helper-/from '@superloomdev\/js-server-helper-/g; \
+     s/from 'js-client-helper-/from '@superloomdev\/js-client-helper-/g"
 ```
 
 ---
@@ -824,7 +824,7 @@ find src/ -name "*.js" -not -path "*/node_modules/*" | \
 
 **Cause:** When `logger.js` store contract method names were renamed (`addRecord`→`addLog`, `listByEntity`→`getLogsByEntity`, `listByActor`→`getLogsByActor`, `initializeStore`→`setupNewStore`, `cleanupExpiredRecords`→`cleanupExpiredLogs`), the rename was applied partially: `logger.js` and the adapter packages were updated but the inline `captureStore` and `minimalStore` stubs scattered throughout `_test/test.js` and the `memory-store.js` fixture were not. `node_modules` held a correct symlinked copy, but the directly-`require`d `../logger.js` used the new names, so the inline stubs were invisible mismatches.
 
-**Lesson:** When renaming store-contract methods in the core module, search for **every store stub** in `_test/test.js`, not just the shared fixtures, because inline anonymous objects appear throughout the test file and are missed by a module-level rename. Grep pattern: `require('../logger.js')` → `addRecord|listByEntity|listByActor|initializeStore|cleanupExpiredRecords`. The same applies to any module that has inline store stubs in its test file (auth, verify).
+**Lesson:** When renaming store-contract methods in the core module, search for **every store stub** in `_test/test.js`, not just the shared fixtures, because inline anonymous objects appear throughout the test file and are missed by a module-level rename. Grep pattern: `import ... from '../logger.js'` -> `addRecord|listByEntity|listByActor|initializeStore|cleanupExpiredRecords`. The same applies to any module that has inline store stubs in its test file (auth, verify).
 
 ### 17. Store contract method renames not propagated to adapter `_test/test.js` files: all adapter CI jobs fail
 
@@ -876,7 +876,7 @@ if: contains(fromJSON(needs.detect.outputs.publish_modules), 'src/helper-modules
 
 **Symptom:** A `test-*` CI job fails with `Error: Cannot find module 'cookie'` (or any transitive dep of the module under test). The require stack points at files inside the module's **source directory** (e.g. `src/helper-modules-server/js-server-helper-http-gateway/parts/cookies.js`), not at `_test/node_modules/...`. Tests pass on the developer's machine because `node_modules/` from a previous module-level `npm install` is still present, but break in a clean CI environment.
 
-**Cause:** The test loader (or test file) was written as `require('../adapter.js')` or `require('../../sibling-module/main.js')` instead of using the alias declared in `_test/package.json`. The CI workflow runs `npm install` inside `_test/`, which only populates `_test/node_modules/`. Node's require resolves the relative path to the source directory, where the module's transitive deps were never installed (CI never runs `npm install` at that location).
+**Cause:** The test loader (or test file) was written as `import ... from '../adapter.js'` or `import ... from '../../sibling-module/main.js'` instead of using the alias declared in `_test/package.json`. The CI workflow runs `npm install` inside `_test/`, which only populates `_test/node_modules/`. Node's import resolution resolves the relative path to the source directory, where the module's transitive deps were never installed (CI never runs `npm install` at that location).
 
 **Why aliases exist:** Every `_test/package.json` declares aliases like:
 
@@ -889,21 +889,21 @@ if: contains(fromJSON(needs.detect.outputs.publish_modules), 'src/helper-modules
 
 These aliases exist precisely so the loader code stays identical between local-source (resolved via `file:../`) and published-package (resolved via `npm:`) contexts. When `npm install` runs in `_test/`, it copies the aliased package into `_test/node_modules/` AND installs that package's transitive deps right next to it. Bypassing the alias defeats this entirely.
 
-**Fix:** Always require helpers in `_test/` files via the alias declared in `_test/package.json`:
+**Fix:** Always import helpers in `_test/` files via the alias declared in `_test/package.json`:
 
 ```javascript
 // WRONG - relative path to source directory
-const HttpGateway        = require('../http-gateway.js');
-const HttpGatewayAdapter = require('../adapter.js');
+import HttpGateway        from '../http-gateway.js';
+import HttpGatewayAdapter from '../adapter.js';
 
 // CORRECT - alias from _test/package.json
-const HttpGateway        = require('helper-http-gateway');
-const HttpGatewayAdapter = require('helper-http-gateway-adapter-express');
+import HttpGateway        from 'helper-http-gateway';
+import HttpGatewayAdapter from 'helper-http-gateway-adapter-express';
 ```
 
 **Exception:** Internal files not exposed via the package's main entry (e.g. `parts/cookies.js`, `parts/params.js` testing internals) may continue to use relative paths. They are not addressable through the alias because they are not part of the package's public surface.
 
-**Lesson:** Treat `require()` style as part of test hygiene, not as a stylistic choice. The HTTP Gateway trio (`js-server-helper-http-gateway` + 2 adapters) is the canonical reference.
+**Lesson:** Treat `import` style as part of test hygiene, not as a stylistic choice. The HTTP Gateway trio (`js-server-helper-http-gateway` + 2 adapters) is the canonical reference.
 
 ### 20. Singleton pattern prevents test isolation
 
@@ -921,7 +921,7 @@ const HttpGatewayAdapter = require('helper-http-gateway-adapter-express');
 ```javascript
 // WRONG: Singleton with dependencies
 let CONFIG;
-module.exports = function loader (config) {
+export default function loader (config) {
   CONFIG = config;  // Last caller wins!
   return singletonInstance;
 };
@@ -934,11 +934,11 @@ module.exports = function loader (config) {
 **Example of the solution:**
 ```javascript
 // CORRECT: Factory pattern (fixed-slots shape - see module-structure.md)
-module.exports = function loader (shared_libs, config) {
+export default function loader (shared_libs, config) {
   const Lib = { Utils: shared_libs.Utils };
-  const CONFIG = Object.assign({}, require('./[module].config'), config || {});
-  const ERRORS = require('./[module].errors');
-  const Validators = require('./[module].validators')(Lib, ERRORS);
+  const CONFIG = Object.assign({}, (await import('./[module].config.js')).default, config || {});
+  const ERRORS = (await import('./[module].errors.js')).default;
+  const Validators = (await import('./[module].validators.js')).default(Lib, ERRORS);
   Validators.validateConfig(CONFIG);
   return createInterface(Lib, CONFIG, ERRORS, Validators);
 };
@@ -992,7 +992,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 23. CI fails after push - local tests ran against stale `node_modules`
 
-**Symptom:** All tests pass locally. Code is committed and pushed. CI fails immediately with `MODULE_NOT_FOUND`, version mismatch, or checksum errors that were never seen on the developer's machine.
+**Symptom:** All tests pass locally. Code is committed and pushed. CI fails immediately with `ERR_MODULE_NOT_FOUND`, version mismatch, or checksum errors that were never seen on the developer's machine.
 
 **Cause:** Local `node_modules/` contained hoisted dependencies from a previous repo session or a `file:` link that masked a missing peer dependency. CI does a fresh `npm ci` from a clean checkout, so it sees the real dependency state. The local test "passed" only because the stale `node_modules/` happened to have the right files from a previous install.
 
@@ -1000,11 +1000,11 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 24. `_data/` directory mixes dev scripts with generated data, violating the single-concern rule
 
-**Symptom:** A module has a `_data/` directory containing both `generate.js` (a dev script) and `basic.country-data.js` (a generated data file). The generated file is a CommonJS module (`module.exports = {...}`), not pure JSON. The `_data/` directory is not a recognized archetype in `file-archetypes.md` or `module-structure.md`.
+**Symptom:** A module has a `_data/` directory containing both `generate.js` (a dev script) and `basic.country-data.js` (a generated data file). The generated file is a JS module (`export default {...}`), not pure JSON. The `_data/` directory is not a recognized archetype in `file-archetypes.md` or `module-structure.md`.
 
 **Cause:** The module was created without consulting the existing `data/` convention. The `_data/` directory was invented ad-hoc to hold both the generator script and its output, mixing two concerns (dev tooling and runtime data) in one directory.
 
-**Lesson:** Generated reference data lives in `data/` as pure JSON (see `module-structure.md` - Static Data Files). Dev scripts that produce generated data live in `scripts/` (see `module-structure.md` - Dev Scripts). The `_data/` directory is not a recognized archetype and must not be used. When a module needs generated data, the generator script outputs JSON to `data/`, the JSON file is committed and required at runtime, and the script is excluded from the published tarball.
+**Lesson:** Generated reference data lives in `data/` as pure JSON (see `module-structure.md` - Static Data Files). Dev scripts that produce generated data live in `scripts/` (see `module-structure.md` - Dev Scripts). The `_data/` directory is not a recognized archetype and must not be used. When a module needs generated data, the generator script outputs JSON to `data/`, the JSON file is committed and imported at runtime, and the script is excluded from the published tarball.
 
 ### 25. Repo-bound workflows miss code quality issues in other repos
 

@@ -231,7 +231,7 @@ Every helper module maintains its own frozen error catalog in `[module].errors.j
 
 ```javascript
 // verify.errors.js - the module's internal error catalog
-module.exports = Object.freeze({
+export default Object.freeze({
   COOLDOWN_ACTIVE: Object.freeze({
     type: 'COOLDOWN_ACTIVE',
     message: 'Rate limit active - wait before requesting another code'
@@ -460,7 +460,7 @@ A programmer-error message MUST follow this shape:
 | **Module prefix** | Yes | `[helper-<name>]` in square brackets, lowercase, exactly the module's npm alias short-name (derivation in [`code-formatting.md`](code-formatting.md#npm-package-aliases)) | `[helper-auth]`, `[helper-http-gateway]` |
 | **Field path** | Yes | Dotted path that names the exact CONFIG key, options key, or argument that is wrong | `CONFIG.Store`, `options.scope`, `createSession options.tenant_id` |
 | **Expected shape** | Yes | Declarative statement of the constraint the value failed to meet. Phrased as "must be …" or "is required …" | `must be a store object implementing the store contract`, `is required (non-empty string)`, `must be a positive integer` |
-| **Concrete example** | Optional | One bare example inside `(e.g. …)`. Used only when the expected shape needs disambiguation (e.g., showing which package provides the object) | `(e.g. the object from require("helper-auth-store-sqlite"))` |
+| **Concrete example** | Optional | One bare example inside `(e.g. ...)`. Used only when the expected shape needs disambiguation (e.g., showing which package provides the object) | `(e.g. the object from import("helper-auth-store-sqlite"))` |
 
 ### Hard Prohibitions
 
@@ -468,7 +468,7 @@ The following MUST NOT appear in any programmer-error message string:
 
 1. **No URLs of any kind.** No `https://`, no GitHub links, no npm registry URLs, no documentation links. The stack trace shows the file and line - the developer can read the source. URLs in error strings become stale, leak deployment details, and clutter logs.
 
-2. **No scoped or bare package names.** Use the alias short-name (`helper-auth-store-sqlite`), not the scoped publish name (`@superloomdev/js-server-helper-auth-store-sqlite`) and not the bare package name (`js-server-helper-auth-store-sqlite`). The scope is a registry concern, not a contract concern, and it changes when the project is forked or re-scoped. The alias is the stable name consumers actually `require()`.
+2. **No scoped or bare package names.** Use the alias short-name (`helper-auth-store-sqlite`), not the scoped publish name (`@superloomdev/js-server-helper-auth-store-sqlite`) and not the bare package name (`js-server-helper-auth-store-sqlite`). The scope is a registry concern, not a contract concern, and it changes when the project is forked or re-scoped. The alias is the stable name consumers actually import.
 
 3. **No multi-line concatenation for prose.** Long messages stitched together with `+ ' ... ' +` across multiple lines are a smell. If the message is too long for a single line, the message is too long. Trim it.
 
@@ -494,8 +494,8 @@ throw new Error('[helper-http-gateway] CONFIG.Adapter is required (an adapter ob
 // WRONG: scoped package names + URL-shaped example + multi-line concatenation
 throw new Error(
   'js-server-helper-http-gateway: CONFIG.Adapter must be an adapter object. ' +
-  'Pass the object from require("@superloomdev/js-server-helper-http-gateway-adapter-aws-apigateway")(Lib) ' +
-  'or require("@superloomdev/js-server-helper-http-gateway-adapter-express")(Lib).'
+  'Pass the object from import("@superloomdev/js-server-helper-http-gateway-adapter-aws-apigateway")(Lib) ' +
+  'or import("@superloomdev/js-server-helper-http-gateway-adapter-express")(Lib).'
 );
 
 // WRONG: no module prefix, vague field path

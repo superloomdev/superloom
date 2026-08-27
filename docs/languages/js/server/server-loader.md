@@ -56,13 +56,17 @@ The full merged configuration (static + env). Modules should not read `process.e
 The entry point calls the loader with its runtime policy. The loader uses that value when it constructs `Lib.Instance`:
 
 ```javascript
+import buildUtils from 'helper-utils';
+import buildDebug from 'helper-debug';
+import buildInstance from 'helper-instance';
+
 const buildLib = function (runtime_config) {
 
   const Lib = {};
 
-  Lib.Utils = require('helper-utils')(Lib, {});
-  Lib.Debug = require('helper-debug')(Lib, {});
-  Lib.Instance = require('helper-instance')(Lib, {
+  Lib.Utils = buildUtils(Lib, {});
+  Lib.Debug = buildDebug(Lib, {});
+  Lib.Instance = buildInstance(Lib, {
     CLOSE_ON_CLEANUP: runtime_config.CLOSE_ON_CLEANUP
   });
 
@@ -77,7 +81,7 @@ The persistent entry point passes `false`; the request-isolated entry point pass
 
 ## Why Dependency Injection
 
-The alternative is direct `require()` calls scattered across modules. The problem with direct imports is coupling: if a service hard-codes `require('../helpers/db')`, you cannot test that service without a real database. With `Lib`, you can replace any dependency by swapping what the loader puts in the container: a real DB connection in production, a lightweight stub in tests.
+The alternative is direct `import` calls scattered across modules. The problem with direct imports is coupling: if a service hard-codes `import db from '../helpers/db.js'`, you cannot test that service without a real database. With `Lib`, you can replace any dependency by swapping what the loader puts in the container: a real DB connection in production, a lightweight stub in tests.
 
 The loader also controls initialization order. Helpers load first (they have no dependencies on entity code), then models (they depend on helpers), then services (they depend on both), then controllers (they depend on everything). Nothing reads `process.env` or loads a config file outside this sequence. The entire dependency graph is visible in one file.
 
@@ -120,37 +124,48 @@ The loader is plumbing. It wires things up and gets out of the way.
 
 ```javascript
 // src/server/common/loader.js
-'use strict';
+import staticConfig from './config.js';
+import buildUtils from 'helper-utils';
+import buildDebug from 'helper-debug';
+import buildInstance from 'helper-instance';
+// import buildDb from '@your-org/js-server-helper-sql-postgres';
+// import buildS3 from '@your-org/js-server-helper-storage-aws-s3';
+import Models from '../../model/index.js';
+import ModelsExtended from '../../model-server/index.js';
+import buildContactService from '../service/contact.service.js';
+import buildUserService from '../service/user.service.js';
+import buildSurveyService from '../service/survey.service.js';
+import buildContactController from '../controller/contact.controller.js';
+import buildUserController from '../controller/user.controller.js';
+import buildSurveyController from '../controller/survey.controller.js';
 
 const loader = async function (runtime_config) {
 
   // Step 1: Load static config and merge with environment variables
-  const static_config = require('./config');
   const Config = {
-    ...static_config,
-    PORT: process.env.PORT || static_config.PORT,
-    DB_HOST: process.env.DB_HOST || static_config.DB_HOST
+    ...staticConfig,
+    PORT: process.env.PORT || staticConfig.PORT,
+    DB_HOST: process.env.DB_HOST || staticConfig.DB_HOST
   };
 
   // Step 2: Build dependency container
   const Lib = {};
 
   // Step 3: Load foundation helpers
-  Lib.Utils = require('helper-utils')(Lib, {});
-  Lib.Debug = require('helper-debug')(Lib, Config.debug);
+  Lib.Utils = buildUtils(Lib, {});
+  Lib.Debug = buildDebug(Lib, Config.debug);
 
   // Step 4: Load one lifecycle manager with entry-point policy
-  Lib.Instance = require('helper-instance')(Lib, {
+  Lib.Instance = buildInstance(Lib, {
     CLOSE_ON_CLEANUP: runtime_config.CLOSE_ON_CLEANUP
   });
 
   // Optional: Uncomment and configure as needed
-  // Lib.DB = require('@your-org/js-server-helper-sql-postgres')(Lib, Config.database);
-  // Lib.S3 = require('@your-org/js-server-helper-storage-aws-s3')(Lib, Config.aws_s3);
+  // Lib.DB = buildDb(Lib, Config.database);
+  // Lib.S3 = buildS3(Lib, Config.aws_s3);
 
   // Step 5: Load model packages (non-executed - returns object of constructors)
-  const Models = require('../../model');
-  const ModelsExtended = require('../../model-server');
+  // Models and ModelsExtended imported at top level
 
   // Step 6: Execute entities in dependency order (independent first)
 
@@ -194,21 +209,21 @@ const loader = async function (runtime_config) {
   const SurveyConfig = { ...SurveyModel._config, ...SurveyModelExtended._config };
 
   // Step 7: Build service modules (receive Lib + private _config)
-  Lib.Contact.service = require('../service/contact.service')(Lib, ContactModel._config);
-  Lib.User.service = require('../service/user.service')(Lib, UserModel._config);
-  Lib.Survey.service = require('../service/survey.service')(Lib, SurveyConfig);
+  Lib.Contact.service = buildContactService(Lib, ContactModel._config);
+  Lib.User.service = buildUserService(Lib, UserModel._config);
+  Lib.Survey.service = buildSurveyService(Lib, SurveyConfig);
 
   // Step 8: Build controller modules (receive Lib + private _config)
-  Lib.Contact.controller = require('../controller/contact.controller')(Lib, ContactModel._config);
-  Lib.User.controller = require('../controller/user.controller')(Lib, UserModel._config);
-  Lib.Survey.controller = require('../controller/survey.controller')(Lib, SurveyConfig);
+  Lib.Contact.controller = buildContactController(Lib, ContactModel._config);
+  Lib.User.controller = buildUserController(Lib, UserModel._config);
+  Lib.Survey.controller = buildSurveyController(Lib, SurveyConfig);
 
   // Return runtime objects
   return { Lib, Config };
 
 };
 
-module.exports = loader;
+export default loader;
 ```
 
 ---
@@ -218,7 +233,7 @@ module.exports = loader;
 The example above demonstrates the rules every loader follows:
 
 1. **Lifecycle manager loaded once** - every cleanup registration reaches the same queue
-2. **Package indices loaded once** - `const Models = require('../../model')` is the entry point
+2. **Package indices loaded once** - `import Models from '../../model/index.js'` is the entry point
 3. **Each entity executed individually** - `Models.Entity(Lib, {})` returns the entity's APIs
 4. **Dependencies available in `Lib` for subsequent entities** - Contact loads first because User depends on it
 5. **Extended models load after the base is assigned to `Lib`** - so the extension can reference its own base

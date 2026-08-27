@@ -189,8 +189,28 @@ in_jsdoc && /\*{8,}\// { match($0,/^ */); c=RLENGTH; if(c!=jsdoc_col) print FILE
 in_jsdoc && /[^ ]/ { match($0,/^ */); c=RLENGTH; if(c!=jsdoc_col && c<=jsdoc_col+4) print FILENAME":"NR": CONTENT col "c" (should be "jsdoc_col")" }
 ' {} +
 ```
+// turbo
+```bash
+# CJS remnants - module.exports, 'use strict', require() (excluding createRequire); catches CJS in code, comments, and error messages
+git grep -nE "module\.exports|'use strict'|\brequire\(" -- '[module-path]' ':!*/node_modules/*' | grep -v createRequire
+```
+// turbo
+```bash
+# Relative imports must include a .js extension; each hit is a missing extension
+git grep -nE "from '\./" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' | grep -v "\.js'"
+```
+// turbo
+```bash
+# "main" present without "exports" in package.json (CJS signature); must return nothing when clean
+grep -q '"main"' [module-path]/package.json && ! grep -q '"exports"' [module-path]/package.json && echo 'FAIL: "main" present without "exports"'
+```
+// turbo
+```bash
+# scripts/ files must match the package's module type; CJS syntax in an ESM package is a violation
+git grep -nE "require\(|module\.exports|'use strict'" -- '[module-path]/scripts/' ':!*/node_modules/*' | grep -v createRequire
+```
 
-The last three enforce the two-form rule and the type-guard primitive rule; sole permitted bare-name hits are URLs addressing a real repo path, and sole permitted `@superloomdev/` hits are real `require()` calls in `eslint.config.js` - judge each manually. Each `typeof` hit is either a violation to convert to a `Lib.Utils` primitive, or one of two permitted forms: argument-shape dispatch or capability duck-typing. The peer-dep utilization sweeps catch inline reimplementations of functions available in peer dependencies; judge each hit by the variable type (string -> `isEmptyString`, array -> `isEmptyArray`) and by whether the peer dep offers a wrapper for that operation. The JSDoc content indentation sweep uses awk to detect the `/*` column for each block, then flags any content line or closer not at that column. The indentation is relative to the `/*` column, not absolute: a JSDoc block at column 0 has all content at column 0; a JSDoc block nested at column 4 has all content at column 4. Continuation lines (indented more than `/*` col + 4 for readability alignment) are excluded. A hardcoded grep or awk that assumes a fixed column misses nested blocks.
+The last three enforce the two-form rule and the type-guard primitive rule; sole permitted bare-name hits are URLs addressing a real repo path, and sole permitted `@superloomdev/` hits are real `import` calls in `eslint.config.js` - judge each manually. Each `typeof` hit is either a violation to convert to a `Lib.Utils` primitive, or one of two permitted forms: argument-shape dispatch or capability duck-typing. The peer-dep utilization sweeps catch inline reimplementations of functions available in peer dependencies; judge each hit by the variable type (string -> `isEmptyString`, array -> `isEmptyArray`) and by whether the peer dep offers a wrapper for that operation. The JSDoc content indentation sweep uses awk to detect the `/*` column for each block, then flags any content line or closer not at that column. The indentation is relative to the `/*` column, not absolute: a JSDoc block at column 0 has all content at column 0; a JSDoc block nested at column 4 has all content at column 4. Continuation lines (indented more than `/*` col + 4 for readability alignment) are excluded. A hardcoded grep or awk that assumes a fixed column misses nested blocks.
 
 **Sweep result reporting (hard gate):** For each sweep, state one of:
 - `[sweep name]: clean` (zero hits)

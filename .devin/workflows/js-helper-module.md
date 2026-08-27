@@ -54,7 +54,7 @@ Ambiguous verb or missing module path: ask, never guess.
 
 1. `docs/principles/documentation-authoring.md` - voice, banned vocabulary, no em dashes
 2. `docs/languages/js/code-formatting.md` - 3/2/1 spacing, banners, JSDoc, step comments, aliases, spelling, ESM formatting
-3. `docs/languages/js/module-structure.md` + `factory-vs-singleton.md` - loader shapes, companions, archetype skeletons, ESM variant
+3. `docs/languages/js/module-structure.md` + `factory-vs-singleton.md` - loader shapes, companions, archetype skeletons, ESM syntax
 4. `docs/languages/js/function-naming.md` - verb catalog, return shapes, confusable pairs, banned verbs, config key casing
 5. `docs/languages/js/module-docs.md` + `module-docs-complex.md` - README/ROBOTS/docs structure
 6. `docs/languages/js/error-handling.md` + `validation.md` - envelopes, catalogs, validators
@@ -67,13 +67,13 @@ Ambiguous verb or missing module path: ask, never guess.
 
 - Loader signature `(shared_libs, config)`; `Lib` picked **by reference** from the injected container; no self-built Lib, no module-scope singleton state in factories (`module-structure.md`)
 - Companions `[name].config.js`, `[name].errors.js`, `[name].validators.js` exist even when minimal; inline ERRORS or inline config validation in the loader is a violation (`module-structure.md` - Universal Companion Files)
-- **Single-require rule:** only `[name].js` requires the companions and `data/*.json`; validators and parts receive `ERRORS` and static data by injection (`module-structure.md`)
+- **Single-import rule:** only `[name].js` imports the companions and `data/*.json`; validators and parts receive `ERRORS` and static data by injection (`module-structure.md`)
 - `createInterface(Lib, CONFIG, ERRORS, Validators, [Parts,] [store|adapter|state])` - fixed slots, canonical names, unused slots KEPT with an eslint-disable line, never removed or underscore-prefixed (`module-structure.md`)
 - Loader calls `Validators.validateConfig(CONFIG)`; violations throw (programmer error) (`validation.md`, `error-handling.md`)
 - Type guards call `Lib.Utils` primitives, never raw `typeof`: `isNumber` (rejects `NaN`), `isFunction`, `isString`, `isBoolean`, `isObject` (rejects `null`), `isNullOrUndefined`; binds `[name].validators.js` and inline guards in `[name].js` equally, and mixed forms inside one module are a violation. Argument-shape dispatch (`typeof key === 'object'` overload normalization) and capability duck-typing (`typeof source.subscribe === 'function'`) stay raw `typeof` (`validation.md` - Use Utils Type-Check Primitives)
 - **Peer-dependency primitive utilization:** when a module declares a peer dependency (Utils, Debug, Time, Money, Crypto, etc.), every operation in the module that can be done by a function in that peer dep MUST use the peer dep function instead of reimplementing it inline. This binds equally to type guards (`typeof` -> `Lib.Utils.isX`), string operations (`.split('').reverse().join('')` -> `Lib.Utils.stringReverse`), empty checks (`.length === 0` on strings -> `Lib.Utils.isEmptyString`, on arrays -> `Lib.Utils.isEmptyArray`, `Object.keys(x).length === 0` -> `Lib.Utils.isEmptyObject`), array membership (`.indexOf(x) > -1` -> `Lib.Utils.inArray` or native `.includes()`), and any other reimplemented logic. The auditor reads the module's `package.json` peerDependencies, reads each peer dep's `ROBOTS.md` for its function signatures, and cross-references every operation in the source. Native ES2015+ methods (`.includes()` on arrays, `Array.isArray()`, `Object.keys()`) are permitted when the peer dep does not offer a wrapper for that specific operation (`validation.md` - Use Utils Type-Check Primitives; `dependencies.md` - Peer Dependency Contract)
 - A module whose public surface includes a React hook (`use*` calling `Lib.React.useState`, `useRef`, or `useEffect`) is a factory with `state`, never a singleton; hook-free pure computation modules stay eligible for the singleton pattern (`module-structure.md` - React Hook Modules Are Factories; `factory-vs-singleton.md`)
-- **ESM variant:** a module consumed via bundler (Vite, Metro, webpack) may use `import`/`export default` with `"type": "module"` in `package.json` instead of `require`/`module.exports`; omit `'use strict'` (implicit in ESM); include `.js` extensions in import paths. The factory skeleton, companions, banners, spacing, JSDoc, and step comments are unchanged. Choose ESM when tree-shaking matters or a peer requires it; CommonJS for Node.js-direct consumers. The choice is per-module (`module-structure.md` - ESM Variant; `code-formatting.md` - ESM Formatting; `factory-vs-singleton.md` - ESM Syntax Variant)
+- **All modules are ESM:** every module uses `import`/`export default` with `"type": "module"` in `package.json`; the strict mode directive is implicit in ESM and must not appear; `.js` extensions in all import paths. The factory skeleton, companions, banners, spacing, JSDoc, and step comments are unchanged (`module-structure.md`; `code-formatting.md`; `factory-vs-singleton.md`)
 - Config carries plain data only - no live objects, no `lib_*` keys, no `LOG_LEVEL`; drivers arrive via the container (`Lib.SQL`, `Lib.MongoDB`, `Lib.DynamoDB`) (`module-structure.md` - Driver injection)
 - Return envelope: all keys on every path, data fields null on failure; errors from the frozen catalog; error prefixes use the alias form `[helper-name]` (`error-handling.md`)
 - `performanceAuditLog`: each interval logged once by the layer that owns the work; drivers instrument their own roundtrips; non-drivers never re-log delegated I/O; every call passes a local `start_ms` captured at operation entry, never `instance['time_ms']` (`code-formatting.md` - Performance Logging; `pitfalls-migration.md`)
@@ -236,13 +236,13 @@ Run everything. Any finding returns to Phase C, then the ENTIRE phase re-runs. E
    ```
    // turbo
    ```bash
-   # Must return NOTHING - validators/parts never self-require errors or data
-   git grep -nE "require\('\./[a-z-]+\.errors'\)|require\('\./data/" -- ':(glob)[module-path]/**/*.validators.js' '[module-path]/parts/*.js' ':!*/node_modules/*'
+   # Must return NOTHING - validators/parts never self-import errors or data
+   git grep -nE "import .+ from '\./[a-z-]+\.errors(\.js)?'|import .+ from '\./data/" -- ':(glob)[module-path]/**/*.validators.js' '[module-path]/parts/*.js' ':!*/node_modules/*'
    ```
    // turbo
    ```bash
-   # Must return NOTHING - Class F violations: self-built Lib, scope requires, LOG_LEVEL, underscore slots
-   git grep -nE "require\('helper-(utils|debug)'\)\(|require\('@superloomdev/|LOG_LEVEL|createInterface = function \(.*_(CONFIG|ERRORS|Validators)" -- '[module-path]/*.js' ':!*/node_modules/*' ':!*/_test/*'
+   # Must return NOTHING - Class F violations: self-built Lib, scope imports, LOG_LEVEL, underscore slots
+   git grep -nE "import .+ from 'helper-(utils|debug)'|import .+ from '@superloomdev/|LOG_LEVEL|createInterface = function \(.*_(CONFIG|ERRORS|Validators)" -- '[module-path]/*.js' ':!*/node_modules/*' ':!*/_test/*'
    ```
 7. Type-guard primitives (every hit is judged, not auto-cleared):
    // turbo
@@ -335,7 +335,7 @@ If this run exposed a failure mode or a gap in the standard or in this workflow:
 - [ ] Fixes applied S1 -> S2 -> S3 -> sweeps -> docs (ROBOTS last) -> naming; renames swept repo-wide
 - [ ] Lint exit 0; clean-install tests green (Pre-Commit Protocol: fresh install mandatory every run)
 - [ ] Sweep battery clean (each sweep result reported explicitly: clean or hits with judgment); plan-reference sweep run; JSDoc awk silent; performance-audit ownership judged
-- [ ] Companions exist; single-require holds; fixed interface slots kept
+- [ ] Companions exist; single-import holds; fixed interface slots kept
 - [ ] Type-guard sweep run; every `typeof` hit judged as violation or permitted form
 - [ ] Peer-dep primitive utilization sweeps run (stringReverse, isEmptyString/Array, isEmptyObject, inArray); every hit judged
 - [ ] Peer-dep utilization review done (read peerDeps + ROBOTS.md, cross-reference source); verdict line output

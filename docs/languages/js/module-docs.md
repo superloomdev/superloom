@@ -601,6 +601,10 @@ A realistic Class F README is **~70-90 lines** (comparable to a Class C driver l
 
 These patterns span multiple classes and modules. When working on a new module, check whether any apply.
 
+### Code Examples Are ESM
+
+All code examples in module documentation (`README.md`, `docs/*.md`, `ROBOTS.md`) must use ES Module syntax: `import` / `export default` / `export const`, never CJS import or export syntax. Every helper module is an ESM package (`"type": "module"`), and documentation must match the actual syntax a consumer uses. A CJS-style example in a module's README is a defect.
+
 ### AWS Family Pattern (DynamoDB, S3, SQS, and any future AWS service wrapper)
 
 All AWS-service wrappers share:

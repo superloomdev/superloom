@@ -68,7 +68,7 @@ One derivation, two projections. There is no second theme to keep in step, and t
 A template is a data object that declares which tokens exist and how each is derived. The engine reads the template through its parts system. The template is the only opinionated layer; the engine is generic.
 
 ```js
-module.exports = {
+export default {
   color:   { ramps: { ... }, palettes: { ... } },
   scales:  { geometric: { ... }, miniUnit: { ... } },
   meta:    { type_sets: { ... }, shadows: { ... } },

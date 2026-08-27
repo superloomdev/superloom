@@ -227,7 +227,7 @@ The test infrastructure dependency **must stay version-matched** with the main m
 ```javascript
 // In test.js - document the contract
 // NOTE: This devDependency must stay version-matched with ../package.json
-const { SomeCommand } = require('@aws-sdk/client-dynamodb');
+import { SomeCommand } from '@aws-sdk/client-dynamodb';
 ```
 
 When upgrading the main module's SDK version, update the corresponding test infrastructure dependency simultaneously.

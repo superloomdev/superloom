@@ -52,21 +52,23 @@ The test loader builds the `shared_libs` container with the framework entry and 
 
 ```javascript
 // _test/loader.js
-'use strict';
 
-const React = require('react');
-const ReactTestRenderer = require('react-test-renderer');
+import React from 'react';
+import ReactTestRenderer from 'react-test-renderer';
+import helperUtils from 'helper-utils';
+import helperDebug from 'helper-debug';
+import helperIdle from 'helper-idle';
 
-const Utils = require('helper-utils')();
-const Debug = require('helper-debug')();
+const Utils = helperUtils();
+const Debug = helperDebug();
 
-const Idle = require('helper-idle')({
+const Idle = helperIdle({
   React,
   Utils,
   Debug
 });
 
-module.exports = { React, ReactTestRenderer, Idle, Utils, Debug };
+export default { React, ReactTestRenderer, Idle, Utils, Debug };
 ```
 
 Real `react` and `react-test-renderer` run in Node. No Metro, no browser. The module's hooks render inside a test component and the test asserts on the rendered output.
@@ -75,13 +77,16 @@ Real `react` and `react-test-renderer` run in Node. No Metro, no browser. The mo
 
 ```javascript
 // _test/loader.js
-'use strict';
 
-const React = require('react');
-const ReactTestRenderer = require('react-test-renderer');
+import React from 'react';
+import ReactTestRenderer from 'react-test-renderer';
+import helperUtils from 'helper-utils';
+import helperDebug from 'helper-debug';
+import helperFont from 'helper-font';
+import helperFontExtExpo from 'helper-font-ext-expo';
 
-const Utils = require('helper-utils')();
-const Debug = require('helper-debug')();
+const Utils = helperUtils();
+const Debug = helperDebug();
 
 // Stub the Expo font API surface
 const FontLoader = {
@@ -90,13 +95,13 @@ const FontLoader = {
 };
 
 // Load the pure parent from file reference
-const Font = require('helper-font')({
+const Font = helperFont({
   Utils,
   Debug
 });
 
 // Load the Expo extension, injecting the parent and the capability stub
-const ExpoExtension = require('helper-font-ext-expo')({
+const ExpoExtension = helperFontExtExpo({
   React,
   Utils,
   Debug,
@@ -104,7 +109,7 @@ const ExpoExtension = require('helper-font-ext-expo')({
   FontLoader
 });
 
-module.exports = { React, ReactTestRenderer, Font, ExpoExtension, Utils, Debug };
+export default { React, ReactTestRenderer, Font, ExpoExtension, Utils, Debug };
 ```
 
 The slot is named for the capability (`FontLoader`), not the vendor (`ExpoFont`). The same module runs against an Expo-backed loader, a bare RN loader, or this stub with no source edit. See [Expo Guide](expo-guide.md) for the capability injection pattern.
@@ -113,10 +118,13 @@ The slot is named for the capability (`FontLoader`), not the vendor (`ExpoFont`)
 
 ```javascript
 // _test/loader.js
-'use strict';
 
-const Utils = require('helper-utils')();
-const Debug = require('helper-debug')();
+import helperUtils from 'helper-utils';
+import helperDebug from 'helper-debug';
+import helperKvMmkv from 'helper-kv-mmkv';
+
+const Utils = helperUtils();
+const Debug = helperDebug();
 
 // Engine stub implementing the native module's interface
 const MMKVStub = {
@@ -126,13 +134,13 @@ const MMKVStub = {
   _store: {}
 };
 
-const KV = require('helper-kv-mmkv')({
+const KV = helperKvMmkv({
   Utils,
   Debug,
   MMKV: MMKVStub
 });
 
-module.exports = { KV, Utils, Debug, MMKVStub };
+export default { KV, Utils, Debug, MMKVStub };
 ```
 
 The engine stub lives in `_test/` and implements the native module's JavaScript interface. It never imports the real native module. See [Unit Test Authoring](../unit-test-authoring.md) for the engine stub pattern.
@@ -145,15 +153,15 @@ A Class I module that ships hooks (for example, a `useIdle` or `useTimer` hook) 
 
 ```javascript
 // _test/test.js
-'use strict';
 
-const { describe, it } = require('node:test');
-const assert = require('node:assert/strict');
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 
-const React = require('react');
-const ReactTestRenderer = require('react-test-renderer');
+import React from 'react';
+import ReactTestRenderer from 'react-test-renderer';
 
-const { Idle } = require('./loader');
+import lib from './loader.js';
+const { Idle } = lib;
 
 describe('useIdle hook', function () {
 

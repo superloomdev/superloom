@@ -8,7 +8,6 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
 
 - [Tooling](#tooling)
 - [Source Style](#source-style)
-- [ESM Formatting](#esm-formatting)
 - [Vertical Spacing (3/2/1 Rule)](#vertical-spacing-321-rule)
 - [Section Header Hierarchy](#section-header-hierarchy)
 - [Private Functions Enclosure](#private-functions-enclosure)
@@ -26,7 +25,7 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
 - [Comment Style](#comment-style)
 - [Spelling and Prose Quality](#spelling-and-prose-quality)
 - [Dependencies](#dependencies)
-- [NPM Aliases in require() and Error Prefixes](#npm-aliases-in-require-and-error-prefixes)
+- [NPM Aliases in import and Error Prefixes](#npm-aliases-in-import-and-error-prefixes)
 - [AWS and Cloud SDK Modules](#aws-and-cloud-sdk-modules)
 
 ---
@@ -68,21 +67,11 @@ ESLint catches `no-var`, `prefer-const`, `no-unused-vars`, `no-useless-assignmen
 
 ---
 
-## ESM Formatting
+## Additional Formatting Rules
 
-Modules declared with `"type": "module"` in `package.json` follow all Source Style rules above, plus these ESM-specific rules. See [ESM Variant](module-structure.md#esm-variant-factory-with-es-modules) for the loader skeleton.
+All modules use `"type": "module"` in `package.json`. The rules below apply to every module.
 
-| Rule | CommonJS | ESM |
-|---|---|---|
-| Module declaration | Implicit (CommonJS) | `"type": "module"` in `package.json` |
-| Strict mode | `'use strict';` required | Omitted (implicit in ESM) |
-| Import syntax | `const X = require('./x')` | `import X from './x.js'` |
-| Export syntax | `module.exports = function loader (...)` | `export default function loader (...)` |
-| Named exports | `module.exports = { foo, bar }` | `export { foo, bar }` or `export function foo () {}` |
-| Import labels | `// Imports` followed by `require` calls | `// Imports` followed by `import` statements |
-| File extensions in imports | Optional (`'./config'`) | Include `.js` (`'./config.js'`) for clarity and bundler compatibility |
-
-**Rules that apply identically to ESM and CommonJS:**
+**Rules:**
 
 - The 3/2/1 vertical spacing rule
 - Section banners (`Module-Loader START/END`, `createInterface START/END`, `Public Functions START/END`)
@@ -127,7 +116,6 @@ The vertical spacing follows a strict hierarchy that creates visual structure at
 // Info: [Module purpose - 1 line]
 // [What it does - 1 line]
 // [Pattern indicator - 1 line]
-'use strict';
 
 
 // Shared dependencies (injected by loader; avoids passing Lib everywhere)
@@ -138,7 +126,7 @@ let CONFIG;
 
 
 /////////////////////////// Module-Loader START ////////////////////////////////
-module.exports = function loader (shared_libs, config) {
+export default function loader (shared_libs, config) {
 
   Lib = shared_libs;
   CONFIG = config;
@@ -171,7 +159,7 @@ const ModuleName = {
 };////////////////////////////Public Functions END///////////////////////////////
 ```
 
-In **helper modules** the loader and the export are **one merged function** under the `Module-Loader` banner - a named `module.exports = function loader (...)` - with no separate `Module Exports` section; splitting them adds a banner and an indirection without adding information. **Application modules** (entity controllers, services, models) keep the separate `Module Exports` section shown in [`entity-creation-guide-js.md`](server/entity-creation-guide-js.md), because their loader wires `Lib`/`CONFIG`/`ERRORS` while the export returns a separately-declared module object.
+In **helper modules** the loader and the export are **one merged function** under the `Module-Loader` banner - a named `export default function loader (...)` - with no separate `export` section; splitting them adds a banner and an indirection without adding information. **Application modules** (entity controllers, services, models) keep the separate `export` section shown in [`entity-creation-guide-js.md`](server/entity-creation-guide-js.md), because their loader wires `Lib`/`CONFIG`/`ERRORS` while the export returns a separately-declared module object.
 
 ---
 
@@ -352,13 +340,14 @@ Use category-based naming so related modules sort and group together:
 
 `@superloomdev/js-helper-eslint-config` is the single source of truth for all lint rules across every Superloom module. Every module's `eslint.config.js` is a three-line re-export of one of its presets (`base`, `browser`, `app`). Per-module rule overrides are not permitted. If a rule value needs to change, it changes in the shared config package and propagates to all modules on the next install.
 
-The shared config defines three presets:
+The shared config defines four presets:
 
 | Preset | Use case | Key differences from `base` |
 |---|---|---|
-| `base` | Node.js CommonJS modules (all helper modules) | Node 24 globals, `sourceType: 'commonjs'` |
+| `base` | Node.js ESM modules (all helper modules) | Node 24 globals, `sourceType: 'module'` |
+| `esm` | Alias of `base` (retained for backward compatibility) | Identical to `base` |
 | `browser` | Web-facing code that uses browser APIs | Adds browser globals (`document`, `window`, etc.) |
-| `app` | Application-tier repos with JSX and ESM | Layers on `browser` + JSX parsing, `sourceType: 'module'`, `varsIgnorePattern: '^React$'` |
+| `app` | Application-tier repos with JSX and browser globals | Layers on `browser` + JSX parsing, `varsIgnorePattern: '^React$'` |
 
 Clean parameter name with an inline directive when needed:
 
@@ -676,7 +665,7 @@ Full publishing pipeline: [`publishing.md`](publishing.md). Peer dependency stra
 
 ---
 
-## NPM Aliases in require() and Error Prefixes
+## NPM Aliases in import and Error Prefixes
 
 ### NPM Package Aliases
 
@@ -712,9 +701,13 @@ Server and client variants of the same module share **one alias** - `package.jso
 ```
 
 ```javascript
-Lib.Utils = require('helper-utils')();
-Lib.SQLite = require('helper-sql-sqlite')(Lib, config);
-Lib.Crypto = require('helper-crypto')(Lib, config);
+import UtilsFactory from 'helper-utils';
+import sqlSqlite from 'helper-sql-sqlite';
+import crypto from 'helper-crypto';
+
+Lib.Utils = UtilsFactory();
+Lib.SQLite = sqlSqlite(Lib, config);
+Lib.Crypto = crypto(Lib, config);
 ```
 
 ### Error Message Prefixes

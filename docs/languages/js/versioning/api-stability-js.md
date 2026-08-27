@@ -41,13 +41,13 @@ Convert string to URL-friendly slug.
 
 ```javascript
 // Before: 1.0.0
-module.exports = {
+export default {
   isEmpty,
   toSlug
 };
 
 // After: 2.0.0 (MAJOR - isEmpty removed)
-module.exports = {
+export default {
   toSlug
 };
 ```
@@ -115,12 +115,12 @@ function process(data) {
 
 ```javascript
 // Before: 1.0.0
-module.exports = {
+export default {
   isEmpty
 };
 
 // After: 1.1.0 (MINOR - new function added)
-module.exports = {
+export default {
   isEmpty,
   isValidEmail  // NEW
 };
@@ -187,7 +187,7 @@ Configuration options in `*.config.js` files are also public API:
 
 ```javascript
 // config.js - PUBLIC API
-module.exports = {
+export default {
   timezone: 'UTC',        // Changing default = MAJOR
   timeout: 30000,         // Changing default = MAJOR
   retries: 3              // Changing default = MAJOR
@@ -227,7 +227,7 @@ function oldFunction() {
   return newFunction();
 }
 
-module.exports = {
+export default {
   oldFunction,  // Still works, but warns
   newFunction
 };
@@ -244,7 +244,7 @@ Use `newFunction()` instead. Will be removed in 2.0.0.
 
 ```javascript
 // 2.0.0 - oldFunction removed
-module.exports = {
+export default {
   newFunction
 };
 ```

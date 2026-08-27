@@ -52,13 +52,11 @@ Every module (helper, model, controller, core) follows this test layout:
 
 ```javascript
 // _test/test.js
-'use strict';
-
-const { describe, it } = require('node:test');
-const assert = require('node:assert/strict');
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 
 // Load via simulating loader for proper dependency injection
-const loadLib = require('./loader');
+import { loadLib } from './loader.js';
 const Lib = loadLib();
 const UserModel = Lib.UserModel;
 
@@ -78,13 +76,11 @@ describe('User Model', function () {
 
 ```javascript
 // _test/test.js
-'use strict';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 
-const { describe, it } = require('node:test');
-const assert = require('node:assert/strict');
-
-// Direct require for pure modules
-const CONFIG = require('../user.config');
+// Direct import for pure modules
+import CONFIG from '../user.config.js';
 
 describe('Config', function () {
 
@@ -146,7 +142,7 @@ Required properties of the in-memory fixture:
 - Implements **every** method of the adapter contract, with the **same return shapes** as a real adapter (success/error envelopes, `record` vs `records`, etc.)
 - Holds state in module-private structures (Map, array). One fixture instance = one isolated dataset
 - No external dependencies beyond Node built-ins
-- Lives **only** in `_test/`. Never published, never required from outside the test directory, never used in production code
+- Lives **only** in `_test/`. Never published, never imported from outside the test directory, never used in production code
 
 The fixture is a **structural duck-typed substitute** for any real adapter. The parent's loader cannot tell it apart from the published packages - that is the whole point.
 
@@ -162,13 +158,13 @@ js-server-helper-[parent]-store-mysql/_test/store-contract-suite.js    ← copy
 js-server-helper-[parent]-store-mongodb/_test/store-contract-suite.js  ← copy
 ```
 
-Why copy instead of export and require:
+Why copy instead of export and import:
 
-| Concern | Outcome with copy | Outcome with export-and-require |
+| Concern | Outcome with copy | Outcome with export-and-import |
 |---|---|---|
 | Test code in published runtime package | Never - suite stays in `_test/` | Test code leaks into runtime exports |
 | Cross-package version coupling | None - each adapter has its own pinned snapshot | Adapter must follow parent's package version exactly |
-| `npm install` graph in `_test/` | One `file:../` for the adapter under test, registry pins for siblings | Deep require pulls test source from another package - fragile in CI |
+| `npm install` graph in `_test/` | One `file:../` for the adapter under test, registry pins for siblings | Deep import pulls test source from another package - fragile in CI |
 | Audit which contract version an adapter was built against | Trivial - the file is right there | Requires inspecting parent's published source |
 
 The suite is **not exported** through the parent module's `package.json` `exports`. It is a test-only artifact whose canonical home is the parent's `_test/` directory; the per-adapter copies are working snapshots.
@@ -195,34 +191,34 @@ When a module (like a Model or Core module) depends on other modules via `Lib`, 
 - Tests for modules that use `Lib.Utils` or other helpers
 - Tests for process functions that receive `Lib` injection
 
-**When direct require() is sufficient:**
+**When direct import is sufficient:**
 - Tests for pure modules with no external dependencies (e.g., simple config or errors modules)
 - Tests that only test the module's internal logic without calling other models/helpers
 
 #### Simulating Loader Pattern:
 ```javascript
 // _test/loader.js
-module.exports = function() {
+export function loadLib() {
   const Lib = {};
   
   // Load helpers
-  Lib.Utils = require('js-helper-utils');
+  Lib.Utils = (await import('js-helper-utils')).default;
   
   // Load models with dependency injection
-  const UserConfig = require('../user/user.config');
-  Lib.UserModel = require('../user')(Lib, UserConfig);
+  const UserConfig = (await import('../user/user.config.js')).default;
+  Lib.UserModel = (await import('../user/index.js')).default(Lib, UserConfig);
   
   // Inject Lib into process functions
   Lib.UserProcess = Lib.UserModel.process(Lib);
   
   return Lib;
-};
+}
 ```
 
 #### Test Usage:
 ```javascript
 // _test/test.js
-const loadLib = require('./loader');
+import { loadLib } from './loader.js';
 const Lib = loadLib();
 
 describe('UserProcess', function() {

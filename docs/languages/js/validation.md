@@ -8,10 +8,10 @@ Every validation function follows the same shape:
 
 ```javascript
 // src/model/[entity]/[entity].validation.js
-const CONFIG = require('./[entity].config');
-const ERRORS = require('./[entity].errors');
+import CONFIG from './[entity].config.js';
+import ERRORS from './[entity].errors.js';
 
-module.exports = {
+export default {
   validateCreate: function (name, email) {
     const errors = [];
     if (!name || typeof name !== 'string') errors.push(ERRORS.NAME_REQUIRED);

@@ -151,10 +151,10 @@ Hosts map a path alias to `src/` in their own bundler configuration. Shared sour
 
 ```js
 // Metro (hosts/expo): resolver.extraNodeModules
-resolver: { extraNodeModules: { '@app': path.resolve(__dirname, '../../src') } }
+resolver: { extraNodeModules: { '@app': path.resolve(import.meta.dirname, '../../src') } }
 
 // Vite (hosts/web): resolve.alias
-resolve: { alias: { '@app': path.resolve(__dirname, '../../src') } }
+resolve: { alias: { '@app': path.resolve(import.meta.dirname, '../../src') } }
 ```
 
 Screens live in `src/screens/`. Each host's router maps a route to a screen from `src/`. The route file is a thin wrapper: one line re-exporting the screen component. All params, hooks, and logic go inside the `src/screens/` component. This lets a screen be reused across two hosts by pointing both routers at the same source.

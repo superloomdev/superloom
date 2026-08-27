@@ -170,23 +170,23 @@ Extensions are loaded through the same loader pattern as other modules:
 
 ```js
 // loader.js
-const FontParent = require('helper-font')({
+const FontParent = (await import('helper-font')).default({
   // parent config
 });
 
-const FontExt = require('helper-font-ext-web')({
-  React: require('react'),
+const FontExt = (await import('helper-font-ext-web')).default({
+  React: (await import('react')).default,
   Parent: FontParent  // optional: pass pre-configured parent
 });
 
-module.exports = { FontParent, FontExt };
+export default { FontParent, FontExt };
 ```
 
 Or the extension can import the parent directly:
 
 ```js
 // extension.js
-const Parent = require('helper-font');
+import Parent from 'helper-font';
 
 function createExtension({ React }) {
   // Use Parent internally

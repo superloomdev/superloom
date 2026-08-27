@@ -149,7 +149,7 @@ The persistent composition root calls the loader with `CLOSE_ON_CLEANUP: false`.
 
 ```javascript
 // src/server/interfaces/api/express/routes.js
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // POST /user/create
@@ -219,7 +219,7 @@ The request-isolated composition root calls the loader with `CLOSE_ON_CLEANUP: t
 
 ```javascript
 // src/server/interfaces/api/lambda-aws/user/create.js
-module.exports.handler = async function (event, context) {
+export const handler = async function (event, context) {
 
   // Create execution context for this invocation
   const instance = Lib.Instance.initialize();

@@ -26,7 +26,7 @@ This file is the JavaScript implementation of the [Composition and Adapters](../
 Every adapter in every tier is a factory function with the same shape:
 
 ```js
-module.exports = function (shared_libs, config) {
+export default function (shared_libs, config) {
   return { /* ready-to-use object */ };
 };
 ```
@@ -49,13 +49,16 @@ A feature module defines a storage contract. Each store adapter implements it fo
 The auth feature module defines an eight-method session store contract. The Postgres store adapter implements it:
 
 ```js
+import authStorePostgres from 'helper-auth-store-postgres';
+import auth from 'helper-auth';
+
 Lib.SQL = Lib.Postgres;
 
-const Store = require('helper-auth-store-postgres')(Lib, {
+const Store = authStorePostgres(Lib, {
   table_name: 'sessions_user'
 });
 
-Lib.AuthUser = require('helper-auth')(Lib, {
+Lib.AuthUser = auth(Lib, {
   Store: Store,
   ACTOR_TYPE: 'user'
 });
@@ -70,9 +73,12 @@ A feature module defines a runtime contract. Each transport adapter implements i
 The HTTP gateway defines a request/response contract. The Express adapter implements it:
 
 ```js
-const Adapter = require('helper-http-gateway-adapter-express')(Lib, {});
+import httpGatewayAdapterExpress from 'helper-http-gateway-adapter-express';
+import httpGateway from 'helper-http-gateway';
 
-const Gateway = require('helper-http-gateway')(Lib, {
+const Adapter = httpGatewayAdapterExpress(Lib, {});
+
+const Gateway = httpGateway(Lib, {
   Adapter: Adapter
 });
 ```
@@ -86,7 +92,7 @@ A pure parent module defines a framework-binding contract. Each extension implem
 The font module defines a font-loading contract. The Expo extension implements it:
 
 ```js
-const FontExtExpo = require('helper-font-ext-expo');
+import FontExtExpo from 'helper-font-ext-expo';
 
 const adapter = FontExtExpo(Lib, {});
 ```
@@ -193,9 +199,9 @@ hosts/
 The same port implemented twice. The Expo navigation adapter wraps `expo-router`:
 
 ```js
-const { Link, Redirect } = require('expo-router');
+import { Link, Redirect } from 'expo-router';
 
-module.exports = function (Lib, config) {
+export default function (Lib, config) {
   return {
     Link: Link,
     Redirect: Redirect
@@ -222,7 +228,7 @@ function Redirect (props) {
   return null;
 }
 
-module.exports = function (Lib, config) {
+export default function (Lib, config) {
   return {
     Link: Link,
     Redirect: Redirect
@@ -238,7 +244,7 @@ Both return `{ Link, Redirect }`. The loader assigns the return value to `Lib.Na
 
 1. **Create the adapter directory.** Add `hosts/[name]/adapters/` with one file per slot.
 2. **Implement every slot.** Each file exports a factory matching the standard adapter signature.
-3. **Declare the adapter set at module scope.** In the host's entry file, require each adapter and pass them to the provider as a stable reference.
+3. **Declare the adapter set at module scope.** In the host's entry file, import each adapter and pass them to the provider as a stable reference.
 4. **Pass the set to the provider.** The provider calls the real loader with the adapter set.
 5. **Run the build.** A missing slot fails at boot with a named error, which is the whole point of the gate.
 
@@ -262,11 +268,12 @@ Adding a slot is a breaking change for every host. The gate enforces this: a hos
 A test suite exercising an application supplies its own adapter set and calls the real composition root. The test fixture:
 
 ```js
-const navigationAdapter = require('./adapters/navigation');
-const iconsAdapter = require('./adapters/icons');
-const fontsAdapter = require('./adapters/fonts');
+import navigationAdapter from './adapters/navigation.js';
+import iconsAdapter from './adapters/icons.js';
+import fontsAdapter from './adapters/fonts.js';
+import loader from '../app-core/loader.js';
 
-const { Lib } = require('../app-core/loader')({
+const { Lib } = loader({
   Navigation: navigationAdapter,
   Icons: iconsAdapter,
   Fonts: fontsAdapter
@@ -278,7 +285,7 @@ The stub adapters are minimal. The navigation stub returns an `<a>` element. The
 Three prohibitions:
 
 1. **No hand-built container.** The test calls the real loader. It never assembles `Lib` by hand.
-2. **No direct helper-module require in the fixture.** The loader wires helper modules. The fixture wires only stub adapters.
+2. **No direct helper-module import in the fixture.** The loader wires helper modules. The fixture wires only stub adapters.
 3. **No inlined platform constant.** The platform value comes from the assembled theme, not from a hardcoded string in the fixture.
 
 Cross-reference: [module-testing.md](module-testing.md) covers module test loaders. This section covers application composition. The two are complementary: module testing injects dependencies into a single module; application testing supplies adapters to the composition root.
@@ -292,7 +299,7 @@ The capability-not-vendor rule binds application slots identically to module slo
 The violation: an adapter that assigns `Lib.Ionicons`:
 
 ```js
-module.exports = function (Lib, config) {
+export default function (Lib, config) {
   Lib.Ionicons = Ionicons;
   return {};
 };
@@ -301,7 +308,7 @@ module.exports = function (Lib, config) {
 The fix: the adapter returns a capability-named member, and the loader assigns the slot:
 
 ```js
-module.exports = function (Lib, config) {
+export default function (Lib, config) {
   return {
     Glyph: Ionicons
   };
@@ -327,7 +334,7 @@ The guard converts a boot-time failure into a runtime failure. Make the slot man
 **The adapter that assigns onto the container.** An adapter that mutates `Lib` directly:
 
 ```js
-module.exports = function (Lib, config) {
+export default function (Lib, config) {
   Lib.Navigation = { Link: Link, Redirect: Redirect };
 };
 ```
@@ -338,7 +345,7 @@ The adapter should return its value. The caller assigns the key. When the adapte
 
 ```js
 let cached;
-module.exports = function loader (adapters) {
+export default function loader (adapters) {
   if (cached) return cached;
   cached = build(adapters);
   return cached;
@@ -350,9 +357,12 @@ A memoized loader prevents a test from building a second independent container. 
 **The duplicated test fixture.** A test that builds `Lib` by hand instead of calling the real loader:
 
 ```js
+import helperUtils from 'helper-utils';
+import helperDebug from 'helper-debug';
+
 const Lib = {
-  Utils: require('helper-utils')({}),
-  Debug: require('helper-debug')({}),
+  Utils: helperUtils({}),
+  Debug: helperDebug({}),
   // ... hand-wired
 };
 ```

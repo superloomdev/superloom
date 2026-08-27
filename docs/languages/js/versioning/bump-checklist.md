@@ -76,7 +76,11 @@ Edit the module's `package.json`:
 {
   "name": "@superloomdev/js-helper-utils",
   "version": "1.0.2",  // ← Update this line
-  "main": "utils.js"
+  "type": "module",
+  "exports": {
+    ".": "./utils.js",
+    "./package.json": "./package.json"
+  }
 }
 ```
 

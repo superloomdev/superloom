@@ -32,6 +32,33 @@ This page scopes **package-configuration rules**; the companion docs scope **how
 | `license` | `MIT` |
 | `private` | `false` |
 | `publishConfig.registry` | `https://npm.pkg.github.com` (no trailing slash, no scope suffix) |
+| `type` | `"module"` (mandatory - all helper modules are ESM) |
+| `exports` | An exports map pointing at the entry file (replaces the legacy `"main"` field) |
+
+### The `"exports"` Map
+
+Every helper module is an ES Module (`"type": "module"`) and uses an `"exports"` map instead of the legacy `"main"` field. The `"exports"` map controls what consumers can import and is the single source of truth for the package's entry point.
+
+**Required shape:**
+
+```json
+{
+  "type": "module",
+  "exports": {
+    ".": "./[module].js",
+    "./package.json": "./package.json"
+  }
+}
+```
+
+**Rules:**
+
+- `"."` points at the module's entry file (e.g. `"./utils.js"`, `"./adapter.js"`).
+- `"./package.json"` is always exported so tooling can read the package metadata.
+- Companion files consumed by the entry file (e.g. `[module].config.js`, `[module].errors.js`, `parts/*.js`) are **not** listed as separate export paths. They are resolved relative to the entry file through normal ESM relative imports. The `"exports"` map exposes only the public entry point.
+- `parts/` subdirectories are **never** exported. They are internal implementation files consumed by the entry file's relative imports, not by consumers. See [`module-structure.md` → Parts Pattern](module-structure.md#parts-pattern).
+- The legacy `"main"` field is **not** used. A package with both `"main"` and `"exports"` is misconfigured - remove `"main"`.
+- Every export path must include the `.js` extension. ESM resolution requires explicit extensions for relative paths.
 
 ## Dependency Rules
 
@@ -90,8 +117,8 @@ Linter config is a three-line re-export of the shared `@superloomdev/js-helper-e
 **Canonical consumer form:**
 
 ```javascript
-const { base } = require('@superloomdev/js-helper-eslint-config');
-module.exports = [ ...base ];
+import { base } from '@superloomdev/js-helper-eslint-config';
+export default [ ...base ];
 ```
 
 Application-tier repos with JSX and browser globals use the `app` preset instead of `base`. See [`code-formatting.md` → Shared ESLint Configuration](code-formatting.md#shared-eslint-configuration) for the full preset table.
