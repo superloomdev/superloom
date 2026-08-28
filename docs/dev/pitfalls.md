@@ -19,6 +19,7 @@
   - [Auto-run / safety pitfalls](#auto-run--safety-pitfalls)
   - [Verification-integrity pitfalls](#verification-integrity-pitfalls)
 - [CI/CD Publishing](#cicd-publishing)
+- [Rule Delivery](#rule-delivery)
 - [Local Module Testing](#local-module-testing)
 - [Adding a New Entry](#adding-a-new-entry)
 
@@ -359,6 +360,20 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 **Cause:** The gate was run honestly - findings were checked, evidence was produced for each - and then the result was decorated with measured-looking numbers that were estimated rather than counted. This is distinct from V1 (the gate was not skipped) and V2 (no mapping was invented). The softer failure mode is that a real pass produced real findings, and then precision was added after the fact to make the report look more rigorous than the method supports.
 
 **Fix:** Any number in a gate report is a claim requiring the same evidence as a pass/fail verdict. A total that is not the arithmetic sum of counted parts must not be emitted. The P3 output block now enforces this with the identity `A + B + C + D = N`; a total that does not equal the sum of its parts is a detectable error rather than a plausible-looking number.
+
+---
+
+## Rule Delivery
+
+### 1. AI attribution trailers appear in commits despite a documented ban
+
+**Symptom:** Commits in `codebase-js-helper-modules` carried `Co-Authored-By: Devin` and `Generated with [Devin]` trailers, even though the no-attribution rule already existed in `codebase-superloom/AGENTS.md:78` and `docs/ai/agent-configuration.md:115`.
+
+**Cause:** `codebase-js-helper-modules` had no `AGENTS.md` at all. The rule was never in the agent's context while it committed there. The CLI's built-in commit template, which appends attribution trailers by default, won because no project-level rule overrode it. A rule that exists only in the constitution repo is not in force in the repos where work actually happens.
+
+**Fix:** Every repo an agent commits to must carry the no-attribution rule in its own `AGENTS.md`, stated in full (not by reference). The rule must explicitly say it overrides any tool's built-in commit template. Three of five workspace repos had no `AGENTS.md`; all four now have self-contained copies with the rule stated verbatim.
+
+**Generalisation:** A rule's reach equals the set of files an agent actually reads. A rule present in a repo the agent never opens during a session is invisible. Delivery is not authoring; a rule undelivered is a rule unenforced.
 
 ---
 

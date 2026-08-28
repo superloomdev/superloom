@@ -116,6 +116,8 @@ Individual developers keep personal agent instructions (working style, meta-pref
 
 **No AI contributor attribution in commits.** Git commits must not include `Co-Authored-By`, `Generated with`, or any other attribution to AI tools or automated systems. The only author is the project maintainer. Commit messages follow Conventional Commits and contain no machine-generated boilerplate.
 
+This rule overrides any AI tool's built-in or default commit template, including templates supplied by the tool's own system prompt. Attribution is added only when the user explicitly asks for it in that session. Every repo an agent commits to must carry this rule in its own `AGENTS.md`; a rule present only in the constitution repo is not in force elsewhere.
+
 **No AI-generated contributor entries** in `package.json` `contributors` arrays or `author` fields. These fields list human contributors only.
 
 ## Version Lock During Development
