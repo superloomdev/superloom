@@ -306,6 +306,18 @@ When plans execute as a chain (multiple plans that must run in sequence), four s
 
 Read order at session start: `RUNBOOK.md`, `PROGRESS.md`, `ESCALATIONS.md`, then the plan named `CURRENT`. Never trust a conversation summary over `PROGRESS.md`.
 
+### When the orchestration layer is warranted
+
+These files exist for **one purpose**: letting a long plan, or a chain of plans, run across many sessions and many hours without a human in the loop. `RUNBOOK.md` is the entry point that stops an agent picking a plan by guesswork; `PROGRESS.md` is the state machine that survives a context window ending mid-run; `ESCALATIONS.md` is what makes "park it and keep going" possible instead of halting; `WORKFLOW-GAPS.md` is what turns a blind audit pass into workflow improvement rather than a one-off fix.
+
+**Warranted when:** more than one plan must run in sequence, or a single plan iterates over more than a handful of targets (a catalog-wide audit, a mass republish), or the run is expected to outlive one conversation.
+
+**Overhead when:** a single self-contained plan will finish inside one session. A plan file plus the agent's own todo list is enough; do not create a chain to run one plan.
+
+### Permanent files, disposable contents
+
+The four state files follow the same rule as `__dev__/wip/`: the files are permanent, their **contents** are chain-scoped. An empty `ESCALATIONS.md` and a `PROGRESS.md` reading `CURRENT: none - chain complete` are the correct resting state. Deleting them breaks the session-start rule in `AGENTS.md`, which reads all three by name, and loses the convention so the next long run reinvents it. Their location at `__dev__/` root is deliberate and referenced by path from both this document and `AGENTS.md`.
+
 ---
 
 ## Two-Pass Audit
