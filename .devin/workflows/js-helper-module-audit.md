@@ -165,13 +165,18 @@ git grep -n "\.split('').reverse().join('')" -- ':(glob)[module-path]/**/*.js' '
 ```
 // turbo
 ```bash
-# .length === 0 on strings -> Lib.Utils.isEmptyString; on arrays -> Lib.Utils.isEmptyArray
-git grep -n "\.length === 0" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*' ':!*/_test/*'
+# .length === 0 / > 0 / !== 0 on strings -> Lib.Utils.isEmptyString; on arrays -> Lib.Utils.isEmptyArray
+git grep -nE "\.length (===|!==|>) 0" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*' ':!*/_test/*'
 ```
 // turbo
 ```bash
-# Object.keys(x).length === 0 should use Lib.Utils.isEmptyObject
-git grep -nE "Object\.keys\([^)]+\)\.length === 0" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*'
+# === '' / !== '' should use Lib.Utils.isEmptyString
+git grep -nE "=== ''|!== ''" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*' ':!*/_test/*'
+```
+// turbo
+```bash
+# Object.keys(x).length against zero should use Lib.Utils.isEmptyObject
+git grep -nE "Object\.keys\([^)]+\)\.length (===|!==|>) 0" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*'
 ```
 // turbo
 ```bash
@@ -242,7 +247,7 @@ These are the *dimensions* to audit, each paired with where its rules actually l
 | Validation | `languages/js/validation.md` |
 | Documentation files and their content | `principles/documentation-authoring.md`, `languages/js/module-docs.md` |
 | Naming consistency (no stale or legacy tokens anywhere) | the cross-reference scrub above + the reference modules |
-| Function naming doctrine (verb catalog, return shapes, banned verbs, config key casing) | `languages/js/function-naming.md` - list every exported function, name its doctrine verb and return shape, compare to actual. A module with zero lines of output has not run this check |
+| Function naming doctrine (verb catalog, return shapes, banned verbs, config key casing) | `languages/js/function-naming.md` - list every exported function, name its doctrine verb and return shape, compare to actual. A module with zero lines of output has not run this check. Exception: React component factories are PascalCase and noun-named by framework contract; the verb rule applies to non-component exported functions |
 
 This table is a starting set, not a closed list. If the target needs a dimension not shown, find its governing document yourself and audit against that.
 

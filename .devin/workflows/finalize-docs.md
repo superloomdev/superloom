@@ -393,7 +393,12 @@ Three allowed destination values, closed set:
 | `docs/languages/js/composition-and-adapters.md` | AI Behavior Rules (composition and adapters doctrine, JS-specific) + Documentation Map |
 | `docs/languages/js/validation.md` | AI Behavior Rules (type-guard primitive rule) |
 | `docs/languages/js/client/client-modules.md` | AI Behavior Rules (client naming taxonomy + loader-pattern rule) |
-| `docs/languages/js/client/components.md` | AI Behavior Rules (component accessibility aria-* rule) |
+| `docs/languages/js/client/components.md` | AI Behavior Rules (component accessibility aria-* rule + theme token contract + named barrel) |
+| `docs/languages/js/client/theming.md` | AI Behavior Rules (RNW native projection rule + scheme versus variant doctrine) |
+| `docs/languages/js/client/fonts.md` | AI Behavior Rules (theme-names/host-loads contract + manifest style entry rule) |
+| `docs/languages/js/client/client-loader.md` | not mirrored (reference material; the loader's Lib container table is looked up per task) |
+| `docs/languages/js/client/client-architecture.md` | not mirrored (reference material; stack decision and project layout looked up per task) |
+| `docs/languages/js/client/super-app.md` | not mirrored (reference material; shape registry and route wrapper patterns looked up per task) |
 | `docs/languages/js/conventions-registry.md` | not mirrored (reference material; lookup table scanned per task) |
 | `docs/languages/js/function-naming.md` | AI Behavior Rules (verb-first naming rule, banned verbs) |
 | `docs/languages/js/publishing.md` | Boundaries / Never (publish is CI-only) |
