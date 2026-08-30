@@ -39,10 +39,10 @@ The `Lib` container holds every dependency the React tree needs. Each entry is e
 | `Lib.React` | The React module | `import React from 'react'` in the loader only |
 | `Lib.Utils` | Core utility helper | `import utils from '@superloomdev/js-helper-utils'`; `utils(Lib)` |
 | `Lib.Debug` | Debug logging helper | `import debug from '@superloomdev/js-helper-debug'`; `debug(Lib)` |
-| `Lib.Themer` | Theme engine (assemble, derive, generateUtilities) | `import themer from '@superloomdev/js-client-helper-themer'`; `themer(Lib)` |
+| `Lib.Themer` | Theme engine (buildTheme, resolve, emit, cacheStats, clearCache) | `import themer from '@superloomdev/js-client-helper-themer'`; `themer(Lib)` |
 | `Lib.ThemerReact` | React extension for themer (ThemeProvider, hooks) | `import themerReact from '@superloomdev/js-client-helper-themer-ext-react'`; `themerReact({ React, Themer, Utils, Debug })` |
-| `Lib.ThemeTemplate` | Default themer template (data) | `import themerTemplate from '@superloomdev/js-client-helper-themer/themer.template.js'` |
-| `Lib.Themes` | Theme values as frozen JS objects | Direct `import` of theme data files |
+| `Lib.ThemeTemplate` | Default themer template (data) | `import themerTemplate from '../themes/themer-template.js'` |
+| `Lib.Schemes` | Scheme values as frozen JS objects | Direct `import` of scheme data files |
 | `Lib.Font` | Font core (family registry, role resolution) | `import font from '@superloomdev/js-client-helper-font'`; `font(Lib)` |
 | `Lib.Fonts` | Font manifest and `useFontsReady` hook | `import fonts from '../fonts/fonts.js'`; `fonts(Lib)` |
 | `Lib.FontAdapter` | Platform font loader adapter | Supplied by a host adapter |
@@ -57,7 +57,7 @@ The `Lib` container holds every dependency the React tree needs. Each entry is e
 
 Every framework module follows the loader pattern: `export default function (shared_libs, config) { ... }`. The loader calls each factory with `Lib`, and the factory returns its public interface. This is identical to how server-side helper modules work.
 
-Themes are plain frozen data objects, not loaders. They are imported directly in the loader and attached to `Lib.Themes`. A theme is a JSON-shaped value object (`base` + optional `variant`); it has no behavior and no dependencies.
+Schemes are plain frozen data objects, not loaders. They are imported directly in the loader and attached to `Lib.Schemes`. A scheme is a complete token set (see [Scheme Versus Variant](theming.md#scheme-versus-variant)); it has no behavior and no dependencies. The loader also holds the themer machinery (`assemble.js`, `themer-bridge.js`, `themer-template.js`) under `src/themes/`. This is distinct from `src/schemes/` (scheme data); the two directories are not a half-finished rename.
 
 ---
 
@@ -101,17 +101,17 @@ Two folders organize React context and theme data inside `src/app-core/`:
 
 Both folders use plural names, matching React community convention. A generic `context/` folder is avoided because it could be confused with non-React context code.
 
-Theme data files live in `src/themes/` as frozen JS objects. The loader is the single source of truth for which themes are wired:
+Scheme data files live in `src/schemes/` as frozen JS objects. The loader is the single source of truth for which schemes are wired:
 
 ```js
-import baseTheme from '../themes/base-theme.js';
-import tasksTheme from '../themes/tasks-theme.js';
-import notesTheme from '../themes/notes-theme.js';
+import neutralScheme from '../schemes/neutral-scheme.js';
+import tasksScheme from '../schemes/tasks-scheme.js';
+import notesScheme from '../schemes/notes-scheme.js';
 
-Lib.Themes = {
-  base:  baseTheme,
-  tasks: tasksTheme,
-  notes: notesTheme
+Lib.Schemes = {
+  neutral:  neutralScheme,
+  tasks:    tasksScheme,
+  notes:    notesScheme
 };
 ```
 
@@ -136,7 +136,7 @@ src/app-core/loader.js               ← validates adapters, builds Lib + Config
 src/app-core/contexts/theme-context.js ← calls Lib.Themer, provides theme + controller
   |
   v  calls assemble()
-src/themes/assemble.js               ← builds themed component library
+src/themes/assemble.js               ← builds themed component library (themer machinery)
   |
   v
 src/components/index.js              ← re-exports screen from src/screens/

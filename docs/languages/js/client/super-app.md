@@ -26,7 +26,7 @@ The registry lives in `src/client/superApp.js`. Each entry maps a shape name to 
 | Field | Purpose |
 |---|---|
 | `name` | Display name for the launcher |
-| `route` | Entry route path (e.g. `/tasks`, `/pos`) |
+| `route` | Entry route path (e.g. `/shape-a`, `/shape-b`) |
 | `variant` | Theme variant for this shape |
 | `icon` | Icon name for the launcher card |
 
@@ -40,7 +40,7 @@ Adding a shape requires three things: a registry entry, an `app/[shape]/` route 
 
 | Mode | Config | Returns |
 |---|---|---|
-| `lean` | `MODE: 'lean'` + `SHAPE: 'tasks'` | The configured shape's route |
+| `lean` | `MODE: 'lean'` + `SHAPE: 'shape-a'` | The configured shape's route |
 | `super` | `MODE: 'super'` | `{ mode: 'super' }` (launcher renders) |
 
 The entry file (`app/index.js`) calls `determineApp()`. In lean mode, it redirects to the shape's route. In super mode, it renders the launcher: a card per shape, each a link into the shape's route.
@@ -52,8 +52,8 @@ The entry file (`app/index.js`) calls `determineApp()`. In lean mode, it redirec
 Every file in `app/` is a route. Routes are zero-logic wrappers that re-export screen components from `src/screens/`.
 
 ```js
-// app/tasks/index.js
-export { default } from '../../../src/screens/tasks/TasksScreen';
+// app/shape-a/index.js
+export { default } from '../../../src/screens/shape-a/ShapeAScreen';
 ```
 
 The wrapper exists for two reasons:
@@ -88,14 +88,14 @@ The same core serves both modes. Lean and super are assembly choices, not archit
 The tree-shaking rule is a hard boundary: a shape's routes import only that shape's screens.
 
 ```text
-app/tasks/          → src/screens/tasks/
-app/notes/          → src/screens/notes/
-app/pos/            → src/screens/pos/
+app/shape-a/         → src/screens/shape-a/
+app/shape-b/         → src/screens/shape-b/
+app/shape-c/         → src/screens/shape-c/
 ```
 
-Because `app/tasks/` imports only from `src/screens/tasks/`, building tasks in lean mode produces a bundle with zero notes, POS, or dashboard code. Clean dependency graph per shape produces tree-shaking as a natural outcome. No extra configuration is needed.
+Because `app/shape-a/` imports only from `src/screens/shape-a/`, building shape-a in lean mode produces a bundle with zero shape-b code. Clean dependency graph per shape produces tree-shaking as a natural outcome. No extra configuration is needed.
 
-The boundary is enforced by the import graph. A screen in `src/screens/tasks/` must not import from `src/screens/notes/`. Cross-shape sharing happens through the shared core (`src/components/`, `src/sdk/`, `src/theme/`), never through direct screen-to-screen imports.
+The boundary is enforced by the import graph. A screen in `src/screens/shape-a/` must not import from `src/screens/shape-b/`. Cross-shape sharing happens through the shared core (`src/components/`, `src/sdk/`, `src/schemes/`), never through direct screen-to-screen imports.
 
 ---
 

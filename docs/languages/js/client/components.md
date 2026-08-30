@@ -12,11 +12,12 @@ The component library ships atoms, molecules, composites, and providers: themeab
 - [Composite Set](#composite-set)
 - [Provider Set](#provider-set)
 - [Authoring Contract](#authoring-contract)
+- [Theme Token Contract](#theme-token-contract)
+- [Named Barrel](#named-barrel)
 - [Utility-Class Mapping](#utility-class-mapping)
 - [Four-Bucket Exception Model](#four-bucket-exception-model)
 - [Interaction States](#interaction-states)
 - [Accessibility Contract](#accessibility-contract)
-- [Divergences from Carbon](#divergences-from-carbon)
 - [Generic vs Custom](#generic-vs-custom)
 - [Peer Dependencies](#peer-dependencies)
 - [Further Reading](#further-reading)
@@ -115,7 +116,7 @@ Adding a provider is a library change. The provider must be a Context provider, 
 
 ## Authoring Contract
 
-Every component is a loader module. The library entry point is `import loader from 'rnw-components-carbon'`, called as `loader(shared_libs, config)`, which returns an interface with `build`, `rebuild`, `themeContract`, `useBreakpoint`, and `tokens`. Calling `build(theme)` produces the themed component set.
+Every component is a loader module. The library entry point is a loader function called as `loader(shared_libs, config)`, which returns an interface with a `build` function that produces the themed component set from a theme object.
 
 The contract:
 
@@ -125,7 +126,7 @@ The contract:
 4. Molecules compose atoms through the shared `Component` object, not through direct imports
 5. Directional layout uses `Parts.Direction`, a context-based direction provider. Components that need the writing direction call `Parts.Direction.useDirection()`. Logical style properties (`paddingStart`, `paddingEnd`, `marginStart`, `marginEnd`) mirror automatically under RTL and require no manual intervention. Directional icons use `Parts.Direction` with a `mirror` prop and `transform: [{ scaleX: -1 }]`
 
-`rebuild(theme, breakpoint?)` re-derives `CommonStyle` and returns a fresh registry. The previous registry is never mutated; callers swap the reference. This is the runtime re-theming mechanism.
+`build(theme)` re-derives `CommonStyle` and returns a fresh registry. The previous registry is never mutated; callers swap the reference. This is the runtime re-theming mechanism.
 
 ### Consumption Pattern
 
@@ -143,6 +144,24 @@ Internal constants live in `data/style-contract.json`, not in config. Unit-conve
 
 ---
 
+## Theme Token Contract
+
+A themed component library requires its full semantic token set at build time. The build function validates the set and fails fast, naming every absent token in a single error so the caller can fix the theme in one pass rather than iteratively.
+
+A hardcoded color fallback inside a component is an anti-pattern. It makes an incomplete theme look complete while silently substituting the library's own design decisions for the tokens the theme did not provide. The correct behavior is to refuse to build, so the theme author sees the gap and fills it.
+
+The rule is framework-level: the library declares which tokens it requires, the build function enforces the set, and no component source contains a color literal. The specific token list belongs in the library's own documentation, not here.
+
+---
+
+## Named Barrel
+
+A public barrel exposes named exports and no default export. This lets a bundler tree-shake unused components and forces consumers to import an explicit surface rather than receiving an opaque default.
+
+A default export reintroduces a second surface that the barrel's named exports already cover. It defeats tree-shaking because the bundler cannot prove which named bindings the default carries. The rule: the package root and any registration barrel export named bindings only.
+
+---
+
 ## Utility-Class Mapping
 
 Components read named utility classes rather than inline token lookups. The mapping is deterministic:
@@ -152,7 +171,7 @@ Components read named utility classes rather than inline token lookups. The mapp
 | `size` | `font_size_[step]` | `size="md"` to `font_size_md` |
 | `color` | `font_[token]` | `color="text_primary"` to `font_text_primary` |
 | `weight` | `font_weight_[name]` | `weight="semibold"` to `font_weight_semibold` |
-| `background` | `background_[token]` | `background="app_primary"` to `background_app_primary` |
+| `background` | `background_[token]` | `background="surface"` to `background_surface` |
 | `padding` | `p_[side]_[step]` | `padding="a_md"` to `p_a_md` |
 | `margin` | `m_[side]_[step]` | `margin="t_lg"` to `m_t_lg` |
 | `radius` | `br_[step]` | `radius="pill"` to `br_pill` |
@@ -202,7 +221,7 @@ The rules are testable constraints:
 
 ## Interaction States
 
-Every interactive component supports six states. The state names align with Carbon's interaction-state specifications.
+Every interactive component supports six states. The state names are the standard interaction-state vocabulary.
 
 | State | Meaning | Visual treatment |
 |---|---|---|
@@ -253,20 +272,6 @@ The following React Native accessibility props are silent no-ops on web and must
 ### Platform gaps
 
 `aria-*` is the one form that works on web, iOS, and Android. However, native platforms have gaps: `aria-live` is Android-only on native, `aria-modal` is iOS-only, and native has no table, tabpanel, or landmark roles. The library routes every gap through a mechanism (such as `useAnnounce` for live regions) rather than leaving it to individual component judgment.
-
----
-
-## Divergences from Carbon
-
-The library follows Carbon's component vocabulary but not its export shape. Four deliberate divergences:
-
-1. **Skeletons collapse to one atom plus a `loading` prop.** Carbon ships approximately 20 `<X>Skeleton` components. The library will ship one `Skeleton` atom with a `variant` prop (`'text' | 'icon' | 'placeholder'`) plus `lines`, `width`, `height`. Components that need a loading state take a `loading` boolean and render `Skeleton` internally. This replaces 20 components with 1 atom and 1 prop.
-
-2. **`Fluid*` variants collapse to a `fluid` prop.** Carbon's 10 `Fluid*` components are behaviorally identical to their non-fluid counterparts; the only difference is that the label sits inside the field. Ship one `fluid` boolean prop on `TextInput`, `TextArea`, `NumberInput`, `Search`, `Select`, `Dropdown`, `ComboBox`, `MultiSelect`, `DatePicker`, `TimePicker`.
-
-3. **Deprecated button aliases collapse to a `kind` prop.** Carbon's `PrimaryButton`, `SecondaryButton`, `DangerButton` are aliases. The library ships one `Button` atom with a `kind` prop.
-
-4. **Six renames to avoid collisions with React Native concepts.** Carbon's `Switch` (a segment inside `ContentSwitcher`) becomes `Switch`. React Native's on/off toggle concept becomes `Toggle`. Carbon's `ProgressIndicator` (a multi-step stepper) becomes `ProgressIndicator`. The determinate bar becomes `ProgressBar`. These renames are breaking but the library is unpublished, so no deprecation window is required.
 
 ---
 

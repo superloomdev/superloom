@@ -22,6 +22,8 @@ This document is the single source of truth for function naming. The registry ca
 
 Every exported function begins with a verb from the catalog. The verb is chosen by what the function does, not by what it returns. Two functions that do the same thing begin with the same verb, even if one returns a String and the other returns an Object. Two functions that do different things begin with different verbs, even if both return an Object.
 
+**Exception: React component factories.** A React component factory is PascalCase and noun-named, because the framework's own contract requires it (JSX requires a capitalized identifier to distinguish a component from an HTML tag). The verb rule applies to non-component exported functions. A component library's PascalCase exports are exempt by design, not by registry row.
+
 When naming a new function, search the catalog for the verb that matches the operation. If no cataloged verb fits, the operation may be two operations in one function, and the fix is to split the function, not to invent a verb. If the operation is genuinely new, add it to the catalog here and to the registry, with evidence, before using it.
 
 ---

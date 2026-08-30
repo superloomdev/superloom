@@ -135,7 +135,8 @@ src/                    ← shared application source, consumed by every host
   components/           ← component library written against the React Native API
   screens/              ← screen components
   app-core/             ← dependency-injection root, config, context providers
-  themes/               ← theme data
+  schemes/              ← scheme data (complete token sets)
+  themes/               ← themer machinery (assemble, bridge, template)
   fonts/                ← font manifest and assets
 hosts/
   expo/                 ← Metro and Expo Router, ships web, iOS, and Android

@@ -30,6 +30,12 @@ The contract is:
 
 The themer module provides `validators.findUnregisteredFamilies(theme, registered)` to catch missing fonts before they degrade the UI. The helper compares the families named in the theme against the families the host has loaded and returns the difference.
 
+### Manifest Style Entries
+
+A manifest style entry must carry a real asset source. Registering an entry without one is an error: the platform attempts to load a font that does not exist, and text renders in a fallback with no signal to the developer that the registration was incomplete.
+
+A platform whose adapter has no native loader keeps an **empty** manifest and relies on the platform's own font mechanism. The manifest exists in every host so the loading flow is uniform. An empty manifest is the correct state when the platform provides fonts through a different channel (system fonts, a build-time config plugin, or a CSS `@font-face` stack the host owns directly).
+
 ---
 
 ## Three Delivery Mechanisms

@@ -80,7 +80,7 @@ Every module MUST declare in `peerDependencies` every Superloom module it consum
 
 **Consequence.** `ROBOTS.md` and `docs/configuration.md` peer-dependency lists MUST match `package.json` exactly. A mismatch between what the docs list and what the manifest declares is a docs-vs-manifest drift finding in audit.
 
-**Version ranges.** All peer entries use caret style: `^1.0.0`. Not `>=1.0.0`.
+**Version ranges.** Superloom modules use caret style: `^1.0.0`. A framework peer such as `react` or `react-native` uses `>=`, because the module supports a span of major versions and the host owns the version. Not `>=` for Superloom peers; not `^` for framework peers.
 
 ### Module Acquisition Rules
 

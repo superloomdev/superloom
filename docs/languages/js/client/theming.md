@@ -8,6 +8,7 @@ The theming system takes a template and a stack of layered values, derives a com
 
 - [Architecture: Three Tiers](#architecture-three-tiers)
 - [The Cascade: Layers, Not Modes](#the-cascade-layers-not-modes)
+- [Scheme Versus Variant](#scheme-versus-variant)
 - [Resolve Then Emit](#resolve-then-emit)
 - [The Template](#the-template)
 - [Module, Extension, App](#module-extension-app)
@@ -48,6 +49,18 @@ Layer 2 (accent)   - partial override, only the accent color
 Layers merge in order: later layers win on conflict. This replaces the older base-plus-variant merge with a general cascade that handles any number of overlays. A dark mode is a layer, a tenant brand is a layer, an accent swap is a layer.
 
 The engine caches derived results by reference identity of the layers array. Passing a fresh array with equal content is a cache hit. The extension holds layers in `useState` and calls `update_layers` with a new array to trigger a re-derive.
+
+---
+
+## Scheme Versus Variant
+
+A **scheme** is a complete token set that replaces the base outright. A **variant** is a partial overlay merged on top of an existing scheme. The two have different runtime operations: replace versus overlay.
+
+The controller exposes both operations. Switching schemes replaces the entire layer stack with a new base, so every token derives from the new scheme's seeds. Applying a variant adds a layer on top of the current stack, so only the tokens the variant declares change; everything else retains the value the current scheme produced.
+
+The distinction matters because the two operations express different intents. A partial overlay cannot express "use a different design language", because the tokens it does not name are inherited from the base. Those inherited tokens may belong to a different visual system. A complete set applied as an overlay silently inherits whatever the base held, which is correct only when the base and the new set share the same design language.
+
+The rule: when the intent is a different visual system, switch schemes. When the intent is a small adjustment to the current system, apply a variant.
 
 ---
 
