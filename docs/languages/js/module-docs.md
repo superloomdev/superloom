@@ -514,7 +514,7 @@ Patterns block:
 
 ### Class E. Feature Module with Adapters
 
-Full-featured business-logic module. May combine Class A utilities, Class B services, Class C/D backends through Class F adapters. Each Class E module already has a `docs/` folder from the framework's earlier era; the migration audits and reorganises rather than rebuilds. For the full conceptual definition see [`module-classes.md` → Class E](module-classes.md#class-e-feature-module-with-adapters).
+Full-featured business-logic module. May combine Class A utilities, Class B services, Class C/D backends through Class F adapters. Each Class E module already has a `docs/` folder from the framework's earlier era; the migration audits and reorganizes rather than rebuilds. For the full conceptual definition see [`module-classes.md` → Class E](module-classes.md#class-e-feature-module-with-adapters).
 
 **Class-specific README subsections.** Class E uses **two** adjacent class-specific subsections in the README:
 

@@ -15,6 +15,8 @@ Example: `/compile-workflows-from-docs [lang]-helper-modules [lang]`
 
 **Repository independence (hard gate).** This workflow lives in the constitution repo and never hard-codes a dependent repo's paths. The target repo and language are runtime parameters. The constitution repo's `docs/` never references a dependent repo's workflows or internals.
 
+**The constitution repo is a valid target.** The `js-helper-module` family lives in `codebase-superloom/.devin/workflows/` because the constitution repo is the composition root for the JavaScript module lifecycle: it holds the docs the embedded Standard compiles from, and the family is invoked from there against module paths in any repo. A target repo equal to the constitution repo is therefore expected, not a contradiction of repository independence - independence forbids the constitution's `docs/` from naming a dependent repo, not the constitution from hosting a workflow family. Do not "relocate" the family to an implementation repo on the strength of the `[target-repo]` parameter alone.
+
 ## Execution Contract (binding)
 
 1. **One target repo per run.** The target repo is named in the invocation.
@@ -235,14 +237,20 @@ The generator self-verifies by running a headless workshop against dummy modules
    # Cwd = codebase-superloom
    grep -oE 'docs/[a-z/-]+\.md' [target-repo]/.devin/workflows/[prefix].md | sort -u | while read f; do test -f "$f" && echo "OK: $f" || echo "MISSING: $f"; done
    ```
+   Module-relative paths (`docs/api.md`, `docs/configuration.md`, `docs/schemas.md`) resolve inside a module, not in the constitution, and are expected misses. Judge each rather than treating the count as the verdict.
 
-6. **Write the workshop verdict:**
+6. **Sweep-parity check (hard gate).** The Build and Audit workflows share one Standard, so a sweep present in one and absent or narrower in the other is a compile defect. Extract every `git grep` pattern from both files and diff the sets. Any asymmetry is reported and fixed before the verdict.
+
+7. **A dummy module must exercise every sweep's edge cases, not just its happy path.** A sweep that only ever runs against conforming code is never shown to distinguish a violation from a legitimate construct. Give at least one dummy a JSON import, a nested JSDoc block, and an intentionally permitted raw `typeof` (argument-shape dispatch), so a sweep that cannot tell those from violations fails here rather than in a real module.
+
+8. **Write the workshop verdict:**
    ```text
    G5 - Workshop Verdict
    Dummy modules created: 3
    Audit runs: 3 (converged: Y/N)
    Fix run: 1 (defect caught: Y/N, fixed: Y/N, converged: Y/N)
    Citations checked: N (valid: M, missing: K)
+   Sweep parity: [symmetric | N asymmetries -> fixed]
    Verdict: [PASS | FAIL]
    ```
 

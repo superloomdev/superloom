@@ -189,6 +189,12 @@ open https://github.com/superloomdev/superloom/packages
 npm view @superloomdev/js-helper-utils versions
 ```
 
+A version appearing in that listing proves the version name exists, not that the new content shipped. On a same-version republish, compare the published shasum against the value recorded before the delete; they must differ. See [`cicd-publishing.md` - The Publish Guard Compares Content, Not Version Presence](../../../dev/cicd-publishing.md#the-publish-guard-compares-content-not-version-presence).
+
+```bash
+npm view @superloomdev/js-helper-utils@1.0.2 dist.shasum
+```
+
 ## Multi-Module Bumps
 
 When bumping multiple modules:
@@ -284,7 +290,7 @@ git push origin main
 A: No. Caret ranges (`^1.0.0`) automatically pick up compatible versions.
 
 **Q: What if CI fails during publish?**
-A: The workflow has a safety-net that skips already-published versions. Fix the issue, commit again, push again.
+A: The workflow's content guard skips only when the packed shasum matches what the registry already serves. Fix the issue, commit again, push again.
 
 **Q: Can I test before publishing?**
 A: Yes. Use `file:../` references locally, then switch to version numbers before push.

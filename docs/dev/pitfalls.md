@@ -311,7 +311,7 @@ Same root cause as S1. Always use `write_to_file` or `edit` instead.
 
 **Cause:** The agent saw a successful test run and decided to publish.
 
-**Fix:** Publishing in this codebase is CI-only via `.github/workflows/ci-publish-helper-modules.yml`. Bumping the `version` in `package.json` and pushing to `main` is the only trigger. The CI workflow has a safety net that skips already-published versions.
+**Fix:** Publishing in this codebase is CI-only via `.github/workflows/ci-publish-helper-modules.yml`. Bumping the `version` in `package.json` and pushing to `main` is the only trigger. The CI workflow's content guard skips only when the packed shasum matches what the registry already serves (entry 26).
 
 #### A3. Force-pushing to a shared branch
 
@@ -373,7 +373,7 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 
 **Fix:** Every repo an agent commits to must carry the no-attribution rule in its own `AGENTS.md`, stated in full (not by reference). The rule must explicitly say it overrides any tool's built-in commit template. Three of five workspace repos had no `AGENTS.md`; all four now have self-contained copies with the rule stated verbatim.
 
-**Generalisation:** A rule's reach equals the set of files an agent actually reads. A rule present in a repo the agent never opens during a session is invisible. Delivery is not authoring; a rule undelivered is a rule unenforced.
+**Generalization:** A rule's reach equals the set of files an agent actually reads. A rule present in a repo the agent never opens during a session is invisible. Delivery is not authoring; a rule undelivered is a rule unenforced.
 
 ---
 
@@ -397,7 +397,7 @@ Each entry below maps a CI symptom to its root cause and the durable fix. The si
 
 **Cause (historical):** The previous detect logic compared `HEAD~1:package.json` to `HEAD:package.json`. After a force-push or a reset that left the version the same on both sides, the diff was empty and publish was skipped - even when the registry did not have the package.
 
-**Fix:** The detect job now uses `npm view <name>@<version>` to ask the registry directly. If the version is missing, publish is scheduled regardless of git history.
+**Fix:** The detect job now asks the registry directly instead of diffing git history. It compares the packed shasum against `npm view <name>@<version> dist.shasum`, so publish is scheduled whenever the version is absent or the content differs (entry 26).
 
 ### 4. CI runs tests for every module on every commit
 
@@ -409,7 +409,7 @@ Each entry below maps a CI symptom to its root cause and the durable fix. The si
 
 **Cause:** A workflow that publishes on every main push, without checking version bump or registry state.
 
-**Lesson:** Use the unified `detect` -> `publish-*` pipeline. The detect job's registry-existence check, plus the per-publish-job safety-net, is the canonical way to avoid this error. Do not rebuild a separate publish workflow.
+**Lesson:** Use the unified `detect` -> `publish-*` pipeline. Both gates compare the packed shasum against the registry's `dist.shasum`, which is the canonical way to avoid this error. A gate that checks version presence alone swallows the failure instead (entry 26). Do not rebuild a separate publish workflow.
 
 ### 6. `403 Forbidden` on `npm publish`
 
@@ -621,7 +621,7 @@ gh api "$BASE/versions"                  # MUST return 404 Package not found
 
 If the verify step returns a JSON array, the delete did not work - re-check the owner type and path.
 
-**Confirmed behavior after deletion:** GitHub Packages accepts republishing a previously-used version name once the version (or the whole package) is deleted - version names are not permanently burned. Combined with the detect job's registry-existence check, this enables a full re-baseline: wipe the packages, push to `main` (no file changes needed), and CI republishes every module at its unchanged `package.json` version. Verified across a 44-module wipe-and-republish. Round-trip proof after republish: `npm install @scope/[name]@[version]` from a scratch directory must resolve.
+**Confirmed behavior after deletion:** GitHub Packages accepts republishing a previously-used version name once the version (or the whole package) is deleted - version names are not permanently burned. Combined with the detect job's content guard, this enables a full re-baseline: wipe the packages, push to `main` (no file changes needed), and CI republishes every module at its unchanged `package.json` version. Verified across a 44-module wipe-and-republish. Round-trip proof after republish: `npm install @scope/[name]@[version]` from a scratch directory must resolve.
 
 ### 17. `git add .` bundles unrelated modules into one commit
 
@@ -669,6 +669,14 @@ This applies to all lock files in the repo (root, `_test/`, `hosts/`, etc.). CI 
 **Cause:** When a shared devDependency (like `js-helper-eslint-config`) is consumed by every module, deleting it from the registry breaks all downstream installs until CI republishes it. If the config package's own `test` and `publish` jobs are not chained ahead of all other jobs in the workflow, downstream modules race the republish and fail.
 
 **Lesson:** A shared devDependency that every module installs must be the head of the CI chain. Its `test-*` and `publish-*` jobs must complete before any other module's `test-*` job starts. In `ci-publish-helper-modules.yml`, chain `test-eslint-config` and `publish-eslint-config` before the first downstream `test-*` job. Never include the config package in a bulk registry deletion without immediately repushing to trigger its CI republish.
+
+### 26. A version-existence publish guard turns a forgotten delete into a green run that ships nothing
+
+**Symptom:** A same-version republish is pushed, CI reports green, and the registry still serves the old tarball. A later re-trigger of the same commit fails with `409 You cannot publish over the previously published versions`, the honest error the first run swallowed. The red run is then easy to misread as "the published version is corrupt", which invites a version bump that is pure collateral damage.
+
+**Cause:** The publish path guards `npm publish` with a registry-existence check: it reads `npm view "$PKG@$VERSION"` and sets `needs_publish=false` when the version is present. The guard exists to make re-runs of an unchanged commit idempotent, which is legitimate. But every module is pinned at one version and republishing is done by delete-then-push. The guard therefore cannot distinguish "nothing to do, the registry already has this exact content" from "the source changed and the operator forgot to delete first". Those two need opposite outcomes, and the version name does not carry enough information to tell them apart.
+
+**Fix/Lesson:** The guard compares content, not version presence: pack the working tree, read the registry's `dist.shasum`, and skip only when the shasums match. Differing shasums fail loudly with instructions to delete the version first. Both the detect gate and the per-job guard must compare, because a detect job filtering on version presence drops the module before its publish job runs. The same comparison is the only honest post-publish verification, because a version appearing in the registry listing does not prove the new content shipped. Generalized rule: when a guard's job is to detect "already done", its input must be a fingerprint of the work, never a name that the work happens to reuse. Positive form of the rule: [`cicd-publishing.md` - The Publish Guard Compares Content, Not Version Presence](cicd-publishing.md#the-publish-guard-compares-content-not-version-presence).
 
 ---
 
@@ -793,7 +801,7 @@ The general rule for any service that has an init phase distinct from "process u
 
 **Cause:** The cooldown gate in `generateAndStore` computed `now - existing.created_at` without short-circuiting when `cooldown_seconds === 0`. Under concurrency, two requests can share a microsecond-close `instance.time` while the store's `created_at` (captured a few milliseconds earlier by the first winning write) is *ahead* of the second caller's `now`. The signed diff is negative, `diff < cooldown_seconds` is trivially true for any positive threshold; and even for `0`, the strictly-less-than check fires when the diff is negative. The caller sees a cooldown error that has no real cooldown semantically.
 
-The bug was dormant until the MongoDB PRIMARY-election fix (entry 11) stabilised CI enough that the race became reproducible; before that, the flake was attributed to the mongodb healthcheck and the true cause went unseen.
+The bug was dormant until the MongoDB PRIMARY-election fix (entry 11) stabilized CI enough that the race became reproducible; before that, the flake was attributed to the mongodb healthcheck and the true cause went unseen.
 
 **Lesson:** A "cooldown disabled" configuration must short-circuit **before** any arithmetic on timestamps. The canonical fix is a single explicit check at the top of the gate:
 
@@ -809,7 +817,7 @@ if (options.cooldown_seconds === 0) {
 }
 ```
 
-Generalised rule: any time a helper has a "feature disabled when N === 0" semantics, the disabled branch must bypass every downstream computation that uses N or any state N would have produced. Never rely on `0 < diff < N` to be false when `N === 0`, because `diff` can be negative under concurrent non-monotonic time sources.
+Generalized rule: any time a helper has a "feature disabled when N === 0" semantics, the disabled branch must bypass every downstream computation that uses N or any state N would have produced. Never rely on `0 < diff < N` to be false when `N === 0`, because `diff` can be negative under concurrent non-monotonic time sources.
 
 Applies anywhere a rate-limit, throttle, TTL, or cooldown is configurable with a "zero = off" value: `verify.cooldown_seconds`, `auth.LAST_ACTIVE_UPDATE_INTERVAL_SECONDS`, `logger` retention, and any future equivalent. Audit the gate when introducing any such option.
 
@@ -817,7 +825,7 @@ Applies anywhere a rate-limit, throttle, TTL, or cooldown is configurable with a
 
 ### 15. Repo-wide `ERR_MODULE_NOT_FOUND` after a "remove scope prefix" style commit
 
-**Symptom:** All `_test/` suites fail immediately at `import 'js-helper-utils'` with `ERR_MODULE_NOT_FOUND`. No code logic has changed; only `import ... from '@superloomdev/...'` statements were rewritten to `import ... from '...'` in a mass search-and-replace commit. `node_modules/` still contains only scoped packages (`@superloomdev/js-helper-utils`, etc.); the unscoped names simply don't exist.
+**Symptom:** All `_test/` suites fail immediately at `import 'js-helper-utils'` with `ERR_MODULE_NOT_FOUND`. No code logic has changed; only `import ... from '@superloomdev/...'` statements were rewritten to `import ... from '...'` in a mass search-and-replace commit. `node_modules/` still contains only scoped packages (`@superloomdev/js-helper-utils`, etc.); the unscoped names do not exist.
 
 **Cause:** npm installs packages under their full published name (the `"name"` field in `package.json`, which includes the `@superloomdev/` scope). An `import` statement must use that exact name. Removing the scope prefix from `import` statements without simultaneously adding npm aliases (or renaming the packages on the registry) breaks every module that was changed.
 

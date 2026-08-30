@@ -1,4 +1,4 @@
-# Organisation Structure
+# Organization Structure
 
 How the Superloom project is divided across repositories and how they relate to each other.
 
@@ -100,7 +100,7 @@ Create a new language module repo (`[lang]-helper-modules`) when:
 - The module follows the same loader/factory/adapter patterns defined in `superloom` docs
 - CI/CD for testing and publishing is ready to be wired up
 
-Create a specialised module repo (`[lang]-helper-modules-specialized`) when:
+Create a specialized module repo (`[lang]-helper-modules-specialized`) when:
 - Modules are opinionated wrappers around niche third-party SDKs
 - They should be opt-in rather than part of the standard module set
 - They may have different quality/maintenance expectations than core modules

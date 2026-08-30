@@ -37,13 +37,13 @@ A third-party dependency is acceptable **only** when **all** of the following ar
 
 | Criterion | Why it matters |
 |---|---|
-| **The surface is specialized, not generic.** The library encodes domain knowledge we would otherwise have to re-derive (an RFC grammar, a public-suffix list, a cryptographic primitive, a vendor SDK contract). Generic utility functions (`isEmpty`, `flatten`, `debounce`) do not qualify | Specialised knowledge ages well in a maintained library; we age badly tracking it |
+| **The surface is specialized, not generic.** The library encodes domain knowledge we would otherwise have to re-derive (an RFC grammar, a public-suffix list, a cryptographic primitive, a vendor SDK contract). Generic utility functions (`isEmpty`, `flatten`, `debounce`) do not qualify | Specialized knowledge ages well in a maintained library; we age badly tracking it |
 | **The library has zero runtime dependencies.** Indirect deps multiply supply-chain surface area and version-conflict pain | Each transitive dep is a separately-trusted party |
 | **The library is the de-facto standard for its problem.** Measured by weekly npm downloads in the top 1% for its category, broad reverse-dependent count (1000+ packages), and presence as a transitive dep of major frameworks | A library used by Express, Fastify, Koa, and Hono simultaneously has been battle-tested by every Node ecosystem actor; a niche library has not |
-| **The maintainer is a recognised org with multiple active maintainers**, not a single hobbyist account | Solo-maintained packages are the canonical supply-chain attack vector (cf. `event-stream`, `colors.js`, `node-ipc`) |
+| **The maintainer is a recognized org with multiple active maintainers**, not a single hobbyist account | Solo-maintained packages are the canonical supply-chain attack vector (cf. `event-stream`, `colors.js`, `node-ipc`) |
 | **The license is MIT, ISC, BSD-2/3, or Apache-2.0**, with no copyleft (GPL family) reach | License compatibility with downstream commercial use |
 | **The bundle size is small** (typically under 10 KB minified) | Cold-start cost on AWS Lambda, build-time cost on the client |
-| **The behaviour cannot be reasonably re-implemented in-house** without re-deriving specification knowledge that has known edge cases or known security pitfalls | The library's value is the cumulative debugging that landed there over years |
+| **The behavior cannot be reasonably re-implemented in-house** without re-deriving specification knowledge that has known edge cases or known security pitfalls | The library's value is the cumulative debugging that landed there over years |
 | **The surface we use is narrow and stable.** We import the library at one point in the codebase (one helper module), wrap it behind an internal interface, and never let it leak elsewhere | Allows future replacement with zero ripple |
 
 ---
@@ -137,5 +137,5 @@ A dependency can be *removed* (replaced with in-house code) at any time if the t
 ## Related Documents
 
 - [Architectural Philosophy](../languages/js/project-structure.md) - "All external libraries wrapped" is one of the four coding-practice rules; this document is the detailed implementation of that rule
-- [Error Handling](error-handling.md) - third-party libraries that throw exceptions are normalised at the wrapper boundary into the framework's error envelope
+- [Error Handling](error-handling.md) - third-party libraries that throw exceptions are normalized at the wrapper boundary into the framework's error envelope
 - [Module Categorization](../languages/js/module-classes.md) - which module classes are allowed to declare runtime dependencies

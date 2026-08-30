@@ -62,6 +62,7 @@ Ambiguous verb or missing module path: ask, never guess.
 8. `docs/languages/js/unit-test-authoring.md` + `docs/languages/js/module-testing.md` - test double patterns, testing tiers, framework module testing
 9. `docs/languages/js/module-classes.md` - this module's class
 10. `docs/languages/js/index.md` - the two-form naming rule
+11. `docs/languages/js/dependencies.md` + `publishing.md` - peer dependency contract, version ranges, registry
 
 **Structural invariants** (each verifiable; source in parentheses):
 
@@ -165,7 +166,7 @@ Run everything. Any finding returns to Phase C, then the ENTIRE phase re-runs. E
    ```
    // turbo
    ```bash
-   git grep -niE "behaviour|colour|favour|licence|optimis|organis|initialis|standardis|serialis|authoris|analyse|centralis|normalis|recognis|synchronis|customis|specialis|catalogu" -- '[module-path]' ':!*/node_modules/*'
+   git grep -niE "behaviour|colour|favour|licence|optimise|optimisation|organise|organisation|initialis|standardis|serialis|authoris|analyse|centralis|normalis|recognis|synchronis|customis|specialis|catalogu" -- '[module-path]' ':!*/node_modules/*'
    ```
    // turbo
    ```bash
@@ -259,14 +260,19 @@ Run everything. Any finding returns to Phase C, then the ENTIRE phase re-runs. E
    ```
    // turbo
    ```bash
-   # .length === 0 on strings -> Lib.Utils.isEmptyString; on arrays -> Lib.Utils.isEmptyArray
+   # .length === 0 / > 0 / !== 0 on strings -> Lib.Utils.isEmptyString; on arrays -> Lib.Utils.isEmptyArray
    # Judge each hit by the variable type: string -> isEmptyString, array -> isEmptyArray
-   git grep -n "\.length === 0" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*' ':!*/_test/*'
+   git grep -nE "\.length (===|!==|>) 0" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*' ':!*/_test/*'
    ```
    // turbo
    ```bash
-   # Object.keys(x).length === 0 should use Lib.Utils.isEmptyObject
-   git grep -nE "Object\.keys\([^)]+\)\.length === 0" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*'
+   # === '' / !== '' should use Lib.Utils.isEmptyString
+   git grep -nE "=== ''|!== ''" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*' ':!*/_test/*'
+   ```
+   // turbo
+   ```bash
+   # Object.keys(x).length against zero should use Lib.Utils.isEmptyObject
+   git grep -nE "Object\.keys\([^)]+\)\.length (===|!==|>) 0" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' ':!*/_data/*'
    ```
    // turbo
    ```bash
@@ -281,14 +287,36 @@ Run everything. Any finding returns to Phase C, then the ENTIRE phase re-runs. E
     # Cwd = [module_root]/_test
     grep -n "file:" package.json
     ```
-11. **No `_data/` directory (hard gate).** The `_data/` directory is not a recognized archetype. Generated data lives in `data/` as pure JSON; dev scripts live in `scripts/`. See `module-structure.md` - Dev Scripts.
+11. ESM conformance (each must return nothing; `Cwd = [repo-root]`):
+    // turbo
+    ```bash
+    # CJS remnants - module.exports, 'use strict', require() (excluding createRequire); catches CJS in code, comments, and error messages
+    git grep -nE "module\.exports|'use strict'|\brequire\(" -- '[module-path]' ':!*/node_modules/*' | grep -v createRequire
+    ```
+    // turbo
+    ```bash
+    # Relative imports must include a .js extension; each hit is a missing extension
+    # JSON imports (`./data/x.json' with { type: 'json' }`) correctly carry .json, so they are excluded
+    git grep -nE "from '\./" -- ':(glob)[module-path]/**/*.js' ':!*/node_modules/*' | grep -vE "\.js'|\.json'"
+    ```
+    // turbo
+    ```bash
+    # "main" present without "exports" in package.json (CJS signature); must return nothing when clean
+    grep -q '"main"' [module-path]/package.json && ! grep -q '"exports"' [module-path]/package.json && echo 'FAIL: "main" present without "exports"'
+    ```
+    // turbo
+    ```bash
+    # scripts/ files must match the package's module type; CJS syntax in an ESM package is a violation
+    git grep -nE "require\(|module\.exports|'use strict'" -- '[module-path]/scripts/' ':!*/node_modules/*' | grep -v createRequire
+    ```
+12. **No `_data/` directory (hard gate).** The `_data/` directory is not a recognized archetype. Generated data lives in `data/` as pure JSON; dev scripts live in `scripts/`. See `module-structure.md` - Dev Scripts.
     // turbo
     ```bash
     # Cwd = [repo-root]
     find '[module-path]' -type d -name "_data" -not -path "*/node_modules/*"
     ```
     Must return nothing. If it returns a result, the module must be migrated: generated data to `data/*.json`, scripts to `scripts/*.js`.
-12. **Step-comment conformance (hard gate).** Read every function body in every source `.js` file and check ALL of the following:
+13. **Step-comment conformance (hard gate).** Read every function body in every source `.js` file and check ALL of the following:
 
    **a) Universal rule (every function, not just I/O):** The first logical block after the opening `{` has a step comment. Every subsequent logical block separated by a blank line also has a step comment. No exceptions for short functions - even a single-block function gets its opening step comment. (`code-formatting.md` - Inline Step Comments Inside Functions, lines 546-551)
 
@@ -299,9 +327,9 @@ Run everything. Any finding returns to Phase C, then the ENTIRE phase re-runs. E
    **d) Loop bodies:** A loop body carrying more than two operations gets a step comment per operation, separated by blank lines. The comment above the loop states what the iteration accomplishes; the comments inside cover each operation. (`code-formatting.md` - Inline Step Comments Inside Functions, line 553)
 
    The Mandatory Set is the audit floor, not the ceiling: blocks outside the set still follow the universal rule. Lint, tests, and sweeps cannot see comments; this check is manual. The reply MUST contain `Step-comment conformance: [clean | N gaps -> fixed]`.
-13. **Skeleton conformance re-diff (hard gate).** Re-open the class skeleton beside the entry file; re-verify element by element, including function bodies against the skeleton's worked body. The reply MUST contain `Skeleton conformance: [clean | N mismatches -> fixed]`.
-14. **Manual checks** (not greppable): table cells without trailing periods; README free of signatures/config tables/install commands; three `ROBOTS.md` signatures spot-checked against `docs/api.md`.
-15. State convergence explicitly: "Pass N found zero new findings; previous pass also clean - converged." Valid ONLY with the Phase B read-evidence table and the conformance verdict present in this conversation.
+14. **Skeleton conformance re-diff (hard gate).** Re-open the class skeleton beside the entry file; re-verify element by element, including function bodies against the skeleton's worked body. The reply MUST contain `Skeleton conformance: [clean | N mismatches -> fixed]`.
+15. **Manual checks** (not greppable): table cells without trailing periods; README free of signatures/config tables/install commands; three `ROBOTS.md` signatures spot-checked against `docs/api.md`.
+16. State convergence explicitly: "Pass N found zero new findings; previous pass also clean - converged." Valid ONLY with the Phase B read-evidence table and the conformance verdict present in this conversation.
 
 ### Phase E - Present (approval gate, never skip)
 
@@ -337,8 +365,9 @@ If this run exposed a failure mode or a gap in the standard or in this workflow:
 - [ ] Sweep battery clean (each sweep result reported explicitly: clean or hits with judgment); plan-reference sweep run; JSDoc awk silent; performance-audit ownership judged
 - [ ] Companions exist; single-import holds; fixed interface slots kept
 - [ ] Type-guard sweep run; every `typeof` hit judged as violation or permitted form
-- [ ] Peer-dep primitive utilization sweeps run (stringReverse, isEmptyString/Array, isEmptyObject, inArray); every hit judged
+- [ ] Peer-dep primitive utilization sweeps run (stringReverse, isEmptyString/Array widened to `=== 0` / `!== 0` / `> 0`, `=== ''` / `!== ''`, isEmptyObject, inArray); every hit judged
 - [ ] Peer-dep utilization review done (read peerDeps + ROBOTS.md, cross-reference source); verdict line output
+- [ ] ESM conformance sweeps clean (CJS remnants, `.js` extensions on relative imports, `main`-without-`exports`, `scripts/` module type)
 - [ ] Skeleton conformance verdict line output
 - [ ] Step-comment conformance verdict line output (all 4 sub-checks: universal rule, mandatory set, every return, loop bodies)
 - [ ] `file:` rule holds

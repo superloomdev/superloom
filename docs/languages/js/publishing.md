@@ -56,7 +56,7 @@ Every helper module is an ES Module (`"type": "module"`) and uses an `"exports"`
 - `"."` points at the module's entry file (e.g. `"./utils.js"`, `"./adapter.js"`).
 - `"./package.json"` is always exported so tooling can read the package metadata.
 - Companion files consumed by the entry file (e.g. `[module].config.js`, `[module].errors.js`, `parts/*.js`) are **not** listed as separate export paths. They are resolved relative to the entry file through normal ESM relative imports. The `"exports"` map exposes only the public entry point.
-- `parts/` subdirectories are **never** exported. They are internal implementation files consumed by the entry file's relative imports, not by consumers. See [`module-structure.md` → Parts Pattern](module-structure.md#parts-pattern).
+- `parts/` subdirectories are **never** exported. They are internal implementation files consumed by the entry file's relative imports, not by consumers. See [`module-structure.md` → Parts Pattern](module-structure.md#parts-pattern-complex-helper-modules).
 - The legacy `"main"` field is **not** used. A package with both `"main"` and `"exports"` is misconfigured - remove `"main"`.
 - Every export path must include the `.js` extension. ESM resolution requires explicit extensions for relative paths.
 

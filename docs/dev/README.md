@@ -109,5 +109,5 @@ The `__dev__/` folder lives at the **workspace root** (the parent directory that
 - `migration-changelog.md` - personal log of module migration changes
 - `secrets/` - real credentials, API keys, sandbox passwords (never copied anywhere committed)
 
-See [Architectural Philosophy](../languages/js/project-structure.md#personal-workspace-dev) for the full convention and [Organisation Structure](org-structure.md) for the workspace layout.
+See [Architectural Philosophy](../languages/js/project-structure.md#personal-workspace-dev) for the full convention and [Organization Structure](org-structure.md) for the workspace layout.
 

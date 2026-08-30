@@ -9,7 +9,9 @@ How helper modules are tested on every push and published to GitHub Packages. Th
 - [How It Works](#how-it-works)
 - [Detect: What Triggers Test and Publish](#detect-what-triggers-test-and-publish)
 - [Fresh-State Recovery](#fresh-state-recovery)
+- [The Publish Guard Compares Content, Not Version Presence](#the-publish-guard-compares-content-not-version-presence)
 - [Why a Single Workflow](#why-a-single-workflow)
+- [Module Execution Sequence](#module-execution-sequence)
 - [Workflow Location](#workflow-location)
 - [Publishing a New Version](#publishing-a-new-version)
 - [GITHUB_TOKEN Permissions](#github_token-permissions)
@@ -27,7 +29,7 @@ A single unified workflow (`.github/workflows/ci-publish-helper-modules.yml`) ha
 1. **`detect`** - inspects the commit and the registry to decide which modules need testing and which need publishing
 2. **`test-eslint-config`** and **`publish-eslint-config`** - run first, ahead of all other test/publish jobs, because every module's `eslint.config.js` resolves `@superloomdev/js-helper-eslint-config` at install time. If the config package is missing from the registry, every downstream `npm ci` fails with a checksum mismatch
 3. **`test-*`** (per-module) - runs lint and tests on every push and PR for any module the detect job marks
-4. **`publish-*`** (per-module) - runs only on `main` pushes for modules the detect job marks as needing publish; includes a registry safety-net that skips if the version is already published
+4. **`publish-*`** (per-module) - runs only on `main` pushes for modules the detect job marks as needing publish; includes a content guard that skips when the packed shasum matches the published one and fails when they differ ([The Publish Guard Compares Content, Not Version Presence](#the-publish-guard-compares-content-not-version-presence))
 
 No manual tokens are required. The `GITHUB_TOKEN` is created automatically by GitHub Actions for every workflow run and expires when the workflow finishes.
 
@@ -38,26 +40,28 @@ The detect job answers two questions:
 | Question | Used for | Source of truth |
 |---|---|---|
 | Which modules had any file changes since the previous commit? | `test_modules` (gates `test-*` jobs) | `git diff HEAD~1 HEAD` |
-| Which modules have a current version that is **not yet on the registry**? | `publish_modules` (gates `publish-*` jobs) | `npm view <name>@<version>` against GitHub Packages |
+| Which modules have content that is **not yet on the registry** at their current version? | `publish_modules` (gates `publish-*` jobs) | `npm pack` shasum against `npm view <name>@<version> dist.shasum` on GitHub Packages |
 
 **`test_modules`** is the union of:
 
 - Modules with file changes in this commit
 - Modules in `publish_modules` (so we always run tests before publishing, even if no file changed in this commit)
 
-**`publish_modules`** is the set of modules whose `package.json` `version` is not currently published. This subsumes both:
+**`publish_modules`** is the set of modules whose packed content is not currently on the registry at their `package.json` `version`. This subsumes three cases:
 
 - **Steady-state version bumps** - the new version is by definition not yet on the registry, so it gets published
 - **Fresh-state recovery** - if the registry has been wiped (or never populated), every module's current version is "not published" and all of them get republished
+- **Source changed at an existing version** - the shasums differ, so the module is marked and its publish job fails with instructions to delete the version first
 
-The publish job retains a per-job safety-net that calls `npm view` again immediately before `npm publish`, so a redundant publish attempt (e.g., due to a transient registry error during detect) never overwrites a real version.
+The publish job re-runs the content guard immediately before `npm publish`, so a redundant publish attempt (for example after a transient registry error during detect) never overwrites a real version. Both gates compare shasums rather than version names; the reasoning is in [The Publish Guard Compares Content, Not Version Presence](#the-publish-guard-compares-content-not-version-presence).
 
 ### What Gets Published When
 
 | Scenario | `test_modules` | `publish_modules` | Tests run? | Publish runs? |
 |---|---|---|---|---|
 | PR opened / updated | Changed only | empty | Yes (changed only) | No |
-| Push to main, no version bump, all already published | Changed only | empty | Yes (changed only) | No |
+| Push to main, no version bump, published content identical | Changed only | empty | Yes (changed only) | No |
+| Push to main, no version bump, source changed at a published version | Changed only | `[X]` | Yes for X | No - the guard fails the job |
 | Push to main, version bumped on module X | `[X]` (or wider if X also unpublished elsewhere) | `[X]` | Yes for X | Yes for X |
 | Push to main, registry wiped, all 17 modules at 1.0.0 | All 17 | All 17 | Yes for all 17 | Yes for all 17 |
 | Push to main, repo's first commit (orphan) | All 17 | All 17 | Yes for all 17 | Yes for all 17 |
@@ -65,7 +69,7 @@ The publish job retains a per-job safety-net that calls `npm view` again immedia
 
 ## Fresh-State Recovery
 
-The pipeline must work the very first time, when nothing has been published yet, and after a registry reset. The detect job's registry-existence check is what makes this work.
+The pipeline must work the very first time, when nothing has been published yet, and after a registry reset. The detect job's content guard is what makes this work: an absent version has no shasum to compare against, so the module is published.
 
 ### When you would use it
 
@@ -79,13 +83,31 @@ The pipeline must work the very first time, when nothing has been published yet,
 2. Make sure each module's `publishConfig.registry` is `https://npm.pkg.github.com` and the package name uses the correct scope
 3. Push to `main`
 
-The detect job will list every module whose `<name>@<version>` is not yet on the registry, schedule its test job, and (on success) schedule its publish job. The safety-net inside each publish job protects against accidentally republishing.
+The detect job will list every module whose `<name>@<version>` is not yet on the registry, schedule its test job, and (on success) schedule its publish job. The content guard inside each publish job protects against accidentally republishing identical content and fails loudly when the source changed at an existing version.
 
 ### Important guidelines
 
 - **Publishing is CI-only.** Always use the pipeline rather than `npm publish` directly. The pipeline ensures tests pass before publishing and keeps version-vs-source tracking consistent.
 - **Version numbers move forward only** in normal operation. Even when restoring an old build, bump the version forward. Downstream consumers rely on `^x.y.z` resolution working predictably.
 - **Same-version republish after a registry wipe is the one sanctioned exception.** GitHub Packages accepts a previously-used version name once the version is deleted, so a deliberate re-baseline (wipe all packages, push to `main`, let detect republish everything at unchanged versions) works end to end. Deletion mechanics and the confirmed behavior: [pitfalls entry 16](pitfalls.md#cicd-publishing).
+
+## The Publish Guard Compares Content, Not Version Presence
+
+A publish path guarded only by a registry-existence check has no failure signal on a same-version republish. The guard reads "does `<name>@<version>` exist" and skips on yes. A republish that forgets the delete step then produces a **green** run that publishes nothing. The job reports success, the commit looks shipped, and the registry still serves the old tarball.
+
+The guard must prove content equality rather than assume it. Pack the working tree with `npm pack`, read the registry's published `dist.shasum` for the same coordinates, and branch on the comparison:
+
+| Comparison | Outcome |
+|---|---|
+| Shasums match | Skip, and say so - the registry already serves this exact content |
+| Shasums differ | **Fail** with "source changed but version exists; delete the version from the registry before pushing" |
+| Version absent | Publish |
+
+The distinction the existence check cannot make is between "nothing to do" and "the operator forgot to delete first". Those need opposite outcomes, so the guard needs an input the version name does not carry.
+
+**The rule binds both gates.** The detect job decides which modules get a `publish-*` job, and each publish job re-checks immediately before `npm publish`. A content comparison in the publish job alone never runs in the failure case it targets. A detect job filtering on version presence drops the module before its publish job is ever scheduled, so both layers compare shasums.
+
+The same comparison is the only honest post-publish verification. A version appearing in the registry listing does not prove the new content shipped; on a same-version republish the published shasum must differ from the pre-delete value. Bumping the version is never the remedy for a shasum mismatch at this gate, because the mismatch is evidence about the delete step, not about the version number. A consumer-side `E409 ... Package file checksum mismatch` during `npm ci` is a different failure with a different remedy ([pitfalls entry 24](pitfalls.md#cicd-publishing)).
 
 ## Why a Single Workflow
 
@@ -97,10 +119,10 @@ Earlier iterations had two separate workflows (`test.yml` and `publish-helper-mo
 The unified workflow fixes both by:
 
 - Running tests once per commit
-- Triggering `npm publish` only when a module is missing from the registry
+- Triggering `npm publish` only when the module's packed content is not already on the registry at that version
 - Sequencing publish after its corresponding test job via `needs:`
 
-This pattern (registry-existence check + version-bump-by-implication + per-job safety-net) is a lightweight alternative to Changesets / semantic-release. It suits quick-iteration monorepos where versions are bumped manually per Conventional Commits.
+This pattern (content-comparison guard + version-bump-by-implication + the same guard repeated per job) is a lightweight alternative to Changesets / semantic-release. It suits quick-iteration monorepos where versions are bumped manually per Conventional Commits.
 
 ## Module Execution Sequence
 
@@ -228,8 +250,10 @@ When you hit a new CI failure: reproduce it, confirm the root cause, then add an
 
 ### Publish Step Skipped
 
-- **Already on registry.** The detect job's registry check found `<name>@<version>` already published, so the module was excluded from `publish_modules`. The safety-net log inside the publish job (when triggered through other paths) reads `<name>@<version> is already published - skipping`. This is normal
+- **Identical content already on registry.** The detect job's content guard found the packed shasum equal to the published `dist.shasum`, so the module was excluded from `publish_modules`. The guard log inside the publish job (when triggered through other paths) reads `<name>@<version> already serves this exact content - skipping`. This is normal
 - **Version is the empty string or missing.** `package.json` must have a non-empty `version` field
+
+A skip is only correct when the shasums match. A skip on version presence alone is the failure mode described in [The Publish Guard Compares Content, Not Version Presence](#the-publish-guard-compares-content-not-version-presence): the run goes green and ships nothing.
 
 ### 403 Forbidden on Publish
 

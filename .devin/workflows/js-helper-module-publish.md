@@ -89,15 +89,22 @@ If the module is already registered, skip this phase.
 
 Only when deliberately replacing an existing release at the same version:
 
-1. Delete all registry versions via `gh api`:
+1. **Record the pre-delete shasum.** This is the evidence that the republish actually shipped new content (`codebase-superloom/docs/dev/cicd-publishing.md` - The Publish Guard Compares Content, Not Version Presence):
+   // turbo
+   ```bash
+   npm view @superloomdev/[PACKAGE_NAME]@[VERSION] dist.shasum
+   ```
+   Write the value down. A republish that ends with this same shasum shipped nothing.
+2. Delete all registry versions via `gh api`:
    ```bash
    gh api /orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions --jq '.[].id' | xargs -I {} gh api --method DELETE /orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions/{}
    ```
-2. Verify `404`:
+3. Verify `404`:
    ```bash
    gh api /orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions
    ```
-3. Then proceed to Phase 6.
+   A response that still lists the version means the delete did not take. Do NOT proceed, and never bump the version to work around it.
+4. Then proceed to Phase 6.
 
 If this is a normal version bump, skip this phase entirely.
 
@@ -127,6 +134,13 @@ Watch the workflow green, then confirm the version is live:
 gh api "/orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions" --jq '.[] | {id, name}'
 ```
 
+**Content verification (hard gate on a same-version republish).** A version being listed does NOT prove the new content shipped: a publish job guarded by a version-existence check skips silently when the version already exists, reporting green while the registry still serves the old tarball (`codebase-superloom/docs/dev/cicd-publishing.md` - The Publish Guard Compares Content, Not Version Presence; CI/CD Publishing entry 26 in `codebase-superloom/docs/dev/pitfalls.md`). Compare the shasum against the value recorded in Phase 5:
+// turbo
+```bash
+npm view @superloomdev/[PACKAGE_NAME]@[VERSION] dist.shasum
+```
+On a same-version republish this MUST differ from the Phase 5 value. An unchanged shasum means the republish shipped nothing - the delete was skipped or the publish job no-opped. Diagnose before reporting success; never bump the version as the remedy.
+
 On CI failure: run `/js-helper-module fix [module-path]` to diagnose and fix, then re-run this workflow from Phase 1.
 
 ## Loop-backs
@@ -145,8 +159,8 @@ If this run exposed a failure mode or a gap in the standard or in this workflow:
 - [ ] Package identity verified: name, private, license, engines, registry, version
 - [ ] Ship check: only source + docs + README + ROBOTS + package.json in tarball
 - [ ] CI registration added (first publish) or confirmed present (subsequent)
-- [ ] Same-version republish handled (if applicable): old versions deleted, 404 verified
+- [ ] Same-version republish handled (if applicable): pre-delete shasum recorded, old versions deleted, 404 verified
 - [ ] Module-only commit; CI workflow file staged if registration changed
 - [ ] Explicit user approval before push
-- [ ] CI published version verified live
+- [ ] CI published version verified live; on a same-version republish the shasum differs from the Phase 5 value
 - [ ] New failure modes journaled; plan updated; STOPPED
