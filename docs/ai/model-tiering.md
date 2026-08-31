@@ -11,7 +11,6 @@ AI-assisted development runs on models of very different cost and capability, an
 - [Token Discipline Within a Session](#token-discipline-within-a-session)
 
 ---
-
 ## The Two Tiers
 
 | Tier | Character | Paid for |

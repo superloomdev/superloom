@@ -5,20 +5,19 @@ How AI agents are configured across the Superloom workspace: which files exist, 
 ## On This Page
 
 - [The File Set](#the-file-set)
-- [AGENTS.md: the Open Standard](#agentsmd-the-open-standard)
-- [AGENTS.md Is Compiled, Never Authored](#agentsmd-is-compiled-never-authored)
+- [AGENTS.md: the Open Standard](#agents-md-the-open-standard)
+- [AGENTS.md Is Compiled, Never Authored](#agents-md-is-compiled-never-authored)
 - [The Size Budget](#the-size-budget)
 - [What Belongs In and Out](#what-belongs-in-and-out)
 - [Tool-Specific Folders](#tool-specific-folders)
 - [Repository Independence](#repository-independence)
-- [Module-Level ROBOTS.md](#module-level-robotsmd)
+- [Module-Level ROBOTS.md](#module-level-robots-md)
 - [Personal Configuration](#personal-configuration)
 - [Commit and Attribution Policy](#commit-and-attribution-policy)
 - [Release Policy Is Repository-Local](#release-policy-is-repository-local)
 - [Autonomous Execution](#autonomous-execution)
 
 ---
-
 ## The File Set
 
 | File | Scope | Committed | Purpose |

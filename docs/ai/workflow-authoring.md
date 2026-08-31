@@ -6,6 +6,13 @@ A workflow is a procedure an AI agent executes: a Markdown file of ordered steps
 
 - [When to Write a Workflow](#when-to-write-a-workflow)
 - [The Seven Properties](#the-seven-properties)
+  - [1. Self-contained execution content](#_1-self-contained-execution-content)
+  - [2. Hard gates with visible evidence](#_2-hard-gates-with-visible-evidence)
+  - [3. Convergence exit conditions](#_3-convergence-exit-conditions)
+  - [4. Fixed phase order with stop points](#_4-fixed-phase-order-with-stop-points)
+  - [5. Exact commands with substitution tokens](#_5-exact-commands-with-substitution-tokens)
+  - [6. Skeletons over rule recall](#_6-skeletons-over-rule-recall)
+  - [7. A self-improvement hook](#_7-a-self-improvement-hook)
 - [Structure of a Workflow File](#structure-of-a-workflow-file)
 - [Embedded Content and the Compile Rule](#embedded-content-and-the-compile-rule)
 - [Command Discipline](#command-discipline)
@@ -14,7 +21,6 @@ A workflow is a procedure an AI agent executes: a Markdown file of ordered steps
 - [Anti-Patterns](#anti-patterns)
 
 ---
-
 ## When to Write a Workflow
 
 A workflow is warranted for an operation that is **repeated, multi-step, and correctness-critical**: creating a module, reviewing one against the standard, publishing, recovering a drifted session. It is not warranted for one-off tasks (direct instruction is cheaper) or for knowledge (that is a document; see [Documentation Authoring](../principles/documentation-authoring.md)).

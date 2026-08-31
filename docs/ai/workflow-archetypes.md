@@ -6,12 +6,22 @@ The language-agnostic patterns that concrete workflow families are compiled from
 
 - [What a Workflow Family Is](#what-a-workflow-family-is)
 - [The Three Archetypes](#the-three-archetypes)
+  - [Archetype 1: Build (create + fix)](#archetype-1-build-create-fix)
+  - [Archetype 2: Audit (deep, read-only)](#archetype-2-audit-deep-read-only)
+  - [Archetype 3: Publish (release)](#archetype-3-publish-release)
 - [Family Contract](#family-contract)
+  - [Naming Convention](#naming-convention)
+  - [Shared Embedded Standard](#shared-embedded-standard)
+  - [Hand-off Protocol](#hand-off-protocol)
+  - [Repository Independence](#repository-independence)
 - [The Compile Rule](#the-compile-rule)
+  - [Inputs](#inputs)
+  - [Output](#output)
+  - [Verification](#verification)
+  - [When to Recompile](#when-to-recompile)
 - [Cross-References](#cross-references)
 
 ---
-
 ## What a Workflow Family Is
 
 A workflow family is a set of workflows that together cover the full lifecycle of one artifact type in one implementation repository. For a helper-modules repository, the artifact is "a helper module" and the family is:
