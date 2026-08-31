@@ -91,9 +91,9 @@ The family pattern exists because:
 2. **Package identity** - Verify name, private flag, license, runtime engine constraint, registry, version.
 3. **Ship check** - The package manager's dry-run pack confirms only source and the published documentation set ship.
 4. **CI registration** - First publish only: add the test/publish job pair to the CI workflow, re-chain dependencies.
-5. **Same-version republish** - Only when replacing an existing release: delete old versions, verify the registry reports them gone.
+5. **Same-version republish** - Skipped by default. Entered only when the target repository's own standing-rule file declares same-version republishing as its release mechanism: delete old versions, verify the registry reports them gone.
 6. **Commit** - Module-only commit, explicit user approval before push.
-7. **Verify CI published** - Watch the workflow green, confirm the version is live via the registry API.
+7. **Verify CI published** - Watch the workflow green, confirm the version is live via the registry API, and confirm the published artifact's fingerprint matches what this commit packs.
 
 **Key properties:**
 - CI-only publishing: no human runs the publish command manually. The commit triggers CI.

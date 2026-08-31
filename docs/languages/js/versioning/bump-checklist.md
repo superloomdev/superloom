@@ -189,10 +189,11 @@ open https://github.com/superloomdev/superloom/packages
 npm view @superloomdev/js-helper-utils versions
 ```
 
-A version appearing in that listing proves the version name exists, not that the new content shipped. On a same-version republish, compare the published shasum against the value recorded before the delete; they must differ. See [`cicd-publishing.md` - The Publish Guard Compares Content, Not Version Presence](../../../dev/cicd-publishing.md#the-publish-guard-compares-content-not-version-presence).
+A version appearing in that listing proves the version name exists, not that the new content shipped. Compare the published shasum against the shasum this commit packs; they must match. On a deliberate same-version republish it must also differ from the value recorded before the delete. See [`cicd-publishing.md` - The Publish Guard Compares Content, Not Version Presence](../../../dev/cicd-publishing.md#the-publish-guard-compares-content-not-version-presence).
 
 ```bash
 npm view @superloomdev/js-helper-utils@1.0.2 dist.shasum
+npm pack --dry-run --json | jq -r '.[0].shasum'
 ```
 
 ## Multi-Module Bumps

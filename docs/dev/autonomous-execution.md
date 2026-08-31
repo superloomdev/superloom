@@ -43,9 +43,10 @@ These are not blocked by caution; they are blocked because they destroy work or 
 - `git push --force`, any history rewrite, branch deletion
 - `git checkout` or `git reset --hard` over uncommitted changes
 - Deleting or unpublishing a published package version that the active plan does not name
-  explicitly. Same-version republish is the sanctioned version-lock procedure, so a plan that
-  names the package authorizes its deletion. A blanket or bulk deletion is never authorized,
-  regardless of what the plan says.
+  explicitly. Where the target repository's `AGENTS.md` declares delete-then-push as its release
+  mechanism, a plan that names the package authorizes its deletion. Where it does not, the remedy
+  is a version bump and deletion stays unauthorized. A blanket or bulk deletion is never
+  authorized, regardless of what the plan says.
 - `rm -rf` on any directory the run did not itself create
 - Modifying `minimumReleaseAge`, `.npmrc` security settings, branch protection, or any CI security control
 - Adding a dependency the plan does **not** name, when the purpose is to work around a failing test

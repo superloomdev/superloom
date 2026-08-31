@@ -11,6 +11,7 @@ This document states the convictions. The documents beside it turn each convicti
 - [Modularity and Decoupling](#modularity-and-decoupling)
 - [Wrap Everything External](#wrap-everything-external)
 - [Build Once, Run Anywhere](#build-once-run-anywhere)
+- [Idempotency Guards Compare Fingerprints](#idempotency-guards-compare-fingerprints)
 - [Designed for AI-Assisted Development](#designed-for-ai-assisted-development)
 - [How the Documentation Is Layered](#how-the-documentation-is-layered)
 - [Language Implementations](#language-implementations)
@@ -91,6 +92,30 @@ Two supporting rules:
 - **Configuration is data, not objects.** Config files carry plain values. Live objects (clients, drivers, connections) arrive through dependency injection, never through configuration keys.
 
 The architecture itself is language-independent. The interface, controller, service, and model separation described in [Server Architecture](server-architecture.md) is a pattern, not a language feature. The same structure applies whether the implementation is JavaScript, Python, Java, or C#.
+
+---
+
+## Idempotency Guards Compare Fingerprints
+
+The rule: **when a guard's job is to detect "already done", its input is a fingerprint of the work, never a name the work happens to carry.**
+
+A guard keyed on a name cannot distinguish two states that need opposite outcomes: "already done, nothing to do" and "not done, and the name was reused". Both present the same name, so the guard picks one answer and is silently wrong about the other. The failure is asymmetric in the worst direction, because the guard's whole purpose is to skip work, so being wrong means skipping work that was needed while reporting success.
+
+A fingerprint carries the information the name lacks. Comparing a content hash, a normalized payload digest, or a version vector separates the two states. The guard can then fail loudly on the third case it previously could not see: the name matches but the content does not.
+
+The pattern recurs wherever work is deduplicated:
+
+| Guard | Name-keyed (wrong) | Fingerprint-keyed (correct) |
+|---|---|---|
+| Package publish | Version string exists | Content checksum matches |
+| Cache read | Key exists | Key plus a hash of the inputs that produced the value |
+| Migration ledger | Migration filename applied | Filename plus a checksum of the migration body |
+| Webhook replay | Event id seen | Event id plus a digest of the payload |
+| Build cache | Target path newer than source | Hash of the full input set |
+
+The tell that a guard is name-keyed: a bug report of the form "it said it was done but nothing happened". Reach for the fingerprint before adding a special case, because each special case narrows the gap without closing it.
+
+A worked instance of this principle, including the failure it produced in this project's release pipeline, is [CI/CD Publishing entry 26](../dev/pitfalls.md#cicd-publishing).
 
 ---
 

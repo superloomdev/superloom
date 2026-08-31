@@ -167,11 +167,14 @@ Evidence required:
 
 This pass also catches implicit naming asymmetry. If sibling headings, skeletons, table rows, or templates form a set, their names must use the same abstraction level unless the docs state why they differ.
 
+**Layer check (a rule that agrees with itself can still sit at the wrong layer).** Take every absolute rule inside the blast radius under `docs/principles/`, `docs/ai/`, and `docs/dev/`: the "never do X" form, the "always do Y" form, and any single named remedy. For each, name a repository or deployment where it is false. If one exists, the rule is policy-dependent and mislayered. It must then state the mechanism only, and defer the policy-dependent part to the owning repository's standing-rule file, with the unsurprising behavior as the default when nothing is declared. Journal a temporary convention as a condition in a pitfall's cause, never as a premise inside a rule. Source: `docs/dev/pitfalls.md` entry V5.
+
 Output:
 
 ```text
 Pass 5 - Rule Agreement
 Rules or naming sets examined: N
+Absolute rules layer-checked: A
 Findings: M
 ```
 
@@ -378,7 +381,7 @@ Three allowed destination values, closed set:
 
 | `docs/` source | `AGENTS.md` section |
 |---|---|
-| `docs/principles/engineering-philosophy.md` | Persona + Golden Rule callout |
+| `docs/principles/engineering-philosophy.md` | Persona + Golden Rule callout + AI Behavior Rules (before-inventing-search, reserved vocabulary, comments never cite `docs/`, idempotency guards compare fingerprints) |
 | `docs/principles/documentation-authoring.md` | Golden Rule callout + AI Behavior Rules (docs-never-reference-plans rule) |
 | `docs/principles/project-management.md` | AI Behavior Rules (product management layer) |
 | `docs/principles/testing.md` | AI Behavior Rules (assertions pin exact values) |
@@ -412,13 +415,15 @@ Three allowed destination values, closed set:
 | `docs/languages/js/pitfalls-migration.md` | AI Behavior Rules (two-pass check reference) |
 | `docs/languages/js/versioning/bump-checklist.md` | Boundaries / Never (publish is CI-only) + Safe Terminal Patterns (pre-publish gate) |
 | `docs/languages/js/versioning/dependency-management.md` | AI Behavior Rules (peer dependencies rule) |
-| `docs/ai/agent-configuration.md` | Golden Rule callout (size budget) + AI Behavior Rules (repository independence) |
+| `docs/ai/agent-configuration.md` | Golden Rule callout (size budget + repo-local `AGENTS.md` note) + AI Behavior Rules (repository independence, release policy is repository-local) |
 | `docs/ai/workflow-authoring.md` | Workflow Inventory (descriptions + authoring standard) |
+| `docs/ai/workflow-archetypes.md` | Workflow Inventory (archetype family pointer line) |
 | `docs/ai/model-tiering.md` | Workflow Inventory (model-tier split line) |
 | `docs/dev/pitfalls.md` | Safe Terminal Patterns (all entries) |
 | `docs/dev/testing-local-modules.md` | Safe Terminal Patterns (module testing contract) |
 | `docs/dev/cicd-publishing.md` | Safe Terminal Patterns (CI chained publishes) |
 | `docs/dev/planning.md` | AI Behavior Rules (at session start) |
+| `docs/dev/autonomous-execution.md` | AI Behavior Rules (autonomous execution protocol) |
 | `docs/dev/org-structure.md` | Directory Map |
 | `docs/ops/**` | (referenced as "see ops/" - not embedded) |
 
@@ -481,9 +486,11 @@ This closes the compile rule from `docs/ai/workflow-authoring.md` - Embedded Con
 
 ### P6 - Verify Canonical AGENTS.md Placement
 
-`AGENTS.md` exists only at the constitution repository root. Inspect every sibling repository in the workspace for a copied file or symlink.
+The compiled constitution `AGENTS.md` exists only at the constitution repository root. Inspect every sibling repository in the workspace for a copy or a symlink of it.
 
-A sibling `AGENTS.md` is drift, not a propagation target. Report its repository and file type. Remove it only with explicit user approval, then verify that the canonical file remains unchanged.
+A sibling repository is expected to carry its own small `AGENTS.md`. It holds only what is true of that repository alone: build and test commands, and any policy the constitution defers to it, such as its release policy (`docs/ai/agent-configuration.md` - Repository Independence, Release Policy Is Repository-Local). That file is not a propagation target and is never written by this workflow.
+
+Drift is a sibling file that copies, symlinks, or restates a compiled constitution rule. Report its repository, file type, and the restated rule. Remove or trim it only with explicit user approval, then verify that the canonical file remains unchanged.
 
 ### Compression Discipline
 
@@ -566,6 +573,7 @@ New failure modes found during a run must be added here. If no pass catches the 
 | Concept gains subtype but general docs mention only old subtype | Pass 4 |
 | Same decision rule diverges across files | Pass 5 |
 | Sibling names use inconsistent abstraction levels | Pass 5 |
+| A transitional repository policy is stated as permanent framework doctrine | Pass 5 layer check (pitfalls V5) |
 | Writing-style rule is violated | Pass 6 |
 | New file is misplaced or unreachable | Pass 7 |
 | Documentation references removed code | Pass 8 |

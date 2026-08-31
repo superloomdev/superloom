@@ -14,7 +14,8 @@ How AI agents are configured across the Superloom workspace: which files exist, 
 - [Module-Level ROBOTS.md](#module-level-robotsmd)
 - [Personal Configuration](#personal-configuration)
 - [Commit and Attribution Policy](#commit-and-attribution-policy)
-- [Version Lock During Development](#version-lock-during-development)
+- [Release Policy Is Repository-Local](#release-policy-is-repository-local)
+- [Autonomous Execution](#autonomous-execution)
 
 ---
 
@@ -94,7 +95,7 @@ Rules:
 - **The constitution repository's workflows, README, and docs never invoke, name, or describe a dependent repository's workflows or internal structure.** The constitution does not know which implementations exist.
 - **The constitution repository may name dependent repositories as organizational context** (for example, in `dev/org-structure.md`) but never describes their internals or invokes their workflows.
 - **Dependent repositories reference the constitution's docs freely.** Their workflows embed standards compiled from `docs/`; their READMEs link to the published documentation
-- **Dependent repositories do not carry `AGENTS.md`.** The constitution file is the only standing-rule artifact; repository-specific procedures remain in the owning repository's workflows
+- **Dependent repositories carry a small repo-local `AGENTS.md`, never a copy of the constitution's.** It holds only what is true of that repository alone: its build and test commands, and any policy the constitution defers to it, such as [release policy](#release-policy-is-repository-local). A framework rule stays in `docs/` and reaches the constitution's `AGENTS.md` by compilation; copying one into a dependent repository is drift
 - **Documentation is the prime guide.** Everything language-specific (patterns, skeletons, catalogs, pitfalls) lives in `docs/languages/[lang]/` so that any team can build its own implementation from the same source. A helper modules repository is one implementation that validates the docs against real-world use; it does not own the knowledge.
 - **This is an architectural constraint, not a style preference.** A violation couples the constitution to one implementation and breaks the language-independent design.
 
@@ -120,11 +121,18 @@ This rule overrides any AI tool's built-in or default commit template, including
 
 **No AI-generated contributor entries** in `package.json` `contributors` arrays or `author` fields. These fields list human contributors only.
 
-## Version Lock During Development
+## Release Policy Is Repository-Local
 
-All packages stay at `1.0.0` until public launch. Republishing uses the delete-and-republish workflow: delete the package version from GitHub Package Registry, push to `main`, and CI republishes at the same version. This avoids version inflation during the development phase and keeps the `peerDependencies` ranges stable across the ecosystem.
+The framework default is normal SemVer: a source change earns a new version number. The publish guard in [`../dev/cicd-publishing.md`](../dev/cicd-publishing.md#the-publish-guard-compares-content-not-version-presence) proves content equality by shasum and fails on a mismatch, but it does not choose the remedy. The remedy is the release policy of the repository being published, and that repository's own `AGENTS.md` declares it.
 
-The delete-and-republish workflow changes the artifact tarball checksum, so any committed `package-lock.json` in a consumer repo must be regenerated after the republish. The working practice: before verifying a consumer, delete the relevant `package-lock.json` and run `npm install` fresh. Commit lockfiles only after the versioned packages are stable.
+| Declared policy | Remedy for a shasum mismatch |
+|---|---|
+| **Normal SemVer**, the default when nothing is declared | Bump the version |
+| Fixed version, republished by delete-then-push | Delete the registry version, then push |
+
+A repository choosing the second option states it in its own `AGENTS.md`, marks it as a transitional pre-release convenience rather than a framework rule, and states what removing it costs. Delete-then-push changes the artifact tarball checksum, so every consumer's committed `package-lock.json` must be regenerated after the republish. The working practice: delete the relevant `package-lock.json` and run `npm install` fresh before verifying the consumer.
+
+The constitution never records which policy a dependent repository currently runs. That is an internal detail of that repository ([Repository Independence](#repository-independence)).
 
 ## Autonomous Execution
 

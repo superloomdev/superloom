@@ -51,7 +51,7 @@ The detect job answers two questions:
 
 - **Steady-state version bumps** - the new version is by definition not yet on the registry, so it gets published
 - **Fresh-state recovery** - if the registry has been wiped (or never populated), every module's current version is "not published" and all of them get republished
-- **Source changed at an existing version** - the shasums differ, so the module is marked and its publish job fails with instructions to delete the version first
+- **Source changed at an existing version** - the shasums differ, so the module is marked and its publish job fails, naming both shasums and the remedy for the repository's release policy
 
 The publish job re-runs the content guard immediately before `npm publish`, so a redundant publish attempt (for example after a transient registry error during detect) never overwrites a real version. Both gates compare shasums rather than version names; the reasoning is in [The Publish Guard Compares Content, Not Version Presence](#the-publish-guard-compares-content-not-version-presence).
 
@@ -93,21 +93,32 @@ The detect job will list every module whose `<name>@<version>` is not yet on the
 
 ## The Publish Guard Compares Content, Not Version Presence
 
-A publish path guarded only by a registry-existence check has no failure signal on a same-version republish. The guard reads "does `<name>@<version>` exist" and skips on yes. A republish that forgets the delete step then produces a **green** run that publishes nothing. The job reports success, the commit looks shipped, and the registry still serves the old tarball.
+A publish path guarded only by a registry-existence check has no failure signal when the source changed but the version did not. The guard reads "does `<name>@<version>` exist" and skips on yes, so the run produces a **green** result that publishes nothing. The job reports success, the commit looks shipped, and the registry still serves the old tarball.
 
 The guard must prove content equality rather than assume it. Pack the working tree with `npm pack`, read the registry's published `dist.shasum` for the same coordinates, and branch on the comparison:
 
 | Comparison | Outcome |
 |---|---|
 | Shasums match | Skip, and say so - the registry already serves this exact content |
-| Shasums differ | **Fail** with "source changed but version exists; delete the version from the registry before pushing" |
+| Shasums differ | **Fail**, naming both shasums and the remedy below |
 | Version absent | Publish |
 
-The distinction the existence check cannot make is between "nothing to do" and "the operator forgot to delete first". Those need opposite outcomes, so the guard needs an input the version name does not carry.
+The distinction the existence check cannot make is between "nothing to do" and "the source moved without the version moving". Those need opposite outcomes, so the guard needs an input the version name does not carry.
+
+### The Remedy Depends on the Release Policy
+
+A shasum mismatch always fails the run. What fixes it depends on which release policy the repository follows, and the repository's own `AGENTS.md` declares which applies:
+
+| Policy | Remedy on mismatch |
+|---|---|
+| **Normal SemVer (the default)** | **Bump the version.** The source changed, so it is a new release. The mismatch is the pipeline catching a forgotten bump |
+| Deliberate same-version republish (explicitly flagged) | Delete the registry version, then push. Only valid where the repository documents same-version republishing as its release mechanism |
+
+Under normal SemVer the guard earns its cost by catching a forgotten bump, which is the far more common mistake. Never resolve a mismatch by deleting a version in a repository that bumps normally: a consumer may already have resolved that version, and deleting it breaks their lockfile.
 
 **The rule binds both gates.** The detect job decides which modules get a `publish-*` job, and each publish job re-checks immediately before `npm publish`. A content comparison in the publish job alone never runs in the failure case it targets. A detect job filtering on version presence drops the module before its publish job is ever scheduled, so both layers compare shasums.
 
-The same comparison is the only honest post-publish verification. A version appearing in the registry listing does not prove the new content shipped; on a same-version republish the published shasum must differ from the pre-delete value. Bumping the version is never the remedy for a shasum mismatch at this gate, because the mismatch is evidence about the delete step, not about the version number. A consumer-side `E409 ... Package file checksum mismatch` during `npm ci` is a different failure with a different remedy ([pitfalls entry 24](pitfalls.md#cicd-publishing)).
+The same comparison is the only honest post-publish verification. A version appearing in the registry listing does not prove the new content shipped; the published shasum must match what was packed. A consumer-side `E409 ... Package file checksum mismatch` during `npm ci` is a different failure with a different remedy ([pitfalls entry 24](pitfalls.md#cicd-publishing)).
 
 ## Why a Single Workflow
 

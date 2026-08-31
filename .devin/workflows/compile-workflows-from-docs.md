@@ -188,11 +188,11 @@ Generate the `[prefix]-publish.md` workflow file (the Publish archetype: release
 
 9. **Phase 4: CI Registration** - first publish only, job pair, chaining.
 
-10. **Phase 5: Same-version Republish** - delete old versions, verify 404.
+10. **Phase 5: Same-version Republish** - policy-gated on the target repo's `AGENTS.md`, skipped on a normal bump; delete old versions, verify 404.
 
 11. **Phase 6: Commit** - module-only, approval gate, push.
 
-12. **Phase 7: Verify CI Published** - watch green, confirm live.
+12. **Phase 7: Verify CI Published** - watch green, confirm live, published shasum matches the packed shasum.
 
 13. **Loop-backs.**
 
