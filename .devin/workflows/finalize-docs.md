@@ -402,7 +402,7 @@ Three allowed destination values, closed set:
 | `docs/` source | `AGENTS.md` section |
 |---|---|
 | `docs/principles/engineering-philosophy.md` | Persona + Golden Rule callout + AI Behavior Rules (before-inventing-search, reserved vocabulary, comments never cite `docs/`, idempotency guards compare fingerprints) |
-| `docs/principles/documentation-authoring.md` | Golden Rule callout + AI Behavior Rules (docs-never-reference-plans rule) |
+| `docs/principles/documentation-authoring.md` | Golden Rule callout + AI Behavior Rules (docs-never-reference-plans rule, anchor targets use site form, On This Page blocks are generated) |
 | `docs/principles/project-management.md` | AI Behavior Rules (product management layer) |
 | `docs/principles/testing.md` | AI Behavior Rules (assertions pin exact values) |
 | `docs/languages/js/code-formatting.md` | AI Behavior Rules (step comments, two-pass check) |
