@@ -9,9 +9,11 @@
   "license": "MIT",
   "scripts": {
     "sync-docs": "rsync -a --delete ../docs/ ./docs/",
+    "anchor-audit": "python3 scripts/anchor-audit.py ..",
+    "toc-check": "python3 scripts/toc-generate.py .. --check",
     "cleanup": "rm -rf ./docs/",
     "dev": "npm run sync-docs && vitepress dev .",
-    "build": "npm run sync-docs && vitepress build . && npm run cleanup",
+    "build": "npm run sync-docs && vitepress build . && npm run anchor-audit && npm run toc-check && npm run cleanup",
     "preview": "vitepress preview ."
   },
   "devDependencies": {

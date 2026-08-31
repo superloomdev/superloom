@@ -91,10 +91,16 @@ Evidence required:
 - Count of Markdown links scanned in blast-radius files.
 - File existence result for every relative file link.
 - Anchor existence result for every cross-file `path#anchor` link **and** every same-file bare `#fragment` link, including a file's own `On This Page` list.
-- Anchor checks compare against slugs derived from the target file's actual headings (lowercase, punctuation and backticks stripped, spaces to hyphens). Renaming a heading invalidates every inbound anchor including those in the same file.
+- Anchor checks use the built HTML as ground truth. Run the anchor audit script after the website build:
+
+```
+python3 website/scripts/anchor-audit.py [repo-root]
+```
+
+The script harvests heading ids from `website/DIST/**/*.html` and checks every `[txt](path#anchor)` and `[txt](#anchor)` link in `docs/**/*.md` against them. It exits non-zero on any finding. Renaming a heading invalidates every inbound anchor including those in the same file.
 - Count of absolute local path links.
 
-> A successful website build is not evidence for this pass. VitePress does not fail on unresolved same-file fragments, so anchors must be verified by slug comparison.
+> A successful website build is not evidence for this pass. VitePress does not validate heading fragments. `ignoreDeadLinks: []` being strict is not evidence that anchors are sound; it checks that linked files exist, not that the `#fragment` resolves. The anchor audit script catches what the build cannot.
 
 Rules (source: `docs/principles/documentation-authoring.md` - Path Portability):
 
@@ -214,7 +220,13 @@ Question: are files discoverable, correctly placed, and internally organized?
 Evidence required:
 
 - For new or moved files: chosen folder and reason.
-- For each blast-radius file: extracted `On This Page` entries compared to actual headings.
+- For each blast-radius file: `On This Page` block checked against the built HTML's heading ids. Run the TOC check script after the website build:
+
+```
+python3 website/scripts/toc-generate.py [repo-root] --check
+```
+
+The script exits non-zero if any `On This Page` block is stale (heading text or anchor does not match the built HTML). `On This Page` blocks are generated; a stale block means someone hand-edited it or a heading was renamed without re-running the generator.
 - Companion docs block compared to related files referenced in the body.
 - Index or parent-page reachability for every new file.
 
@@ -609,9 +621,11 @@ New failure modes found during a run must be added here. If no pass catches the 
 |---|---|
 | Concept renamed but old references remain | Pass 1 |
 | Concept removed but references remain | Pass 1 and Pass 8 |
-| Heading renamed and inbound anchors break | Pass 2 |
-| Heading renamed and the file's own `On This Page` anchor breaks | Pass 2 |
-| Green website build accepted as anchor evidence | Pass 2 (build is explicitly not evidence) |
+| Heading renamed and inbound anchors break | Pass 2 (anchor-audit.py) |
+| Heading renamed and the file's own `On This Page` anchor breaks | Pass 2 (anchor-audit.py) |
+| Green website build accepted as anchor evidence | Pass 2 (build is explicitly not evidence; anchor-audit.py is the gate) |
+| Anchor written in GitHub form instead of site form | Pass 2 (anchor-audit.py catches slugifier divergence) |
+| `On This Page` block hand-edited or stale after heading rename | Pass 7 (toc-generate.py --check) |
 | Local filesystem path appears in published docs | Pass 2 |
 | Summary table and detailed section disagree | Pass 3 |
 | Concept gains subtype but general docs mention only old subtype | Pass 4 |
