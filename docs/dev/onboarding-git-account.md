@@ -4,19 +4,19 @@ How to configure Git on your development machine to contribute to this repositor
 
 ## On This Page
 
-- [Step 1 - Check Existing SSH Keys](#step-1---check-existing-ssh-keys)
-- [Step 2 - Generate an SSH Key](#step-2---generate-an-ssh-key)
-- [Step 3 - Add the Public Key to GitHub](#step-3---add-the-public-key-to-github)
-- [Step 4 - Configure `~/.ssh/config`](#step-4---configure-sshconfig)
-- [Step 5 - Register Keys with the SSH Agent](#step-5---register-keys-with-the-ssh-agent)
-- [Step 6 - Add or Verify the Remote](#step-6---add-or-verify-the-remote)
-- [Step 7 - Set Local Git Identity](#step-7---set-local-git-identity-for-this-repo)
-- [Step 8 - Test the Connection](#step-8---test-the-connection)
-- [Step 9 - Push to GitHub](#step-9---push-to-github)
+- [Step 1 - Check Existing SSH Keys](#step-1-check-existing-ssh-keys)
+- [Step 2 - Generate an SSH Key](#step-2-generate-an-ssh-key)
+- [Step 3 - Add the Public Key to GitHub](#step-3-add-the-public-key-to-github)
+- [Step 4 - Configure `~/.ssh/config`](#step-4-configure-ssh-config)
+- [Step 5 - Register Keys with the SSH Agent](#step-5-register-keys-with-the-ssh-agent)
+- [Step 6 - Add or Verify the Remote](#step-6-add-or-verify-the-remote)
+  - [Override for multi-account users (optional)](#override-for-multi-account-users-optional)
+- [Step 7 - Set Local Git Identity for This Repo](#step-7-set-local-git-identity-for-this-repo)
+- [Step 8 - Test the Connection](#step-8-test-the-connection)
+- [Step 9 - Push to GitHub](#step-9-push-to-github)
 - [Quick Reference](#quick-reference)
 
 ---
-
 ## Step 1 - Check Existing SSH Keys
 
 ```bash

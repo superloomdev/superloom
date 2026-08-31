@@ -2,26 +2,36 @@
 
 > **Language:** JavaScript
 
-How helper modules are tested on every push and published to GitHub Packages. The framework uses a single unified workflow at `.github/workflows/ci-publish-helper-modules.yml`. This guide is the canonical reference for that pipeline. Every positive rule below exists because a real failure taught it; those failures are journaled in [`pitfalls.md`](pitfalls.md#cicd-publishing).
+How helper modules are tested on every push and published to GitHub Packages. The framework uses a single unified workflow at `.github/workflows/ci-publish-helper-modules.yml`. This guide is the canonical reference for that pipeline. Every positive rule below exists because a real failure taught it; those failures are journaled in [`pitfalls.md`](pitfalls.md#ci-cd-publishing).
 
 ## On This Page
 
 - [How It Works](#how-it-works)
 - [Detect: What Triggers Test and Publish](#detect-what-triggers-test-and-publish)
+  - [What Gets Published When](#what-gets-published-when)
 - [Fresh-State Recovery](#fresh-state-recovery)
+  - [When you would use it](#when-you-would-use-it)
+  - [What you must do](#what-you-must-do)
+  - [Important guidelines](#important-guidelines)
 - [The Publish Guard Compares Content, Not Version Presence](#the-publish-guard-compares-content-not-version-presence)
+  - [The Remedy Depends on the Release Policy](#the-remedy-depends-on-the-release-policy)
 - [Why a Single Workflow](#why-a-single-workflow)
 - [Module Execution Sequence](#module-execution-sequence)
+  - [Why This Order Matters](#why-this-order-matters)
+  - [Adding a New Module](#adding-a-new-module)
 - [Workflow Location](#workflow-location)
 - [Publishing a New Version](#publishing-a-new-version)
-- [GITHUB_TOKEN Permissions](#github_token-permissions)
+- [GITHUB_TOKEN Permissions](#github-token-permissions)
+  - [Enabling Write Permissions (Repository Setting)](#enabling-write-permissions-repository-setting)
 - [Known Failure Modes](#known-failure-modes)
 - [Troubleshooting](#troubleshooting)
+  - [Workflow Not Triggered](#workflow-not-triggered)
+  - [Publish Step Skipped](#publish-step-skipped)
+  - [403 Forbidden on Publish](#_403-forbidden-on-publish)
 - [Why Not Fine-grained PAT for Publishing](#why-not-fine-grained-pat-for-publishing)
 - [References](#references)
 
 ---
-
 ## How It Works
 
 A single unified workflow (`.github/workflows/ci-publish-helper-modules.yml`) handles everything:
@@ -89,7 +99,7 @@ The detect job will list every module whose `<name>@<version>` is not yet on the
 
 - **Publishing is CI-only.** Always use the pipeline rather than `npm publish` directly. The pipeline ensures tests pass before publishing and keeps version-vs-source tracking consistent.
 - **Version numbers move forward only** in normal operation. Even when restoring an old build, bump the version forward. Downstream consumers rely on `^x.y.z` resolution working predictably.
-- **Same-version republish after a registry wipe is the one sanctioned exception.** GitHub Packages accepts a previously-used version name once the version is deleted, so a deliberate re-baseline (wipe all packages, push to `main`, let detect republish everything at unchanged versions) works end to end. Deletion mechanics and the confirmed behavior: [pitfalls entry 16](pitfalls.md#cicd-publishing).
+- **Same-version republish after a registry wipe is the one sanctioned exception.** GitHub Packages accepts a previously-used version name once the version is deleted, so a deliberate re-baseline (wipe all packages, push to `main`, let detect republish everything at unchanged versions) works end to end. Deletion mechanics and the confirmed behavior: [pitfalls entry 16](pitfalls.md#ci-cd-publishing).
 
 ## The Publish Guard Compares Content, Not Version Presence
 
@@ -118,7 +128,7 @@ Under normal SemVer the guard earns its cost by catching a forgotten bump, which
 
 **The rule binds both gates.** The detect job decides which modules get a `publish-*` job, and each publish job re-checks immediately before `npm publish`. A content comparison in the publish job alone never runs in the failure case it targets. A detect job filtering on version presence drops the module before its publish job is ever scheduled, so both layers compare shasums.
 
-The same comparison is the only honest post-publish verification. A version appearing in the registry listing does not prove the new content shipped; the published shasum must match what was packed. A consumer-side `E409 ... Package file checksum mismatch` during `npm ci` is a different failure with a different remedy ([pitfalls entry 24](pitfalls.md#cicd-publishing)).
+The same comparison is the only honest post-publish verification. A version appearing in the registry listing does not prove the new content shipped; the published shasum must match what was packed. A consumer-side `E409 ... Package file checksum mismatch` during `npm ci` is a different failure with a different remedy ([pitfalls entry 24](pitfalls.md#ci-cd-publishing)).
 
 ## Why a Single Workflow
 
@@ -192,7 +202,7 @@ When adding a module to the pipeline:
 2. **Place it in the correct group** based on its directory (`helper-modules-core/`, `helper-modules-server/`, or `helper-modules-client/`)
 3. **Position within group** based on its dependencies - if Module B imports Module A, Module A must come first
 4. **Add both `test-*` and `publish-*` jobs** - they run sequentially per module
-5. **Chain a dependent module's test job after its dependency's `publish-*` job, never its `test-*` job.** If the new module's `_test/package.json` installs another in-repo package from the registry (extension modules, store adapters), its test job must `needs` that package's publish job so the package exists on the registry before `npm install` runs. Wrong chaining passes in steady state and only fails during bootstrap or a registry re-baseline ([pitfalls entry 23](pitfalls.md#cicd-publishing))
+5. **Chain a dependent module's test job after its dependency's `publish-*` job, never its `test-*` job.** If the new module's `_test/package.json` installs another in-repo package from the registry (extension modules, store adapters), its test job must `needs` that package's publish job so the package exists on the registry before `npm install` runs. Wrong chaining passes in steady state and only fails during bootstrap or a registry re-baseline ([pitfalls entry 23](pitfalls.md#ci-cd-publishing))
 
 The workflow file groups jobs visually with comment banners showing the group boundaries. Maintain this structure when adding new modules.
 
@@ -246,7 +256,7 @@ This allows `GITHUB_TOKEN` to be granted write permissions by individual jobs.
 
 ## Known Failure Modes
 
-Every CI symptom, root cause, and durable fix this pipeline has ever uncovered is journaled in [`pitfalls.md` → CI/CD Publishing](pitfalls.md#cicd-publishing).
+Every CI symptom, root cause, and durable fix this pipeline has ever uncovered is journaled in [`pitfalls.md` → CI/CD Publishing](pitfalls.md#ci-cd-publishing).
 
 When you hit a new CI failure: reproduce it, confirm the root cause, then add an entry to `pitfalls.md` under *CI/CD Publishing* (Symptom → Cause → Lesson). Do **not** add it here. This file is for positive rules only. If the rule is small enough to live in `AGENTS.md`, recompile the compact one-liner into it (`AGENTS.md` is a derived artifact, never edited directly).
 

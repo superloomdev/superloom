@@ -5,13 +5,13 @@ This guide is for whoever is creating the GitHub repository for the first time. 
 ## On This Page
 
 - [GitHub Repository](#github-repository)
-- [Step 1 - Add the Remote](#step-1---add-the-remote)
-- [Step 2 - Push](#step-2---push)
-- [Step 3 - Verify on GitHub](#step-3---verify-on-github)
-- [Step 4 - Recommended Repository Settings](#step-4---recommended-repository-settings-github)
+- [Step 1 - Add the Remote](#step-1-add-the-remote)
+- [Step 2 - Push](#step-2-push)
+- [Step 3 - Verify on GitHub](#step-3-verify-on-github)
+- [Step 4 - Recommended Repository Settings (GitHub)](#step-4-recommended-repository-settings-github)
+- [Repository `.gitignore` Convention](#repository-gitignore-convention)
 
 ---
-
 ## GitHub Repository
 
 - **Organization:** superloomdev

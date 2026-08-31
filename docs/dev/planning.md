@@ -10,13 +10,25 @@ How a developer (and the AI assistant) keeps track of what is being worked on an
 - [Plan File Format](#plan-file-format)
 - [Backlog Format](#backlog-format)
 - [How to Plan](#how-to-plan)
+  - [Deciding whether something needs a plan](#deciding-whether-something-needs-a-plan)
+  - [Writing a good goal](#writing-a-good-goal)
+  - [Scoping steps](#scoping-steps)
+  - [Using Out of scope aggressively](#using-out-of-scope-aggressively)
+  - [When the plan changes mid-flight](#when-the-plan-changes-mid-flight)
 - [Workflow Verbs](#workflow-verbs)
 - [Session Rituals](#session-rituals)
+  - [Start of session](#start-of-session)
+  - [End of significant step](#end-of-significant-step)
+  - [When the conversation drifts off-topic](#when-the-conversation-drifts-off-topic)
+- [Orchestration State Files](#orchestration-state-files)
+  - [When the orchestration layer is warranted](#when-the-orchestration-layer-is-warranted)
+  - [Permanent files, disposable contents](#permanent-files-disposable-contents)
+- [Two-Pass Audit](#two-pass-audit)
 - [Common Pitfalls and Fixes](#common-pitfalls-and-fixes)
 - [Automation](#automation)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Why This Exists
 
 Long-horizon work in this repository routinely spans many AI conversations. Each conversation has finite context. Without a persistent record:

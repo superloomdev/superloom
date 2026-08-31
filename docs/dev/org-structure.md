@@ -5,13 +5,13 @@ How the Superloom project is divided across repositories and how they relate to 
 ## On This Page
 
 - [Repository Map](#repository-map)
+  - [Repository Root Content](#repository-root-content)
 - [Naming Convention](#naming-convention)
 - [Local Workspace Layout](#local-workspace-layout)
 - [Personal Workspace (`__dev__/`)](#personal-workspace-dev)
 - [When to Create a New Repo](#when-to-create-a-new-repo)
 
 ---
-
 ## Repository Map
 
 ```

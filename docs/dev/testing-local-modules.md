@@ -38,7 +38,7 @@ rm -rf node_modules package-lock.json && npm install   # from <module>/_test
 
 This is the default, not an exception. A plain `npm install` on top of an existing `node_modules/` can silently use stale lock files, hoisted dependencies from a previous repo, or `file:` links that do not reflect the current registry state. CI does a fresh checkout every time - local testing must match that condition or the results are meaningless.
 
-The few seconds saved by skipping the wipe are never worth a broken CI run, a fix commit, and wasted pipeline time. See [`pitfalls.md` entry 21](pitfalls.md#21-stale-package-lockjson-causes-wrong-version-install-after-file-swap-or-version-reset) and [`pitfalls.md` entry 23](pitfalls.md#23-ci-fails-after-push---local-tests-ran-against-stale-node_modules) for the failure modes this prevents.
+The few seconds saved by skipping the wipe are never worth a broken CI run, a fix commit, and wasted pipeline time. See [`pitfalls.md` entry 21](pitfalls.md#_21-stale-package-lock-json-causes-wrong-version-install-after-file-swap-or-version-reset) and [`pitfalls.md` entry 23](pitfalls.md#_23-ci-fails-after-push-local-tests-ran-against-stale-node-modules) for the failure modes this prevents.
 
 ### Step 2: Run tests
 
@@ -122,7 +122,7 @@ npm run lint
 
 CI is the second line of defense, not the first. A CI run that fails on something testable locally is wasted pipeline time, a polluted git log with fix commits, and delayed feedback. The fresh install is the critical step: it guarantees the local environment matches what CI will see. Stale `node_modules/` can mask missing dependencies, version mismatches, and broken `file:` links that only surface in a clean checkout.
 
-See [`pitfalls.md` entry 23](pitfalls.md#23-ci-fails-after-push---local-tests-ran-against-stale-node_modules) for the failure mode this prevents.
+See [`pitfalls.md` entry 23](pitfalls.md#_23-ci-fails-after-push-local-tests-ran-against-stale-node-modules) for the failure mode this prevents.
 
 ---
 
@@ -164,7 +164,7 @@ Only after all three gates of the [Pre-Commit Protocol](#pre-commit-protocol-all
 
 **Never push a version bump with a lint failure.** It wastes pipeline time and pollutes the git log with a follow-up fix commit.
 
-The failure mode that produced this rule is journaled in [`pitfalls.md` → CI/CD Publishing entry 13](pitfalls.md#13-ci-fails-on-lint-after-local-tests-pass-pre-publish-checklist-not-followed).
+The failure mode that produced this rule is journaled in [`pitfalls.md` → CI/CD Publishing entry 13](pitfalls.md#_13-ci-fails-on-lint-after-local-tests-pass-pre-publish-checklist-not-followed).
 
 ## Test Patterns You'll Encounter
 

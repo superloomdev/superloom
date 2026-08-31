@@ -6,11 +6,11 @@ Generic, project-agnostic guides for setting up infrastructure services used by 
 
 - [Purpose](#purpose)
 - [Structure](#structure)
-- [How to Use These Guides](#how-to-use)
+- [How to Use](#how-to-use)
 - [Full Standard](#full-standard)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Purpose
 
 These guides explain **how** to set up each service. They contain no project-specific names, secrets, or configuration values. Use them as a knowledge base when filling in your project's `ops/` runbook.

@@ -6,16 +6,24 @@ How helper packages are published (CI/CD only) and consumed. This setup is requi
 
 **Approach 2 (Local Copy)** does not require GitHub Packages setup since it uses `file:` references.
 
-**For complete approach comparison and setup instructions, see [`getting-started.md`](../guide/getting-started.md#step-1---choose-your-implementation-approach).**
+**For complete approach comparison and setup instructions, see [`getting-started.md`](../guide/getting-started.md#step-1-choose-your-implementation-approach).**
 
 ## On This Page
 
-- [For Approach 1 - Install `@your-org/*` Packages Locally](#for-approach-1---install-your-org-packages-locally)
-- [For Approach 3 - Install `@superloomdev/*` Packages Locally](#for-approach-3---install-superloomdev-packages-locally)
-- [Publishing - CI/CD Only](#publishing---cicd-only)
+- [For Approach 1 - Install `@your-org/*` Packages Locally](#for-approach-1-install-your-org-packages-locally)
+  - [1. Create a Read Token](#_1-create-a-read-token)
+  - [2. Set Up Global npmrc](#_2-set-up-global-npmrc)
+  - [3. Add Token to Environment](#_3-add-token-to-environment)
+  - [4. Load Environment (Each Terminal Session)](#_4-load-environment-each-terminal-session)
+- [For Approach 2 - Local Copy (No GitHub Packages Needed)](#for-approach-2-local-copy-no-github-packages-needed)
+- [For Approach 3 - Install `@superloomdev/*` Packages Locally](#for-approach-3-install-superloomdev-packages-locally)
+  - [1. Create a Read Token](#_1-create-a-read-token-1)
+  - [2. Set Up Global npmrc](#_2-set-up-global-npmrc-1)
+  - [3. Add Token to Environment](#_3-add-token-to-environment-1)
+- [Publishing - CI/CD Only](#publishing-ci-cd-only)
+- [Further Reading](#further-reading)
 
 ---
-
 ## For Approach 1 - Install `@your-org/*` Packages Locally
 
 Every developer needs a GitHub token with `read:packages` scope to install `@your-org` packages (Approach 1) or `@superloomdev` packages (Approach 3).

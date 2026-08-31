@@ -6,7 +6,7 @@ Global npmrc configuration for installing helper packages from GitHub Packages. 
 
 **Approach 2 (Local Copy)** does not require npmrc setup since it uses `file:` references.
 
-**For complete approach comparison and setup instructions, see [`getting-started.md`](../guide/getting-started.md#step-1---choose-your-implementation-approach).**
+**For complete approach comparison and setup instructions, see [`getting-started.md`](../guide/getting-started.md#step-1-choose-your-implementation-approach).**
 
 ## On This Page
 
@@ -17,7 +17,6 @@ Global npmrc configuration for installing helper packages from GitHub Packages. 
 - [Notes](#notes)
 
 ---
-
 ## Setup
 
 ```bash

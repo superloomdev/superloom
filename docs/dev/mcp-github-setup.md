@@ -7,14 +7,21 @@ Configure your AI agentic IDE (Windsurf, Cursor, ...) to manage your GitHub repo
 - [Overview](#overview)
 - [Token Requirements](#token-requirements)
 - [Creating the Fine-grained PAT](#creating-the-fine-grained-pat)
+  - [Repository Permissions (Read and write)](#repository-permissions-read-and-write)
+  - [Account Permissions](#account-permissions)
 - [Windsurf Configuration](#windsurf-configuration)
+  - [Step 1: Locate MCP Config](#step-1-locate-mcp-config)
+  - [Step 2: Add GitHub MCP Server](#step-2-add-github-mcp-server)
+  - [Step 3: Store Token Reference (Personal)](#step-3-store-token-reference-personal)
 - [Security Notes](#security-notes)
 - [Troubleshooting](#troubleshooting)
+  - [MCP Not Connecting](#mcp-not-connecting)
+  - [Permission Errors](#permission-errors)
+  - [Token Expired](#token-expired)
 - [Limitations](#limitations)
 - [References](#references)
 
 ---
-
 ## Overview
 
 The GitHub MCP server allows your AI assistant to:

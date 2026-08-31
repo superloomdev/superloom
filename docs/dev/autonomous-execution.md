@@ -6,16 +6,32 @@ How to let a lower-tier LLM execute plans unattended, with a self-correcting ver
 
 - [Why This Exists](#why-this-exists)
 - [Authorization Boundary](#authorization-boundary)
+  - [Pre-authorized: proceed without asking](#pre-authorized-proceed-without-asking)
+  - [Never authorized: hard stop, write to the escalation log, move to other work](#never-authorized-hard-stop-write-to-the-escalation-log-move-to-other-work)
+  - [The judgment rule](#the-judgment-rule)
 - [The Convergence Loop](#the-convergence-loop)
+  - [The loop](#the-loop)
+  - [Converged means two consecutive clean passes](#converged-means-two-consecutive-clean-passes)
+  - [The iteration cap is a real stop](#the-iteration-cap-is-a-real-stop)
+  - [Never mark a gate green without evidence](#never-mark-a-gate-green-without-evidence)
+  - [Prove every check fires before trusting an empty result](#prove-every-check-fires-before-trusting-an-empty-result)
 - [Escalation Log](#escalation-log)
+  - [The file](#the-file)
+  - [Escalate, then keep going](#escalate-then-keep-going)
+  - [Undecided conventions get a default, not a guess](#undecided-conventions-get-a-default-not-a-guess)
 - [Progress Journal](#progress-journal)
+  - [Why](#why)
+  - [The file](#the-file-1)
+  - [Resume rule](#resume-rule)
 - [Publish Ordering](#publish-ordering)
+  - [The rule](#the-rule)
+  - [Verify the publish actually landed](#verify-the-publish-actually-landed)
+  - [Registry transients are expected](#registry-transients-are-expected)
 - [Registry and Publish Ordering](#registry-and-publish-ordering)
 - [What Counts as Done](#what-counts-as-done)
 - [The Things Most Likely to Go Wrong](#the-things-most-likely-to-go-wrong)
 
 ---
-
 ## Why This Exists
 
 The module workflows contain hard-stop gates that require a human. They are correct for interactive use and they make unattended execution impossible. This protocol names exactly which of those are pre-authorized and which remain hard stops. It does not remove the gates from the workflow files. The workflows stay correct for interactive use; this protocol is an explicit, bounded authorization that applies while executing a plan chain.

@@ -10,12 +10,13 @@ Everything a contributor needs to start working on Superloom helper modules and 
 
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
-- [What's in this Folder](#whats-in-this-folder)
+- [What's in this Folder](#what-s-in-this-folder)
 - [Environment Setup](#environment-setup)
+  - [1. npmrc Configuration (Required for GitHub Packages)](#_1-npmrc-configuration-required-for-github-packages)
+  - [2. Environment Files](#_2-environment-files)
 - [Personal Dev Workspace](#personal-dev-workspace)
 
 ---
-
 ## Prerequisites
 
 | Tool | Why |
@@ -23,7 +24,7 @@ Everything a contributor needs to start working on Superloom helper modules and 
 | **Node.js 24+** | Runtime - download from [nodejs.org](https://nodejs.org). Every module declares `engines.node` of `>=24` and CI tests against Node 24 |
 | **Docker Desktop** | Local emulators for service-dependent modules ([docker.com](https://www.docker.com/products/docker-desktop/)) |
 | **Git** | Access to `github.com/superloomdev` |
-| **GitHub Packages token** | Required for Approach 1 (@your-org/*) and Approach 3 (@superloomdev/*) - see [`onboarding-github-packages.md`](onboarding-github-packages.md). **Not needed for Approach 2 (Local Copy).** For approach details, see [`getting-started.md`](../guide/getting-started.md#step-1---choose-your-implementation-approach). |
+| **GitHub Packages token** | Required for Approach 1 (@your-org/*) and Approach 3 (@superloomdev/*) - see [`onboarding-github-packages.md`](onboarding-github-packages.md). **Not needed for Approach 2 (Local Copy).** For approach details, see [`getting-started.md`](../guide/getting-started.md#step-1-choose-your-implementation-approach). |
 
 ---
 
