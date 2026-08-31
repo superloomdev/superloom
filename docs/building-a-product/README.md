@@ -14,13 +14,18 @@ questions, and for the person checking that the process is being followed rather
 - [Phase 2: Offer Alternatives With Costs](#phase-2-offer-alternatives-with-costs)
 - [Phase 3: Ask The Invalidating Questions](#phase-3-ask-the-invalidating-questions)
 - [Phase 4: Top-Level Architecture, Then Drill](#phase-4-top-level-architecture-then-drill)
+  - [Step 1: Produce a top-level shape, quickly and cheaply](#step-1-produce-a-top-level-shape-quickly-and-cheaply)
+  - [Step 2: Decompose into areas ordered by constraint](#step-2-decompose-into-areas-ordered-by-constraint)
+  - [Step 3: For each area, questions first, then draft](#step-3-for-each-area-questions-first-then-draft)
+  - [Step 4: Reconcile in both directions](#step-4-reconcile-in-both-directions)
+  - [Step 5: Record risk, not just decisions](#step-5-record-risk-not-just-decisions)
 - [Phase 5: Build Module By Module](#phase-5-build-module-by-module)
 - [Eliciting A Decision](#eliciting-a-decision)
 - [Failure Modes And The Rules They Produced](#failure-modes-and-the-rules-they-produced)
 - [Artifacts](#artifacts)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Why This Exists
 
 An assistant asked to build a product will, by default, start writing. It will infer a domain, assume a

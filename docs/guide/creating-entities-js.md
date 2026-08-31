@@ -9,14 +9,18 @@ A quick-start guide for adding a domain entity to a Superloom project.
 ## On This Page
 
 - [What You Will Create](#what-you-will-create)
-- [Step 1 - Base Model](#step-1---base-model)
-- [Step 2 - Register in the Loader](#step-2---register-in-the-loader)
-- [Step 3 - Add Routes](#step-3---add-routes)
-- [Step 4 - Write and Run Tests](#step-4---write-and-run-tests)
+- [Step 1 - Base Model](#step-1-base-model)
+  - [`[entity].config.js` - Domain Constants](#entity-config-js-domain-constants)
+  - [`[entity].errors.js` - Error Catalog](#entity-errors-js-error-catalog)
+  - [`[entity].data.js` - Entity Constructors](#entity-data-js-entity-constructors)
+  - [`[entity].validation.js` - Pure Validation](#entity-validation-js-pure-validation)
+  - [`[entity].data.js` - One Shape](#entity-data-js-one-shape)
+- [Step 2 - Register in the Loader](#step-2-register-in-the-loader)
+- [Step 3 - Add Routes](#step-3-add-routes)
+- [Step 4 - Write and Run Tests](#step-4-write-and-run-tests)
 - [Where to Next](#where-to-next)
 
 ---
-
 ## What You Will Create
 
 A Superloom entity is a vertical slice across the layered architecture. The mandatory pieces are the base model and the controller; everything else is added as your endpoint surface grows.

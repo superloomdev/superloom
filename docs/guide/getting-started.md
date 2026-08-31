@@ -7,15 +7,20 @@ A walkthrough that gets you from a clean machine to a running Superloom project.
 ## On This Page
 
 - [Prerequisites](#prerequisites)
-- [Step 1 - Create Your Project](#step-1---create-your-project)
-- [Step 2 - Install Dependencies](#step-2---install-dependencies)
-- [Step 3 - Run the Server](#step-3---run-the-server)
-- [Step 4 - Run the Tests](#step-4---run-the-tests)
+- [Step 1 - Choose Your Implementation Approach](#step-1-choose-your-implementation-approach)
+  - [Approach 1: Fork and Publish (Recommended for teams)](#approach-1-fork-and-publish-recommended-for-teams)
+  - [Approach 2: Local Copy (Zero dependencies)](#approach-2-local-copy-zero-dependencies)
+  - [Approach 3: Direct Usage (Quick start)](#approach-3-direct-usage-quick-start)
+- [Step 2 - Install Dependencies](#step-2-install-dependencies)
+  - [Approach 1: Fork and Publish](#approach-1-fork-and-publish)
+  - [Approach 2: Local Copy](#approach-2-local-copy)
+  - [Approach 3: Direct Usage](#approach-3-direct-usage)
+- [Step 3 - Run the Server](#step-3-run-the-server)
+- [Step 4 - Run the Tests](#step-4-run-the-tests)
 - [Project Layout](#project-layout)
 - [Where to Next](#where-to-next)
 
 ---
-
 ## Prerequisites
 
 | Tool | Version | Why |
@@ -50,14 +55,14 @@ git clone https://github.com/YOUR-USERNAME/js-helper-modules.git
 # Clone the helper modules repo
 git clone https://github.com/superloomdev/js-helper-modules.git
 
-# Clone the demo project repo
-git clone https://github.com/superloomdev/js-demo-project.git
+# Clone the demo server repo
+git clone https://github.com/superloomdev/demo-server-js.git
 
 # Copy helper modules into your project
 cp -r js-helper-modules/src/helper-modules-*/* my-project/helpers/
 
-# Copy the demo project source into your project
-cp -r js-demo-project/src/ my-project/src/
+# Copy the demo server source into your project
+cp -r demo-server-js/src/ my-project/src/
 
 # Initialize git in your project
 git init my-project
@@ -67,14 +72,16 @@ git init my-project
 
 ### Approach 3: Direct Usage (Quick start)
 ```bash
-# Clone the demo project
-git clone https://github.com/superloomdev/js-demo-project.git my-project
+# Clone the demo server
+git clone https://github.com/superloomdev/demo-server-js.git my-project
 
 # Initialize git in your project
 git init my-project
 ```
 **Pros**: Quick setup, automatic updates, no maintenance  
 **Cons**: External dependency, limited customization
+
+> **Client-side demo.** This guide walks through the server. For a React Native Web client demo, see [`superloomdev/demo-client-rnw`](https://github.com/superloomdev/demo-client-rnw).
 
 ---
 
