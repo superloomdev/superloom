@@ -14,7 +14,6 @@
 - [Further Reading](#further-reading)
 
 ---
-
 ## Purpose
 
 - Provide **reusable functions** that depend on server-side technologies

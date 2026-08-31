@@ -9,15 +9,32 @@ Complete walkthrough for creating a new domain entity in a Superloom project, fr
 ## On This Page
 
 - [Overview](#overview)
-- [Phase 1 - Base Model](#phase-1---base-model-creation)
-- [Phase 2 - Server Extensions (Optional)](#phase-2---server-extensions-optional)
-- [Phase 3 - Service and Controller](#phase-3---service-and-controller)
-- [Phase 4 - Update Server Loader](#phase-4---update-server-loader)
+- [Phase 1 - Base Model Creation](#phase-1-base-model-creation)
+  - [Step 1: Create Directory Structure](#step-1-create-directory-structure)
+  - [Step 2: Create Config Module](#step-2-create-config-module)
+  - [Step 3: Create Errors Module](#step-3-create-errors-module)
+  - [Step 4: Create Data Module](#step-4-create-data-module)
+  - [Step 5: Create Process Module](#step-5-create-process-module)
+  - [Step 6: Create Validation Module](#step-6-create-validation-module)
+  - [Step 7: Create Index Module](#step-7-create-index-module)
+  - [Step 8: Update Package Index](#step-8-update-package-index)
+- [Phase 2 - Server Extensions (Optional)](#phase-2-server-extensions-optional)
+  - [Step 1: Create Server Model Directory](#step-1-create-server-model-directory)
+  - [Step 2: Create Server Data Module](#step-2-create-server-data-module)
+  - [Step 3: Create Server Index Module](#step-3-create-server-index-module)
+  - [Step 4: Update Server Package Index](#step-4-update-server-package-index)
+- [Phase 3 - Service and Controller](#phase-3-service-and-controller)
+  - [Step 1: Create Service Module](#step-1-create-service-module)
+  - [Step 2: Create Controller Module](#step-2-create-controller-module)
+- [Phase 4 - Update Server Loader](#phase-4-update-server-loader)
 - [Checklist](#checklist)
+  - [Base Model](#base-model)
+  - [Server Extensions (if needed)](#server-extensions-if-needed)
+  - [Server Layers](#server-layers)
+  - [Testing](#testing)
 - [Key Principles Summary](#key-principles-summary)
 
 ---
-
 ## Overview
 
 Creating a new entity involves building across multiple layers:

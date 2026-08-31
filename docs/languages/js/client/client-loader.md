@@ -15,7 +15,6 @@ The `loader.js` at `src/app-core/loader.js` is the bootstrap and dependency-inje
 - [Further Reading](#further-reading)
 
 ---
-
 ## What the Loader Builds
 
 The loader is a pure build function. It performs three tasks in order:

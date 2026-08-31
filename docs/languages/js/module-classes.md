@@ -19,13 +19,17 @@ Every Superloom helper module belongs to one of nine classes. The class determin
 - [Class D. Cloud Service Wrapper](#class-d-cloud-service-wrapper)
 - [Class E. Feature Module with Adapters](#class-e-feature-module-with-adapters)
 - [Class F. Dependent Adapter](#class-f-dependent-adapter)
+  - [Auth Store Adapters](#auth-store-adapters)
+  - [Verify Store Adapters](#verify-store-adapters)
+  - [Logger Store Adapters](#logger-store-adapters)
+  - [Cache Store Adapters](#cache-store-adapters)
+  - [HTTP Gateway Transport Adapters](#http-gateway-transport-adapters)
 - [Class G. Feature Module with Extensions](#class-g-feature-module-with-extensions)
 - [Class H. Extension](#class-h-extension)
 - [Class I. Framework Module](#class-i-framework-module)
 - [Documentation Status Matrix](#documentation-status-matrix)
 
 ---
-
 ## The Nine Classes
 
 The classes form a **dependency staircase**: each step adds one more thing the module is allowed to depend on. A module belongs to the lowest class whose dependency budget it fits. The class is decided by where the dependency boundary sits, not by what the module does.

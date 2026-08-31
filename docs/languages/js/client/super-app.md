@@ -16,7 +16,6 @@ A super-app project hosts multiple application shapes (POS, kiosk, ordering, das
 - [Further Reading](#further-reading)
 
 ---
-
 ## Shape Registry
 
 A shape is a route tree with its own theme, screens, and navigation. The shape registry holds metadata for each shape: name, route entry, theme variant, and display information for the launcher.

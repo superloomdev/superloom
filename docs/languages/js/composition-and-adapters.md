@@ -8,6 +8,10 @@ This file is the JavaScript implementation of the [Composition and Adapters](../
 
 - [The Standard Adapter Signature](#the-standard-adapter-signature)
 - [The Four Tiers in Published Modules](#the-four-tiers-in-published-modules)
+  - [Store](#store)
+  - [Transport Adapter](#transport-adapter)
+  - [Extension](#extension)
+  - [Host Adapter](#host-adapter)
 - [Peer Dependency Rules per Tier](#peer-dependency-rules-per-tier)
 - [The Application Composition Root](#the-application-composition-root)
 - [The Adapter Gate](#the-adapter-gate)
@@ -20,7 +24,6 @@ This file is the JavaScript implementation of the [Composition and Adapters](../
 - [Further Reading](#further-reading)
 
 ---
-
 ## The Standard Adapter Signature
 
 Every adapter in every tier is a factory function with the same shape:

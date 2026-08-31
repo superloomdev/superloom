@@ -8,12 +8,16 @@
 - [Design Principles](#design-principles)
 - [Naming Convention](#naming-convention)
 - [Typical Files](#typical-files)
+  - [Typical Function Names](#typical-function-names)
+  - [Per-Function Responsibilities](#per-function-responsibilities)
 - [Module Initialization Pattern](#module-initialization-pattern)
 - [Boundary Rules](#boundary-rules)
+  - [Services may be used by](#services-may-be-used-by)
+  - [Services must NOT](#services-must-not)
+  - [Services may](#services-may)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Purpose
 
 - Contain **all server-side application and business logic**

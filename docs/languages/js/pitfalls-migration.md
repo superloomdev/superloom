@@ -7,18 +7,46 @@ Common issues encountered when **migrating an existing helper module** to curren
 ## On This Page
 
 - [Function Naming Issues](#function-naming-issues)
+  - [Generic name doesn't distinguish multiple HTTP methods](#generic-name-doesn-t-distinguish-multiple-http-methods)
+  - [Convenience function combines multiple operations](#convenience-function-combines-multiple-operations)
+  - [HTTP method suffix used when only one method exists](#http-method-suffix-used-when-only-one-method-exists)
 - [Module Naming Issues](#module-naming-issues)
+  - [Inconsistent naming across similar services](#inconsistent-naming-across-similar-services)
+  - [Vendor placement wrong](#vendor-placement-wrong)
 - [Module Structure Issues](#module-structure-issues)
+  - [Private functions defined before public functions](#private-functions-defined-before-public-functions)
+  - [Formatting drift after a refactor pass](#formatting-drift-after-a-refactor-pass)
+  - [Verification scoped to the fix list instead of the class skeleton](#verification-scoped-to-the-fix-list-instead-of-the-class-skeleton)
+  - [Step-comment drift on fresh module creation](#step-comment-drift-on-fresh-module-creation)
+  - [Patching when complete rewrite is needed](#patching-when-complete-rewrite-is-needed)
+  - [Orphaned root artifacts carried over during repo extraction](#orphaned-root-artifacts-carried-over-during-repo-extraction)
+  - [Module not added to CI/CD workflow](#module-not-added-to-ci-cd-workflow)
+  - [Missing test loader file](#missing-test-loader-file)
 - [Version Management Issues](#version-management-issues)
-- [CI/CD Detection Issues](#cicd-detection-issues)
+  - [Wrong version for migrated modules](#wrong-version-for-migrated-modules)
+- [CI/CD Detection Issues](#ci-cd-detection-issues)
+  - [Regex pattern doesn't match module directory](#regex-pattern-doesn-t-match-module-directory)
 - [Documentation Synchronization Issues](#documentation-synchronization-issues)
+  - [Function rename not propagated everywhere](#function-rename-not-propagated-everywhere)
 - [Testing Issues](#testing-issues)
+  - [Service-dependent tests fail without credentials](#service-dependent-tests-fail-without-credentials)
 - [Cross-Reference Issues](#cross-reference-issues)
+  - [Old terminology remains after migration](#old-terminology-remains-after-migration)
+- [Signature Drift Issues](#signature-drift-issues)
+  - [Underscore-prefixed createInterface slots instead of canonical names](#underscore-prefixed-createinterface-slots-instead-of-canonical-names)
+  - [JSDoc blocks left at old indentation after nesting-depth change](#jsdoc-blocks-left-at-old-indentation-after-nesting-depth-change)
 - [Performance Logging Issues](#performance-logging-issues)
+  - [`performanceAuditLog` reference_time is a constant, not the operation start](#performanceauditlog-reference-time-is-a-constant-not-the-operation-start)
+  - [Duplicate audit lines from layered performance logging](#duplicate-audit-lines-from-layered-performance-logging)
+- [Audit Tooling Issues](#audit-tooling-issues)
+  - [Broken regex pattern reported a clean pass that hid stale references](#broken-regex-pattern-reported-a-clean-pass-that-hid-stale-references)
+- [ESM Migration Issues](#esm-migration-issues)
+  - [`scripts/` files left as CJS inside a `"type": "module"` package throw at startup](#scripts-files-left-as-cjs-inside-a-type-module-package-throw-at-startup)
+  - [CJS import of an ESM package returns a module namespace object, not the default export](#cjs-import-of-an-esm-package-returns-a-module-namespace-object-not-the-default-export)
 - [Prevention Checklist](#prevention-checklist)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Function Naming Issues
 
 The full verb catalog, return shapes, confusable pairs, and banned verbs are settled in [`function-naming.md`](function-naming.md). The pitfalls below cover the specific failure modes that motivated those rules.

@@ -7,19 +7,33 @@ This page is the single source of truth for the client-side module naming taxono
 ## On This Page
 
 - [Runtime-Tier Prefixes](#runtime-tier-prefixes)
+  - [Dev-Tooling Packages](#dev-tooling-packages)
 - [Framework-Tier Prefixes](#framework-tier-prefixes)
 - [Suffix Inventory](#suffix-inventory)
 - [Pure Core With Extensions, or a Single Framework Module?](#pure-core-with-extensions-or-a-single-framework-module)
+  - [The Test](#the-test)
+  - [Size Is Not the Test](#size-is-not-the-test)
+  - [Dependency Direction](#dependency-direction)
+  - [Loader Pattern Follows From the Surface](#loader-pattern-follows-from-the-surface)
+  - [Worked Verdicts](#worked-verdicts)
 - [Placement Rules](#placement-rules)
 - [Tier Placement Flowchart](#tier-placement-flowchart)
 - [Promotion Rule](#promotion-rule)
 - [Boundary Rules](#boundary-rules)
 - [Worked Examples](#worked-examples)
+  - [Example 1: A module that detects network connectivity](#example-1-a-module-that-detects-network-connectivity)
+  - [Example 2: A module that provides accessible focus trap logic for React modals](#example-2-a-module-that-provides-accessible-focus-trap-logic-for-react-modals)
+  - [Example 3: A module that wraps the Clipboard API](#example-3-a-module-that-wraps-the-clipboard-api)
+  - [Example 4: A Carbon design-language template for the themer](#example-4-a-carbon-design-language-template-for-the-themer)
+  - [Example 5: Key-value storage per backend](#example-5-key-value-storage-per-backend)
 - [Worked Negative Examples](#worked-negative-examples)
+  - ["Idle detection is NOT `js-client-helper`, and NOT a pure core plus an extension"](#idle-detection-is-not-js-client-helper-and-not-a-pure-core-plus-an-extension)
+  - ["A React-only module is NOT `js-rnw-helper`"](#a-react-only-module-is-not-js-rnw-helper)
+  - ["Font is NOT `js-helper`"](#font-is-not-js-helper)
+  - ["A React hook for theme access is NOT `js-rnw-helper`"](#a-react-hook-for-theme-access-is-not-js-rnw-helper)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Runtime-Tier Prefixes
 
 The runtime tier describes what platform APIs a module depends on. A module takes the lowest tier whose dependency budget it fits.

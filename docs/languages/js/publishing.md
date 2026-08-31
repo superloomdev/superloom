@@ -15,15 +15,18 @@ This page scopes **package-configuration rules**; the companion docs scope **how
 ## On This Page
 
 - [Package Identity](#package-identity)
+  - [The `"exports"` Map](#the-exports-map)
 - [Dependency Rules](#dependency-rules)
+  - [Foundation Modules (Zero Dependencies)](#foundation-modules-zero-dependencies)
+  - [Other Modules](#other-modules)
 - [npmrc Configuration](#npmrc-configuration)
-- [Registry Ignore File](#registry-ignore-file-npmignore)
+- [Registry Ignore File (`.npmignore`)](#registry-ignore-file-npmignore)
 - [Linter Configuration](#linter-configuration)
 - [Required Scripts](#required-scripts)
 - [Test Directory Structure](#test-directory-structure)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Package Identity
 
 | Field | Required Value |

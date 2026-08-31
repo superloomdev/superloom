@@ -8,14 +8,17 @@
 - [Design Principles](#design-principles)
 - [Naming Convention](#naming-convention)
 - [Typical Files](#typical-files)
+  - [Typical Function Names](#typical-function-names)
 - [Per-Function Responsibilities](#per-function-responsibilities)
 - [Central Entry Rule](#central-entry-rule)
 - [Request Flow](#request-flow)
 - [Boundary Rules](#boundary-rules)
+  - [Controllers may be used by](#controllers-may-be-used-by)
+  - [Controllers must NOT](#controllers-must-not)
+  - [Controllers may](#controllers-may)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Purpose
 
 - Act as thin adapters between `server-interfaces` and `server-service`

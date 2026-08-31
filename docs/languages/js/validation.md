@@ -32,12 +32,18 @@ export default {
 - [How Validation Works](#how-validation-works)
 - [Return Convention](#return-convention)
 - [Validation Patterns](#validation-patterns)
+  - [Simple Entity (e.g., User)](#simple-entity-e-g-user)
+  - [Nested Entity (e.g., Survey → Questions → Options)](#nested-entity-e-g-survey-→-questions-→-options)
+  - [Type-Dependent Validation](#type-dependent-validation)
+  - [Cross-Reference Validation](#cross-reference-validation)
 - [Use Utils Type-Check Primitives](#use-utils-type-check-primitives)
+  - [Scope](#scope)
+  - [Not a Type Guard: Argument-Shape Dispatch](#not-a-type-guard-argument-shape-dispatch)
+  - [Identifier Format and Wire Parsing](#identifier-format-and-wire-parsing)
 - [Validation in the Request Flow](#validation-in-the-request-flow)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Philosophy
 
 - All validation lives in the **model layer** (`[entity].validation.js`)

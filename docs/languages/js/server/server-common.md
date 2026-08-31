@@ -10,11 +10,13 @@
 - [Standard Files](#standard-files)
 - [Connection Lifecycle in the Loader](#connection-lifecycle-in-the-loader)
 - [Boundary Rules](#boundary-rules)
+  - [`server-common` must NOT](#server-common-must-not)
+  - [Allowed dependencies](#allowed-dependencies)
+  - [Disallowed dependencies](#disallowed-dependencies)
 - [Mental Model](#mental-model)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Purpose
 
 - Provide the **server runtime foundation** for all server entry points (API, hook, job)

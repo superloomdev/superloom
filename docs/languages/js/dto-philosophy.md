@@ -10,12 +10,12 @@ This document explains why every entity has exactly **one** canonical data build
 - [The One-Shape Rule](#the-one-shape-rule)
 - [Absent Keys Are Not Added](#absent-keys-are-not-added)
 - [Public DTOs Derive From Internal](#public-dtos-derive-from-internal)
-- [Explicit Parameters, Not Object Passthrough](#why-explicit-parameters-not-object-passthrough)
+- [Why Explicit Parameters, Not Object Passthrough](#why-explicit-parameters-not-object-passthrough)
 - [Nested DTOs](#nested-dtos)
 - [Server-Extended DTOs](#server-extended-dtos)
+- [Further Reading](#further-reading)
 
 ---
-
 ## What is a DTO
 
 A **Data Transfer Object (DTO)** is a data structure that defines the exact shape of data at a boundary. In this framework, DTOs are the contract between layers - controllers build them, services receive them, and interfaces produce them on the way out.

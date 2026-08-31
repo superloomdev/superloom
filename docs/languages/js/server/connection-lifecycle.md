@@ -16,7 +16,6 @@ This page implements [Server Architecture](../../../principles/server-architectu
 - [Further Reading](#further-reading)
 
 ---
-
 ## Three Lifetimes
 
 The host assigns every open resource to one lifetime. The lifetime determines the registration API and the code that triggers cleanup.

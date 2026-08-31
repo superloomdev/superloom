@@ -7,28 +7,64 @@ How every helper module documents itself. Each module ships three files: `README
 - [`module-classes.md`](module-classes.md) - the six module classes and which class each existing module belongs to.
 - [`../../principles/documentation-authoring.md`](../../principles/documentation-authoring.md) - writing-style rules (voice, prose mechanics, em-dash ban, table-cell rules, placeholder syntax).
 - [`module-docs-complex.md`](module-docs-complex.md) - deep guide for `docs/` folders in Class E feature modules.
-- [ROBOTS.md - The AI Surface](#robotsmd---the-ai-surface) - the specification for the AI-consumption file.
+- [ROBOTS.md - The AI Surface](#robots-md-the-ai-surface) - the specification for the AI-consumption file.
 
 ## On This Page
 
 - [The Three-Tier Model](#the-three-tier-model)
 - [Audiences and Personas](#audiences-and-personas)
 - [Universal README Sections](#universal-readme-sections)
+  - [Section 4. Why Use This Module](#section-4-why-use-this-module)
+  - [Section 5. Hot-Swappable with Other Backends *(class-conditional)*](#section-5-hot-swappable-with-other-backends-class-conditional)
+  - [Section 7. Aligned with Superloom Philosophy](#section-7-aligned-with-superloom-philosophy)
+  - [Section 8. Extended Documentation](#section-8-extended-documentation)
+  - [Section 9. Adding to Your Project](#section-9-adding-to-your-project)
+  - [Section 10. Dependencies](#section-10-dependencies)
+  - [Section 11. Testing Status](#section-11-testing-status)
 - [Class-Specific Sections](#class-specific-sections)
 - [`docs/` Folder Pattern by Class](#docs-folder-pattern-by-class)
-- [ROBOTS.md - The AI Surface](#robotsmd---the-ai-surface)
+  - [`docs/data-model.md` Key Field Semantics](#docs-data-model-md-key-field-semantics)
+  - [`docs/api.md`](#docs-api-md)
+  - [`docs/configuration.md`](#docs-configuration-md)
+- [ROBOTS.md - The AI Surface](#robots-md-the-ai-surface)
+  - [Section Order (fixed)](#section-order-fixed)
+  - [Function Entry Format (fixed)](#function-entry-format-fixed)
+  - [Rules](#rules)
 - [Class-Specific Templates and Reusable Wording](#class-specific-templates-and-reusable-wording)
+  - [Universal "Why Use This Module" Bullets](#universal-why-use-this-module-bullets)
+  - [Class A. Foundation Utility](#class-a-foundation-utility)
+  - [Class H. Extension](#class-h-extension)
+  - [Class B. Extended Utility](#class-b-extended-utility)
+  - [Class C. Driver Wrapper](#class-c-driver-wrapper)
+  - [Class D. Cloud Service Wrapper](#class-d-cloud-service-wrapper)
+  - [Class E. Feature Module with Adapters](#class-e-feature-module-with-adapters)
+  - [Class G. Feature Module with Extensions](#class-g-feature-module-with-extensions)
+  - [Class F. Dependent Adapter](#class-f-dependent-adapter)
 - [Cross-Cutting Patterns](#cross-cutting-patterns)
+  - [Code Examples Are ESM](#code-examples-are-esm)
+  - [AWS Family Pattern (DynamoDB, S3, SQS, and any future AWS service wrapper)](#aws-family-pattern-dynamodb-s3-sqs-and-any-future-aws-service-wrapper)
+  - [Repo-Root Family Table](#repo-root-family-table)
+  - [Hot-Swap Families](#hot-swap-families)
+  - ["Required (override)" Pattern in Configuration Tables](#required-override-pattern-in-configuration-tables)
+  - [Response Envelope Illustration in "What This Is"](#response-envelope-illustration-in-what-this-is)
+  - [Lazy Initialization Note](#lazy-initialization-note)
+  - [`close()` / Lifecycle Convention](#close-lifecycle-convention)
 - [Link Form](#link-form)
 - [Section Order and Why It Matters](#section-order-and-why-it-matters)
 - [Readability Test Passes](#readability-test-passes)
+  - [Pass 1. Layman pass (Persona 1)](#pass-1-layman-pass-persona-1)
+  - [Pass 2. Integrator pass (Persona 3)](#pass-2-integrator-pass-persona-3)
 - [Writing Style and Prose Quality](#writing-style-and-prose-quality)
+  - [No Em Dashes Anywhere](#no-em-dashes-anywhere)
+  - [Table Cells Do Not End With Periods](#table-cells-do-not-end-with-periods)
+  - [Sentence Length](#sentence-length)
+  - [AI-Sounding Phrases](#ai-sounding-phrases)
+  - [American English](#american-english)
 - [Anti-Patterns to Avoid](#anti-patterns-to-avoid)
 - [Authoring Checklist](#authoring-checklist)
 - [Further Reading](#further-reading)
 
 ---
-
 ## The Three-Tier Model
 
 Each module's documentation is split across three files. Each file has one audience and one job. They do not duplicate each other.
@@ -43,7 +79,7 @@ Each module's documentation is split across three files. Each file has one audie
 
 **The `docs/` folder is the reference layer.** Complete, exhaustive, written for someone actively integrating or maintaining the module. Every class ships at least `docs/api.md` and `docs/configuration.md`; deeper classes add more (Class D may add `iam.md`; Class E adds `data-model.md` and optional `runtime.md`; Class F stores add `schema.md` and `cleanup.md`; Class F adapters ship only the universal pair). Any module that ships a `*.validators.js` also adds `docs/schemas.md`, the validated boundary contracts.
 
-**`ROBOTS.md` is the AI surface.** Compact, structured, every exported function with its signature and return shape. See [ROBOTS.md - The AI Surface](#robotsmd---the-ai-surface) below for the full specification.
+**`ROBOTS.md` is the AI surface.** Compact, structured, every exported function with its signature and return shape. See [ROBOTS.md - The AI Surface](#robots-md-the-ai-surface) below for the full specification.
 
 ---
 

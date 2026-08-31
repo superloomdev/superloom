@@ -18,7 +18,6 @@ The theming system takes a template and a stack of layered values, derives a com
 - [Further Reading](#further-reading)
 
 ---
-
 ## Architecture: Three Tiers
 
 The theming system is split into three tiers, each with a distinct responsibility:

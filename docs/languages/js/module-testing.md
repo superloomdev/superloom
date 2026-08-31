@@ -15,21 +15,30 @@ Use this file for **what to test and which tier**; use the companion docs for **
 
 ## On This Page
 
-- [Testing Tiers (Industry Standard)](#testing-tiers---industry-standard)
-- [README Badges (Standard)](#readme-badges-standard)
-- [Testing Section (Standard)](#testing-section-standard)
+- [Testing Tiers - Industry Standard](#testing-tiers-industry-standard)
+  - [Module-Level Testing (Tiers 1 and 2)](#module-level-testing-tiers-1-and-2)
+  - [README Badges (Standard)](#readme-badges-standard)
+  - [Testing Section (Standard)](#testing-section-standard)
 - [Environment Variable Registration](#environment-variable-registration)
 - [Environments](#environments)
 - [Running Tests](#running-tests)
 - [Module Categories](#module-categories)
-- [CI/CD for Service-Dependent Modules](#cicd-for-service-dependent-modules)
+  - [Offline Modules (no external services)](#offline-modules-no-external-services)
+  - [Service-Dependent Modules (need Docker or cloud credentials)](#service-dependent-modules-need-docker-or-cloud-credentials)
+  - [CI/CD for Service-Dependent Modules](#ci-cd-for-service-dependent-modules)
 - [Integration Testing](#integration-testing)
+  - [When to Run](#when-to-run)
+  - [Setup Requirements](#setup-requirements)
+  - [Credentials](#credentials)
 - [Test Loader Pattern](#test-loader-pattern)
 - [Adding Tests to a New Module](#adding-tests-to-a-new-module)
-- [Framework Module Testing (Class H / Class I)](#framework-module-testing-class-h--class-i)
+- [Framework Module Testing (Class H / Class I)](#framework-module-testing-class-h-class-i)
+  - [What Gets Injected](#what-gets-injected)
+  - [Test Loader Shape](#test-loader-shape)
+  - [CI Placement](#ci-placement)
+  - [What About Component Tests?](#what-about-component-tests)
 
 ---
-
 ## Testing Tiers - Industry Standard
 
 The project follows the standard 4-tier testing model. **This framework handles tiers 1 and 2.** Tiers 3 and 4 are the responsibility of the application project that consumes these modules.
@@ -107,9 +116,9 @@ See [Module Testing](https://github.com/superloomdev/superloom/blob/main/docs/la
 
 ### Emulated (Docker)
 
-```bash
+\`\`\`bash
 cd _test && npm install && npm test
-```
+\`\`\`
 
 Docker lifecycle is automatic: `pretest` starts the [emulator] container, `posttest` stops and removes it (containers and volumes only; images are cached). No manual `docker compose up` needed.
 
@@ -117,10 +126,10 @@ Full guide: `_test/ops/00-local-testing/[module]-setup.md`
 
 ### Integration (Real Service)
 
-```bash
+\`\`\`bash
 source init-env.sh   # select 'integration'
 cd _test && npm install && npm test
-```
+\`\`\`
 
 Full guide: `_test/ops/01-integration-testing/[module]-integration-setup.md`
 
@@ -276,7 +285,7 @@ See `js-server-helper-nosql-aws-dynamodb/_test/loader.js` for the reference impl
 
 ## Adding Tests to a New Module
 
-Before writing tests, identify each external dependency the module has (storage backend, runtime adapter, cloud SDK, storage engine) and decide which test double pattern to use for each. See [Test Double Patterns](unit-test-authoring.md#test-double-patterns-memory-store-vs-stub-adapter-vs-engine-stub) in the unit-test authoring guide - the three patterns (`memory-store`, `stub-adapter`, `engine-stub`) are not mutually exclusive and a module may need several.
+Before writing tests, identify each external dependency the module has (storage backend, runtime adapter, cloud SDK, storage engine) and decide which test double pattern to use for each. See [Test Double Patterns](unit-test-authoring.md#test-double-patterns-memory-store-vs-stub-adapter-vs-engine-stub-vs-emitter-stub) in the unit-test authoring guide - the four patterns (`memory-store`, `stub-adapter`, `engine-stub`, `emitter-stub`) are not mutually exclusive and a module may need several.
 
 1. Create `_test/` directory in the module
 2. Create `_test/loader.js` - reads env vars, builds `Lib` container

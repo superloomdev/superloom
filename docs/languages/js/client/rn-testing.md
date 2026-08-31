@@ -9,14 +9,20 @@ How to test React Native and Expo modules in the Superloom framework. This page 
 - [Testing Philosophy](#testing-philosophy)
 - [Module Testing Tiers for Framework Modules](#module-testing-tiers-for-framework-modules)
 - [Test Loader Shape for Expo-Bound Modules](#test-loader-shape-for-expo-bound-modules)
+  - [Class I: Standalone React Module](#class-i-standalone-react-module)
+  - [Class H: Expo Extension with Capability Stub](#class-h-expo-extension-with-capability-stub)
+  - [Class C: Engine Stub for Native Module Wrapper](#class-c-engine-stub-for-native-module-wrapper)
 - [Component Testing with react-test-renderer](#component-testing-with-react-test-renderer)
+  - [Testing State Transitions](#testing-state-transitions)
 - [Integration Testing with Metro and Expo](#integration-testing-with-metro-and-expo)
+  - [When Integration Testing Is Needed](#when-integration-testing-is-needed)
+  - [React Native Web Alias Tier](#react-native-web-alias-tier)
+  - [Manual Verification](#manual-verification)
 - [CI Placement](#ci-placement)
 - [End-to-End Tests](#end-to-end-tests)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Testing Philosophy
 
 Helper modules test in pure Node with no Metro, no emulator, and no browser. The framework or engine is injected through `shared_libs` in the test loader, exactly as server modules inject adapters and cloud SDKs.

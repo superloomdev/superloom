@@ -11,16 +11,20 @@ The key design goal: **the entire application logic is transport-agnostic**. Onl
 - [Purpose](#purpose)
 - [Design Principles](#design-principles)
 - [Sub-Categories](#sub-categories)
+  - [API Modules (`server-api`)](#api-modules-server-api)
+  - [Hook Modules (`server-hook`)](#hook-modules-server-hook)
+  - [Job Modules (`server-job`)](#job-modules-server-job)
 - [The Dual Entry Point Pattern](#the-dual-entry-point-pattern)
+  - [Solution: Shared Controller, Separate Adapters](#solution-shared-controller-separate-adapters)
 - [Standardized Request Object](#standardized-request-object)
 - [Standardized Response Object](#standardized-response-object)
 - [Express Adapter Pattern](#express-adapter-pattern)
 - [Lambda Adapter Pattern](#lambda-adapter-pattern)
 - [Boundary Rules](#boundary-rules)
+  - [Server interface responsibilities](#server-interface-responsibilities)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Purpose
 
 - Act as **entry points** into the server application

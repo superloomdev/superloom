@@ -10,14 +10,30 @@ This document is the single source of truth for function naming. The registry ca
 
 - [The Rule](#the-rule)
 - [Verb Catalog](#verb-catalog)
+  - [The `Sync` suffix](#the-sync-suffix)
 - [Return Shape by Verb Class](#return-shape-by-verb-class)
+  - [Predicates: `is` and `has`](#predicates-is-and-has)
+  - [Getters: `get`, `list`, `load`](#getters-get-list-load)
+  - [Mutators: `set`, `update`, `write`, `delete`, `remove`, `clear`, `cleanup`](#mutators-set-update-write-delete-remove-clear-cleanup)
+  - [Constructors: `build`, `create`, `generate`](#constructors-build-create-generate)
+  - [Validators: `validate`, `assert`, `check`](#validators-validate-assert-check)
 - [Confusable Pairs](#confusable-pairs)
+  - [`build` versus `format`](#build-versus-format)
+  - [`create` versus `generate` versus `build`](#create-versus-generate-versus-build)
+  - [`is` versus `has` versus `validate`](#is-versus-has-versus-validate)
+  - [`get` versus `list` versus `load`](#get-versus-list-versus-load)
+  - [`delete` versus `remove` versus `clear` versus `cleanup`](#delete-versus-remove-versus-clear-versus-cleanup)
+  - [`set` versus `update` versus `write`](#set-versus-update-versus-write)
 - [Banned Verbs](#banned-verbs)
+  - [Banned naming shape: `xToY` conversion names](#banned-naming-shape-xtoy-conversion-names)
 - [Naming Shape Rules](#naming-shape-rules)
+  - [Verb first, always](#verb-first-always)
+  - [No verb in the middle](#no-verb-in-the-middle)
+  - [No noun first](#no-noun-first)
+  - [Multi-HTTP-method suffix](#multi-http-method-suffix)
 - [Config Key Casing](#config-key-casing)
 
 ---
-
 ## The Rule
 
 Every exported function begins with a verb from the catalog. The verb is chosen by what the function does, not by what it returns. Two functions that do the same thing begin with the same verb, even if one returns a String and the other returns an Object. Two functions that do different things begin with different verbs, even if both return an Object.

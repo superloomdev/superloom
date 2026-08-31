@@ -9,16 +9,19 @@ How tests are organized across modules. This document covers the **layout** (whe
 - [Philosophy](#philosophy)
 - [Test Directory Structure](#test-directory-structure)
 - [Test File Pattern](#test-file-pattern)
-- [Test `package.json` Pattern](#test-packagejson-pattern)
+- [Test `package.json` Pattern](#test-package-json-pattern)
 - [Testing Levels](#testing-levels)
 - [Testing Adapter-Based Modules (Three-Tier Pattern)](#testing-adapter-based-modules-three-tier-pattern)
-- [Testing Modules with Dependencies](#testing-modules-with-dependencies-simulating-loader)
+  - [The Three Tiers](#the-three-tiers)
+  - [In-Memory Fixture Pattern (Tier 2 Enabler)](#in-memory-fixture-pattern-tier-2-enabler)
+  - [Shared Contract Suite Copy Pattern (Tier 3 Enabler)](#shared-contract-suite-copy-pattern-tier-3-enabler)
+  - [Reference Implementations](#reference-implementations)
+- [Testing Modules with Dependencies (Simulating Loader)](#testing-modules-with-dependencies-simulating-loader)
 - [Global Test Runner Pattern](#global-test-runner-pattern)
 - [Rules](#rules)
-- [Module README as Context](#module-readme-as-context)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Philosophy
 
 - Every module must be **independently testable**

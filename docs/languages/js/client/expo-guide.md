@@ -8,14 +8,28 @@ Expo is the app framework for the Superloom client stack. This page documents wh
 
 - [What Expo Provides](#what-expo-provides)
 - [Adapter Versus Direct Use](#adapter-versus-direct-use)
+  - [When to Wrap](#when-to-wrap)
+  - [When a Pure Parent Exists](#when-a-pure-parent-exists)
+  - [When No Second Consumer Exists](#when-no-second-consumer-exists)
 - [Capability Injection Pattern](#capability-injection-pattern)
 - [Prebuild and Continuous Native Generation](#prebuild-and-continuous-native-generation)
+  - [How CNG Works](#how-cng-works)
+  - [When to Use Prebuild](#when-to-use-prebuild)
+  - [Dev Client Versus Expo Go](#dev-client-versus-expo-go)
 - [Expo SDK Versioning](#expo-sdk-versioning)
+  - [Upgrading the SDK](#upgrading-the-sdk)
+  - [Version Pinning](#version-pinning)
+  - [Breaking Changes](#breaking-changes)
 - [Expo Cloud Account Features](#expo-cloud-account-features)
+  - [EAS Build](#eas-build)
+  - [EAS Update](#eas-update)
+  - [EAS Submit](#eas-submit)
+  - [Free Tier Limitations](#free-tier-limitations)
+  - [When a Paid Plan Is Needed](#when-a-paid-plan-is-needed)
+  - [What Works Without an Account](#what-works-without-an-account)
 - [Further Reading](#further-reading)
 
 ---
-
 ## What Expo Provides
 
 The Expo SDK bundles capabilities that would otherwise require separate native modules, manual linking, and platform-specific configuration. Each capability ships as a versioned package under the `expo-*` namespace.

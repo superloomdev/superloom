@@ -7,21 +7,31 @@ The model layer is where every entity defines its **shape, validation rules, err
 ## On This Page
 
 - [Base Model Modules](#base-model-modules)
-  - [Purpose](#base-model---purpose)
-  - [Design Principles](#base-model---design-principles)
-  - [Naming Convention](#base-model---naming-convention)
-  - [Standard Files](#base-model---standard-files)
+  - [Base Model - Purpose](#base-model-purpose)
+  - [Base Model - Design Principles](#base-model-design-principles)
+  - [Base Model - Naming Convention](#base-model-naming-convention)
+  - [Base Model - Standard Files](#base-model-standard-files)
+  - [`index.js` File Comments and Pattern](#index-js-file-comments-and-pattern)
+  - [`[entity].data.js` Function Set](#entity-data-js-function-set)
+  - [`[entity].validation.js` Cross-Module Validation](#entity-validation-js-cross-module-validation)
   - [DTO Terminology](#dto-terminology)
-  - [Boundary Rules](#base-model---boundary-rules)
+  - [Base Model - Boundary Rules](#base-model-boundary-rules)
 - [Server Model Modules](#server-model-modules)
   - [Peer Package Pattern](#peer-package-pattern)
   - [Merge Mechanics](#merge-mechanics)
-  - [What Belongs Here](#what-belongs-in-server-model)
+  - [Config Privacy](#config-privacy)
+  - [Structure](#structure)
+  - [What Belongs in Server Model](#what-belongs-in-server-model)
+  - [What Does NOT Belong Here](#what-does-not-belong-here)
+  - [Server Model - Naming Convention](#server-model-naming-convention)
 - [Client Model Modules](#client-model-modules)
+  - [What Belongs in Client Model](#what-belongs-in-client-model)
+  - [What Does NOT Belong Here](#what-does-not-belong-here-1)
+  - [Merge Pattern](#merge-pattern)
+  - [Client Model - Naming Convention](#client-model-naming-convention)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Base Model Modules
 
 `base-model` defines the **shared domain model** for an entity. It provides canonical data structures, validation, domain rules, and DTO transformations. Pure and IO-free, it is safe to share between server and client.

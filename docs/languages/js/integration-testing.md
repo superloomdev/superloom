@@ -7,12 +7,17 @@ How to set up and run integration tests against **real cloud services** in an is
 - [Terminology](#terminology)
 - [Architecture](#architecture)
 - [Setup Steps](#setup-steps)
+  - [1. AWS Sandbox Account](#_1-aws-sandbox-account)
+  - [2. IAM Unit-Tester User](#_2-iam-unit-tester-user)
+  - [3. Store Credentials](#_3-store-credentials)
+  - [4. Environment File](#_4-environment-file)
+  - [5. Run Tests](#_5-run-tests)
 - [Safety Rules](#safety-rules)
 - [Per-Module Documentation](#per-module-documentation)
 - [When to Run Integration Tests](#when-to-run-integration-tests)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Terminology
 
 | Term | Meaning |

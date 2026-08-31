@@ -8,16 +8,23 @@
 - [Design Principles](#design-principles)
 - [Naming Convention](#naming-convention)
 - [Typical Files](#typical-files)
+  - [Provider Folder (Multi-Vendor)](#provider-folder-multi-vendor)
+  - [Configuration](#configuration)
 - [Example Modules](#example-modules)
 - [Boundary Rules](#boundary-rules)
+  - [Platform Neutrality (Hard Rule)](#platform-neutrality-hard-rule)
+  - [Runtime Environment Constraints](#runtime-environment-constraints)
+  - [No Client-State Awareness](#no-client-state-awareness)
 - [Configuration Isolation](#configuration-isolation)
 - [Side-Effect Discipline](#side-effect-discipline)
 - [Data Shape Independence](#data-shape-independence)
+- [Factory Pattern for Testability](#factory-pattern-for-testability)
+  - [Why Factory Pattern?](#why-factory-pattern)
+  - [Singleton Exception: Utils](#singleton-exception-utils)
 - [Testing and Reuse](#testing-and-reuse)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Purpose
 
 - Provide **generic, reusable, stateless** functions that are universal and platform-agnostic

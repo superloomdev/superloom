@@ -13,14 +13,16 @@ Every module file that captures the *why* behind design decisions, not the *what
 ## On This Page
 
 - [Why This Exists](#why-this-exists)
-- [What Goes in THOUGHTS.md](#what-goes-in-thoughtsmd)
-- [What Does Not Go in THOUGHTS.md](#what-does-not-go-in-thoughtsmd)
+- [What Goes in THOUGHTS.md](#what-goes-in-thoughts-md)
+- [What Does Not Go in THOUGHTS.md](#what-does-not-go-in-thoughts-md)
 - [File Properties](#file-properties)
 - [Excluding from Package Registries](#excluding-from-package-registries)
+  - [JavaScript (npm)](#javascript-npm)
+  - [Python (pip / PyPI)](#python-pip-pypi)
+  - [Other runtimes](#other-runtimes)
 - [Rollout Policy](#rollout-policy)
 
 ---
-
 ## Why This Exists
 
 Modules are built through design sessions where many alternatives are considered, rejected, and reasoned about. That reasoning lives only in chat logs and human memory. When work on a module resumes months later, or when a new contributor reads the code, none of that context is available. The same dead ends get explored again. The same decisions get re-litigated.

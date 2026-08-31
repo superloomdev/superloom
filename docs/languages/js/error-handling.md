@@ -5,20 +5,39 @@ The framework recognizes **three** error categories. Each has exactly one correc
 ## On This Page
 
 - [Three Categories, Three Disposals](#three-categories-three-disposals)
-- [Where Each Category Appears](#where-each-category-appears)
+  - [Where Each Category Appears](#where-each-category-appears)
+  - [The Heuristic Test](#the-heuristic-test)
+  - [Worked Example: Walking Through `verify`'s Errors](#worked-example-walking-through-verify-s-errors)
 - [Why Throw Programmer Errors](#why-throw-programmer-errors)
+  - [Why Operational Errors Are *Not* Thrown](#why-operational-errors-are-not-thrown)
 - [Why Two Return Shapes](#why-two-return-shapes)
+  - [Why Helper Modules Catch SDK Errors at All](#why-helper-modules-catch-sdk-errors-at-all)
 - [Wrapper Purity: The Catalog Owns the Envelope](#wrapper-purity-the-catalog-owns-the-envelope)
+  - [The Rule](#the-rule)
+  - [Why the Rule Is Strict](#why-the-rule-is-strict)
+  - [Catalog Design Implication](#catalog-design-implication)
 - [Service-Layer Translation Is Mandatory](#service-layer-translation-is-mandatory)
+  - [Pattern A - Module Error Catalog (Preferred)](#pattern-a-module-error-catalog-preferred)
+  - [The Boundary, Stated Cleanly](#the-boundary-stated-cleanly)
 - [Domain Validation (Model Layer)](#domain-validation-model-layer)
 - [Return Object Shapes (Quick Reference)](#return-object-shapes-quick-reference)
 - [Pure Engines: Modules With No Operational Errors](#pure-engines-modules-with-no-operational-errors)
 - [Type String Naming](#type-string-naming)
+  - [Why Not Always Use the Module Name as a Prefix](#why-not-always-use-the-module-name-as-a-prefix)
+  - [Three Classes of Error Types](#three-classes-of-error-types)
+  - [The Short-Name Rule](#the-short-name-rule)
+  - [Intentionally Shared Semantics](#intentionally-shared-semantics)
 - [Programmer Error Message Format](#programmer-error-message-format)
+  - [The Rule](#the-rule-1)
+  - [Hard Prohibitions](#hard-prohibitions)
+  - [Correct Examples](#correct-examples)
+  - [Incorrect Examples](#incorrect-examples)
+  - [Why These Rules Exist](#why-these-rules-exist)
+  - [Scope of This Rule](#scope-of-this-rule)
 - [Scope](#scope)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Three Categories, Three Disposals
 
 Each category has exactly one correct disposal mechanism.

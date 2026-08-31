@@ -6,14 +6,23 @@ The layered dependency model that Superloom helper modules follow. Two foundatio
 
 - [Self-Contained Foundation Modules](#self-contained-foundation-modules)
 - [Why Peer Dependencies](#why-peer-dependencies)
+  - [Problem with Regular Dependencies](#problem-with-regular-dependencies)
+  - [Solution with Peer Dependencies](#solution-with-peer-dependencies)
 - [Module Structure](#module-structure)
+  - [Injected Dependencies Are Peer Dependencies](#injected-dependencies-are-peer-dependencies)
+  - [Module Acquisition Rules](#module-acquisition-rules)
 - [Consumer Installation](#consumer-installation)
 - [Benefits](#benefits)
+- [Per-Module Inventory](#per-module-inventory)
 - [Development Guidelines](#development-guidelines)
+  - [When Adding Dependencies to a Module](#when-adding-dependencies-to-a-module)
+  - [Example: Adding a New Dependency](#example-adding-a-new-dependency)
 - [Troubleshooting](#troubleshooting)
+  - [Common Issues](#common-issues)
+  - [Authentication Errors When Installing](#authentication-errors-when-installing)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Self-Contained Foundation Modules
 
 **`js-helper-utils` and `js-helper-debug` are fully self-contained with zero runtime dependencies.**

@@ -9,6 +9,8 @@ The client architecture produces web, iOS, and Android from one JavaScript codeb
 - [Stack Decision Record](#stack-decision-record)
 - [Why React Native Web](#why-react-native-web)
 - [One Pipeline, Not Two](#one-pipeline-not-two)
+  - [Portability Harness Exception](#portability-harness-exception)
+  - [Portability Fence](#portability-fence)
 - [Bundler-Agnostic Rule](#bundler-agnostic-rule)
 - [Platform-File Convention](#platform-file-convention)
 - [Project Layout](#project-layout)
@@ -16,7 +18,6 @@ The client architecture produces web, iOS, and Android from one JavaScript codeb
 - [Further Reading](#further-reading)
 
 ---
-
 ## Stack Decision Record
 
 The stack is frozen. These decisions were validated against Expo documentation and a working demo before adoption.

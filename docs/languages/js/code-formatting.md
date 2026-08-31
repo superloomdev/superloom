@@ -7,13 +7,27 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
 ## On This Page
 
 - [Tooling](#tooling)
+  - [General Principles](#general-principles)
 - [Source Style](#source-style)
-- [Vertical Spacing (3/2/1 Rule)](#vertical-spacing-321-rule)
+- [Additional Formatting Rules](#additional-formatting-rules)
+- [Vertical Spacing (3/2/1 Rule)](#vertical-spacing-3-2-1-rule)
+  - [Spacing Reference Table](#spacing-reference-table)
+  - [Standard Module Skeleton](#standard-module-skeleton)
 - [Section Header Hierarchy](#section-header-hierarchy)
+  - [When to Use Level 2 Subsections](#when-to-use-level-2-subsections)
+  - [Level 2 Example](#level-2-example)
 - [Private Functions Enclosure](#private-functions-enclosure)
 - [Section Closing Banners](#section-closing-banners)
 - [Variable Declarations](#variable-declarations)
+  - [Variable Initialization](#variable-initialization)
 - [Naming Conventions](#naming-conventions)
+  - [Function Naming](#function-naming)
+  - [Module Naming](#module-naming)
+  - [Module Terminology (Consistent Across Modules)](#module-terminology-consistent-across-modules)
+  - [Parameter Naming](#parameter-naming)
+  - [Shared ESLint Configuration](#shared-eslint-configuration)
+  - [Uniform Factory Signatures](#uniform-factory-signatures)
+  - [Public Data Field Naming](#public-data-field-naming)
 - [Function Parameter Conventions](#function-parameter-conventions)
 - [Multi-line Literals](#multi-line-literals)
 - [Return Objects](#return-objects)
@@ -22,14 +36,21 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
 - [Error Handling Disposal](#error-handling-disposal)
 - [Performance Logging](#performance-logging)
 - [JSDoc Style](#jsdoc-style)
+  - [JSDoc Block Conventions](#jsdoc-block-conventions)
+  - [Body Indentation](#body-indentation)
+  - [Nested Object Params and Returns](#nested-object-params-and-returns)
 - [Comment Style](#comment-style)
+  - [Voice and Tone](#voice-and-tone)
+  - [Inline Step Comments Inside Functions](#inline-step-comments-inside-functions)
+  - [Adapter and Driver Lazy-Load Pattern](#adapter-and-driver-lazy-load-pattern)
 - [Spelling and Prose Quality](#spelling-and-prose-quality)
 - [Dependencies](#dependencies)
 - [NPM Aliases in import and Error Prefixes](#npm-aliases-in-import-and-error-prefixes)
+  - [NPM Package Aliases](#npm-package-aliases)
+  - [Error Message Prefixes](#error-message-prefixes)
 - [AWS and Cloud SDK Modules](#aws-and-cloud-sdk-modules)
 
 ---
-
 ## Tooling
 
 | Tool | Role | Command |

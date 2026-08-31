@@ -7,6 +7,7 @@ The font system separates font identity (family names and weights, which are dat
 ## On This Page
 
 - [The Contract](#the-contract)
+  - [Manifest Style Entries](#manifest-style-entries)
 - [Three Delivery Mechanisms](#three-delivery-mechanisms)
 - [Font Manifest](#font-manifest)
 - [Loading Flow](#loading-flow)
@@ -15,7 +16,6 @@ The font system separates font identity (family names and weights, which are dat
 - [Further Reading](#further-reading)
 
 ---
-
 ## The Contract
 
 The rule: the theme names font families; the host loads them.

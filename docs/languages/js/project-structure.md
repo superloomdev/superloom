@@ -5,6 +5,7 @@ The high-level rules that shape every project. Covers the reasoning behind the d
 ## On This Page
 
 - [Top-Level Goals](#top-level-goals)
+  - [Supported Deployment Targets](#supported-deployment-targets)
 - [Coding Practices](#coding-practices)
 - [Platform Identifiers](#platform-identifiers)
 - [Directory Layout](#directory-layout)
@@ -13,13 +14,12 @@ The high-level rules that shape every project. Covers the reasoning behind the d
   - [Client Application](#client-application)
 - [Repository Conventions](#repository-conventions)
   - [Personal Workspace (`__dev__/`)](#personal-workspace-dev)
-  - [Developer Documentation (`docs/dev/`)](#developer-documentation-docsdev)
+  - [Developer Documentation (`docs/dev/`)](#developer-documentation-docs-dev)
   - [Environment Strategy](#environment-strategy)
   - [Git Identity](#git-identity)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Top-Level Goals
 
 The architecture serves four non-negotiable goals. Every other rule in `architecture/` exists to support one of these:
@@ -82,7 +82,7 @@ The repository is structured by **responsibility and execution context**, with s
 
 ### Helper Modules (Framework Level)
 
-Helper modules provide reusable utilities and can be integrated into your project in three different ways. For detailed implementation approaches, pros/cons, and setup instructions, see [`module-structure.md`](module-structure#implementation-approaches) and [`getting-started.md`](../../guide/getting-started.md#step-1---choose-your-implementation-approach).
+Helper modules provide reusable utilities and can be integrated into your project in three different ways. For detailed implementation approaches, pros/cons, and setup instructions, see [`module-structure.md`](module-structure#implementation-approaches) and [`getting-started.md`](../../guide/getting-started.md#step-1-choose-your-implementation-approach).
 
 #### Framework Structure (Reference)
 

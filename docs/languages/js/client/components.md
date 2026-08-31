@@ -12,18 +12,25 @@ The component library ships atoms, molecules, composites, and providers: themeab
 - [Composite Set](#composite-set)
 - [Provider Set](#provider-set)
 - [Authoring Contract](#authoring-contract)
+  - [Consumption Pattern](#consumption-pattern)
+  - [Parts and the Style Contract](#parts-and-the-style-contract)
 - [Theme Token Contract](#theme-token-contract)
 - [Named Barrel](#named-barrel)
 - [Utility-Class Mapping](#utility-class-mapping)
 - [Four-Bucket Exception Model](#four-bucket-exception-model)
+  - [Canonical](#canonical)
+  - [Provider](#provider)
+  - [Structured variant](#structured-variant)
+  - [Unstructured freeform](#unstructured-freeform)
 - [Interaction States](#interaction-states)
 - [Accessibility Contract](#accessibility-contract)
+  - [No-op props on web](#no-op-props-on-web)
+  - [Platform gaps](#platform-gaps)
 - [Generic vs Custom](#generic-vs-custom)
 - [Peer Dependencies](#peer-dependencies)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Component Vocabulary
 
 The library uses four tiers. Atoms and molecules follow Brad Frost's atomic design taxonomy. Composites extend the hierarchy for components that compose other molecules (MenuButton composes Menu which composes MenuItem). Providers are context-only components that render no visual output.

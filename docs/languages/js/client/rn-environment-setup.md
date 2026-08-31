@@ -7,15 +7,36 @@ The development environment for React Native and Expo projects. This page covers
 ## On This Page
 
 - [Prerequisites](#prerequisites)
+  - [Expo Path (Primary)](#expo-path-primary)
+  - [Native Build Prerequisites](#native-build-prerequisites)
 - [Local Development Without an Expo Account](#local-development-without-an-expo-account)
+  - [Start the Dev Server](#start-the-dev-server)
+  - [Running on a Physical Device](#running-on-a-physical-device)
+  - [Run on iOS Simulator](#run-on-ios-simulator)
+  - [Run on Android Emulator](#run-on-android-emulator)
+  - [Run on Web](#run-on-web)
+  - [Dev Client with Prebuild](#dev-client-with-prebuild)
 - [Building Without Expo Tooling](#building-without-expo-tooling)
+  - [Prebuild Output](#prebuild-output)
+  - [Maintenance Overhead](#maintenance-overhead)
 - [Metro Bundler](#metro-bundler)
+  - [Configuration](#configuration)
+  - [Platform-File Resolution](#platform-file-resolution)
+  - [Cache Clearing](#cache-clearing)
 - [Platform-Specific Setup](#platform-specific-setup)
+  - [iOS](#ios)
+  - [Android](#android)
+  - [Web](#web)
 - [Troubleshooting](#troubleshooting)
+  - [Metro Port Conflict](#metro-port-conflict)
+  - [iOS Pod Issues (Native Build)](#ios-pod-issues-native-build)
+  - [Android SDK License Acceptance](#android-sdk-license-acceptance)
+  - [Watchman Issues (macOS)](#watchman-issues-macos)
+  - [Metro Cache Corruption](#metro-cache-corruption)
+  - [Node Modules Out of Sync](#node-modules-out-of-sync)
 - [Further Reading](#further-reading)
 
 ---
-
 ## Prerequisites
 
 The Superloom client stack uses Expo as the app framework. The Expo path is the primary setup. Building without Expo tooling is documented for teams that need to compile native projects directly.

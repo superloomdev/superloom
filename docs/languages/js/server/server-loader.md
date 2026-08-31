@@ -8,17 +8,18 @@ The `loader.js` at `src/server/common/loader.js` is the **bootstrap and dependen
 
 - [What the Loader Does](#what-the-loader-does)
 - [Runtime Objects](#runtime-objects)
+  - [`Lib` - Dependency Container](#lib-dependency-container)
+  - [`Config` - Resolved Application Config](#config-resolved-application-config)
 - [Lifecycle Configuration](#lifecycle-configuration)
 - [Why Dependency Injection](#why-dependency-injection)
 - [Dependency Injection Rules](#dependency-injection-rules)
 - [Scope Boundaries](#scope-boundaries)
 - [Mental Model](#mental-model)
-- [Example - Loading Models and Services](#example---loading-models-and-services)
+- [Example - Loading Models and Services](#example-loading-models-and-services)
 - [Key Principles](#key-principles)
 - [Further Reading](#further-reading)
 
 ---
-
 ## What the Loader Does
 
 The loader runs once per process. It performs five tasks in order:
