@@ -17,7 +17,6 @@ This is the contract for writing and maintaining Superloom documentation itself:
 - [Maintenance Rituals](#maintenance-rituals)
 
 ---
-
 ## Voice
 
 The documentation speaks as a senior practitioner dictating house style: declarative, specific, calm. It states positions and stands behind them with reasons. It does not hedge, does not sell, and does not apologize for being opinionated.

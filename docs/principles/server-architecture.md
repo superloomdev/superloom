@@ -13,7 +13,6 @@ The server side of a Superloom application uses a layered architecture: thin tra
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## Why This Pattern
 
 **It is universally understood.** MVC with a service layer is the most widely recognized server structure in the industry. A developer joining a project orients immediately; an AI agent trained on decades of MVC code generates idiomatic contributions on the first attempt.

@@ -19,7 +19,6 @@ A general unit defines a port, specific units implement it, and a composition ro
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## The Shape
 
 Three participants form every composition:

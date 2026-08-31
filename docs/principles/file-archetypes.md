@@ -13,7 +13,6 @@ Every source file in a Superloom codebase belongs to a named **archetype**: a fi
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## The Concept
 
 An archetype answers one question about a file before anyone opens it: **what shape will this file have?** A module entry file always has the same regions in the same order. An error catalog always looks like every other error catalog. A test suite opens the same way in every module.

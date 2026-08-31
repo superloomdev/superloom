@@ -12,7 +12,6 @@ Modules are published independently, versioned semantically, and released exclus
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## Semantic Versioning
 
 Every module follows [Semantic Versioning](https://semver.org): `MAJOR.MINOR.PATCH`.

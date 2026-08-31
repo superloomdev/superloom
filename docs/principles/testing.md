@@ -13,7 +13,6 @@ Tests in this framework are part of the module contract: every module carries it
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## Doctrine
 
 - **Native tooling over frameworks.** Tests use the language's built-in test runner and assertion library. A test framework is a dependency in every module at once; the built-in runner is a dependency in none.

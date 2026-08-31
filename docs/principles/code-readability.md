@@ -17,7 +17,6 @@ This document states the universal readability rules. Exact counts, banner width
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## The Scanning Model
 
 The rules below share one mental model: **a reader scrolls a file at speed and stops only where something matters.** Every formatting decision either creates a reliable stopping cue or removes visual noise between cues.

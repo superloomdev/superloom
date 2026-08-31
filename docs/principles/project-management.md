@@ -5,7 +5,7 @@ How a product built on the framework records what it is, what it does, and how i
 ## On This Page
 
 - [The Canonical File](#the-canonical-file)
-- [PROJECT.md Structure](#projectmd-structure)
+- [PROJECT.md Structure](#project-md-structure)
 - [The Feature Ledger](#the-feature-ledger)
 - [The Changelog](#the-changelog)
 - [The Decision Log](#the-decision-log)
@@ -15,6 +15,7 @@ How a product built on the framework records what it is, what it does, and how i
 - [Provenance Neutrality](#provenance-neutrality)
 - [Why These Formats](#why-these-formats)
 
+---
 ## The Canonical File
 
 Every product has exactly one management entry point: **`PROJECT.md` at the root of the product's main repository**. The main repository is the one that owns the domain - usually the server repository. Client repositories, SDK packages, and other satellites link to it from their `README.md` and never duplicate its content.

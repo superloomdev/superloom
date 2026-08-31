@@ -13,7 +13,6 @@ Superloom's principles layer is a contract that any language can implement. This
 - [Forking and Re-Opinionating](#forking-and-re-opinionating)
 
 ---
-
 ## What an Implementation Is
 
 A language implementation is a directory `docs/languages/[lang]/` containing that language's complete, self-sufficient answer to every principles document, plus a module repository (`[lang]-helper-modules`) whose code demonstrates every answer. The JavaScript layer is the reference: its structure is the template for every subsequent language.

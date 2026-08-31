@@ -9,12 +9,12 @@ A Superloom system is assembled from helper modules: small, independently publis
 - [Dependency Injection and the Container](#dependency-injection-and-the-container)
 - [The Class Taxonomy](#the-class-taxonomy)
 - [Composition Patterns](#composition-patterns)
+  - [Index Budget](#index-budget)
 - [Configuration Discipline](#configuration-discipline)
 - [Module Documentation Set](#module-documentation-set)
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## The Module Contract
 
 Every module, regardless of what it does, satisfies the same contract:

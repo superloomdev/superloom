@@ -5,16 +5,16 @@ How infrastructure and deployment documentation is organized across the framewor
 ## On This Page
 
 - [Three-Layer Documentation Strategy](#three-layer-documentation-strategy)
-- [Layer 1 - Framework Knowledge (`docs/ops/`)](#layer-1---framework-knowledge-docsops)
-- [Layer 2 - Project Runbook (`ops/`)](#layer-2---project-runbook-ops)
-- [Layer 3 - Secrets (`__dev__/secrets/`)](#layer-3---secrets-__dev__secrets)
-- [Module-Level Testing Ops (`_test/ops/`)](#module-level-testing-ops-_testops)
+- [Layer 1 - Framework Knowledge (`docs/ops/`)](#layer-1-framework-knowledge-docs-ops)
+- [Layer 2 - Project Runbook (`ops/`)](#layer-2-project-runbook-ops)
+- [Layer 3 - Secrets (`__dev__/secrets/`)](#layer-3-secrets-dev-secrets)
+- [Module-Level Testing Ops (`_test/ops/`)](#module-level-testing-ops-test-ops)
 - [Naming Conventions](#naming-conventions)
 - [Content Format](#content-format)
 - [Handover Scenario](#handover-scenario)
+- [Further Reading](#further-reading)
 
 ---
-
 ## Three-Layer Documentation Strategy
 
 Operations documentation is split into three layers based on security, distribution, and audience:
@@ -139,7 +139,7 @@ The number prefix ensures the runbook is followed in order. A developer setting 
 
 ---
 
-## Layer 3 - Secrets
+## Layer 3 - Secrets (`__dev__/secrets/`)
 
 Secret values are never written into runbook files. Where a value goes depends on how it is consumed:
 
@@ -200,7 +200,7 @@ js-server-helper-aws-dynamodb/
 
 ## Naming Conventions
 
-**Directory Names** are vendor-agnostic and listed in canonical dependency order in the [Layer 2 dependency table](#layer-2---project-runbook-ops) above. That table is the single source of truth - do not duplicate the category list elsewhere.
+**Directory Names** are vendor-agnostic and listed in canonical dependency order in the [Layer 2 dependency table](#layer-2-project-runbook-ops) above. That table is the single source of truth - do not duplicate the category list elsewhere.
 
 **File Names** are vendor-prefixed using the pattern `{vendor}-{service}-setup.md`:
 

@@ -8,6 +8,8 @@ This document states the convictions. The documents beside it turn each convicti
 
 - [The Five Convictions](#the-five-convictions)
 - [Consistency Is the Product](#consistency-is-the-product)
+  - [Before Inventing, Search](#before-inventing-search)
+  - [Reserved Vocabulary](#reserved-vocabulary)
 - [Modularity and Decoupling](#modularity-and-decoupling)
 - [Wrap Everything External](#wrap-everything-external)
 - [Build Once, Run Anywhere](#build-once-run-anywhere)
@@ -17,7 +19,6 @@ This document states the convictions. The documents beside it turn each convicti
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## The Five Convictions
 
 | Conviction | One-line consequence |
@@ -115,7 +116,7 @@ The pattern recurs wherever work is deduplicated:
 
 The tell that a guard is name-keyed: a bug report of the form "it said it was done but nothing happened". Reach for the fingerprint before adding a special case, because each special case narrows the gap without closing it.
 
-A worked instance of this principle, including the failure it produced in this project's release pipeline, is [CI/CD Publishing entry 26](../dev/pitfalls.md#cicd-publishing).
+A worked instance of this principle, including the failure it produced in this project's release pipeline, is [CI/CD Publishing entry 26](../dev/pitfalls.md#ci-cd-publishing).
 
 ---
 

@@ -15,10 +15,13 @@ This document defines:
 - [Decision Criteria](#decision-criteria)
 - [Where Third-Party Code Is Allowed to Live](#where-third-party-code-is-allowed-to-live)
 - [Module Documentation Requirement](#module-documentation-requirement)
+  - [Required Section in README](#required-section-in-readme)
+  - [Template](#template)
+  - [Examples](#examples)
 - [Review Cadence](#review-cadence)
+- [Related Documents](#related-documents)
 
 ---
-
 ## The Default Rule
 
 > **A new helper module should ship with zero npm `dependencies` unless every criterion in the next section is satisfied.**

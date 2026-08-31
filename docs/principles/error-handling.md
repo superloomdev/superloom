@@ -13,7 +13,6 @@ Error handling in this framework is a design contract, not a defensive habit. Ev
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## The Three Categories
 
 | Category | What it is | Example | Delivery |

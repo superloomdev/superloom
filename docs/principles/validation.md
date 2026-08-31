@@ -12,7 +12,6 @@ Validation in this framework is hand-written, co-located with the code it protec
 - [Language Implementations](#language-implementations)
 
 ---
-
 ## The Position
 
 The rule: **every module and every entity validates its own inputs with hand-written validator functions, kept in a companion file beside the code they protect.**
