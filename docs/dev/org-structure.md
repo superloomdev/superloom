@@ -18,7 +18,9 @@ How the Superloom project is divided across repositories and how they relate to 
 superloomdev/
   superloom              - Framework constitution: docs, conventions, architecture, website
   js-helper-modules      - All JavaScript helper modules (published as @superloomdev/*)
-  js-demo-project        - JavaScript reference demo application
+  rnw-components-carbon  - RNW component library (published as @superloomdev/rnw-components-carbon)
+  demo-client-rnw        - Demo client application (React Native Web)
+  demo-server-js         - Demo server application (Express)
   [future]
   py-helper-modules      - Python helper modules (when ready)
   js-helper-modules-specialized  - Non-core or community JS wrappers (when ready)
@@ -28,7 +30,9 @@ superloomdev/
 |---|---|---|
 | `superloom` | The constitution | `docs/`, `website/`, framework conventions, architectural philosophy, this file |
 | `js-helper-modules` | JS implementation | `src/helper-modules-core/`, `src/helper-modules-server/`, `src/helper-modules-client/`, CI/CD publish pipeline |
-| `js-demo-project` | JS reference app | Full demo application - model, server, ops runbook |
+| `rnw-components-carbon` | RNW component library | Shared React Native Web components, theme tokens, accessibility layer; published as `@superloomdev/rnw-components-carbon` |
+| `demo-client-rnw` | Demo client app | React Native Web client consuming helper modules and the component library |
+| `demo-server-js` | Demo server app | Express server with entity modules, model, ops runbook |
 
 The `superloom` repo is language-agnostic. It defines patterns, not implementations. Language-specific implementations live in their own repos and reference `superloom` for conventions.
 
@@ -48,7 +52,8 @@ After any repo extraction or restructure, diff the resulting root against this l
 |---|---|---|
 | Core language modules | `[lang]-helper-modules` | `js-helper-modules`, `py-helper-modules` |
 | Specialized/non-core modules | `[lang]-helper-modules-specialized` | `js-helper-modules-specialized` |
-| Demo/reference application | `[lang]-demo-project` | `js-demo-project` |
+| Component library | `[platform]-components-[name]` | `rnw-components-carbon` |
+| Demo/reference application | `demo-[tier]-[stack]` | `demo-client-rnw`, `demo-server-js` |
 
 `[lang]` is the lowercase language identifier: `js`, `py`, `go`, etc.
 
@@ -62,11 +67,13 @@ All repositories in the project share a single parent directory on the developer
 
 ```
 project-superloom/
-  codebase-superloom/          - clone of superloomdev/superloom
-  codebase-js-helper-modules/  - clone of superloomdev/js-helper-modules
-  codebase-js-demo-project/    - clone of superloomdev/js-demo-project
-  __dev__/                     - personal workspace (never committed, see below)
-  superloom.code-workspace     - multi-root workspace file for VSCode / Windsurf
+  codebase-superloom/              - clone of superloomdev/superloom
+  codebase-js-helper-modules/      - clone of superloomdev/js-helper-modules
+  codebase-rnw-components-carbon/  - clone of superloomdev/rnw-components-carbon
+  codebase-demo-client-rnw/        - clone of superloomdev/demo-client-rnw
+  codebase-demo-server-js/         - clone of superloomdev/demo-server-js
+  __dev__/                         - personal workspace (never committed, see below)
+  superloom.code-workspace         - multi-root workspace file for VSCode / Windsurf
 ```
 
 The `superloom.code-workspace` file ties all repos together into a single IDE window. Each repo has its own `.git/` and its own CI/CD, but a developer works across all of them from one IDE session.

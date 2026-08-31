@@ -138,7 +138,9 @@ project-superloom/                 (workspace root)
     src/helper-modules-core/       -   Class A/B (js-helper-*)
     src/helper-modules-server/     -   Classes B-F (js-server-helper-*)
     src/helper-modules-client/     -   client modules (js-client-helper-*, js-react-helper-*, js-rn-helper-*, js-rnw-helper-*)
-  codebase-js-demo-project/        - reference application (model, server, ops runbook)
+  codebase-rnw-components-carbon/  - RNW component library (published as @superloomdev/rnw-components-carbon)
+  codebase-demo-client-rnw/        - demo client app (React Native Web)
+  codebase-demo-server-js/         - demo server app (Express, entity modules, model, ops)
   __dev__/                         - personal workspace (plans/, secrets/; never committed)
   superloom.code-workspace         - multi-root workspace file
 ```
@@ -154,7 +156,7 @@ Every module: entry file + `[name].config.js` + `[name].errors.js` + `[name].val
 | `/js-helper-module [create\|fix] [path]` | js-helper-modules | Build new modules and fix existing ones; one module per run. `fix` is also the retrofit verb after docs change |
 | `/js-helper-module-audit [path]` | js-helper-modules | Read-only deep audit with creator-diff and three-bucket drift classification; hands findings to `/js-helper-module fix` |
 | `/js-helper-module-publish [path]` | js-helper-modules | Pre-publish gate, CI registration, version bump, and release |
-| `/new-entity` | js-demo-project | Adding a domain entity to the demo application |
+| `/new-entity` | demo-server-js | Adding a domain entity to the demo server application |
 | `/demo-client-rnw` | demo-client-rnw | Pre-commit protocol and code quality for the demo RNW client |
 | `/rnw-components-carbon` | rnw-components-carbon | Pre-commit protocol and code quality for the Carbon RNW component library |
 | `/project-docs [create\|update\|audit]` | any product repo | Create, update, or audit the management layer (PROJECT.md, feature ledger, CHANGELOG.md) per `docs/principles/project-management.md` |

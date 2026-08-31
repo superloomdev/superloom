@@ -367,6 +367,14 @@ Propagate does not run until this gate passes.
 
 Every section in `AGENTS.md` mirrors a specific subtree of `docs/`. If a new docs section should mirror into `AGENTS.md`, extend this table first, in the same change.
 
+**P1.0 - Coverage gate (hard gate).** Before any P1 work, run the coverage script to confirm every `docs/**/*.md` file has a row in this table:
+
+```
+bash __dev__/audits/section-map-coverage.sh [repo-root]
+```
+
+If the script reports unmapped files, add rows for each before proceeding. A file with no mirror destination takes `not mirrored (reference material)` with a reason. Never skip this step; an unmapped file is invisible to P3 and its rules silently drop out of `AGENTS.md`.
+
 Actual `AGENTS.md` sections: Golden Rule callout (header), Persona, Tech Stack, Documentation Map, AI Behavior Rules, Safe Terminal Patterns, Boundaries, Directory Map, Workflow Inventory.
 
 **A row must name the section that carries the compressed rule.** A filename appearing in the Documentation Map table is a pointer, not a mirror. Never invent a mirror location to make a row look complete.
@@ -426,6 +434,42 @@ Three allowed destination values, closed set:
 | `docs/dev/autonomous-execution.md` | AI Behavior Rules (autonomous execution protocol) |
 | `docs/dev/org-structure.md` | Directory Map |
 | `docs/ops/**` | (referenced as "see ops/" - not embedded) |
+| `docs/README.md` | not mirrored (reference material; top-level documentation index) |
+| `docs/index.md` | not mirrored (reference material; public landing page) |
+| `docs/ai/index.md` | not mirrored (reference material; AI docs navigation) |
+| `docs/building-a-product/README.md` | not mirrored (reference material; product-building process looked up per engagement) |
+| `docs/dev/README.md` | not mirrored (reference material; contributor onboarding index) |
+| `docs/dev/mcp-github-setup.md` | not mirrored (reference material; per-developer IDE setup) |
+| `docs/dev/npmrc-setup.md` | not mirrored (reference material; per-machine npmrc walkthrough) |
+| `docs/dev/onboarding-git-account.md` | not mirrored (reference material; one-time SSH and git identity setup) |
+| `docs/dev/onboarding-github-packages.md` | mirrored to workflow: js-helper-module-publish |
+| `docs/dev/repo-setup.md` | not mirrored (reference material; one-time repository creation guide) |
+| `docs/guide/getting-started.md` | not mirrored (reference material; project setup walkthrough) |
+| `docs/guide/ide-setup.md` | not mirrored (reference material; editor configuration recommendations) |
+| `docs/guide/creating-entities-js.md` | not mirrored (reference material; quick-start entity creation walkthrough) |
+| `docs/principles/code-readability.md` | AI Behavior Rules (blank-line hierarchy, section banners, public/private grouping) |
+| `docs/principles/error-handling.md` | AI Behavior Rules (three-category error disposal, universal doctrine) |
+| `docs/principles/extending-to-a-language.md` | not mirrored (reference material; procedure for adding a language layer; rules already mirrored via server-architecture, validation, versioning-and-releases, testing) |
+| `docs/principles/file-archetypes.md` | AI Behavior Rules (one file one archetype, skeleton conformance) |
+| `docs/principles/operations-documentation.md` | AI Behavior Rules (three-layer ops doc split, vendor-agnostic directories, secrets never inline) |
+| `docs/principles/server-architecture.md` | AI Behavior Rules (MVC+service layers, one envelope, one-shape DTO, downward dependencies) |
+| `docs/principles/third-party-libraries.md` | AI Behavior Rules (zero-dependency default, acceptance criteria) |
+| `docs/principles/validation.md` | AI Behavior Rules (validation doctrine, universal; JS-specific implementation mirrored via docs/languages/js/validation.md) |
+| `docs/principles/versioning-and-releases.md` | AI Behavior Rules (SemVer, Conventional Commits, pipeline-only releases, pinned caret ranges) |
+| `docs/languages/js/catalog-core.md` | not mirrored (reference material; module catalog; enforceable rules in module-structure and module-classes) |
+| `docs/languages/js/catalog-server.md` | not mirrored (reference material; server module catalog; enforceable rules in module-structure and third-party-libraries) |
+| `docs/languages/js/client/expo-guide.md` | not mirrored (reference material; Expo capability and setup; adapter rules in module-structure and composition-and-adapters) |
+| `docs/languages/js/client/rn-environment-setup.md` | not mirrored (reference material; React Native local environment setup) |
+| `docs/languages/js/client/rn-testing.md` | not mirrored (reference material; RN test loader reference; rules in unit-test-authoring and module-testing) |
+| `docs/languages/js/dto-philosophy.md` | AI Behavior Rules (one canonical builder per entity, absent keys not added, public DTOs derive from internal) |
+| `docs/languages/js/integration-testing.md` | not mirrored (reference material; real-cloud integration test setup, looked up per test run) |
+| `docs/languages/js/module-docs-complex.md` | mirrored to workflow: js-helper-module |
+| `docs/languages/js/versioning/index.md` | not mirrored (reference material; versioning section navigation) |
+| `docs/languages/js/versioning/semantic-versioning.md` | not mirrored (reference material; SemVer 2.0.0 reference; rules in versioning-and-releases) |
+| `docs/languages/js/versioning/api-stability-js.md` | not mirrored (reference material; JS API-stability reference; rules in versioning-and-releases and publishing) |
+| `docs/languages/js/versioning/changelog-format.md` | not mirrored (reference material; changelog template looked up when writing CHANGELOG.md) |
+| `docs/languages/js/versioning/ci-dependency-graph.md` | not mirrored (reference material; CI job-dependency recipe book) |
+| `docs/languages/js/versioning/version-bump-section.md` | not mirrored (reference material; README versioning-section template) |
 
 ### P2 - Session Diff and Full-Doc Audit
 
@@ -585,6 +629,7 @@ New failure modes found during a run must be added here. If no pass catches the 
 | `AGENTS.md` edited outside Phase P | Phase 0 Blocker |
 | `AGENTS.md` missing a source-doc rule | P3 |
 | Section Map row names a section that does not exist in `AGENTS.md` | P1 (row must name a real section) |
+| `docs/` file with no Section Map row | P1.0 (coverage gate; run `section-map-coverage.sh`) |
 | Section Map row names a real section but the rule is not actually there | P1 (a Documentation Map filename is a pointer, not a mirror) |
 | Section Map row relabelled `not mirrored` to clear a P3 finding | P3 step 5 (user decision, not the agent's) |
 | Section Map row destination left ambiguous between AGENTS.md and a workflow | P1 |
