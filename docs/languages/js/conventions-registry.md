@@ -105,3 +105,5 @@ An undocumented exception is a defect. Each is named with its disposition.
 | `clearIdleHandlers` returns `removed_count` | 18 | Drift, unify on next touch. `cleared_count` is the rule-conformant name |
 | `canonicalize` in `contact-email` | 9-12 | Permanent. Established term of art for email normalization; renaming a published public function buys nothing |
 | `addLog` versus `writeRecord` / `setSession` | 26 | Permanent. `addLog` carries an append semantic that `writeLog` loses. The "put a record" family is not unified; each domain-specific verb reads correctly in its own domain |
+| `send` in `email` | new | Permanent. Established term of art for email dispatch; every email library uses `send`. Not `write` (no persistence) or `run` (not an engine command) |
+| `sign` and `verify` verbs | new | Permanent. Cryptographic signing and verification are distinct from `generate` (no crypto), `build` (no signature), `check` (no crypto), and `validate` (config-time). `sign` returns `{ success, token, error }`; `verify` returns `{ success, data, error }`. Both throw `TypeError` on bad input or missing secret |

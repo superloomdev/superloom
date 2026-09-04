@@ -17,6 +17,7 @@ This document is the single source of truth for function naming. The registry ca
   - [Mutators: `set`, `update`, `write`, `delete`, `remove`, `clear`, `cleanup`](#mutators-set-update-write-delete-remove-clear-cleanup)
   - [Constructors: `build`, `create`, `generate`](#constructors-build-create-generate)
   - [Validators: `validate`, `assert`, `check`](#validators-validate-assert-check)
+  - [Cryptographic: `sign`, `verify`](#cryptographic-sign-verify)
 - [Confusable Pairs](#confusable-pairs)
   - [`build` versus `format`](#build-versus-format)
   - [`create` versus `generate` versus `build`](#create-versus-generate-versus-build)
@@ -72,6 +73,9 @@ Each row names the verb, what it does, what it returns, one real example from a 
 | `assert` | Throws `TypeError` on a programmer error, synchronously, never returns an envelope | Never returns; throws or falls through | `auth.validators.assertOptionsObject(options)` | `validate` (returns errors), `check` (domain logic) |
 | `check` | Runs a domain-specific check that returns a Boolean or a result object, not an error array | Boolean or a domain result object | `policy.checkTotal(instance, options)` | `validate` (error array), `assert` (throws) |
 | `run` | Executes a command or a prepared operation against an engine | Envelope | `dynamodb.runQueryCommand(command)` | `build` (constructs the command) |
+| `send` | Dispatches a message to an external service for delivery | Envelope with provider response fields | `email.sendEmail(instance, message)` | `write` (no persistence), `run` (not an engine command) |
+| `sign` | Produces a cryptographic signature or signed token from a value | Envelope `{ success, token, error }` | `email.signUnsubscribeToken(instance, email)` | `generate` (no crypto), `build` (no signature) |
+| `verify` | Checks a cryptographic signature or token and extracts the original value | Envelope `{ success, data, error }` | `email.verifyUnsubscribeToken(instance, token)` | `check` (no crypto), `validate` (config-time) |
 
 ### The `Sync` suffix
 
@@ -149,6 +153,15 @@ These return the constructed artifact directly, never an envelope. They are pure
 | `check` | A Boolean or a domain result object | No |
 
 The split is semantic and already consistent across the catalog. `validate` is for config and contract validation at load time. `assert` is for programmer-error guards at call time. `check` is for domain-specific logic that does not fit either mold.
+
+### Cryptographic: `sign`, `verify`
+
+| Verb | Returns | Throws |
+|---|---|---|
+| `sign` | Envelope `{ success, token, error }` | `TypeError` on bad input (non-string, empty) or missing secret |
+| `verify` | Envelope `{ success, data, error }` on failure; `{ success, data, error: null }` on success | `TypeError` on bad input (non-string, empty) or missing secret |
+
+`sign` produces a cryptographic signature or signed token from a value. `verify` checks a cryptographic signature or token and extracts the original value. Both return envelopes because they depend on a secret that may be misconfigured at runtime. Bad input (non-string, empty token) throws `TypeError` synchronously; a missing or empty secret throws `TypeError` because it is a configuration error the caller must fix before calling.
 
 ---
 

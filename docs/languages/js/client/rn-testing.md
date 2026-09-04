@@ -20,6 +20,7 @@ How to test React Native and Expo modules in the Superloom framework. This page 
   - [Manual Verification](#manual-verification)
 - [CI Placement](#ci-placement)
 - [End-to-End Tests](#end-to-end-tests)
+  - [List windowing under React Native Web](#list-windowing-under-react-native-web)
 - [Further Reading](#further-reading)
 
 ---
@@ -292,6 +293,12 @@ E2E tests are an application concern. Modules do not ship E2E tests. The contrac
 | Detox | Native app E2E on iOS and Android simulators | Application project |
 | Maestro | Flow-based UI testing on simulators and devices | Application project |
 | Playwright | Web E2E in a real browser | Application project |
+
+### List windowing under React Native Web
+
+`FlatList` and `VirtualizedList` under React Native Web must have a bounded height to make windowing possible. An unbounded list expands to fit its content and mounts the full roster, so a row-count assertion that passes locally does not prove virtualization.
+
+A test that claims virtualization asserts an exact or fixed upper bound on the mounted-row count that is below the full roster, and reaches a late row by scrolling the real scroll node. A local-versus-CI row-count difference is evidence of a layout or viewport precondition, not permission to relax the threshold: loosening a threshold until it passes converts a real signal into a green check.
 
 ---
 

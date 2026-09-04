@@ -68,6 +68,9 @@
   - [25. Repo-bound workflows miss code quality issues in other repos](#_25-repo-bound-workflows-miss-code-quality-issues-in-other-repos)
   - [26. JSDoc content indentation drifts to 4 spaces when the docs say 4 but reference modules use 0](#_26-jsdoc-content-indentation-drifts-to-4-spaces-when-the-docs-say-4-but-reference-modules-use-0)
   - [27. Engine TTL sentinels (-1, -2) leak through wrapper purity when the driver returns them as-is](#_27-engine-ttl-sentinels-1-2-leak-through-wrapper-purity-when-the-driver-returns-them-as-is)
+  - [28. Hand-mirrored workflow regexes drift from CI while the count-parity check stays green](#_28-hand-mirrored-workflow-regexes-drift-from-ci-while-the-count-parity-check-stays-green)
+  - [29. `git grep` is blind to untracked files, so an empty result is not evidence](#_29-git-grep-is-blind-to-untracked-files-so-an-empty-result-is-not-evidence)
+  - [30. An unbounded RNW list mounts the full roster, so a row-count assertion does not prove virtualization](#_30-an-unbounded-rnw-list-mounts-the-full-roster-so-a-row-count-assertion-does-not-prove-virtualization)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1111,6 +1114,42 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** The `ioredis` client returns the raw `TTL` command response, which is `-1` for "key exists, no expiry" and `-2` for "key does not exist". The wrapper passes these through without translation, violating wrapper purity (the envelope must not leak engine-specific sentinels).
 
 **Fix/Lesson:** The driver maps both sentinels to `null` before returning. `null` means "no TTL known" for both cases. A caller that needs to distinguish "no expiry" from "absent" calls `getKeyExists`. The same principle applies to any engine that uses sentinel values for exceptional states: the wrapper translates them to `null` or a boolean, never passes them through. The test suite includes a regression test that asserts `ttl_seconds` is never `-1` or `-2`.
+
+---
+
+### 28. Hand-mirrored workflow regexes drift from CI while the count-parity check stays green
+
+**Symptom:** A local verifier script copies a workflow's `git grep` regex into a shell function and asserts only that the count of copied gates matches the workflow's count. After an edit to the workflow regex, both the copied gate and the count-parity check pass locally, while CI fails on the real gate.
+
+**Cause:** The local verifier is not derived from the workflow file. It hand-mirrors the regex, so an edit to the workflow is not reflected in the copy. The count-parity check only compares the number of gates, not their bodies, so changing a regex leaves the count unchanged and the check green. The defect is invisible until CI runs.
+
+**Fix/Lesson:** The local verifier reads the workflow file and extracts the current gate body, so a workflow edit is reflected without a second hand-mirror edit. A count-parity check is removed; it does not catch body drift. The verifier is proven by a deliberate mutation: edit the workflow regex, plant a matching scratch file, and confirm the verifier fails for the right reason, then restore both.
+
+**Prevention:** A workflow policy gate must have a local entry point that executes the workflow's source-of-truth command. See [testing-local-modules.md](testing-local-modules.md) - Local CI parity.
+
+---
+
+### 29. `git grep` is blind to untracked files, so an empty result is not evidence
+
+**Symptom:** A new source file contains a pattern the workflow's `git grep` gate forbids. The local verifier runs `git grep` and reports the gate clean, because the file is untracked and invisible to the index. CI later adds the file on push and the gate fails.
+
+**Cause:** `git grep` searches tracked and indexed content only. A brand-new untracked file is invisible to it, so a forbidden pattern in an untracked file produces an empty result that reads as compliance.
+
+**Fix/Lesson:** The verifier fails when nonignored untracked files exist, or the operator runs `git add -N path/to/new-file` before trusting a clean `git grep` result. The verifier is proven by planting an untracked scratch file with a forbidden pattern and confirming the verifier fails naming the file, then removing the probe.
+
+**Prevention:** A `git grep` result is not valid while matching untracked files are invisible. See [testing-local-modules.md](testing-local-modules.md) - Local CI parity.
+
+---
+
+### 30. An unbounded RNW list mounts the full roster, so a row-count assertion does not prove virtualization
+
+**Symptom:** A `FlatList` conversion claims virtualization, but CI measures the full roster mounted on first paint while a local run measures a partial window. The local assertion passes and CI fails.
+
+**Cause:** Under React Native Web, an unbounded `FlatList` expands to fit its content and never clips, so every row mounts regardless of viewport. The local viewport happened to be smaller and the partial count looked like windowing. The threshold was loosened until CI passed, converting a real signal into a green check.
+
+**Fix/Lesson:** `FlatList` and `VirtualizedList` under RNW must have a bounded height to make windowing possible. A test that claims virtualization asserts an exact or fixed upper bound on the mounted-row count below the full roster and reaches a late row by scrolling the real scroll node. A local-versus-CI row-count difference is evidence of a layout or viewport precondition, not permission to relax the threshold.
+
+**Prevention:** See [rn-testing.md](../languages/js/client/rn-testing.md) - List windowing under React Native Web.
 
 ---
 

@@ -124,6 +124,14 @@ CI is the second line of defense, not the first. A CI run that fails on somethin
 
 See [`pitfalls.md` entry 23](pitfalls.md#_23-ci-fails-after-push-local-tests-ran-against-stale-node-modules) for the failure mode this prevents.
 
+### Local CI parity - a gate that exists only in CI is not locally verified
+
+A workflow policy gate must have a local entry point that executes the workflow's source-of-truth command. Do not hand-copy a regex into a local script and compare only the count of gates: editing an existing workflow regex leaves both the copy and the count-parity check green locally while CI fails on the real gate. The local verifier reads the workflow file and extracts the current gate body, so a workflow edit is reflected without a second hand-mirror edit.
+
+`git grep` searches tracked and indexed content. It does not validate a brand-new untracked file. A verifier that runs `git grep` gates must fail when nonignored untracked files exist, or the operator must run `git add -N path/to/new-file` before trusting a clean result. An empty `git grep` result is not evidence while the file is invisible to the index.
+
+Full local verification runs after the final edit and immediately before push, not only at the start of the session. Any edit between two clean passes resets the convergence count to zero.
+
 ---
 
 ## Pre-Publish Checklist

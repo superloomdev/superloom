@@ -21,6 +21,7 @@ How helper modules are tested on every push and published to GitHub Packages. Th
   - [Adding a New Module](#adding-a-new-module)
 - [Workflow Location](#workflow-location)
 - [Publishing a New Version](#publishing-a-new-version)
+- [Workflow Maintenance - External Action Versions](#workflow-maintenance-external-action-versions)
 - [GITHUB_TOKEN Permissions](#github-token-permissions)
   - [Enabling Write Permissions (Repository Setting)](#enabling-write-permissions-repository-setting)
 - [Known Failure Modes](#known-failure-modes)
@@ -219,6 +220,10 @@ The workflow file groups jobs visually with comment banners showing the group bo
 The step-by-step bump procedure (SemVer classification, commit format, multi-module bumps, post-publish verification) lives in [`../languages/js/versioning/bump-checklist.md`](../languages/js/versioning/bump-checklist.md). This page covers the **pipeline mechanics**; the checklist covers **the contributor's procedure**.
 
 **Before pushing:** the [Pre-Commit Protocol](testing-local-modules.md#pre-commit-protocol-all-repos) must pass locally (fresh install, lint, tests). CI is the second line of defense, not the first. A CI run that fails on something testable locally is wasted pipeline time and a polluted git log.
+
+## Workflow Maintenance - External Action Versions
+
+Active workflows use each external action's current stable major, verified from the action's official release API. Align every active workflow in one pass when a new major is stable; do not leave one repo on a stale major while others move. Exclude archived references (workflows outside active repositories) and vendored dependencies (`node_modules`) from the alignment scope. Do not encode a permanent numeric major in doctrine: the rule names the policy (current stable major), not a specific version number.
 
 ## GITHUB_TOKEN Permissions
 
