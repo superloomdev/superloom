@@ -81,7 +81,7 @@ If this module has never been published before:
 5. **If this module's `_test/package.json` installs another in-repo package from the registry** (extension modules, store adapters): its test job must `needs` that package's `publish-*` job, never its `test-*` job - wrong chaining only fails during bootstrap or a registry re-baseline (pitfalls entry 23 in `codebase-superloom/docs/dev/pitfalls.md`).
 6. Update the execution-order header comment and re-chain the next module's `needs:`.
 
-**Bootstrap window (main module + adapters both unpublished):** test adapters locally against a temporary `file:` reference to the main module, publish the main module first, swap the `file:` back to a registry pin, re-test against the live registry, then publish the adapters. The full sequence and the reasoning for the step-3 re-test is pitfalls entry 12 in `codebase-superloom/docs/dev/pitfalls.md`.
+**Bootstrap window (main module + adapters both unpublished):** This scenario is historical. The current catalog is fully published. If a genuinely new module family is created where no published version exists for any member, publish the main module first, then test adapters against the live registry artifact, then publish the adapters. A temporary `file:` reference to an unpublished sibling is not acceptable final evidence. The full sequence and the reasoning for the re-test is pitfalls entry 12 in `codebase-superloom/docs/dev/pitfalls.md`.
 
 If the module is already registered, skip this phase.
 
@@ -97,16 +97,21 @@ Enter this phase only when the target repository's `AGENTS.md` explicitly docume
    npm view @superloomdev/[PACKAGE_NAME]@[VERSION] dist.shasum
    ```
    Write the value down. A republish that ends with this same shasum shipped nothing.
-2. Delete all registry versions via `gh api`:
+2. **Identify the exact version ID to delete.** Query the registry for the specific version, never delete all versions:
    ```bash
-   gh api /orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions --jq '.[].id' | xargs -I {} gh api --method DELETE /orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions/{}
+   gh api "orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions?per_page=100" --jq '.[] | select(.name == "[VERSION]") | .id'
    ```
-3. Verify `404`:
+   Require exactly one matching ID. If zero or multiple IDs are returned, stop and diagnose. Bulk deletion of all versions is forbidden by the autonomous execution protocol.
+3. **Delete only the identified version:**
    ```bash
-   gh api /orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions
+   gh api --method DELETE "orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions/[VERSION_ID]"
    ```
-   A response that still lists the version means the delete did not take. Do NOT proceed; diagnose the delete instead.
-4. Then proceed to Phase 6.
+4. Verify the specific version is absent:
+   ```bash
+   gh api "orgs/superloomdev/packages/npm/[PACKAGE_NAME]/versions?per_page=100" --jq '.[] | select(.name == "[VERSION]") | .id'
+   ```
+   An empty result means the delete succeeded. A response that still lists the version means the delete did not take. Do NOT proceed; diagnose the delete instead.
+5. Then proceed to Phase 6.
 
 ## Phase 6 - Commit
 

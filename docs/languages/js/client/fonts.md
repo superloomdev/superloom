@@ -2,12 +2,13 @@
 
 > **Language:** JavaScript
 
-The font system separates font identity (family names and weights, which are data) from font loading (file acquisition and registration, which is a host concern). The theme names font families; the host loads them. Three delivery mechanisms exist, all unified through `expo-font`. This page documents the contract, the mechanisms, and the production path.
+The font system separates font identity (family names and weights, which are data) from font loading (file acquisition and registration, which is a host concern). The theme names font families; the host loads them. The core module (`js-client-helper-font`) owns family and role identity, per-weight validation, and the registered-versus-loaded distinction. Platform adapters (`js-client-helper-font-ext-web`, `-expo`, `-rn`) own the actual file acquisition and registration. This page documents the contract, the mechanisms, and the production path.
 
 ## On This Page
 
 - [The Contract](#the-contract)
   - [Manifest Style Entries](#manifest-style-entries)
+  - [Registered Versus Loaded](#registered-versus-loaded)
 - [Three Delivery Mechanisms](#three-delivery-mechanisms)
 - [Font Manifest](#font-manifest)
 - [Loading Flow](#loading-flow)
@@ -28,7 +29,7 @@ The contract is:
 - The host registers the `Inter` font family with the platform
 - If the theme names a family the host has not registered, text renders in a fallback
 
-The themer module provides `validators.findUnregisteredFamilies(theme, registered)` to catch missing fonts before they degrade the UI. The helper compares the families named in the theme against the families the host has loaded and returns the difference.
+The font core module provides family and role validation. The app's theme assembly calls the font core to check whether the families named in the theme are registered with the host. A family that is registered is not necessarily loaded; registration is a data declaration, loading is a platform I/O operation. Visual acceptance requires confirmed loaded font faces, not a family-name string or a registered-but-unloaded record.
 
 ### Manifest Style Entries
 
@@ -36,11 +37,19 @@ A manifest style entry must carry a real asset source. Registering an entry with
 
 A platform whose adapter has no native loader keeps an **empty** manifest and relies on the platform's own font mechanism. The manifest exists in every host so the loading flow is uniform. An empty manifest is the correct state when the platform provides fonts through a different channel (system fonts, a build-time config plugin, or a CSS `@font-face` stack the host owns directly).
 
+### Registered Versus Loaded
+
+Registration is a data declaration: the font core records a family name and its per-weight face keys. Loading is a platform I/O operation: the adapter acquires the font file and registers it with the OS or browser. A family can be registered but not loaded, which means text renders in a fallback with no signal to the developer that the registration was incomplete.
+
+The core module tracks both states independently. `isFamilyLoaded` reports whether the platform has confirmed the font face is available for rendering, not merely whether the family name was declared. A host that returns `isFamilyLoaded: true` unconditionally without checking actual platform state masks fallback rendering and is a defect in fidelity mode.
+
+Theme derivation is synchronous and may precede font readiness. A host may gate its initial presentation until fonts are loaded. These are separate policies: the theme is valid before fonts load, but visual acceptance requires confirmed loaded faces.
+
 ---
 
 ## Three Delivery Mechanisms
 
-React Native supports three font delivery mechanisms. All three funnel through the same `expo-font.useFonts()` call.
+React Native and Expo support three font delivery mechanisms. On Expo and React Native hosts, all three funnel through the same `expo-font.useFonts()` call. On web, the font extension adapter uses `@font-face` CSS or a platform font mechanism instead. The core module is platform-agnostic; it validates family and role identity and tracks readiness without performing I/O.
 
 | Mechanism | Example family | How it loads | Where the module comes from |
 |---|---|---|---|

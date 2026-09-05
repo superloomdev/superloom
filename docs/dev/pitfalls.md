@@ -672,13 +672,21 @@ gh api /users/OWNER --jq '.type'        # "Organization" or "User"
 # org:        BASE=/orgs/OWNER/packages/npm/PACKAGE_NAME
 # own user:   BASE=/user/packages/npm/PACKAGE_NAME
 gh api "$BASE/versions"                  # list / confirm it exists
-gh api "$BASE/versions" --jq '.[].id' | xargs -I {} gh api --method DELETE "$BASE/versions/{}"
-gh api "$BASE/versions"                  # MUST return 404 Package not found
+```
+
+For same-version republish, delete only the specific version ID, never all versions. Bulk deletion is forbidden by the autonomous execution protocol. The correct deletion is:
+
+```bash
+gh api "$BASE/versions?per_page=100" --jq '.[] | select(.name == "VERSION") | .id'
+# Require exactly one ID, then:
+gh api --method DELETE "$BASE/versions/VERSION_ID"
+gh api "$BASE/versions?per_page=100" --jq '.[] | select(.name == "VERSION") | .id'
+# Must return empty
 ```
 
 If the verify step returns a JSON array, the delete did not work - re-check the owner type and path.
 
-**Confirmed behavior after deletion:** GitHub Packages accepts republishing a previously-used version name once the version (or the whole package) is deleted - version names are not permanently burned. Combined with the detect job's content guard, this enables a full re-baseline: wipe the packages, push to `main` (no file changes needed), and CI republishes every module at its unchanged `package.json` version. Verified across a 44-module wipe-and-republish. Round-trip proof after republish: `npm install @scope/[name]@[version]` from a scratch directory must resolve.
+**Confirmed behavior after deletion:** GitHub Packages accepts republishing a previously-used version name once the version is deleted - version names are not permanently burned. Combined with the detect job's content guard, this enables same-version republish. The historical 44-module wipe-and-republish was a one-time re-baseline under a different policy; current plans delete only the exact named version. Round-trip proof after republish: `npm install @scope/[name]@[version]` from a scratch directory must resolve.
 
 ### 17. `git add .` bundles unrelated modules into one commit
 
@@ -725,7 +733,7 @@ This applies to all lock files in the repo (root, `_test/`, `hosts/`, etc.). CI 
 
 **Cause:** When a shared devDependency (like `js-helper-eslint-config`) is consumed by every module, deleting it from the registry breaks all downstream installs until CI republishes it. If the config package's own `test` and `publish` jobs are not chained ahead of all other jobs in the workflow, downstream modules race the republish and fail.
 
-**Lesson:** A shared devDependency that every module installs must be the head of the CI chain. Its `test-*` and `publish-*` jobs must complete before any other module's `test-*` job starts. In `ci-publish-helper-modules.yml`, chain `test-eslint-config` and `publish-eslint-config` before the first downstream `test-*` job. Never include the config package in a bulk registry deletion without immediately repushing to trigger its CI republish.
+**Lesson:** A shared devDependency that every module installs must be the head of the CI chain. Its `test-*` and `publish-*` jobs must complete before any other module's `test-*` job starts. In `ci-publish-helper-modules.yml`, chain `test-eslint-config` and `publish-eslint-config` before the first downstream `test-*` job. Never delete a shared devDependency version without immediately repushing to trigger its CI republish. Bulk deletion of all versions is forbidden; delete only the exact named version when the active plan authorizes it.
 
 ### 26. A version-existence publish guard turns an unmoved version into a green run that ships nothing
 

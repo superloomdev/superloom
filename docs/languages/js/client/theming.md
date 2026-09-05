@@ -15,6 +15,9 @@ The theming system takes a template and a stack of layered values, derives a com
 - [Runtime Re-Theming](#runtime-re-theming)
 - [Server-Driven Theming](#server-driven-theming)
 - [Theme Projection for RNW](#theme-projection-for-rnw)
+- [Emission Options](#emission-options)
+- [Profiles and Schemes](#profiles-and-schemes)
+- [Contextual UI Layers](#contextual-ui-layers)
 - [Further Reading](#further-reading)
 
 ---
@@ -47,7 +50,7 @@ Layer 2 (accent)   - partial override, only the accent color
 
 Layers merge in order: later layers win on conflict. This replaces the older base-plus-variant merge with a general cascade that handles any number of overlays. A dark mode is a layer, a tenant brand is a layer, an accent swap is a layer.
 
-The engine caches derived results by reference identity of the layers array. Passing a fresh array with equal content is a cache hit. The extension holds layers in `useState` and calls `update_layers` with a new array to trigger a re-derive.
+The engine caches derived results by a composite key: the per-instance state identity, the template identity, the serialized layers array, and the normalized emission options. Passing a fresh array with equal content is a cache hit only when the template identity and emission options also match. Templates are immutable inputs; changing template metadata creates a new template identity and invalidates the cache. The extension holds layers in `useState` and calls `update_layers` with a new array to trigger a re-derive.
 
 ---
 
@@ -132,6 +135,50 @@ This separation is what makes the system portable. A server can push a layer wit
 A React Native Web component library always consumes the **`native`** projection, on every platform including web. RNW is itself the web projection: it accepts unit-free numbers and emits CSS. Requesting the themer's `web` projection and then rendering through RNW applies two projections and yields unit strings that React Native cannot consume on iOS or Android.
 
 The correct call is always `buildTheme(template, layers, 'native')` from an RNW consumer, regardless of whether the app is running in a browser. The themer's `web` projection exists for raw-DOM consumers that write CSS directly.
+
+---
+
+## Emission Options
+
+The engine's `emit` stage accepts an optional fourth argument: a normalized options object that selects platform-specific behavior without coupling the engine to any platform's API. Omitted options normalize to legacy defaults and produce output identical to the existing three-argument call.
+
+Options that affect output join the cache key alongside the resolved-object identity, template identity, and platform string. Two calls with semantically equivalent options (one omitted, one explicitly defaulted) share a cache entry. Changing template metadata creates a new template identity and a new cache entry.
+
+The host selects a supported mode; the pure engine does not inspect React Native or the OS. Unsupported capabilities are reported through loss metadata, not silently dropped.
+
+---
+
+## Profiles and Schemes
+
+A **profile** is a complete, reusable token pack that bundles a template, a set of named schemes, and reference identity. A profile is a data object, not a new `buildTheme` signature. The app selects a profile's template and the chosen scheme's layer data before calling the existing template/layers pipeline.
+
+```js
+const profile = {
+  id: 'carbon-v11',
+  reference: { web: '@carbon/react v11.115.0', native: '@carbon/react-native v9.0.7' },
+  template: { /* ... full template ... */ },
+  schemes: {
+    white: { /* ... complete layer ... */ },
+    g10: { /* ... */ },
+    g90: { /* ... */ },
+    g100: { /* ... */ }
+  }
+};
+```
+
+Profile identity is separate from theme variant and projection. Switching profiles is a template change, not a layer overlay. An alias (`carbon` selecting `carbon-v11` white) is an app-level convenience, not an automatic OS-driven profile swap. Native-v9 compatibility is a separate explicit profile selection, not an automatic platform switch.
+
+A component library may ship profile data through a subpath export (for example `./theme`) that imports neither React nor component factories. This keeps the pure data pack tree-shakeable from the component barrel.
+
+---
+
+## Contextual UI Layers
+
+A **contextual UI layer** is distinct from a cascade layer. Cascade layers are theme overrides merged during resolution. Contextual UI layers are surface selection: background, field, border, and interaction tokens chosen based on nesting depth.
+
+Carbon uses a base layer plus layer-01, layer-02, and layer-03. A component library maps its provider numbering to these surface levels. The provider is a context carrier, not a visual wrapper: it stores a level and descendants read it to select the correct surface token set.
+
+Contextual layers, cast shadows, and overlay stacking are separate concepts. A contextual layer selects a background color. A cast shadow is a visual effect. Overlay stacking and backdrop are z-order and dimming. None implies the others.
 
 ---
 

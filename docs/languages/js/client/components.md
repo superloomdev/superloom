@@ -123,23 +123,23 @@ Adding a provider is a library change. The provider must be a Context provider, 
 
 ## Authoring Contract
 
-Every component is a loader module. The library entry point is a loader function called as `loader(shared_libs, config)`, which returns an interface with a `build` function that produces the themed component set from a theme object.
+The library entry point is `createSystem(shared_libs, config, theme, breakpoint)`, which builds the shared infrastructure, registers every component factory, and returns a themed component registry. The system is the only entry point; there is no separate loader or build function.
 
 The contract:
 
-1. The loader generates `CommonStyle` (the utility style map for the current theme) and wires every component via `make(factory)`
+1. `createSystem` generates `CommonStyle` (the utility style map for the current theme) and wires every component via `make(factory)`
 2. Each component factory is `function (Lib, CONFIG, ERRORS, Parts, Registry, Style)` returning a React component
 3. The component maps props to utility classes: `size` to `font_size_[step]`, `color` to `font_[token]`, `weight` to `font_weight_[name]`
 4. Molecules compose atoms through the shared `Component` object, not through direct imports
 5. Directional layout uses `Parts.Direction`, a context-based direction provider. Components that need the writing direction call `Parts.Direction.useDirection()`. Logical style properties (`paddingStart`, `paddingEnd`, `marginStart`, `marginEnd`) mirror automatically under RTL and require no manual intervention. Directional icons use `Parts.Direction` with a `mirror` prop and `transform: [{ scaleX: -1 }]`
 
-`build(theme)` re-derives `CommonStyle` and returns a fresh registry. The previous registry is never mutated; callers swap the reference. This is the runtime re-theming mechanism.
+Re-theming calls `createSystem` with a new theme, which re-derives `CommonStyle` and returns a fresh registry. The previous registry is never mutated; callers swap the reference. This is the runtime re-theming mechanism.
 
 ### Consumption Pattern
 
-Component factory files use `export default function (Lib, CONFIG, ERRORS, Parts, Registry, Style) { ... }`, and the loader imports them via `import viewFactory from './component/atom/view.js'`. The loader itself uses `export default function loader (shared_libs, config)`. See [Module Structure](../module-structure.md) for the full skeleton.
+Component factory files use `export default function (Lib, CONFIG, ERRORS, Parts, Registry, Style) { ... }`, and `createSystem` imports them via `import viewFactory from './component/atom/view.js'`. The system entry point uses `export function createSystem (shared_libs, config, theme, breakpoint)`. See [Module Structure](../module-structure.md) for the full skeleton.
 
-Consumers that use a bundler (Vite, Metro) import the loader directly.
+Consumers that use a bundler (Vite, Metro) import `createSystem` directly.
 
 ### Parts and the Style Contract
 
@@ -228,7 +228,7 @@ The rules are testable constraints:
 
 ## Interaction States
 
-Every interactive component supports six states. The state names are the standard interaction-state vocabulary.
+Every interactive component supports a set of states. The state names are the standard interaction-state vocabulary. Some states are persistent (selected, checked, current, expanded, invalid), others are transient (hovered, pressed, focused). A component can be in multiple states simultaneously; the precedence rules are component-specific and documented per component family.
 
 | State | Meaning | Visual treatment |
 |---|---|---|
@@ -238,8 +238,15 @@ Every interactive component supports six states. The state names are the standar
 | `focused` | Component has keyboard or screen-reader focus | Focus ring or outline |
 | `disabled` | Component is non-interactive | `disabled` color operation (45% original + 55% white) |
 | `loading` | Component is performing an async action | Non-interactive, announces `aria-busy`, renders a `Loading` or `Skeleton` |
+| `selected` | Component is the active choice in a group | Authored selected token, not a pseudo-state derivation |
+| `checked` | Toggle/checkbox is on | Authored checked token |
+| `current` | Component marks the current page/step | Authored current token |
+| `expanded` | Component reveals additional content | `aria-expanded` semantics, visual indicator |
+| `invalid` | Component has a validation error | Authored error/invalid token |
 
-The themer engine derives pseudo-state colors from base colors through the template's color operations. Components resolve the active state from interaction events and select the corresponding utility class or token.
+The themer engine derives pseudo-state colors from base colors through the template's color operations. However, a design system may provide authored values for selected, checked, current, and invalid states rather than deriving them from pseudoHover or pseudoPress. The template declares which approach each token uses. A component must not assume a derived value when the template provides an authored one.
+
+**Selected is not pressed.** A selected tab or navigation item retains its selected treatment at rest. A pressed state is a transient pointer-down visual. A component can be selected and pressed simultaneously; the selected indicator persists while the pressed fill overlays. A border indicator (such as a top border on a selected tab) is not equivalent to a background fill and must not be substituted for one unless the pinned design system specification explicitly calls for an indicator border.
 
 The `focused` state is the accessibility-visible state. It must render a visible focus indicator on every platform, including web (keyboard navigation) and native (VoiceOver/TalkBack focus).
 
