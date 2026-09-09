@@ -8,6 +8,7 @@ A reference for how every module in Superloom is shaped: the standard applicatio
 
 - [Module Types Overview](#module-types-overview)
   - [Implementation Approaches](#implementation-approaches)
+  - [Data Pack Modules](#data-pack-modules)
 - [Application Module Pattern](#application-module-pattern)
   - [Standard Module Template](#standard-module-template)
 - [Helper Module Pattern (Factory)](#helper-module-pattern-factory)
@@ -98,6 +99,20 @@ Helper modules can be implemented in three different ways depending on your proj
 | Deploy Configs | `deploy` | `[project]/src/server/_deploy/[entity]/` | Per-entity Serverless Framework configs |
 
 Helper module directories live in their own implementation repository (see [`org-structure.md`](../../dev/org-structure.md)). Model and project-side directories live inside each application project under `src/`.
+
+### Data Pack Modules
+
+A **data pack module** ships a frozen default export of theme values for the token contract. It has no loader, no factory, no runtime code, and no framework dependency. A reference theme package (`-template-[name]`) is a data pack.
+
+| Property | Rule |
+|---|---|
+| Default export | `Object.freeze(...)` of the complete theme data |
+| Code | None. No `create*`, no loader, no adapter |
+| Generator | A script under `scripts/` that produces the data from the design system's source; excluded from the published tarball |
+| Test | A regeneration test that re-runs the generator and asserts the output equals the frozen export |
+| Peer dependencies | The Themer package only, for `validateContract` in the regeneration test |
+
+The frozen export guarantees a server-sent theme and a published theme are the same data. The generator script is the source of truth; the frozen export is the artifact. A drift between them is a defect caught by the regeneration test.
 
 ---
 

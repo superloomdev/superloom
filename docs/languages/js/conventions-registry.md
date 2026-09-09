@@ -92,6 +92,15 @@ A lookup table of settled micro-conventions. One row per settled question, with 
 | 18 | Name the count field an operation returns | The **past participle of that operation's own verb**: `clear` returns `cleared_count`, `remove*` returns `removed_count`, `stopAll` returns `stopped_count`, a delete or cleanup returns `deleted_count` | D8. One outlier recorded in Exceptions |
 | 19 | Name a plural payload in an envelope | For the collection it holds: `records`, `keys`, `values`, `results` | D8 |
 
+## Token Contract
+
+| # | Question | Settled answer | Evidence |
+|---|---|---|---|
+| 48 | Who owns the token contract? | The Themer package (`@superloomdev/js-client-helper-themer`). `Themer.getContract()` lists every token, its group, its tier, and its value type. No component library invents a token name | `docs/languages/js/client/theming.md` - The token contract |
+| 49 | How does a component system validate its tokens? | `Themer.validateContract(built, { required, supported })`. Missing required tokens throw `TypeError`; unsupported provided tokens warn. Both lists are exported data | `docs/languages/js/client/components.md` - Theme Token Contract |
+| 50 | May a theme value carry a unit string? | No. Theme values are unit-free numbers or color strings. The engine attaches units at emit time. `'0.875rem'`, `'2vw'`, `'70ms'` are invalid; `validateContract` reports `CONTRACT_INVALID_VALUE` | `docs/languages/js/client/theming.md` - Units and platforms |
+| 51 | Is `SCREAMING_SNAKE_CASE` used for theme tokens? | No. `SCREAMING_SNAKE_CASE` is for config keys only. Theme tokens use lowercase dot notation (`color.interactive`, `spacing.spacing_05`) | `docs/languages/js/client/theming.md` - The token contract; row 27 for config keys |
+
 ## Exceptions
 
 An undocumented exception is a defect. Each is named with its disposition.

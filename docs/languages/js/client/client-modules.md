@@ -84,7 +84,7 @@ Suffixes modify a module's role within its tier. A module carries at most one su
 | `-ext-[target]` | Framework or platform-engine binding of a pure parent | Class H | `js-client-helper-font-ext-web` |
 | `-store-[backend]` | Storage adapter for a parent module | Class F | `js-server-helper-auth-store-dynamodb` |
 | `-adapter-[name]` | Runtime adapter for a parent module | Class F | `js-server-helper-http-gateway-adapter-express` |
-| `-template-[name]` | Design-language data pack for the themer | Data module | `js-client-helper-themer-template-carbon` |
+| `-template-[name]` | A data pack of theme values for the token contract | Data module | `js-client-helper-themer-template-carbon` |
 
 Framework-specific bindings never live in the parent module. They are `-ext-[target]` packages that import the pure parent and add framework-specific or platform-specific code. The parent never imports a framework. The target is one of: `react`, `vue`, `web`, `rn`, `expo`.
 

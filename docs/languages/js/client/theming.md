@@ -2,36 +2,126 @@
 
 > **Language:** JavaScript
 
-The theming system takes a template and a stack of layered values, derives a complete theme through a three-tier cascade, and emits platform-ready tokens. The pipeline is pure JavaScript: no CSS variables, no build-time magic, no framework dependency. React bindings arrive through an extension module with a transform seam that keeps app-specific logic in the app. This page documents the architecture, the module and extension split, runtime re-theming, and server-driven theming.
+The theming system takes a template and a stack of layered values, derives a complete theme through the token contract, and emits platform-ready tokens. The pipeline is pure JavaScript: no CSS variables, no build-time magic, no framework dependency. React bindings arrive through an extension module with a transform seam that keeps app-specific logic in the app. This page documents the architecture, the module and extension split, runtime re-theming, and server-driven theming.
 
 ## On This Page
 
-- [Architecture: Three Tiers](#architecture-three-tiers)
+- [The token contract](#the-token-contract)
+- [Two tiers](#two-tiers)
+- [Themes, templates, layers, profiles](#themes-templates-layers-profiles)
+- [Component systems consume the contract](#component-systems-consume-the-contract)
+- [Units and platforms](#units-and-platforms)
+- [Font role tokens](#font-role-tokens)
+- [Themes from a server](#themes-from-a-server)
+- [The base template and the subset rule](#the-base-template-and-the-subset-rule)
+- [Motion](#motion)
+- [What is not a token, and why](#what-is-not-a-token-and-why)
 - [The Cascade: Layers, Not Modes](#the-cascade-layers-not-modes)
-- [Scheme Versus Variant](#scheme-versus-variant)
 - [Resolve Then Emit](#resolve-then-emit)
-- [The Template](#the-template)
 - [Module, Extension, App](#module-extension-app)
 - [Runtime Re-Theming](#runtime-re-theming)
-- [Server-Driven Theming](#server-driven-theming)
-- [Theme Projection for RNW](#theme-projection-for-rnw)
 - [Emission Options](#emission-options)
-- [Profiles and Schemes](#profiles-and-schemes)
 - [Contextual UI Layers](#contextual-ui-layers)
 - [Further Reading](#further-reading)
 
 ---
-## Architecture: Three Tiers
+## The token contract
 
-The theming system is split into three tiers, each with a distinct responsibility:
+A theme in Superloom is a set of named values. The names come from one place: the **token contract**, published by the Themer package and read through `Themer.getContract()`. The contract lists every token Superloom knows, its group, its tier, and its value type. It contains no values.
 
-| Tier | Module | Class | Responsibility |
+Nothing else defines a token name. A component system imports the contract and declares which tokens it requires. A theme supplies values for contract tokens. A server that sends a theme sends values for contract tokens. Because the names are fixed above every component system, the same theme works with any Superloom component system, and a new component system needs no new names.
+
+The contract's vocabulary is derived from the IBM Carbon Design System v11 token set, converted to snake_case, with Carbon's web-only concepts removed and two additions: font role tokens and structure knobs. Superloom invents no token name. When a design system needs a token the contract lacks, the contract is extended through a governed change and its version increments; a component-library-local name is a violation.
+
+---
+
+## Two tiers
+
+| Tier | What | Examples | If missing from a theme |
 |---|---|---|---|
-| **Engine** | `js-client-helper-themer` | G | Pure JavaScript token engine. Takes a template and layered values, resolves canonical values, emits platform-specific tokens. No framework dependency, no React, no state |
-| **Extension** | `js-client-helper-themer-ext-react` | H | React bindings for the engine. Provides `ThemeProvider`, `useTheme`, `useTokens`, `useThemeController`, and `ThemeContext`. Holds layers in React state, derives through the engine on change, exposes the result via context. Factory pattern: each loader call returns an independent instance |
-| **App** | Host code | n/a | App-specific logic inside the extension's transform seam: token vocabulary bridging, font validation, component building. The app owns everything the engine and extension do not |
+| value | colors, spacing, sizes, type sets, font roles | `color.interactive`, `spacing.spacing_05`, `type.body01`, `font.family.sans` | an error at component system build time when the library requires it |
+| structure | things design systems normally hardcode: corner radius, border width, focus ring, motion, press feedback, shadow recipes, breakpoints | `shape.radius_04`, `border.width_01`, `focus.width`, `motion.duration_fast_01`, `feedback.press`, `shadow.level_01`, `breakpoint.md` | falls back to the base template's value |
 
-The engine never imports a framework. The extension never imports the engine directly; it receives a built instance through dependency injection. The app never calls the engine directly; it passes through the extension's transform seam.
+A reference theme sets structure knobs to its design system's canonical values (Carbon: radius 0, highlight press feedback). A brand layer may override any knob. "Carbon anatomy with soft corners" is one structure token in a layer, and it is not pure Carbon, which is allowed and explicit.
+
+Geometry that cannot be a number (a trapezoid call to action, a cloud-shaped field) is not a token. It is a different component system.
+
+---
+
+## Themes, templates, layers, profiles
+
+- A **theme** is a file of values for the contract: `{ polarity, scales, tokens, meta }`. Values are canonical and unit-free (see Units and platforms).
+- A **template** is a complete theme used as the base of a derivation. Every reference theme is a template.
+- A **layer** is a sparse theme: only the tokens that differ. A brand is a layer. A dark mode is a layer or a different template.
+- A **profile** is a named, versioned set of reference templates with identity: `{ id, contract_version, reference, schemes }`. `js-client-helper-themer-template-carbon` is a profile with four schemes; `js-client-helper-themer-template-material` is a profile with Material's schemes.
+- The **base template** is Superloom's own complete, neutral theme, shipped as `js-client-helper-themer-template-base`. Every contract key has a value in it, derived through the engine's rules and generators wherever possible. A reference theme package completes each scheme from it at generation time and lists the keys it took in `from_base`, so every published scheme is complete and the source of every value is visible.
+
+The engine derives with `buildTheme(template, layers, 'native')`. A token absent from every layer takes the template's value; that is the only runtime fallback. Completion from the base template happens in data, before publication, never inside a component.
+
+Replacing the template changes the visual system. Adding a layer adjusts it. An application exposes both operations and never rebuilds the template when a layer changes.
+
+---
+
+## Component systems consume the contract
+
+A component system is a library whose components read tokens through generated style utilities and nothing else. It never contains a color literal, never reads a token by a name outside the contract, and never falls back from one token to another.
+
+At build time the system calls `Themer.validateContract(built, { required, supported })`:
+
+- a required token missing from the theme is a `TypeError` naming every missing token in one message; the system refuses to build;
+- a token present in the theme but not supported by this system is a warning listing every such token; the build continues.
+
+Both lists are data the library exports, so a theme can be checked against a component system without rendering. Under strict mode (`STRICT_TOKENS`) an unknown utility name throws at render, which makes a headless roster walk a proof that every component's every token exists.
+
+A component system fixes anatomy and behavior: which parts a component has, how they nest, how they respond to input and to assistive technology, and how surfaces nest. Everything else is a token.
+
+---
+
+## Units and platforms
+
+Resolve produces canonical, unit-free values: numbers are pixels at `scales.base_font_size`, milliseconds for durations, and plain integers for weights; colors are lowercase hex or `rgba()` strings; curves are one of three data shapes (a bezier as four numbers, a spring as stiffness, damping, and mass, or segments as an ordered list of beziers with split points); a viewport-relative length is `{ viewport: true, vw }`. Emit projects them per platform: web writes `rem`, `vw`, and `cubic-bezier()`; native writes numbers and objects, and the component system turns `vw` into pixels from the window width. A React Native Web component system always requests the `native` projection, on every platform including the browser; React Native Web turns numbers into CSS itself.
+
+A theme therefore never contains a unit string. `'0.875rem'`, `'2vw'`, `'70ms'`, and a CSS font stack are all invalid values; `validateContract` reports them as `CONTRACT_INVALID_VALUE`, and repositories gate them in CI. No token has two hand-authored values for two platforms; every platform difference is a projection the engine or the component system performs from one canonical value.
+
+Shadows are lists of layers, each `{ x, y, blur, spread, color, inset? }`. Both platforms receive the whole list: web as a CSS `box-shadow` value, native as React Native's `boxShadow` style prop (New Architecture, React Native 0.76 or later). Nothing is dropped and nothing is approximated.
+
+---
+
+## Font role tokens
+
+A type set names a font **role** (`sans`, `serif`, `mono`), not a family. `font.family.<role>` maps the role to a family name the host has registered with the font module. The engine passes the role through untranslated; the component system resolves role to family through `font.family.*`; the font module resolves family to the platform's registered name. A theme sent as JSON can therefore switch a brand's typeface by changing one string.
+
+---
+
+## Themes from a server
+
+A theme or a layer is plain JSON in the contract vocabulary. A server stores it, validates it with the same `validateContract` (the Themer package has no React or DOM dependency), and sends it. The client adds it to its layer stack. The server never sends derivation rules, code, or font files; it sends values for names both sides already agree on.
+
+---
+
+## The base template and the subset rule
+
+Superloom is its own token system. Its vocabulary was seeded from Carbon's names and is extended with generic keys of its own. A design system is a **subset**: a reference theme defines the keys its design system has a concept for and nothing else.
+
+Completeness comes from the base template. `js-client-helper-themer-template-base` is one neutral theme in which every contract key has a value: colors are `rampStep` rules over a neutral gray ramp, type sets come from `stepPairIncrement`, spacing from `miniUnit`, and every structure knob has an identity default (radius named by its value, state-layer opacities 0, tint 0, one shadow level). A reference theme package's generator completes each scheme from the base and records the keys it took in `from_base`. Two assertions prove a reference theme complete: every value its design system defines is reproduced exactly at the Superloom key (the parity oracle), and every key it does not define is in `from_base`.
+
+This is not a fallback. A fallback is a value a component substitutes at render time when the theme is silent, which hides an incomplete theme. The base template is a published theme, the substitution happens in data before publication, and `from_base` and `stats.source.default` say exactly where it happened. A component system still requires its `REQUIRED_TOKENS` and still refuses to build a hand-written theme that lacks one; it may report keys it reads from `from_base` at debug level so an author sees what the design system left to Superloom.
+
+---
+
+## Motion
+
+Motion has two halves. Curves and timings are data tokens: durations in milliseconds, and curves of three kinds, a **bezier** (`[x1, y1, x2, y2]`), a **spring** (`{ spring: true, stiffness, damping, mass }`), and **segments** (`{ segments: true, curves: [[t, [x1, y1, x2, y2]], ...] }`, an ordered list of beziers with split points). Every curve in Carbon and Material is one of the three, and both platforms render all three: React Native through `Easing.bezier`, `Animated.spring`, and a sequenced bezier list; the web through `cubic-bezier()` and `linear()`.
+
+Choreography is the component system: what animates, in which order, and which part moves. The component library implements the three curve interpreters once, in `parts/motion.js`, and every component animates through them. A new curve value is a theme edit. A new curve kind is a new interpreter, which is a component release plus a contract version.
+
+Discrete behaviors that design systems answer differently are enum tokens, and the component system implements every listed value: `feedback.press` selects `highlight` (swap to hover and active colors), `opacity` (paint a state layer at `state.*` opacities), or `ripple` (radial spread from the touch point); `feedback.focus` (contract version 2) selects `outline`, `inset`, or `underline`. Stacking order (which surface sits above which) is the same in every design system and is one table inside the component library, not a token.
+
+---
+
+## What is not a token, and why
+
+A concept that is not a plain data token has exactly one of three causes. **Platform:** React Native cannot render it on iOS or Android at the supported floor (variable-font axes, backdrop blur); these are the only exceptions, each recorded in the plan's exception register with owner approval and revisited at every floor change. **Web-only form:** the concept exists everywhere but arrives in a web-shaped unit (`rem`, `vw`, media queries, font stacks); the engine or the component system projects it and it is never an exception. **Anatomy:** structural behavior a number cannot carry (choreography, stacking, ripple spread, grid layout, focus movement); it lives in the component system, selected by a generic enum where design systems differ.
 
 ---
 
@@ -54,18 +144,6 @@ The engine caches derived results by a composite key: the per-instance state ide
 
 ---
 
-## Scheme Versus Variant
-
-A **scheme** is a complete token set that replaces the base outright. A **variant** is a partial overlay merged on top of an existing scheme. The two have different runtime operations: replace versus overlay.
-
-The controller exposes both operations. Switching schemes replaces the entire layer stack with a new base, so every token derives from the new scheme's seeds. Applying a variant adds a layer on top of the current stack, so only the tokens the variant declares change; everything else retains the value the current scheme produced.
-
-The distinction matters because the two operations express different intents. A partial overlay cannot express "use a different design language", because the tokens it does not name are inherited from the base. Those inherited tokens may belong to a different visual system. A complete set applied as an overlay silently inherits whatever the base held, which is correct only when the base and the new set share the same design language.
-
-The rule: when the intent is a different visual system, switch schemes. When the intent is a small adjustment to the current system, apply a variant.
-
----
-
 ## Resolve Then Emit
 
 The engine splits the work into two stages:
@@ -75,23 +153,6 @@ The engine splits the work into two stages:
 2. **Emit** projects those values onto one platform. Web wants `'1rem'` and a `box-shadow` string; React Native wants `16` and a style object.
 
 One derivation, two projections. There is no second theme to keep in step, and the difference between the platforms lives in one table rather than scattered through the token values.
-
----
-
-## The Template
-
-A template is a data object that declares which tokens exist and how each is derived. The engine reads the template through its parts system. The template is the only opinionated layer; the engine is generic.
-
-```js
-export default {
-  color:   { ramps: { ... }, palettes: { ... } },
-  scales:  { geometric: { ... }, miniUnit: { ... } },
-  meta:    { type_sets: { ... }, shadows: { ... } },
-  emit:    { web: { ... }, native: { ... } }
-};
-```
-
-The full authoring reference, including every token type (literal, rule, alias, generator, type set, shadow), every scale type, and every validation rule, lives in the themer module's own documentation. This page cross-references it rather than duplicating the schema.
 
 ---
 
@@ -120,24 +181,6 @@ Each app shape mounts its own `ThemeProvider` with its own base and variant laye
 
 ---
 
-## Server-Driven Theming
-
-A layer is pure JSON. It can be stored in a database, sent over HTTP, or pushed from a server at runtime. The server delivers a layer object that the client adds to its layer stack before calling `buildTheme`.
-
-The contract is one-directional: the server sends data (color seeds, dimension seeds, font family names). The client owns the template (derivation rules) and the engine (math). The server never sends derivation rules or code.
-
-This separation is what makes the system portable. A server can push a layer with one accent color override to a client running any template, and the client derives the full set of tokens, contrast pairs, and platform-specific projections locally.
-
----
-
-## Theme Projection for RNW
-
-A React Native Web component library always consumes the **`native`** projection, on every platform including web. RNW is itself the web projection: it accepts unit-free numbers and emits CSS. Requesting the themer's `web` projection and then rendering through RNW applies two projections and yields unit strings that React Native cannot consume on iOS or Android.
-
-The correct call is always `buildTheme(template, layers, 'native')` from an RNW consumer, regardless of whether the app is running in a browser. The themer's `web` projection exists for raw-DOM consumers that write CSS directly.
-
----
-
 ## Emission Options
 
 The engine's `emit` stage accepts an optional fourth argument: a normalized options object that selects platform-specific behavior without coupling the engine to any platform's API. Omitted options normalize to legacy defaults and produce output identical to the existing three-argument call.
@@ -145,30 +188,6 @@ The engine's `emit` stage accepts an optional fourth argument: a normalized opti
 Options that affect output join the cache key alongside the resolved-object identity, template identity, and platform string. Two calls with semantically equivalent options (one omitted, one explicitly defaulted) share a cache entry. Changing template metadata creates a new template identity and a new cache entry.
 
 The host selects a supported mode; the pure engine does not inspect React Native or the OS. Unsupported capabilities are reported through loss metadata, not silently dropped.
-
----
-
-## Profiles and Schemes
-
-A **profile** is a complete, reusable token pack that bundles a template, a set of named schemes, and reference identity. A profile is a data object, not a new `buildTheme` signature. The app selects a profile's template and the chosen scheme's layer data before calling the existing template/layers pipeline.
-
-```js
-const profile = {
-  id: 'carbon-v11',
-  reference: { web: '@carbon/react v11.115.0', native: '@carbon/react-native v9.0.7' },
-  template: { /* ... full template ... */ },
-  schemes: {
-    white: { /* ... complete layer ... */ },
-    g10: { /* ... */ },
-    g90: { /* ... */ },
-    g100: { /* ... */ }
-  }
-};
-```
-
-Profile identity is separate from theme variant and projection. Switching profiles is a template change, not a layer overlay. An alias (`carbon` selecting `carbon-v11` white) is an app-level convenience, not an automatic OS-driven profile swap. Native-v9 compatibility is a separate explicit profile selection, not an automatic platform switch.
-
-A component library may ship profile data through a subpath export (for example `./theme`) that imports neither React nor component factories. This keeps the pure data pack tree-shakeable from the component barrel.
 
 ---
 

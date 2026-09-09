@@ -326,7 +326,7 @@ Class I exists because the Class G plus H pair is not free: it costs two package
 | `js-react-helper-idle` | `@superloomdev/js-react-helper-idle` | `js-react-helper-*` | React | Idle-state detection with `useIdle` hook |
 | `js-react-helper-timer` | `@superloomdev/js-react-helper-timer` | `js-react-helper-*` | React | Countdown and interval hooks |
 | `js-rnw-helper-device` | `@superloomdev/js-rnw-helper-device` | `js-rnw-helper-*` | React Native Web | RN platform APIs (device info, screen metrics, accessibility) injected via `shared_libs` |
-| `rnw-components-carbon` | `@superloomdev/rnw-components-carbon` | `rnw-components-*` | React Native Web | Carbon-informed component library (atoms, molecules, composites, providers) using ESM factory pattern |
+| `rnw-components` | `@superloomdev/rnw-components` | `rnw-components-*` | React Native Web | Component library (atoms, molecules, composites, providers) using ESM factory pattern, reads the Superloom token contract |
 
 ---
 

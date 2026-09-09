@@ -82,7 +82,7 @@ rm -rf node_modules package-lock.json && npm install && npm test
 npm run lint
 ```
 
-**Components library** (`codebase-rnw-components-carbon`):
+**Components library** (`codebase-rnw-components`):
 
 ```bash
 # Gate 1 + 3: from _test/

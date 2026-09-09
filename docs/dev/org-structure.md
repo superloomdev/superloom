@@ -18,7 +18,7 @@ How the Superloom project is divided across repositories and how they relate to 
 superloomdev/
   superloom              - Framework constitution: docs, conventions, architecture, website
   js-helper-modules      - All JavaScript helper modules (published as @superloomdev/*)
-  rnw-components-carbon  - RNW component library (published as @superloomdev/rnw-components-carbon)
+  rnw-components  - RNW component library (published as @superloomdev/rnw-components)
   demo-client-rnw        - Demo client application (React Native Web)
   demo-server-js         - Demo server application (Express)
   [future]
@@ -30,7 +30,7 @@ superloomdev/
 |---|---|---|
 | `superloom` | The constitution | `docs/`, `website/`, framework conventions, architectural philosophy, this file |
 | `js-helper-modules` | JS implementation | `src/helper-modules-core/`, `src/helper-modules-server/`, `src/helper-modules-client/`, CI/CD publish pipeline |
-| `rnw-components-carbon` | RNW component library | Shared React Native Web components, theme tokens, accessibility layer; published as `@superloomdev/rnw-components-carbon` |
+| `rnw-components` | RNW component library | Shared React Native Web components, theme tokens, accessibility layer; published as `@superloomdev/rnw-components` |
 | `demo-client-rnw` | Demo client app | React Native Web client consuming helper modules and the component library |
 | `demo-server-js` | Demo server app | Express server with entity modules, model, ops runbook |
 
@@ -52,7 +52,7 @@ After any repo extraction or restructure, diff the resulting root against this l
 |---|---|---|
 | Core language modules | `[lang]-helper-modules` | `js-helper-modules`, `py-helper-modules` |
 | Specialized/non-core modules | `[lang]-helper-modules-specialized` | `js-helper-modules-specialized` |
-| Component library | `[platform]-components-[name]` | `rnw-components-carbon` |
+| Component library | `[platform]-components-[name]` | `rnw-components` |
 | Demo/reference application | `demo-[tier]-[stack]` | `demo-client-rnw`, `demo-server-js` |
 
 `[lang]` is the lowercase language identifier: `js`, `py`, `go`, etc.
@@ -69,7 +69,7 @@ All repositories in the project share a single parent directory on the developer
 project-superloom/
   codebase-superloom/              - clone of superloomdev/superloom
   codebase-js-helper-modules/      - clone of superloomdev/js-helper-modules
-  codebase-rnw-components-carbon/  - clone of superloomdev/rnw-components-carbon
+  codebase-rnw-components/  - clone of superloomdev/rnw-components
   codebase-demo-client-rnw/        - clone of superloomdev/demo-client-rnw
   codebase-demo-server-js/         - clone of superloomdev/demo-server-js
   __dev__/                         - personal workspace (never committed, see below)

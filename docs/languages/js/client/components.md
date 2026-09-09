@@ -153,11 +153,7 @@ Internal constants live in `data/style-contract.json`, not in config. Unit-conve
 
 ## Theme Token Contract
 
-A themed component library requires its full semantic token set at build time. The build function validates the set and fails fast, naming every absent token in a single error so the caller can fix the theme in one pass rather than iteratively.
-
-A hardcoded color fallback inside a component is an anti-pattern. It makes an incomplete theme look complete while silently substituting the library's own design decisions for the tokens the theme did not provide. The correct behavior is to refuse to build, so the theme author sees the gap and fills it.
-
-The rule is framework-level: the library declares which tokens it requires, the build function enforces the set, and no component source contains a color literal. The specific token list belongs in the library's own documentation, not here.
+A component system requires its tokens from the Superloom token contract and declares the subset it requires and the subset it supports as exported data. `createSystem` calls `Themer.validateContract` with both lists: missing required tokens are one `TypeError` naming them all; unsupported provided tokens are one warning naming them all. No component source contains a color literal, reads a token by a name outside the contract, or falls back from one token to another; CI gates G24, G27, G28, and G29 enforce this. A hardcoded fallback would make an incomplete theme look complete while substituting the library's own design decisions; the correct behavior is to refuse to build so the theme author sees the gap.
 
 ---
 

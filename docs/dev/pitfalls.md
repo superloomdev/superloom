@@ -71,6 +71,16 @@
   - [28. Hand-mirrored workflow regexes drift from CI while the count-parity check stays green](#_28-hand-mirrored-workflow-regexes-drift-from-ci-while-the-count-parity-check-stays-green)
   - [29. `git grep` is blind to untracked files, so an empty result is not evidence](#_29-git-grep-is-blind-to-untracked-files-so-an-empty-result-is-not-evidence)
   - [30. An unbounded RNW list mounts the full roster, so a row-count assertion does not prove virtualization](#_30-an-unbounded-rnw-list-mounts-the-full-roster-so-a-row-count-assertion-does-not-prove-virtualization)
+  - [31. Install claims that were never run were written into evidence](#_31-install-claims-that-were-never-run-were-written-into-evidence)
+  - [32. Audit sweeps reported through `&&`/`||` chains gave wrong verdicts](#_32-audit-sweeps-reported-through-chains-gave-wrong-verdicts)
+  - [33. CI skipped 150 of 154 jobs and was read as "all green"](#_33-ci-skipped-150-of-154-jobs-and-was-read-as-all-green)
+  - [34. Literal comparisons of profile data passed while the engine rejected every profile](#_34-literal-comparisons-of-profile-data-passed-while-the-engine-rejected-every-profile)
+  - [35. `git grep -E` with `\b` on macOS matches nothing](#_35-git-grep-e-with-b-on-macos-matches-nothing)
+  - [36. A scoped sweep must be proven to stay in scope](#_36-a-scoped-sweep-must-be-proven-to-stay-in-scope)
+  - [37. A test that asserts a field name the implementation exposes, rather than the shape the specification names, passes a defect](#_37-a-test-that-asserts-a-field-name-the-implementation-exposes-rather-than-the-shape-the-specification-names-passes-a-defect)
+  - [38. A checkpoint declared from memory skipped a wave](#_38-a-checkpoint-declared-from-memory-skipped-a-wave)
+  - [39. Documentation written by one hand from the specification while the code was written by another from the keyboard diverged on a field name](#_39-documentation-written-by-one-hand-from-the-specification-while-the-code-was-written-by-another-from-the-keyboard-diverged-on-a-field-name)
+  - [40. A `shadow*` collapse dropped layers and spread on native for as long as React Native lacked `boxShadow`](#_40-a-shadow-collapse-dropped-layers-and-spread-on-native-for-as-long-as-react-native-lacked-boxshadow)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -419,6 +429,14 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 **Fix:** A rule that only holds under a policy names the policy and names where the policy is declared. Split the two halves. The permanent half states the mechanism: a guard compares a fingerprint of content. The policy-dependent half states the remedy and defers it to the repository's own standing-rule file. The default remedy is the unsurprising one, so a repository that declares nothing still gets correct behavior. When journaling a failure found under a temporary convention, write the convention into the entry's cause as a condition, never into the rule as a premise. The detection question at validation time: for every "never do X" in the constitution, name the repository where it is false. If one exists, the rule is policy-dependent and mislayered.
 
 ---
+
+#### V6. Raw fixture comparisons conceal a broken runtime pipeline
+
+**Symptom:** Profile tests and lint pass while the real engine rejects every profile, a bridge overwrites dotted siblings, and rendered typography overrides authored metrics. Tests for an unavailable package export skip after catching any import error, so the acceptance report stays green.
+
+**Cause:** Tests compare selected raw literals rather than executing the engine, bridge, validation, utility generation, and component branches together. Negative controls compare two reference values instead of mutating the implementation input and exercising the real assertion. Static searches miss dynamic token names and lowercase semantic aliases. Filtering test output through a shell pipeline can also replace the test process's failure status with the filter's success status.
+
+**Fix:** Test the actual public pipeline and assert emitted and rendered values. Preserve strict missing-token failures, including dynamic branches. Required import errors remain failures, not automatic skips; park dependent acceptance until its registry artifact exists. Run commands without output filters or preserve their exit status with `pipefail`. After a same-version release, verify the committed consumer lockfiles, not only the regenerated working copies. Existing smoke counts do not certify newly added behavior.
 
 ## Rule Delivery
 
@@ -1096,7 +1114,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 25. Repo-bound workflows miss code quality issues in other repos
 
-**Symptom:** The `js-helper-module` audit workflow catches Lib.Utils gaps, step-comment gaps, and type-guard violations in `codebase-js-helper-modules`. But the same gaps exist in `codebase-rnw-components-carbon/parts/a11y.js` (19 raw `!== null && !== undefined` checks, no step comments) and were never caught.
+**Symptom:** The `js-helper-module` audit workflow catches Lib.Utils gaps, step-comment gaps, and type-guard violations in `codebase-js-helper-modules`. But the same gaps exist in `codebase-rnw-components/parts/a11y.js` (19 raw `!== null && !== undefined` checks, no step comments) and were never caught.
 
 **Cause:** The workflow files lived in `codebase-js-helper-modules/.devin/workflows/`, so they could only be invoked when working inside that repo. The components library has the same module structure (entry file, companion files, `parts/` factories with `shared_libs`) but the workflow was never run against it.
 
@@ -1104,7 +1122,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 26. JSDoc content indentation drifts to 4 spaces when the docs say 4 but reference modules use 0
 
-**Symptom:** JSDoc blocks across ~90+ files in `codebase-js-helper-modules` and ~14 files in `codebase-rnw-components-carbon` use wrong indentation for description text, `@param`, `@return` lines, and closers. The docs (`code-formatting.md`) said "4 spaces from the `/*` delimiter" but every reference module (`money.js`, `utils.js`, `debug.js`) uses 0-space (flush-left) indentation at top level. Nested JSDoc blocks (inside object literals) have content at the `/*` column, not at a fixed offset.
+**Symptom:** JSDoc blocks across ~90+ files in `codebase-js-helper-modules` and ~14 files in `codebase-rnw-components` use wrong indentation for description text, `@param`, `@return` lines, and closers. The docs (`code-formatting.md`) said "4 spaces from the `/*` delimiter" but every reference module (`money.js`, `utils.js`, `debug.js`) uses 0-space (flush-left) indentation at top level. Nested JSDoc blocks (inside object literals) have content at the `/*` column, not at a fixed offset.
 
 **Cause:** Three gaps, found over three passes:
 1. The docs said "4 spaces" but reference modules use 0 spaces. The create/fix workflow's JSDoc awk check only verified the code after the JSDoc closer matched the closer's indentation, not the content inside the block. The audit workflow had no JSDoc content indentation check at all.
@@ -1158,6 +1176,126 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Fix/Lesson:** `FlatList` and `VirtualizedList` under RNW must have a bounded height to make windowing possible. A test that claims virtualization asserts an exact or fixed upper bound on the mounted-row count below the full roster and reaches a late row by scrolling the real scroll node. A local-versus-CI row-count difference is evidence of a layout or viewport precondition, not permission to relax the threshold.
 
 **Prevention:** See [rn-testing.md](../languages/js/client/rn-testing.md) - List windowing under React Native Web.
+
+---
+
+### 31. Install claims that were never run were written into evidence
+
+**Symptom:** An evidence block records "clean install: exit 0" for a step that was never executed, and downstream decisions are made on the false evidence.
+
+**Cause:** The agent wrote the expected result as if it had observed it, skipping the actual command. The evidence read as complete, and the wave proceeded on a claim with no backing output.
+
+**Fix/Lesson:** Every evidence line is the pasted output of a command the agent ran in this session, not a prediction. Rule 2.4 and 2.17 exist because of this. If a command was not run, its evidence line is absent, not "expected" or "should be".
+
+**Prevention:** Paste the actual terminal output. An evidence line with no pasted output is not evidence.
+
+---
+
+### 32. Audit sweeps reported through `&&`/`||` chains gave wrong verdicts
+
+**Symptom:** A sweep reports "clean" when it has hits, because the `&&`/`||` chain masks the exit code of the actual grep.
+
+**Cause:** Shell chaining reuses the last command's exit code, not the grep's. A grep that finds hits exits 1, but `grep ... && echo clean` prints `clean` only when grep exits 0; `grep ... || echo clean` prints `clean` when grep exits 1 (found hits). Both forms invert the verdict under different conditions.
+
+**Fix/Lesson:** Rule 2.6. Run the grep alone, capture its exit code, and report the hit count. A sweep is clean when it prints zero hits, not when a chained echo says so.
+
+**Prevention:** Never chain a sweep through `&&`/`||` to a verdict. Run, count, report.
+
+---
+
+### 33. CI skipped 150 of 154 jobs and was read as "all green"
+
+**Symptom:** A CI run is reported as "all green" when 150 of 154 jobs were skipped. The four that ran passed; the 150 that did not run were invisible in the summary.
+
+**Cause:** The CI matrix has skip conditions that drop jobs under certain paths. A summary that counts only completed jobs reads a partial run as complete. Rule 2.13.
+
+**Fix/Lesson:** A CI run is green when every declared job for the commit's changed paths ran and succeeded. Skipped jobs are reported as skipped, not as passed. The job count in evidence is `ran: N, skipped: M, total: N+M`.
+
+**Prevention:** `gh run view <id> --json jobs --jq '.jobs[] | .name + ":" + .conclusion'` lists every job including skipped ones. Read the full list, not the conclusion summary.
+
+---
+
+### 34. Literal comparisons of profile data passed while the engine rejected every profile
+
+**Symptom:** A test compares two literal objects and passes, while the real engine rejects every profile the test claims to validate. The test is green and the feature is broken.
+
+**Cause:** The test's `expected` value was copied from the implementation's output, not from the specification. Both sides of the `deepEqual` come from the same code path, so disabling the production line changes both sides equally and the test stays green. Rule 2.38.
+
+**Fix/Lesson:** The `expected` side of every `deepEqual` is a literal copied from the specification, a fixture file, or a rule re-implemented in the test from the plan's words. It is never the output of the library function the test exists to check, and never a second call to the same function with the same input.
+
+**Prevention:** When writing a test, ask: "if I delete the production line, does this test fail?" If not, the expected value is not independent.
+
+---
+
+### 35. `git grep -E` with `\b` on macOS matches nothing
+
+**Symptom:** A `git grep -E` sweep whose pattern contains `\b` prints nothing on macOS and reads as clean, when the same pattern matches on Linux.
+
+**Cause:** BSD regex has no word boundary. A `-E` sweep whose pattern contains `\b` prints nothing and reads as clean. Run word-boundary sweeps with `-P`, and probe that `-P` matches a known word before trusting an empty result.
+
+**Fix/Lesson:** Use `-P` for word boundaries, and probe the pattern against a known word before trusting an empty result.
+
+**Prevention:** Add a positive control to every word-boundary sweep: a known word the pattern must match, run first, that proves the pattern works.
+
+---
+
+### 36. A scoped sweep must be proven to stay in scope
+
+**Symptom:** A script that accepts a module path and never passes it to `git grep` returns repository-wide hits; readers skim them and real hits hide among them.
+
+**Cause:** The scoping argument was accepted but not threaded into the grep. The sweep reports every match in the repo as if it were scoped to the module.
+
+**Fix/Lesson:** After scoping a sweep, assert that zero hit lines fall outside the scope. A sweep that cannot prove it stayed in scope is a repository-wide sweep.
+
+**Prevention:** Every scoped sweep ends with a scope assertion: `if any hit line is outside the module path, exit 1`.
+
+---
+
+### 37. A test that asserts a field name the implementation exposes, rather than the shape the specification names, passes a defect
+
+**Symptom:** A test asserts that a field named `foo` exists on the result, and passes. The specification names the field `bar`. The implementation exposed the wrong name and the test did not catch it.
+
+**Cause:** The test's assertion was written from the implementation's surface, not from the specification's shape. The test proves the implementation is self-consistent, not that it is correct.
+
+**Fix/Lesson:** Assert specification shapes with `deepEqual` against the specification's literal. A field name the implementation exposes that the specification does not name is a defect the test should fail on, not pass on.
+
+**Prevention:** Write the expected shape from the spec, then implement to it. Never copy the implementation's field names into the test.
+
+---
+
+### 38. A checkpoint declared from memory skipped a wave
+
+**Symptom:** An agent declares a checkpoint "proceed" from recollection, and a wave that was never released is treated as released. The next wave starts on a false premise.
+
+**Cause:** The agent computed checkpoint eligibility from memory rather than from the plan text and the recorded evidence. The memory was wrong; the evidence was never written.
+
+**Fix/Lesson:** Compute checkpoint eligibility from the plan text and the recorded evidence, never from recollection. Run `checkpoint-check.sh <plan> <n>` and read its output.
+
+**Prevention:** A checkpoint is a gate, not a judgment. The script is the authority; memory is not.
+
+---
+
+### 39. Documentation written by one hand from the specification while the code was written by another from the keyboard diverged on a field name
+
+**Symptom:** The docs say `color.interactive`; the code reads `color.primary`. Both are green in their own suites; the divergence is invisible until a consumer reads both.
+
+**Cause:** The agent that changed the public surface did not write its documentation in the same pass. The doc agent worked from the spec; the code agent worked from the keyboard. Rule 23.
+
+**Fix/Lesson:** The agent that changes a public surface writes its documentation in the same pass. A second agent's summary is not evidence and is not read.
+
+**Prevention:** One agent, one pass, surface and docs together. A doc change without a code change in the same commit is a smell; a code change without a doc change in the same commit is a defect.
+
+---
+
+### 40. A `shadow*` collapse dropped layers and spread on native for as long as React Native lacked `boxShadow`
+
+**Symptom:** A shadow approximation that collapsed multi-layer shadows to a single layer and dropped spread was kept past the React Native version that added `boxShadow`. Native rendered the wrong shadow for months after the approximation's reason ended.
+
+**Cause:** The approximation was written when React Native could not render `boxShadow`. When React Native gained the capability, the approximation was not retired because no one re-checked the floor.
+
+**Fix/Lesson:** When a platform gains a capability, retire the approximation and its loss report in the same release; an approximation kept past its reason is a silent defect.
+
+**Prevention:** Every exception in the plan's exception register is revisited at every floor change. An approximation with no revisit date is a defect.
 
 ---
 

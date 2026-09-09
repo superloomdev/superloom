@@ -7,6 +7,7 @@ The font system separates font identity (family names and weights, which are dat
 ## On This Page
 
 - [The Contract](#the-contract)
+  - [Font Role Tokens](#font-role-tokens)
   - [Manifest Style Entries](#manifest-style-entries)
   - [Registered Versus Loaded](#registered-versus-loaded)
 - [Three Delivery Mechanisms](#three-delivery-mechanisms)
@@ -19,15 +20,19 @@ The font system separates font identity (family names and weights, which are dat
 ---
 ## The Contract
 
-The rule: the theme names font families; the host loads them.
+The rule: the theme names font roles; the host loads the families that fill them.
 
 The reason is architectural. A theme is pure JSON. It travels from a server, through a database, across a wire. It cannot carry binary font files. A bundler asset import for a `.ttf` file is bundler-bound: it resolves at build time through Metro or webpack, producing a binary asset reference. A server-sent JSON theme cannot perform that resolution.
 
 The contract is:
 
-- The theme declares `primaryFamily: 'Inter'` (a string)
+- The theme declares `font.family.sans: 'Inter'` (a string mapping a role to a family)
 - The host registers the `Inter` font family with the platform
 - If the theme names a family the host has not registered, text renders in a fallback
+
+### Font Role Tokens
+
+A type set names a font **role** (`sans`, `serif`, `mono`), not a family. `font.family.<role>` maps the role to a family name the host has registered with the font module. The engine passes the role through untranslated; the component system resolves role to family through `font.family.*`; the font module resolves family to the platform's registered name. A theme sent as JSON can therefore switch a brand's typeface by changing one string.
 
 The font core module provides family and role validation. The app's theme assembly calls the font core to check whether the families named in the theme are registered with the host. A family that is registered is not necessarily loaded; registration is a data declaration, loading is a platform I/O operation. Visual acceptance requires confirmed loaded font faces, not a family-name string or a registered-but-unloaded record.
 
