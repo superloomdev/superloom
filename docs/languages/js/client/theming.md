@@ -142,7 +142,7 @@ Layer 2 (accent)   - partial override, only the accent color
 
 Layers merge in order: later layers win on conflict. This replaces the older base-plus-variant merge with a general cascade that handles any number of overlays. A dark mode is a layer, a tenant brand is a layer, an accent swap is a layer.
 
-The engine caches derived results by a composite key: the per-instance state identity, the template identity, the serialized layers array, and the normalized emission options. Passing a fresh array with equal content is a cache hit only when the template identity and emission options also match. Templates are immutable inputs; changing template metadata creates a new template identity and invalidates the cache. The extension holds layers in `useState` and calls `update_layers` with a new array to trigger a re-derive.
+The engine caches derived results by a composite key: the per-instance state identity, the template identity, the serialized layers array, and the normalized emission options. Passing a fresh array with equal content is a cache hit only when the template identity and emission options also match. Templates are immutable inputs; changing template metadata creates a new template identity and invalidates the cache. The extension is prop-driven: it re-derives when the `template` or `layers` prop reference changes. An `update_layers` override API remains available for imperative use, but the primary flow is props in, derived theme out.
 
 ---
 
@@ -177,7 +177,7 @@ The extension's `useThemeController()` returns the full context value, including
 
 ## Runtime Re-Theming
 
-The extension's `ThemeProvider` holds the layer stack in React state. Calling `update_layers` with a new array triggers a re-derive through the engine and a re-render of the entire subtree. The app's `useThemeController()` wraps this with an `updateTheme(nextVariant)` function that converts the variant to layers and calls `update_layers` under the hood.
+The extension's `ThemeProvider` is prop-driven: it re-derives when the `template` or `layers` prop reference changes, producing a new theme through the engine and re-rendering the entire subtree. The app wrapper owns profile, scheme, and brand selection state, derives the template and layers from that state, and passes them as props. An `update_layers` override API remains available in the extension context for imperative use, but the primary flow is prop-driven.
 
 Each app shape mounts its own `ThemeProvider` with its own base and variant layers. Switching shapes re-themes the entire subtree. This is the mechanism for per-tenant branding, dark mode, and live accent changes.
 
