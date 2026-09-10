@@ -27,6 +27,8 @@ The component library ships atoms, molecules, composites, and providers: themeab
   - [No-op props on web](#no-op-props-on-web)
   - [Platform gaps](#platform-gaps)
 - [Generic vs Custom](#generic-vs-custom)
+  - [What the Generic Component System Absorbs](#what-the-generic-component-system-absorbs)
+  - [What the Generic Component System Cannot Absorb](#what-the-generic-component-system-cannot-absorb)
 - [Peer Dependencies](#peer-dependencies)
 - [Further Reading](#further-reading)
 
@@ -292,6 +294,32 @@ The library ships generic atoms and molecules. Apps register their own variants 
 Example: a restaurant suite has a POS application and a customer ordering application. Both share the same atom set (Text, Button, Icon, Image). The POS uses large-touch variant buttons (a structured variant with bigger hit targets and higher contrast). The ordering app uses the canonical button. Both variants read the same tokens; they differ at the molecule and variant layer.
 
 App-registered variants live in the app's source, not in the library. The library provides the generic set and the extension points (`Component.variant`, `Component.freeform`). The app populates them.
+
+### What the Generic Component System Absorbs
+
+The generic component system is designed to absorb any standard design system that can be expressed through the Superloom token contract. Two reference template packages prove this: Carbon (IBM) and Material (Google). Each template fills the same 379 contract tokens with its own values; the component library interprets those tokens into React Native API calls without knowing which design system provided them.
+
+The generic system handles:
+
+- Border radius, border thickness, and border color
+- Background colors and surface layers
+- Text colors, font families, font sizes, line heights, and weights
+- Spacing scales for padding and margins
+- Focus rings and interaction state colors
+- Motion durations, easing curves (bezier), spring physics, and multi-segment curves
+- Shadow elevation levels
+- Layout dimensions (width, height, min/max constraints)
+
+### What the Generic Component System Cannot Absorb
+
+The generic system cannot handle visual concepts that have no token representation:
+
+- Custom artistic shapes (trapezoids, cloud-shaped CTAs, organic geometry) that require hardcoded SVG paths or custom drawing
+- Visual elements that cannot be expressed through border radius, border thickness, or background color
+- Animations with no contract token (e.g., a custom particle effect or a morphing shape)
+- Platform-specific rendering that bypasses the React Native component model
+
+A custom component system for these cases is a separate package. It declares its own required and supported token subset from the contract (or proposes contract additions for new concepts) and implements its own rendering and animation logic. The core Themer still validates whatever token subset that system declares as required.
 
 ---
 

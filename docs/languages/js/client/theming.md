@@ -115,6 +115,8 @@ Motion has two halves. Curves and timings are data tokens: durations in millisec
 
 Choreography is the component system: what animates, in which order, and which part moves. The component library implements the three curve interpreters once, in `parts/motion.js`, and every component animates through them. A new curve value is a theme edit. A new curve kind is a new interpreter, which is a component release plus a contract version.
 
+The core Themer defines and validates motion token shapes (durations, bezier arrays, spring objects, segments). It does not interpret them into platform API calls. That interpretation lives in the component system: `parts/motion.js` converts tokens to `Easing.bezier`, `Animated.spring` parameters, and sequenced bezier lists. Even when a platform provides a native animation (e.g., React Native's `Modal` `animationType`), the component system should drive the animation through motion tokens rather than relying on a platform default. This keeps the animation theme-driven and consistent across design systems.
+
 Discrete behaviors that design systems answer differently are enum tokens, and the component system implements every listed value: `feedback.press` selects `highlight` (swap to hover and active colors), `opacity` (paint a state layer at `state.*` opacities), or `ripple` (radial spread from the touch point); `feedback.focus` (contract version 2) selects `outline`, `inset`, or `underline`. Stacking order (which surface sits above which) is the same in every design system and is one table inside the component library, not a token.
 
 ---
