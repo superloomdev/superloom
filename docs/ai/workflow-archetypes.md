@@ -19,6 +19,7 @@ The language-agnostic patterns that concrete workflow families are compiled from
   - [Output](#output)
   - [Verification](#verification)
   - [When to Recompile](#when-to-recompile)
+- [Application UI Acceptance](#application-ui-acceptance)
 - [Cross-References](#cross-references)
 
 ---
@@ -193,6 +194,14 @@ A workshop verdict is written to the workspace. A failed verdict blocks propagat
 - After a directory layout change in the implementation repository.
 
 The `/finalize-docs` workflow's embedded-block pass (P5) triggers recompilation when it detects drift between the archetypes and the concrete workflows.
+
+---
+
+## Application UI Acceptance
+
+Application-level UI audit is a distinct concern from module audit. A module audit checks structure and convention; a UI audit checks that the rendered application is visually and geometrically correct. The four-gate acceptance model (contract, functional readiness, geometric layout, visual regression) is documented in [React Native Testing - Application UI Acceptance](../languages/js/client/rn-testing.md#application-ui-acceptance).
+
+A workflow that audits application UI includes all four gates as required passes. Plan close-out checks verify literal floors and evidence: no blank evidence fields, all waves released, all test floors met, no blocked gate markers, package versions unchanged, and all visual baselines present. A close-out checker is proven against fixtures before its first real run.
 
 ---
 

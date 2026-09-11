@@ -43,6 +43,8 @@ Common issues encountered when **migrating an existing helper module** to curren
 - [ESM Migration Issues](#esm-migration-issues)
   - [`scripts/` files left as CJS inside a `"type": "module"` package throw at startup](#scripts-files-left-as-cjs-inside-a-type-module-package-throw-at-startup)
   - [CJS import of an ESM package returns a module namespace object, not the default export](#cjs-import-of-an-esm-package-returns-a-module-namespace-object-not-the-default-export)
+- [Generated Artifact Issues](#generated-artifact-issues)
+  - [Generated profile retains stale values completed from a defective base artifact](#generated-profile-retains-stale-values-completed-from-a-defective-base-artifact)
 - [Prevention Checklist](#prevention-checklist)
 - [Further Reading](#further-reading)
 
@@ -404,6 +406,18 @@ When renaming an entire module, also check **other modules' README and ROBOTS** 
 
 ---
 
+## Generated Artifact Issues
+
+### Generated profile retains stale values completed from a defective base artifact
+
+**Symptom:** A base template package is republished with corrected typography (replacing step-based type sets with explicit `font_size` and `line_height_px`). Consumer clean installs pick up the new base artifact, but a generated downstream profile package (e.g., Material) retains the old step-based values for contract keys that were completed from the base rather than mapped explicitly. The browser renders a `caption02` token at 42px/60px instead of 14px/18px, producing a 300px banner and a 762px page. Presence-only E2E tests pass because the text is present and the interaction works.
+
+**Cause:** The generator completed unmapped contract keys by copying the base template's values at generation time. When the base was republished with corrected values, the generated package was not regenerated. Its committed data files still carry the stale step-based shapes. A consumer clean install fetches the corrected base and the stale generated package side by side; nothing detects the mismatch because the generated package has no provenance recording which base version and shasum it was generated from.
+
+**Fix:** Generated packages record source provenance (base package version, base distribution shasum, generator schema revision) in their metadata. A generator check compares the installed base shasum against the registry shasum and refuses to write on mismatch. A generated-artifact test regenerates into a temporary directory and byte-compares every committed data file. After a same-version base republish, every downstream generated package is regenerated and republished at the same version, and every consumer lockfile is refreshed. Contract keys with no explicit semantic mapping use the documented completion table, not blind copies of old base values.
+
+---
+
 ## Prevention Checklist
 
 Before completing any migration:
@@ -433,6 +447,7 @@ Before completing any migration:
 - [ ] **Step-comment conformance checked on every function body** - each public I/O function carries the [Mandatory Step-Comment Set](code-formatting.md#comment-style) (validate, init, driver calls, success returns, error returns, early-return branches); this is a distinct gate from the skeleton conformance diff and applies to fresh creations, not just migrations (see [Step-comment drift on fresh module creation](#step-comment-drift-on-fresh-module-creation))
 - [ ] **`eslint.config.js` is the canonical three-line re-export** of `@superloomdev/js-helper-eslint-config` - no per-module rule overrides, no standalone config. See [Shared ESLint Configuration](code-formatting.md#shared-eslint-configuration)
 - [ ] **Grep patterns proven against a known-bad input** before trusting an empty result - use `[[:<:]]`/`[[:>:]]` for word boundaries in POSIX ERE (`-E`), or `-P` (PCRE) with `\b`. A broken pattern and a genuine zero-match produce identical output. See [Broken regex pattern reported a clean pass](#broken-regex-pattern-reported-a-clean-pass-that-hid-stale-references)
+- [ ] **Generated packages record base provenance** (version, shasum, schema revision) and a generator check refuses to write on installed/registry shasum mismatch. After a same-version base republish, regenerate every downstream generated package and refresh consumer lockfiles. See [Generated profile retains stale values](#generated-profile-retains-stale-values-completed-from-a-defective-base-artifact)
 
 ## Further Reading
 

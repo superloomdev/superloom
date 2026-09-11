@@ -417,21 +417,21 @@ Three allowed destination values, closed set:
 | `docs/languages/js/validation.md` | AI Behavior Rules (type-guard primitive rule) |
 | `docs/languages/js/client/client-modules.md` | AI Behavior Rules (client naming taxonomy + loader-pattern rule) |
 | `docs/languages/js/client/components.md` | AI Behavior Rules (component accessibility aria-* rule + theme token contract + named barrel) |
-| `docs/languages/js/client/theming.md` | AI Behavior Rules (RNW native projection rule + scheme versus variant doctrine) |
+| `docs/languages/js/client/theming.md` | AI Behavior Rules (RNW native projection rule + scheme versus variant doctrine + generated artifact provenance) |
 | `docs/languages/js/client/fonts.md` | AI Behavior Rules (theme-names/host-loads contract + manifest style entry rule) |
 | `docs/languages/js/client/client-loader.md` | not mirrored (reference material; the loader's Lib container table is looked up per task) |
 | `docs/languages/js/client/client-architecture.md` | not mirrored (reference material; stack decision and project layout looked up per task) |
 | `docs/languages/js/client/super-app.md` | not mirrored (reference material; shape registry and route wrapper patterns looked up per task) |
 | `docs/languages/js/conventions-registry.md` | not mirrored (reference material; lookup table scanned per task) |
 | `docs/languages/js/function-naming.md` | AI Behavior Rules (verb-first naming rule, banned verbs) |
-| `docs/languages/js/publishing.md` | Boundaries / Never (publish is CI-only) |
+| `docs/languages/js/publishing.md` | Boundaries / Never (publish is CI-only) + Safe Terminal Patterns (same-version republish for generated packages) |
 | `docs/languages/js/module-thoughts-file.md` | Directory Map (THOUGHTS.md in standard files list) |
 | `docs/languages/js/dependencies.md` | AI Behavior Rules (peer dependencies declare full runtime contract) |
 | `docs/languages/js/module-docs.md` | Directory Map (standard files per module line) |
 | `docs/languages/js/index.md` | AI Behavior Rules (two-form naming rule) |
 | `docs/languages/js/catalog-client.md` | not mirrored (reference material; the naming taxonomy rule is sourced from `client/client-modules.md`) |
 | `docs/languages/js/server/*` | not mirrored (reference material; server layer contracts are looked up per task) |
-| `docs/languages/js/testing-strategy.md`, `unit-test-authoring.md`, `module-testing.md` | AI Behavior Rules (run tests, assertions pin exact values) + Safe Terminal Patterns (module testing contract) |
+| `docs/languages/js/testing-strategy.md`, `unit-test-authoring.md`, `module-testing.md` | AI Behavior Rules (run tests, assertions pin exact values, generated package provenance) + Safe Terminal Patterns (module testing contract) |
 | `docs/languages/js/pitfalls-migration.md` | AI Behavior Rules (two-pass check reference) |
 | `docs/languages/js/versioning/bump-checklist.md` | Boundaries / Never (publish is CI-only) + Safe Terminal Patterns (pre-publish gate) |
 | `docs/languages/js/versioning/dependency-management.md` | AI Behavior Rules (peer dependencies rule) |
@@ -472,7 +472,7 @@ Three allowed destination values, closed set:
 | `docs/languages/js/catalog-server.md` | not mirrored (reference material; server module catalog; enforceable rules in module-structure and third-party-libraries) |
 | `docs/languages/js/client/expo-guide.md` | not mirrored (reference material; Expo capability and setup; adapter rules in module-structure and composition-and-adapters) |
 | `docs/languages/js/client/rn-environment-setup.md` | not mirrored (reference material; React Native local environment setup) |
-| `docs/languages/js/client/rn-testing.md` | not mirrored (reference material; RN test loader reference; rules in unit-test-authoring and module-testing) |
+| `docs/languages/js/client/rn-testing.md` | AI Behavior Rules (UI acceptance four-gate model) + Safe Terminal Patterns (stale dev server, presence-only E2E) |
 | `docs/languages/js/dto-philosophy.md` | AI Behavior Rules (one canonical builder per entity, absent keys not added, public DTOs derive from internal) |
 | `docs/languages/js/integration-testing.md` | not mirrored (reference material; real-cloud integration test setup, looked up per test run) |
 | `docs/languages/js/module-docs-complex.md` | mirrored to workflow: js-helper-module |

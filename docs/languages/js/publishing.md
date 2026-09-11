@@ -24,6 +24,7 @@ This page scopes **package-configuration rules**; the companion docs scope **how
 - [Linter Configuration](#linter-configuration)
 - [Required Scripts](#required-scripts)
 - [Test Directory Structure](#test-directory-structure)
+- [Same-Version Republish for Generated Packages](#same-version-republish-for-generated-packages)
 - [Further Reading](#further-reading)
 
 ---
@@ -164,6 +165,21 @@ module-name/
 - Reference the module under test as `"file:../"` in dependencies
 - Reference published `@your-org` packages by version for peer dependencies (never `file:` for siblings - that breaks in CI; see [`pitfalls.md` entry 8](../../dev/pitfalls.md))
 - **No `.npmrc` in `_test/`** - use global npmrc
+
+## Same-Version Republish for Generated Packages
+
+A generated reference theme package (e.g., Material, Carbon) completes its schemes from the base template at generation time. When the base template is republished at the same version with corrected values, the generated package must be regenerated and republished at the same version. The procedure:
+
+1. Regenerate all schemes from the corrected, registry-installed base.
+2. Verify the installed base shasum equals the registry shasum before writing.
+3. Byte-compare regenerated output against committed data files.
+4. Run the module's full test suite (including provenance and exact typography tests).
+5. Delete the exact queried `1.0.0` version ID through `gh api` immediately before the push that publishes it.
+6. Push the known publishing commit.
+7. Compare local pack shasum to registry shasum after CI publishes.
+8. Regenerate every consumer lockfile that resolves the republished package.
+
+Never delete a package version the active plan does not name. Never bump a version to clear a checksum mismatch. See [`pitfalls-migration.md` - Generated profile retains stale values](pitfalls-migration.md#generated-profile-retains-stale-values-completed-from-a-defective-base-artifact).
 
 ## Further Reading
 

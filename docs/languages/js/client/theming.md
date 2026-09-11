@@ -14,6 +14,7 @@ The theming system takes a template and a stack of layered values, derives a com
 - [Font role tokens](#font-role-tokens)
 - [Themes from a server](#themes-from-a-server)
 - [The base template and the subset rule](#the-base-template-and-the-subset-rule)
+  - [Generated artifact provenance](#generated-artifact-provenance)
 - [Motion](#motion)
 - [What is not a token, and why](#what-is-not-a-token-and-why)
 - [The Cascade: Layers, Not Modes](#the-cascade-layers-not-modes)
@@ -106,6 +107,12 @@ Superloom is its own token system. Its vocabulary was seeded from Carbon's names
 Completeness comes from the base template. `js-client-helper-themer-template-base` is one neutral theme in which every contract key has a value: colors are `rampStep` rules over a neutral gray ramp, type sets come from `stepPairIncrement`, spacing from `miniUnit`, and every structure knob has an identity default (radius named by its value, state-layer opacities 0, tint 0, one shadow level). A reference theme package's generator completes each scheme from the base and records the keys it took in `from_base`. Two assertions prove a reference theme complete: every value its design system defines is reproduced exactly at the Superloom key (the parity oracle), and every key it does not define is in `from_base`.
 
 This is not a fallback. A fallback is a value a component substitutes at render time when the theme is silent, which hides an incomplete theme. The base template is a published theme, the substitution happens in data before publication, and `from_base` and `stats.source.default` say exactly where it happened. A component system still requires its `REQUIRED_TOKENS` and still refuses to build a hand-written theme that lacks one; it may report keys it reads from `from_base` at debug level so an author sees what the design system left to Superloom.
+
+### Generated artifact provenance
+
+A generated reference theme package (e.g., Material, Carbon) completes its schemes from the base template at generation time. When the base template is republished at the same version with corrected values, a generated package that is not regenerated retains stale values for every key it completed from the old base. A consumer clean install fetches the corrected base and the stale generated package side by side; nothing detects the mismatch.
+
+Generated packages prevent this by recording source provenance in their metadata: the base package version, the base distribution shasum, and the generator schema revision. A generator check compares the installed base shasum against the registry shasum and refuses to write on mismatch. A generated-artifact test regenerates into a temporary directory and byte-compares every committed data file against the regeneration output. After a same-version base republish, every downstream generated package is regenerated and republished at the same version, and every consumer lockfile is refreshed.
 
 ---
 

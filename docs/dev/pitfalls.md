@@ -438,6 +438,22 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 
 **Fix:** Test the actual public pipeline and assert emitted and rendered values. Preserve strict missing-token failures, including dynamic branches. Required import errors remain failures, not automatic skips; park dependent acceptance until its registry artifact exists. Run commands without output filters or preserve their exit status with `pipefail`. After a same-version release, verify the committed consumer lockfiles, not only the regenerated working copies. Existing smoke counts do not certify newly added behavior.
 
+#### V7. A stale dev server serves output from a previous dependency state
+
+**Symptom:** A Vite dev server started hours ago on port 5173 continues serving stale module state after a dependency is republished and `node_modules` is refreshed. A new `vite` invocation silently moves to port 5174 or 5175 because the configured port is occupied, so the developer inspects the wrong server and believes the build is current. Playwright, which builds its own production preview on port 4173, passes its tests while the dev server the developer is looking at serves a completely different layout.
+
+**Cause:** Vite's dev server caches transformed modules in memory and does not detect that the installed packages changed underneath it. Its port-increment behavior makes the stale server and the fresh server coexist without warning. A production preview build produces correct output from the current tree, but that proves nothing about the dev server the developer is interacting with.
+
+**Fix:** Production Playwright must always use a fresh server (`reuseExistingServer: false` in CI and `npm run verify`). A build identity endpoint (git SHA + lockfile hash) lets a freshness check compare the served identity to the identity computed before launch. A `dev:fresh` command checks the configured port, fails loudly with PID and remedy on a mismatch, and never silently increments the port. Killing a stale process remains an explicit human action.
+
+#### V8. Presence-only E2E tests pass while the rendered UI is geometrically broken
+
+**Symptom:** Tasks and Notes E2E suites assert that expected text appears, that adding data works, and that navigation works. All pass. The Notes banner renders at 42px/60px (a stale `caption02` token), producing a 300px banner and a 762px page. A typography regression suite with an 84px global ceiling also passes because 42 is under 84. No test measures computed font size, line height, overflow, overlap, or page geometry.
+
+**Cause:** Text presence and interaction success are necessary but not sufficient. A global font-size ceiling catches only extreme blowups and lets any wrong-but-smaller value through. Computed typography and layout geometry are deterministic in a fixed browser environment and can be asserted exactly, but only if a test reads them.
+
+**Fix:** Application-level acceptance uses four complementary gates: contract (exact generated token values), functional readiness (response, mount, console/request errors, interaction), geometric layout (exact typography, spacing, overflow, overlap, reflow at fixed viewports), and visual regression (`toHaveScreenshot` baselines). Deterministic values use exact assertions, not ranges. A global ceiling does not replace a semantic expectation.
+
 ## Rule Delivery
 
 ### 1. AI attribution trailers appear in commits despite a documented ban

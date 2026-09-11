@@ -21,6 +21,7 @@ How to test React Native and Expo modules in the Superloom framework. This page 
 - [CI Placement](#ci-placement)
 - [End-to-End Tests](#end-to-end-tests)
   - [List windowing under React Native Web](#list-windowing-under-react-native-web)
+  - [Application UI Acceptance](#application-ui-acceptance)
 - [Further Reading](#further-reading)
 
 ---
@@ -299,6 +300,57 @@ E2E tests are an application concern. Modules do not ship E2E tests. The contrac
 `FlatList` and `VirtualizedList` under React Native Web must have a bounded height to make windowing possible. An unbounded list expands to fit its content and mounts the full roster, so a row-count assertion that passes locally does not prove virtualization.
 
 A test that claims virtualization asserts an exact or fixed upper bound on the mounted-row count that is below the full roster, and reaches a late row by scrolling the real scroll node. A local-versus-CI row-count difference is evidence of a layout or viewport precondition, not permission to relax the threshold: loosening a threshold until it passes converts a real signal into a green check.
+
+### Application UI Acceptance
+
+Application-level E2E tests verify the full runtime, but presence and interaction alone do not prove the rendered UI is correct. A page can load, display expected text, and handle interactions while its typography is broken, its layout overflows, or its visual output has regressed. Application UI acceptance uses four complementary gates, each proving something the others cannot.
+
+#### The four-gate acceptance model
+
+| Gate | What it proves | What it does not prove |
+|---|---|---|
+| Contract | Exact generated token values and provenance at the template-package level | Browser layout or visual output |
+| Functional readiness | Response 200, root mount, no console/page/request errors, primary interaction works | Layout geometry or visual correctness |
+| Geometric layout | Exact typography, spacing, overflow, overlap, and reflow at fixed viewports | Visual pixel equality |
+| Visual regression | Committed `toHaveScreenshot` baselines match the current render | Semantic correctness or why a change occurred |
+
+Unit tests do not claim browser layout coverage. Screenshot tests do not replace semantic or geometric assertions. A global font-size ceiling does not replace a semantic expectation.
+
+#### External standards
+
+- Playwright visual comparisons: `expect(page).toHaveScreenshot()`, stable state first, same browser/OS environment, animations disabled.
+- WCAG 2.2 SC 1.4.10: no two-dimensional scrolling at 320 CSS px for vertical pages.
+- WCAG 2.2 SC 1.4.12: no clipping, overlap, or loss when line height, paragraph spacing, letter spacing, and word spacing are overridden to the criterion values.
+- Testing Library principle: functional locators prefer role/label/text; `data-testid` is reserved for geometry or otherwise inaccessible structure.
+- Material 3 official type scale is the authority for Material role values.
+
+#### Viewports and deterministic geometry
+
+Run page acceptance at fixed viewports (e.g., 320x568, 375x667, 768x1024, 1280x720). At every viewport:
+
+- `document.documentElement.scrollWidth === document.documentElement.clientWidth` (no horizontal overflow).
+- No visible element extends left of `-1` or right of `viewport width + 1`.
+- No pair of designated page sections overlaps.
+- Root contains nonzero visible content and a route-ready sentinel is visible.
+- Vertical scrolling is allowed; a fixed page-height ceiling is forbidden.
+
+At the narrowest viewport, repeat overflow, visibility, and overlap checks after applying WCAG text-spacing overrides (line-height 1.5, paragraph margin-bottom 2em, letter-spacing 0.12em, word-spacing 0.16em).
+
+#### Exact typography and spacing
+
+Assert computed pixels exactly in Chromium for deterministic values. Do not use ranges for values that are deterministic in a fixed browser environment. A global ceiling catches only extreme blowups and lets any wrong-but-smaller value through.
+
+#### Dev-server freshness
+
+Production Playwright must always use a fresh server (`reuseExistingServer: false` in CI and `npm run verify`). A build identity (git SHA + lockfile hash) served at a known endpoint lets a freshness check compare the served identity to the identity computed before launch. A `dev:fresh` command checks the configured port, fails loudly with PID and remedy on a mismatch, and never silently increments the port. Killing a stale process remains an explicit human action.
+
+#### Visual baseline environment
+
+A dedicated serial Playwright project runs visual regression in a pinned browser environment. Animations are disabled, color scheme is fixed, locale and timezone are fixed, and device scale factor is 1. Only stable page regions are captured after fonts and data are ready. Platform-specific snapshots use Playwright's standard naming; the CI-authoritative platform (Linux Chromium) is the only one committed. Use `maxDiffPixels: 0` after eliminating external font and network nondeterminism. If a proven platform antialiasing difference remains, use the smallest measured `maxDiffPixels` and document the reason; never use a percentage threshold.
+
+#### Script lifecycle
+
+Permanent developer/CI commands with assertions go in committed `scripts/`. Product tests go in committed `e2e/`. Reusable cross-session audit tooling goes in the workspace `__dev__/audits/`. Disposable probes and output go in `__dev__/investigations/<date>-<topic>/`, never discovered by product test runners.
 
 ---
 
