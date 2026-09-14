@@ -81,6 +81,11 @@
   - [38. A checkpoint declared from memory skipped a wave](#_38-a-checkpoint-declared-from-memory-skipped-a-wave)
   - [39. Documentation written by one hand from the specification while the code was written by another from the keyboard diverged on a field name](#_39-documentation-written-by-one-hand-from-the-specification-while-the-code-was-written-by-another-from-the-keyboard-diverged-on-a-field-name)
   - [40. A `shadow*` collapse dropped layers and spread on native for as long as React Native lacked `boxShadow`](#_40-a-shadow-collapse-dropped-layers-and-spread-on-native-for-as-long-as-react-native-lacked-boxshadow)
+  - [41. A warm npm cache served a tarball the registry had already deleted, so local `npm ci` passed while CI returned `403`](#_41-a-warm-npm-cache-served-a-tarball-the-registry-had-already-deleted-so-local-npm-ci-passed-while-ci-returned-403)
+  - [42. `npm unpublish` returns `E405` on GitHub Packages](#_42-npm-unpublish-returns-e405-on-github-packages)
+  - [43. A React Native Web `<input>` keeps its intrinsic minimum width and overflows its wrapper](#_43-a-react-native-web-input-keeps-its-intrinsic-minimum-width-and-overflows-its-wrapper)
+  - [44. An SVG icon adapter that rewrites root fill and stroke turns stroke glyphs into filled shapes](#_44-an-svg-icon-adapter-that-rewrites-root-fill-and-stroke-turns-stroke-glyphs-into-filled-shapes)
+  - [45. A unit test read a sibling host's `node_modules`, passed locally where every host was installed, and failed in the CI job that installs only its own directory](#_45-a-unit-test-read-a-sibling-host-s-node-modules-passed-locally-where-every-host-was-installed-and-failed-in-the-ci-job-that-installs-only-its-own-directory)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1312,6 +1317,46 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Fix/Lesson:** When a platform gains a capability, retire the approximation and its loss report in the same release; an approximation kept past its reason is a silent defect.
 
 **Prevention:** Every exception in the plan's exception register is revisited at every floor change. An approximation with no revisit date is a defect.
+
+### 41. A warm npm cache served a tarball the registry had already deleted, so local `npm ci` passed while CI returned `403`
+
+**Symptom:** Every CI `test` job fails at `npm ci` with `npm error 403 Forbidden - GET https://npm.pkg.github.com/download/@scope/package/1.0.0/<shasum>` and `Permission permission_denied: read_package`, while the same lockfile installs cleanly on the developer machine. The token has read access; the `403` looks like a permissions problem and is not one.
+
+**Cause:** A same-version republish (delete, then publish `1.0.0` again) changes the tarball shasum. Every consumer lockfile still pins `resolved: .../1.0.0/<old shasum>`. GitHub Packages answers `403`, not `404`, for a deleted tarball. Locally, npm's content-addressable cache serves the old tarball by integrity hash without contacting the registry, so `npm ci` cannot see that the pin is dead. A verify script that runs `npm ci` against the warm cache is not CI-faithful for this failure.
+
+**Fix/Lesson:** After any same-version republish, refresh every lockfile in every consumer, enumerated by path (root, `src/_test`, `hosts/web`, `hosts/expo`), not "the ones that changed". Two permanent gates: a lockfile freshness check that compares each pinned `@scope` shasum with `npm view <name>@<version> dist.tarball` and fails on any mismatch, run in CI before the first `npm ci` and mirrored in the local verify script; and `npm ci --cache "$(mktemp -d)"` in the verify script so the local cache can never mask a deleted tarball. Evidence for "CI green" is a `gh run watch` conclusion on the pushed commit, never a local pass.
+
+### 42. `npm unpublish` returns `E405` on GitHub Packages
+
+**Symptom:** `npm unpublish @scope/package@1.0.0 --registry=https://npm.pkg.github.com` fails with `npm error code E405` and `405 Method Not Allowed`.
+
+**Cause:** GitHub Packages does not implement the npm unpublish endpoint. Version removal is a GitHub Packages API operation, not an npm one.
+
+**Fix/Lesson:** Query the version id with `gh api /orgs/<org>/packages/npm/<package>/versions --jq '.[0].id'`, delete it with `gh api --method DELETE /orgs/<org>/packages/npm/<package>/versions/<id>`, then push so CI republishes. Never `npm unpublish`, never a local `npm publish`.
+
+### 43. A React Native Web `<input>` keeps its intrinsic minimum width and overflows its wrapper
+
+**Symptom:** A password, number, or search field renders wider than its wrapper by a few pixels at narrow widths (an inner `<input>` of 186px inside a 180px wrapper), so the wrapper's border or adjacent control is pushed out or clipped.
+
+**Cause:** React Native Web renders `TextInput` as `<input>`, and a browser `<input>` has an intrinsic width with `min-width: auto`. Flex `flex: 1` lets it grow but not shrink below that intrinsic width.
+
+**Fix/Lesson:** The `TextInput` atom sets `minWidth: 0`, so every composite that embeds it can shrink. Patching each composite individually leaves the next one broken.
+
+### 44. An SVG icon adapter that rewrites root fill and stroke turns stroke glyphs into filled shapes
+
+**Symptom:** Checkmarks, sync arrows, and every `*-outline` glyph render as filled wedges or blobs; filled glyphs look correct, so the defect is not uniform and is easy to attribute to the icon set.
+
+**Cause:** Stroke glyphs depend on their own classes or attributes (`fill: none`, a stroke width) that the adapter did not load, while the adapter set `fill` and `stroke` on the root element for every glyph. Open polylines received a fill.
+
+**Fix/Lesson:** An adapter sets color through the one attribute the icon set documents (`fill` for filled sets, `stroke` for stroke sets, or the set's own color prop) and never both. Every host maps semantic names through one committed manifest, and an unmapped name is a `console.error`, not a silent placeholder, so the zero-console-error gate sees it. A `?` placeholder that passes every gate and lands in a regenerated visual baseline is the failure this entry exists to prevent.
+
+### 45. A unit test read a sibling host's `node_modules`, passed locally where every host was installed, and failed in the CI job that installs only its own directory
+
+**Symptom:** `src/_test` passes locally and in the local verify script; the CI `test` job fails with `ENOENT ... hosts/web/node_modules/@scope/package/data/manifest.json` from a unit test.
+
+**Cause:** The test resolved a data file through `hosts/web/node_modules`. On the developer machine every host had been installed by an earlier gate, so the path existed. The CI `test` job installs `src/_test` only.
+
+**Fix/Lesson:** A test directory reads installed packages from its own `node_modules` and declares them in its own `package.json`. Anything a test needs from another directory of the repo is either a tracked source file or a declared dependency. A CI-faithful check for this class is to run the unit suite with every other `node_modules` moved aside.
 
 ---
 

@@ -23,6 +23,12 @@ The component library ships atoms, molecules, composites, and providers: themeab
   - [Structured variant](#structured-variant)
   - [Unstructured freeform](#unstructured-freeform)
 - [Interaction States](#interaction-states)
+- [Geometry and Fidelity Contract](#geometry-and-fidelity-contract)
+  - [Spec Sheets](#spec-sheets)
+  - [Frame Ownership](#frame-ownership)
+  - [Icon Adapters Preserve Glyph Semantics](#icon-adapters-preserve-glyph-semantics)
+  - [Status Surface Triad](#status-surface-triad)
+  - [Centered Targets](#centered-targets)
 - [Accessibility Contract](#accessibility-contract)
   - [No-op props on web](#no-op-props-on-web)
   - [Platform gaps](#platform-gaps)
@@ -247,6 +253,55 @@ The themer engine derives pseudo-state colors from base colors through the templ
 **Selected is not pressed.** A selected tab or navigation item retains its selected treatment at rest. A pressed state is a transient pointer-down visual. A component can be selected and pressed simultaneously; the selected indicator persists while the pressed fill overlays. A border indicator (such as a top border on a selected tab) is not equivalent to a background fill and must not be substituted for one unless the pinned design system specification explicitly calls for an indicator border.
 
 The `focused` state is the accessibility-visible state. It must render a visible focus indicator on every platform, including web (keyboard navigation) and native (VoiceOver/TalkBack focus).
+
+---
+
+## Geometry and Fidelity Contract
+
+A component's geometry (heights, paddings, border sides, icon sizes, target sizes, radius tokens, glyph names) is declared data, not an emergent result of padding and line height. The declaration is shared by the component and its tests, so a rendered size that drifts from the declaration fails a test instead of waiting for a human to notice. The normative visual specification is the pinned design system the template reproduces; the library expresses it in contract tokens and never in literals.
+
+### Spec Sheets
+
+`data/component-spec.js` holds one frozen sheet per covered component and `Parts.Spec(name)` returns it. A sheet names numeric geometry (`height`, `iconSize`, `controlSize`, `dismissTargetSize`), the radius token (`radiusToken: 'shape.radius_00'`), border sides, type styles, and the glyph names the component may render. Components read the sheet; they do not repeat the values. Three tests hold the sheet honest:
+
+- **Spec validation:** every token name in a sheet resolves in the strict utility registry, and every numeric value matches the geometry oracle generated from the pinned design system package.
+- **Geometry lint:** a numeric literal for a size, padding, or radius in component source is a defect. A committed baseline lists the known remaining literals and may only shrink.
+- **Assertion integrity:** each permanent test is paired with a way to disable the behavior it guards; the manifest proves the test fails when the behavior is off. A test that cannot be made to fire is not a gate.
+
+A `spec-coverage.json` manifest lists every component as `specced` or `unspecced` with a reason; the `unspecced` count may not grow.
+
+### Frame Ownership
+
+A field composite (password, search, number, date, combo box, select) has exactly one frame owner. The wrapper owns the border, the focus ring, the invalid state, and the disabled state; the inner `TextInput` renders `unframed`. Nested borders (a bordered input inside a bordered wrapper) are a defect, and so is a browser default focus outline: when the wrapper owns focus it renders the contract's focus treatment and suppresses the user agent outline.
+
+The frame shape is a structure-tier token, `feedback.field`, with values `underline` (bottom border only, square corners) and `outline` (four sides). Components switch on the token; a brand layer changes the value. Every square corner reads `shape.radius_00`, so one layer override rounds fields, buttons, tiles, notifications, and menus together while pill shapes stay on `shape.radius_max`. If a component needs a code change to look right under a brand layer, the component hard-coded structure; fix the component, never widen the layer.
+
+React Native Web renders `TextInput` as an `<input>` with an intrinsic minimum width. The atom sets `minWidth: 0` so a field can shrink to its wrapper; composites do not patch this individually.
+
+### Icon Adapters Preserve Glyph Semantics
+
+Components emit semantic icon names (`close`, `chevron_down`, `visibility_off`, `trash`) from a committed manifest, `data/icon-names.json`. Each host adapter maps every manifest name to one glyph in its icon set; the manifest carries one column per host and a test asserts every name has every column and every referenced export exists. Applications use the same semantic names; an icon-name literal in application source that is not a manifest key or alias fails a unit test.
+
+An adapter renders the glyph as authored. Stroke glyphs depend on their own classes or attributes for `fill: none` and stroke width; an adapter that rewrites root styling with both fill and stroke turns open polylines into filled shapes. Icon size comes from the sheet's icon size tokens, never from a type set's font size.
+
+An unmapped name renders a visible fallback **and** reports `console.error`. A silent fallback passes every zero-console-error gate while the page shows placeholders.
+
+### Status Surface Triad
+
+Every status surface (inline, toast, actionable, static notification, callout, error state) uses the notification triad for a `kind`:
+
+| Role | Token |
+|---|---|
+| Fill | `color.notification_background_[kind]` |
+| Accent (leading border, icon) | `color.support_[kind]` |
+| Text | `color.text_primary`, `color.text_secondary` |
+| High contrast | `color.background_inverse`, `color.text_inverse`, `color.support_[kind]_inverse` |
+
+`support_[kind]` is an accent color, never a fill; a `support_*` fill with dark text fails the contrast floor. Status surfaces read geometry and the radius token from the shared `notification` sheet.
+
+### Centered Targets
+
+Every pressable meets a minimum target: field-adjacent controls (password toggle, clear, steppers, calendar) are `controlSize` square from the `textInput` sheet; notification dismiss is `dismissTargetSize`; every other pressable meets the shared `target.minSize` floor. A minimum size alone is not enough: the pressable centers its glyph (`alignItems`, `justifyContent` on a `View` or `Pressable`, never on the SVG itself, which rejects flex properties), so the visible glyph sits inside the hit region rather than in one corner. Every pressable also has an accessible name; a component that takes `title` and a caller that passes `children` (or the reverse) produces a nameless button, and the fidelity test rejects it.
 
 ---
 
