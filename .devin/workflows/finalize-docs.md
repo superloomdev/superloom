@@ -442,6 +442,7 @@ Three allowed destination values, closed set:
 | `docs/dev/pitfalls.md` | Safe Terminal Patterns (all entries) |
 | `docs/dev/testing-local-modules.md` | Safe Terminal Patterns (module testing contract) |
 | `docs/dev/cicd-publishing.md` | Safe Terminal Patterns (CI chained publishes) |
+| `docs/dev/local-ci-parity.md` | Safe Terminal Patterns (local CI parity contract) |
 | `docs/dev/planning.md` | AI Behavior Rules (at session start) |
 | `docs/dev/autonomous-execution.md` | AI Behavior Rules (autonomous execution protocol) |
 | `docs/dev/org-structure.md` | Directory Map |

@@ -42,6 +42,9 @@
   - [24. `npm error 409 Conflict - Package file checksum mismatch` after deleting and republishing a package](#_24-npm-error-409-conflict-package-file-checksum-mismatch-after-deleting-and-republishing-a-package)
   - [25. Shared devDependency package missing from registry breaks every downstream `npm ci`](#_25-shared-devdependency-package-missing-from-registry-breaks-every-downstream-npm-ci)
   - [26. A version-existence publish guard turns an unmoved version into a green run that ships nothing](#_26-a-version-existence-publish-guard-turns-an-unmoved-version-into-a-green-run-that-ships-nothing)
+  - [27. A local parity runner that extracts CI steps by name pattern reports false confidence](#_27-a-local-parity-runner-that-extracts-ci-steps-by-name-pattern-reports-false-confidence)
+  - [28. A test passes locally because a sibling install exists that its CI job never performs](#_28-a-test-passes-locally-because-a-sibling-install-exists-that-its-ci-job-never-performs)
+  - [29. The documented pre-push command is not the command that ran](#_29-the-documented-pre-push-command-is-not-the-command-that-ran)
 - [Local Module Testing](#local-module-testing)
   - [1. `npm error notarget No matching version found for @superloomdev/...`](#_1-npm-error-notarget-no-matching-version-found-for-superloomdev)
   - [2. `ERR_MODULE_NOT_FOUND` for a package that should be installed](#_2-err-module-not-found-for-a-package-that-should-be-installed)
@@ -475,7 +478,7 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 
 ## CI/CD Publishing
 
-Each entry below maps a CI symptom to its root cause and the durable fix. The sibling philosophy doc is [`cicd-publishing.md`](cicd-publishing.md); this section is the journal of real failures that shaped those rules.
+Each entry below maps a CI symptom to its root cause and the durable fix. The sibling philosophy doc is [`cicd-publishing.md`](cicd-publishing.md); this section is the journal of real failures that shaped those rules. For the local CI parity contract, see [`local-ci-parity.md`](local-ci-parity.md).
 
 ### 1. `Bind for 127.0.0.1:NNNN failed: port is already allocated` in CI
 
@@ -781,6 +784,36 @@ This applies to all lock files in the repo (root, `_test/`, `hosts/`, etc.). CI 
 **Cause:** The publish path guards `npm publish` with a registry-existence check: it reads `npm view "$PKG@$VERSION"` and sets `needs_publish=false` when the version is present. The guard exists to make re-runs of an unchanged commit idempotent, which is legitimate. But it cannot distinguish "nothing to do, the registry already has this exact content" from "the source changed and the version did not move with it". Those two need opposite outcomes, and the version name does not carry enough information to tell them apart. Any repository whose version can stay put across a source change is exposed, whether because a bump was forgotten or because the repository republishes at a fixed version by policy.
 
 **Fix/Lesson:** The guard compares content, not version presence: pack the working tree, read the registry's `dist.shasum`, and skip only when the shasums match. A mismatch fails loudly, naming both shasums; the remedy follows the repository's release policy, which is normally to bump the version. Both the detect gate and the per-job guard must compare, because a detect job filtering on version presence drops the module before its publish job runs. The same comparison is the only honest post-publish verification, because a version appearing in the registry listing does not prove the new content shipped. Generalized rule: when a guard's job is to detect "already done", its input must be a fingerprint of the work, never a name that the work happens to reuse. Positive form of the rule: [`cicd-publishing.md` - The Publish Guard Compares Content, Not Version Presence](cicd-publishing.md#the-publish-guard-compares-content-not-version-presence); the underlying principle: [`engineering-philosophy.md` - Idempotency Guards Compare Fingerprints](../principles/engineering-philosophy.md#idempotency-guards-compare-fingerprints).
+
+---
+
+### 27. A local parity runner that extracts CI steps by name pattern reports false confidence
+
+**Symptom:** Local `verify` is green, then CI goes red on a step the local runner never ran, or that it coincidentally covered without mapping.
+
+**Cause:** The runner extracted workflow steps with a `G[0-9]+` name pattern, so 23 of 55 named steps in one repository and 15 of 23 in another were invisible. Nothing reported them as unmapped; silence read as coverage.
+
+**Fix/Lesson:** Enumerate every workflow step structurally, map each to a local gate or a signed unreplicable reason from the closed set, and fail on any step that is neither. A new CI step with no mapping turns the runner red instead of escaping to GitHub. Positive form of the rule: [`local-ci-parity.md` - Enumerate Every Step](local-ci-parity.md#enumerate-every-step).
+
+---
+
+### 28. A test passes locally because a sibling install exists that its CI job never performs
+
+**Symptom:** CI fails with `ENOENT` for a path under another package's `node_modules`, while the same test passes locally every time.
+
+**Cause:** The local runner installs every package into one shared working tree, so a test in `src/_test` could read `hosts/web/node_modules`. The CI `test` job installs `src/_test` only, from a bare checkout, so the path does not exist there.
+
+**Fix/Lesson:** Replay install-scoped jobs in a snapshot that contains only that job's installs, and add a cheap grep gate for cross-package path references. The snapshot is the working tree as git sees it, not a worktree at HEAD, so it tests the edits about to be pushed. Positive form of the rule: [`local-ci-parity.md` - Isolate the Install Scope](local-ci-parity.md#isolate-the-install-scope).
+
+---
+
+### 29. The documented pre-push command is not the command that ran
+
+**Symptom:** CI goes red on gates the local runner does replay, even though the developer ran a command and it passed.
+
+**Cause:** `AGENTS.md` said "run `npm run verify` before every push" as prose. `npm run lint` was run instead, and nothing distinguished the two. Lint is a subset of verify, so it passed while the full gate would have failed.
+
+**Fix/Lesson:** The full runner writes a content-hashed stamp on success, and a tracked `pre-push` hook refuses a push when the stamp is missing or stale. The hook is an additional local gate; CI still runs as before. Positive form of the rule: [`local-ci-parity.md` - Enforce the Pre-Push Command](local-ci-parity.md#enforce-the-pre-push-command).
 
 ---
 

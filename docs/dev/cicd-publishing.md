@@ -2,7 +2,7 @@
 
 > **Language:** JavaScript
 
-How helper modules are tested on every push and published to GitHub Packages. The framework uses a single unified workflow at `.github/workflows/ci-publish-helper-modules.yml`. This guide is the canonical reference for that pipeline. Every positive rule below exists because a real failure taught it; those failures are journaled in [`pitfalls.md`](pitfalls.md#ci-cd-publishing).
+How helper modules are tested on every push and published to GitHub Packages. The framework uses a single unified workflow at `.github/workflows/ci-publish-helper-modules.yml`. This guide is the canonical reference for that pipeline. Every positive rule below exists because a real failure taught it; those failures are journaled in [`pitfalls.md`](pitfalls.md#ci-cd-publishing). For the local verification contract that mirrors this pipeline, see [`local-ci-parity.md`](local-ci-parity.md).
 
 ## On This Page
 

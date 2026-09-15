@@ -54,6 +54,7 @@ docker compose -f docs/dev/docker-compose.yml down -v   # stop + delete volumes
 | `onboarding-git-account.md` | Configure Git for multiple GitHub accounts (SSH key, remote, identity) |
 | `onboarding-github-packages.md` | Step-by-step: GitHub token and npm registry setup |
 | `cicd-publishing.md` | How helper modules are published to GitHub Packages via CI/CD |
+| `local-ci-parity.md` | How local verification mirrors CI and the conformance contract every repo must satisfy |
 | `mcp-github-setup.md` | Configure AI assistant (Windsurf/Cascade) with GitHub MCP server |
 | `pitfalls.md` | Consolidated AI journal for `dev/`: AI terminal, CI/CD publishing, local module testing. Read when a specific failure needs a confirmed fix |
 | `repo-setup.md` | One-time GitHub repository creation (founder only) |

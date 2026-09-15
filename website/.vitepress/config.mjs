@@ -175,6 +175,7 @@ export default defineConfig({
             { text: 'GitHub Packages',         link: '/docs/dev/onboarding-github-packages' },
             { text: 'npmrc Setup',             link: '/docs/dev/npmrc-setup' },
             { text: 'CI/CD Publishing',        link: '/docs/dev/cicd-publishing' },
+            { text: 'Local CI Parity',         link: '/docs/dev/local-ci-parity' },
             { text: 'Local Module Testing',    link: '/docs/dev/testing-local-modules' },
             { text: 'Planning System',         link: '/docs/dev/planning' },
             { text: 'Pitfalls Journal',        link: '/docs/dev/pitfalls' },

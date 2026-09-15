@@ -2,7 +2,7 @@
 
 > **Language:** JavaScript
 
-This guide is the canonical reference for running module tests on a developer machine. It focuses on the **operational how-to** plus the *why* behind healthcheck and lifecycle rules. The journal of real failures that produced these rules lives in [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing) - read that before assuming a "weird" failure is unique.
+This guide is the canonical reference for running module tests on a developer machine. It focuses on the **operational how-to** plus the *why* behind healthcheck and lifecycle rules. The journal of real failures that produced these rules lives in [`pitfalls.md` → Local Module Testing](pitfalls.md#local-module-testing) - read that before assuming a "weird" failure is unique. For the local CI parity contract, see [`local-ci-parity.md`](local-ci-parity.md).
 
 **Companion docs.**
 
