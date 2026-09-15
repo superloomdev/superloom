@@ -25,6 +25,7 @@ The component library ships atoms, molecules, composites, and providers: themeab
 - [Interaction States](#interaction-states)
 - [Geometry and Fidelity Contract](#geometry-and-fidelity-contract)
   - [Spec Sheets](#spec-sheets)
+  - [Component Geometry Oracles](#component-geometry-oracles)
   - [Frame Ownership](#frame-ownership)
   - [Icon Adapters Preserve Glyph Semantics](#icon-adapters-preserve-glyph-semantics)
   - [Status Surface Triad](#status-surface-triad)
@@ -262,13 +263,44 @@ A component's geometry (heights, paddings, border sides, icon sizes, target size
 
 ### Spec Sheets
 
-`data/component-spec.js` holds one frozen sheet per covered component and `Parts.Spec(name)` returns it. A sheet names numeric geometry (`height`, `iconSize`, `controlSize`, `dismissTargetSize`), the radius token (`radiusToken: 'shape.radius_00'`), border sides, type styles, and the glyph names the component may render. Components read the sheet; they do not repeat the values. Three tests hold the sheet honest:
+`data/component-spec.js` holds one frozen sheet per covered component and `Parts.Spec(name)` returns it. A sheet names geometry through token references (`heightToken`, `radiusToken`, `iconSizeToken`) wherever contract tokens exist, and a field-specific `rawReason` where no token covers the value. A sheet never carries a bare number without a token reference or a reason. Components read the sheet; they do not repeat the values. Three tests hold the sheet honest:
 
-- **Spec validation:** every token name in a sheet resolves in the strict utility registry, and every numeric value matches the geometry oracle generated from the pinned design system package.
-- **Geometry lint:** a numeric literal for a size, padding, or radius in component source is a defect. A committed baseline lists the known remaining literals and may only shrink.
+- **Spec validation:** every token name in a sheet resolves in the strict utility registry, and every geometry value matches the oracle generated from the pinned design system package.
+- **Geometry lint:** a numeric literal for a size, padding, or radius in component source is a defect. The lint resolves token references before comparing, so a sheet that reads `heightToken: 'size.size_medium'` is checked at 40, not at the token name.
 - **Assertion integrity:** each permanent test is paired with a way to disable the behavior it guards; the manifest proves the test fails when the behavior is off. A test that cannot be made to fire is not a gate.
 
-A `spec-coverage.json` manifest lists every component as `specced` or `unspecced` with a reason; the `unspecced` count may not grow.
+A `spec-coverage.js` manifest lists every component as `specced` or `unspecced` with a reason; a component represented in either oracle may not remain `unspecced`. The `unspecced` count may not grow.
+
+### Component Geometry Oracles
+
+Geometry in a component library is declared data, and a **raw number in a component library is one design system's opinion hardcoded**. Every geometry value is a token reference; the template supplies the number. An oracle validates that the spec sheet agrees with the design system the template reproduces.
+
+A geometry oracle is generated from the **pinned published packages** of one design system and validates that system's defaults only. Carbon resolves in two stages: the layout scales are parsed from `@carbon/layout` SCSS, and each component's default size and density are parsed from its own `@carbon/styles` component SCSS (`layout.use('size', $default: ...)`). Material's per-component tokens are parsed from `@material/web/tokens/versions/<pin>/_md-comp-*.scss`.
+
+The **method taxonomy** is part of the contract: every entry is `parsed`, `inherited`, `transcribed`, or `none`, and the last two carry a reason. State plainly why: a transcribed value cannot detect upstream drift, so it is a declared weakness rather than an invisible one.
+
+**A deviation is declared, never assumed.** Where the implementation differs from a system's default, the spec sheet carries `sizeChoice` naming each system's value and the reason. Use the real case as the worked example: Carbon's button default is `lg` (48px) and this library ships 40px (`size="md"`).
+
+**A custom template needs no oracle.** The check for a scratch-built template is contract validity - the token exists and resolves - not equality with an external authority. This is what makes the method template-agnostic.
+
+The twelve-check matrix:
+
+| Check | Rule |
+|---|---|
+| C1 | Pin lock: the oracle records the source package version |
+| C2 | No transcription without a reason: every `transcribed` entry carries a `reason` |
+| C3 | Parse coverage floor: at least `textInput`, `button`, `search`, `tag`, `select` report `parsed` |
+| C4 | Idempotency: regenerating the oracle produces a byte-identical artifact (minus timestamp) |
+| C5 | Self-check constants: known shape and size values are asserted at generation time |
+| C6 | Ledger completeness: every ledger component has a `method` |
+| C7 | No orphans: a component in either oracle may not remain `unspecced` |
+| C8 | Spec-versus-oracle agreement: spec sheet geometry matches the oracle for `parsed` entries |
+| C9 | Cross-oracle declaration: disagreements between Carbon and Material are declared with `sizeChoice` |
+| C10 | Every geometry field, not only height: padding, radius, and icon size are checked |
+| C11 | CI regeneration drift gate: copied artifacts are byte-compared, never `git diff` |
+| C12 | Native projection: the oracle validates the native token projection, not the web one |
+
+Each check carries a fire test. A check without a recorded fire result is considered absent.
 
 ### Frame Ownership
 

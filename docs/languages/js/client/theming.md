@@ -47,6 +47,8 @@ A reference theme sets structure knobs to its design system's canonical values (
 
 Geometry that cannot be a number (a trapezoid call to action, a cloud-shaped field) is not a token. It is a different component system.
 
+Geometry tokens (sizes, spacing, radius, border widths) are supplied by the template. Switching the template changes geometry with no component edit: a component reads `size.size_medium` and the template decides whether that is 40 (Carbon) or another value. A geometry oracle is per-design-system and never a cross-system authority: the Carbon oracle validates Carbon defaults, the Material oracle validates Material defaults, and a custom template needs no oracle - contract validity (the token exists and resolves) is the only check.
+
 ---
 
 ## Themes, templates, layers, profiles

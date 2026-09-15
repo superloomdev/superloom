@@ -89,6 +89,8 @@
   - [43. A React Native Web `<input>` keeps its intrinsic minimum width and overflows its wrapper](#_43-a-react-native-web-input-keeps-its-intrinsic-minimum-width-and-overflows-its-wrapper)
   - [44. An SVG icon adapter that rewrites root fill and stroke turns stroke glyphs into filled shapes](#_44-an-svg-icon-adapter-that-rewrites-root-fill-and-stroke-turns-stroke-glyphs-into-filled-shapes)
   - [45. A unit test read a sibling host's `node_modules`, passed locally where every host was installed, and failed in the CI job that installs only its own directory](#_45-a-unit-test-read-a-sibling-host-s-node-modules-passed-locally-where-every-host-was-installed-and-failed-in-the-ci-job-that-installs-only-its-own-directory)
+  - [46. A generated artifact hand-written to agree with the implementation](#_46-a-generated-artifact-hand-written-to-agree-with-the-implementation)
+  - [47. A check whose pattern cannot match the real artifact format](#_47-a-check-whose-pattern-cannot-match-the-real-artifact-format)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1390,6 +1392,30 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** The test resolved a data file through `hosts/web/node_modules`. On the developer machine every host had been installed by an earlier gate, so the path existed. The CI `test` job installs `src/_test` only.
 
 **Fix/Lesson:** A test directory reads installed packages from its own `node_modules` and declares them in its own `package.json`. Anything a test needs from another directory of the repo is either a tracked source file or a declared dependency. A CI-faithful check for this class is to run the unit suite with every other `node_modules` moved aside.
+
+---
+
+### 46. A generated artifact hand-written to agree with the implementation
+
+**Symptom:** A check comparing the implementation against a "generated" oracle passes while both are wrong.
+
+**Cause:** The oracle's values were transcribed from the source by hand, so the comparison is self-confirming. A hand-written oracle cannot detect upstream drift because it has no source to regenerate from.
+
+**Evidence:** `button.height` read 40 in both the oracle and the spec sheet while `@carbon/styles` declared the root at `$default: 'lg'` (48). The oracle agreed with the implementation because the oracle was written from the implementation.
+
+**Fix/Lesson:** Parse the source, record a `method` per value (`parsed`, `inherited`, `transcribed`, `none`), and regenerate in CI with a copy-aside byte compare. Detection question: for every generated artifact, name the command that reproduces it from source, and if none exists it is not generated.
+
+---
+
+### 47. A check whose pattern cannot match the real artifact format
+
+**Symptom:** A validator reports clean forever and its selftest passes.
+
+**Cause:** The selftest plants a fixture in a format the real artifact never uses. The validator's pattern matches the fixture but not the real artifact, so the check is inert on real input.
+
+**Evidence:** The plan close checker's blank-evidence rule matched zero of 14 genuinely blank lines because real plans write `- Label:` (a markdown list item) and the pattern required a line starting with a letter. The selftest used `SelftestBlankLabel:` (no dash), a format no real plan uses.
+
+**Fix/Lesson:** Every checker rule ships a fixture derived from a real artifact; a rule that cannot be shown firing on real input is treated as absent. Detection question: does the selftest's fixture format match the real artifact's format? If not, the rule is inert.
 
 ---
 
