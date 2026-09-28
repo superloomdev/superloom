@@ -8,6 +8,7 @@ AI-assisted development runs on models of very different cost and capability, an
 - [The Division of Labor](#the-division-of-labor)
 - [Plans as the Interface](#plans-as-the-interface)
 - [Session Discipline](#session-discipline)
+- [Hand-off Within a Plan](#hand-off-within-a-plan)
 - [Token Discipline Within a Session](#token-discipline-within-a-session)
 
 ---
@@ -49,6 +50,16 @@ A plan entry that cannot be executed without asking what it means is a defect of
 - **One phase, one session.** Long conversations are the cost multiplier, since every call re-sends everything. End sessions at phase boundaries; write state to the plan; start the next phase clean.
 - **Never mix authoring and mechanical execution in one session.** A design discussion dragging behind a sweep pass taxes every remaining call with dead context.
 - **A session states its plan position at start** (which plan, which step) and updates the plan at end. The ritual is what makes fresh sessions cheap.
+
+## Hand-off Within a Plan
+
+A plan whose steps alternate between judgment and execution tags every step `[HIGH]` (reasoning) or `[LOW]` (execution), and the two tiers hand off through the progress file, not through conversation:
+
+- **`PROGRESS.md` carries a `TIER` field** beside the plan, part and step. It names the tier that owns the next step. Whoever finishes a step writes the next step's tier, prints exactly `>>> SWITCH TO LOW <<<` or `>>> SWITCH TO HIGH <<<`, and ends the turn. The owner switches the model and says "continue".
+- **A tier switch is a hard stop.** Before starting any step, the session compares the step's tag with `TIER`. If they differ, it writes the step's tier, prints the switch line and stops - it never starts the step in the same turn, and never chains a step of the other tier because the owner said "continue". If the tier the owner announces does not match the file, the session says so instead of working. A hand-off that is skipped once is skipped silently, because the model that skipped it is the one that would have noticed.
+- **The boundary is mechanical, not a convention.** A tier guard runs before every commit and fails when `TIER` is `LOW` and any changed path is one the reasoning tier authors: tests, specs, API data, sample data, roster and icon data, `notes.md`, constitution docs, decision records, plan files. The execution tier may run, regenerate, commit and push; it may not author a decision, a test, a spec value, a fidelity classification or a numeric evidence value. Proof that the guard fires (a planted forbidden file rejected under `LOW`) is recorded before the guard is trusted.
+- **The reasoning tier reads a fixed briefing pack**, named in the plan: the decision record, the rows it is working on, the authoring guide, the behavior reference, one exemplar, the current defects list and the latest contact sheet. Never raw logs, never plan history, never the progress file beyond its header. What it needs to know is put into those files by the execution tier; the execution tier's numbers are written by scripts, never typed.
+- **Existing workflows are execution-tier work even inside a reasoning-tier plan.** Module audits, publishes, documentation propagation, clean installs and CI watching run on the execution tier through the workflows written for them; the plan marks them `[LOW]` and the reasoning tier does not spend its context on them.
 
 ## Token Discipline Within a Session
 

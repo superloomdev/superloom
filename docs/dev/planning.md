@@ -123,7 +123,7 @@ One paragraph. What done looks like.
 - Things explicitly not being done in this plan, even if tempting
 
 ## DRY RUN - executed at authoring time
-Every read-only command was run against the live repo. Actual output is pasted.
+Every read-only command was run against the live repo. Actual output is pasted here, or - when it would run past one screen - written to `__dev__/evidence/<plan>/dry-run.md` and referenced from this section by heading.
 
 ## PART 1 - <title>
 ### Step 1.1 - <title>
@@ -159,7 +159,7 @@ Every read-only command was run against the live repo. Actual output is pasted.
 
 **Provenance is mandatory** because a plan that does not say what was already tried will have it tried again. Name what failed and why; name what is superseded.
 
-**Dry Run is mandatory** because a command the author never executed is a guess. Paste real output so the executor never meets an untested command.
+**Dry Run is mandatory** because a command the author never executed is a guess. Paste real output so the executor never meets an untested command. Long outputs live in the plan's evidence side file (`__dev__/evidence/<plan>/dry-run.md`), referenced from the plan, so the plan itself stays short enough to read at the start of every session; a plan that grows past a few hundred lines is re-read less and followed worse.
 
 ---
 

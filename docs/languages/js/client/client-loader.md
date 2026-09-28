@@ -47,7 +47,6 @@ The `Lib` container holds every dependency the React tree needs. Each entry is e
 | `Lib.FontAdapter` | Platform font loader adapter | Supplied by a host adapter |
 | `Lib.FontManifest` | Host-owned font asset sources | Supplied by a host adapter |
 | `Lib.Navigation` | Navigation surface (Link, Redirect) | Supplied by a host adapter |
-| `Lib.Icons` | Icon glyph component | Supplied by a host adapter |
 | `Lib.ThemeContext` | React theming hub (ThemeProvider + hooks) | `import themeContext from './contexts/theme-context.js'`; `themeContext(Lib)` |
 | `Lib.Client` | Client utilities (os, device info) | `import client from './client.js'`; `client(Lib, Config)` |
 | `Lib.SuperApp` | Super-app launcher utilities | `import superApp from './superApp.js'`; `superApp(Lib, Config)` |
@@ -62,12 +61,11 @@ Reference theme profiles are plain frozen data objects, not loaders. They are im
 
 ## Adapters
 
-Three slots are supplied by host adapters, not by published packages:
+Two slots are supplied by host adapters, not by published packages (icons are theme tokens, not a host capability):
 
 | Slot | Port defines | Adapter returns |
 |---|---|---|
 | `Navigation` | `Link`, `Redirect` | `{ Link, Redirect }` |
-| `Icons` | `Glyph` | `{ Glyph }` |
 | `Fonts` | `adapter`, `manifest` | `{ adapter, manifest }` |
 
 Each build target has its own adapter directory. The Expo host supplies adapters under `hosts/expo/adapters/`; the web host supplies adapters under `hosts/web/adapters/`. The loader calls each adapter factory with `Lib` and assigns the return value to the container slot.

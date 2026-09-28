@@ -13,9 +13,11 @@ The theming system takes a template and a stack of layered values, derives a com
 - [Units and platforms](#units-and-platforms)
 - [Font role tokens](#font-role-tokens)
 - [Themes from a server](#themes-from-a-server)
-- [The base template and the subset rule](#the-base-template-and-the-subset-rule)
+- [The default template and the subset rule](#the-default-template-and-the-subset-rule)
   - [Generated artifact provenance](#generated-artifact-provenance)
 - [Motion](#motion)
+- [Anatomy enums](#anatomy-enums)
+- [Icons](#icons)
 - [What is not a token, and why](#what-is-not-a-token-and-why)
 - [The Cascade: Layers, Not Modes](#the-cascade-layers-not-modes)
 - [Resolve Then Emit](#resolve-then-emit)
@@ -40,8 +42,8 @@ The contract's vocabulary is derived from the IBM Carbon Design System v11 token
 
 | Tier | What | Examples | If missing from a theme |
 |---|---|---|---|
-| value | colors, spacing, sizes, type sets, font roles | `color.interactive`, `spacing.spacing_05`, `type.body01`, `font.family.sans` | an error at component system build time when the library requires it |
-| structure | things design systems normally hardcode: corner radius, border width, focus ring, motion, press feedback, shadow recipes, breakpoints | `shape.radius_04`, `border.width_01`, `focus.width`, `motion.duration_fast_01`, `feedback.press`, `shadow.level_01`, `breakpoint.md` | falls back to the base template's value |
+| value | colors, spacing, sizes, type sets, font roles, icons | `color.interactive`, `spacing.spacing_05`, `type.body01`, `font.family.sans`, `icon.close` | an error at component system build time when the library requires it |
+| structure | things design systems normally hardcode: corner radius, border width, focus ring, motion, press feedback, anatomy choices, shadow recipes, breakpoints | `shape.radius_04`, `border.width_01`, `focus.width`, `motion.duration_fast_01`, `feedback.press`, `anatomy.label`, `shadow.level_01`, `breakpoint.md` | falls back to the default template's value |
 
 A reference theme sets structure knobs to its design system's canonical values (Carbon: radius 0, highlight press feedback). A brand layer may override any knob. "Carbon anatomy with soft corners" is one structure token in a layer, and it is not pure Carbon, which is allowed and explicit.
 
@@ -57,9 +59,11 @@ Geometry tokens (sizes, spacing, radius, border widths) are supplied by the temp
 - A **template** is a complete theme used as the base of a derivation. Every reference theme is a template.
 - A **layer** is a sparse theme: only the tokens that differ. A brand is a layer. A dark mode is a layer or a different template.
 - A **profile** is a named, versioned set of reference templates with identity: `{ id, contract_version, reference, schemes }`. `js-client-helper-themer-template-carbon` is a profile with four schemes; `js-client-helper-themer-template-material` is a profile with Material's schemes.
-- The **base template** is Superloom's own complete, neutral theme, shipped as `js-client-helper-themer-template-base`. Every contract key has a value in it, derived through the engine's rules and generators wherever possible. A reference theme package completes each scheme from it at generation time and lists the keys it took in `from_base`, so every published scheme is complete and the source of every value is visible.
+- The **default template** is Superloom's own complete, neutral theme, shipped as `js-client-helper-themer-template-default`. Every contract key has a value in it, derived through the engine's rules and generators wherever possible. A reference theme package completes each scheme from it at generation time and lists the keys it took in `from_default`, so every published scheme is complete and the source of every value is visible. The default template is the seed of Superloom's own signature design system, which will be built as a template alone.
 
-The engine derives with `buildTheme(template, layers, 'native')`. A token absent from every layer takes the template's value; that is the only runtime fallback. Completion from the base template happens in data, before publication, never inside a component.
+**Exactly one template package per design system.** Light and dark schemes live inside the template as schemes; a design system never spreads across several packages. **A template is theme plus icons.** Every value, every enum choice and every glyph a component system needs is inside the template's data, so an application that installs one template has a complete design system. Fonts are the one thing that stays outside: they are binary files each platform loads through its own loader, so the theme names the family and the host installs the font package (see [Fonts](fonts.md)).
+
+The engine derives with `buildTheme(template, layers, 'native')`. A token absent from every layer takes the template's value; that is the only runtime fallback. Completion from the default template happens in data, before publication, never inside a component.
 
 Replacing the template changes the visual system. Adding a layer adjusts it. An application exposes both operations and never rebuilds the template when a layer changes.
 
@@ -102,19 +106,21 @@ A theme or a layer is plain JSON in the contract vocabulary. A server stores it,
 
 ---
 
-## The base template and the subset rule
+## The default template and the subset rule
 
 Superloom is its own token system. Its vocabulary was seeded from Carbon's names and is extended with generic keys of its own. A design system is a **subset**: a reference theme defines the keys its design system has a concept for and nothing else.
 
-Completeness comes from the base template. `js-client-helper-themer-template-base` is one neutral theme in which every contract key has a value: colors are `rampStep` rules over a neutral gray ramp, type sets come from `stepPairIncrement`, spacing from `miniUnit`, and every structure knob has an identity default (radius named by its value, state-layer opacities 0, tint 0, one shadow level). A reference theme package's generator completes each scheme from the base and records the keys it took in `from_base`. Two assertions prove a reference theme complete: every value its design system defines is reproduced exactly at the Superloom key (the parity oracle), and every key it does not define is in `from_base`.
+Completeness comes from the default template. `js-client-helper-themer-template-default` is one neutral theme in which every contract key has a value: colors are `rampStep` rules over a neutral gray ramp, type sets come from `stepPairIncrement`, spacing from `miniUnit`, every structure knob has an identity default (radius named by its value, state-layer opacities 0, tint 0, one shadow level), every anatomy enum holds the plainest value, and the icon group carries a complete open-source set. A reference theme package's generator completes each scheme from the default and records the keys it took in `from_default`. Two assertions prove a reference theme complete: every value its design system defines is reproduced exactly at the Superloom key (the parity oracle), and every key it does not define is in `from_default`.
 
-This is not a fallback. A fallback is a value a component substitutes at render time when the theme is silent, which hides an incomplete theme. The base template is a published theme, the substitution happens in data before publication, and `from_base` and `stats.source.default` say exactly where it happened. A component system still requires its `REQUIRED_TOKENS` and still refuses to build a hand-written theme that lacks one; it may report keys it reads from `from_base` at debug level so an author sees what the design system left to Superloom.
+This is not a fallback. A fallback is a value a component substitutes at render time when the theme is silent, which hides an incomplete theme. The default template is a published theme, the substitution happens in data before publication, and `from_default` and `stats.source.default` say exactly where it happened. A component system still requires its `REQUIRED_TOKENS` and still refuses to build a hand-written theme that lacks one; it may report keys it reads from `from_default` at debug level so an author sees what the design system left to Superloom.
 
 ### Generated artifact provenance
 
-A generated reference theme package (e.g., Material, Carbon) completes its schemes from the base template at generation time. When the base template is republished at the same version with corrected values, a generated package that is not regenerated retains stale values for every key it completed from the old base. A consumer clean install fetches the corrected base and the stale generated package side by side; nothing detects the mismatch.
+A generated reference theme package (e.g., Material, Carbon) completes its schemes from the default template at generation time. When the default template is republished at the same version with corrected values, a generated package that is not regenerated retains stale values for every key it completed from the old default. A consumer clean install fetches the corrected default and the stale generated package side by side; nothing detects the mismatch.
 
-Generated packages prevent this by recording source provenance in their metadata: the base package version, the base distribution shasum, and the generator schema revision. A generator check compares the installed base shasum against the registry shasum and refuses to write on mismatch. A generated-artifact test regenerates into a temporary directory and byte-compares every committed data file against the regeneration output. After a same-version base republish, every downstream generated package is regenerated and republished at the same version, and every consumer lockfile is refreshed.
+Generated packages prevent this by recording source provenance in their metadata: the default package version, the default distribution shasum, and the generator schema revision. A generator check compares the installed default shasum against the registry shasum and refuses to write on mismatch. A generated-artifact test regenerates into a temporary directory and byte-compares every committed data file against the regeneration output. After a same-version default republish, every downstream generated package is regenerated and republished at the same version, and every consumer lockfile is refreshed. Generated icon values carry the same provenance: the upstream icon package name and version, and a regenerate-and-diff test.
+
+Template updates follow one procedure, contract first. The contract is defined before any component is written; during component work, a token the contract lacks is queued as a contract request and never invented locally; at a milestone the queued requests are applied as one contract version bump, every template is regenerated and republished in dependency order (engine, default, then each reference template), and every consumer is revalidated. A wrong template *value* found by measurement follows the same path: template fix, regenerate, republish.
 
 ---
 
@@ -126,13 +132,46 @@ Choreography is the component system: what animates, in which order, and which p
 
 The core Themer defines and validates motion token shapes (durations, bezier arrays, spring objects, segments). It does not interpret them into platform API calls. That interpretation lives in the component system: `parts/motion.js` converts tokens to `Easing.bezier`, `Animated.spring` parameters, and sequenced bezier lists. Even when a platform provides a native animation (e.g., React Native's `Modal` `animationType`), the component system should drive the animation through motion tokens rather than relying on a platform default. This keeps the animation theme-driven and consistent across design systems.
 
-Discrete behaviors that design systems answer differently are enum tokens, and the component system implements every listed value: `feedback.press` selects `highlight` (swap to hover and active colors), `opacity` (paint a state layer at `state.*` opacities), or `ripple` (radial spread from the touch point); `feedback.focus` (contract version 2) selects `outline`, `inset`, or `underline`. Stacking order (which surface sits above which) is the same in every design system and is one table inside the component library, not a token.
+Discrete behaviors that design systems answer differently are enum tokens, and the component system implements every listed value: `feedback.press` selects `highlight` (swap to hover and active colors), `opacity` (paint a state layer at `state.*` opacities), or `ripple` (radial spread from the touch point); `feedback.focus` (contract version 2) selects `outline`, `inset`, or `underline`. Stacking magnitudes are structure tokens: the `stacking.*` group (contract version 3) names the five ordered surfaces (`dropdown`, `modal`, `header`, `overlay`, `floating`) and each template supplies the numbers its design system publishes: Carbon's z-index utility map, or the default template's value when the system orders by elevation instead, as Material does. Which surface a component occupies stays in the component library, not in a token.
+
+---
+
+## Anatomy enums
+
+Where two design systems draw the same component with a different shape, the choice is an enum token in the `anatomy` group (contract version 4, structure tier). The component implements every value; the template picks one; a brand layer may pick another. Enum values are named by what they do, never by a system.
+
+| Token | Values | Decides |
+|---|---|---|
+| `anatomy.label` | `above`, `floating` | whether a field label sits above the field or floats into its border |
+| `anatomy.switch_handle` | `fixed`, `grows` | whether a switch handle keeps its size or grows when on |
+| `anatomy.status_marker` | `bar_icon`, `plain` | whether a status surface shows a leading bar plus icon or a plain icon |
+| `anatomy.dialog_actions` | `stretched`, `trailing` | whether dialog action buttons stretch across the footer or sit trailing |
+| `anatomy.caret` | `shown`, `hidden` | whether a select shows a caret glyph |
+| `anatomy.slider_handle` | `round`, `bar` | whether a slider handle is a disc or a bar |
+
+The `feedback` group (`press`, `field`, `focus`) is the older enum group and follows the same rule. An anatomy neither system has an answer for takes the plainest value in the default template. A shape that cannot be expressed as one of the listed values is a new value: a component release plus a contract version, recorded as a contract request until the next bump.
+
+---
+
+## Icons
+
+Icons are the third piece of a theme, after values and enums. The `icon` group (contract version 4, value tier, type `icon`) holds one token per semantic name - `icon.close`, `icon.chevron_down`, `icon.warning` - and each value is SVG path data:
+
+```text
+{ viewBox: '0 0 32 32', paths: [{ d, fillRule? }], sizes?: { '16': paths, '20': paths, '24': paths } }
+```
+
+Only paths, no other SVG element, no colors: the component system passes its color token as the fill. `sizes` holds size-tuned variants where the upstream set publishes them, so a 16-pixel icon is the set's own 16-pixel glyph rather than a shrunk 32. The validator checks the shape, a non-empty `d` and a well-formed `viewBox`; emit passes the value through unchanged on every platform.
+
+A template's generator produces the icon values from a pinned upstream icon package, once, at generation time - never at runtime. Conversion rules are the generator's: `path` elements are kept, `circle` and `rect` are converted to an equivalent path, foreign-object fallbacks and transparent helper paths are dropped, and a test asserts no mapped icon needed anything that was dropped. Redistributed icon sets carry their license in the template package's `NOTICE`. The semantic-name-to-upstream-glyph mapping is the one hand-authored table, kept beside the component library's roster, and every template supplies every name in it; a name one set lacks is recorded as such, never silently drawn from another set.
+
+A brand overrides icons the way it overrides any token: a sparse layer with five `icon.*` values changes five glyphs and leaves the rest to the template. A theme sent from a server carries its icons as the same JSON, validated by the same `validateContract`.
 
 ---
 
 ## What is not a token, and why
 
-A concept that is not a plain data token has exactly one of three causes. **Platform:** React Native cannot render it on iOS or Android at the supported floor (variable-font axes, backdrop blur); these are the only exceptions, each recorded in the plan's exception register with owner approval and revisited at every floor change. **Web-only form:** the concept exists everywhere but arrives in a web-shaped unit (`rem`, `vw`, media queries, font stacks); the engine or the component system projects it and it is never an exception. **Anatomy:** structural behavior a number cannot carry (choreography, stacking, ripple spread, grid layout, focus movement); it lives in the component system, selected by a generic enum where design systems differ.
+A concept that is not a plain data token has exactly one of three causes. **Platform:** React Native cannot render it on iOS or Android at the supported floor (variable-font axes, backdrop blur); these are the only exceptions, each recorded in the plan's exception register with owner approval and revisited at every floor change. **Web-only form:** the concept exists everywhere but arrives in a web-shaped unit (`rem`, `vw`, media queries, font stacks); the engine or the component system projects it and it is never an exception. **Anatomy:** structural behavior a number cannot carry (choreography, which surface a component occupies in the stacking order, ripple spread, grid layout, focus movement); it lives in the component system, selected by a generic enum where design systems differ. The stacking magnitudes themselves are `stacking.*` tokens.
 
 ---
 

@@ -43,7 +43,7 @@ A plan missing any of these is not executable and must not be handed off:
 | **Provenance** | Parent plan, the chain of events that created this plan, what was already tried and failed and why, rules the failure produced, what this plan supersedes |
 | Purpose | One paragraph. What done looks like |
 | Out of scope | Aggressive. Names the adjacent work that is explicitly not included |
-| **Dry Run** | Every read-only command executed at authoring time with real output pasted |
+| **Dry Run** | Every read-only command executed at authoring time with real output pasted, or referenced from the plan's evidence side file (`__dev__/evidence/<plan>/dry-run.md`) when it runs past one screen |
 | Parts and Steps | Each step: Cwd, exact command, pass signature, and an explicit on-failure action |
 | Ledger | Present whenever the plan iterates over more than five targets |
 | Steps checklist | Coarse checkboxes |
@@ -60,7 +60,7 @@ Plans are authored by an expensive model and executed by a cheap one that will n
 - [ ] Every step has a pass signature that is an exit code, an exact string, or an emptiness check. Never "looks correct".
 - [ ] Every step has an explicit on-failure action. Never leave failure implicit.
 - [ ] Every judgment call is pre-decided in the plan text. If a step says "judge each hit", the criteria are written out.
-- [ ] Every read-only command has been executed and its output pasted into Dry Run.
+- [ ] Every read-only command has been executed and its output pasted into Dry Run or into the plan's evidence side file, referenced by heading.
 - [ ] Loop-backs cover every failure the author can name.
 - [ ] Hard stops are enumerated and distinguished from park-and-continue items.
 - [ ] Iteration over many targets has a ledger, so progress survives a crash.

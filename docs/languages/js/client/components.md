@@ -2,344 +2,259 @@
 
 > **Language:** JavaScript
 
-The component library ships atoms, molecules, composites, and providers: themeable, accessible primitives built on React Native Web. The library is own code, following Superloom's loader pattern and Lib DI throughout. Design languages arrive as themer template packs, not as separate component libraries. This page defines the component vocabulary, the authoring contract, the four-bucket exception model, and the accessibility contract.
+The component library is one generic React Native Web library. A component owns its **anatomy** (which parts exist and how they nest) and its **behavior** (state, keyboard, focus, accessibility) and nothing else. Every value it draws is a token read from the theme; every discrete shape choice is an enum token the theme picks and the component implements every value of; every glyph is an icon token whose value the theme carries. The library ships no colors, no font files and no icon files. A design system is a template package, and a new design system is a new template and zero component changes - a property proven continuously by rendering the whole roster under three templates. This page defines the vocabulary, the roster, the authoring contract, the platform model, the gates, and the accessibility contract.
 
 ## On This Page
 
 - [Component Vocabulary](#component-vocabulary)
-- [Atom Set](#atom-set)
-- [Molecule Set](#molecule-set)
-- [Composite Set](#composite-set)
-- [Provider Set](#provider-set)
-- [Authoring Contract](#authoring-contract)
-  - [Consumption Pattern](#consumption-pattern)
-  - [Parts and the Style Contract](#parts-and-the-style-contract)
+- [The Roster](#the-roster)
+  - [Where vendor knowledge lives](#where-vendor-knowledge-lives)
+- [Anatomy, Behavior, Theme](#anatomy-behavior-theme)
+  - [Behaviors](#behaviors)
+  - [The context seam](#the-context-seam)
 - [Theme Token Contract](#theme-token-contract)
-- [Named Barrel](#named-barrel)
-- [Utility-Class Mapping](#utility-class-mapping)
-- [Four-Bucket Exception Model](#four-bucket-exception-model)
-  - [Canonical](#canonical)
-  - [Provider](#provider)
-  - [Structured variant](#structured-variant)
-  - [Unstructured freeform](#unstructured-freeform)
+  - [Enum tokens](#enum-tokens)
+  - [Icon tokens](#icon-tokens)
+  - [Contract requests](#contract-requests)
+- [Platforms](#platforms)
+- [Component Folder](#component-folder)
 - [Interaction States](#interaction-states)
-- [Geometry and Fidelity Contract](#geometry-and-fidelity-contract)
-  - [Spec Sheets](#spec-sheets)
-  - [Component Geometry Oracles](#component-geometry-oracles)
+- [Geometry and Fidelity](#geometry-and-fidelity)
+  - [Spec as token names](#spec-as-token-names)
+  - [Measurement against the upstream reference](#measurement-against-the-upstream-reference)
+  - [The five gate layers](#the-five-gate-layers)
   - [Frame Ownership](#frame-ownership)
-  - [Icon Adapters Preserve Glyph Semantics](#icon-adapters-preserve-glyph-semantics)
   - [Status Surface Triad](#status-surface-triad)
   - [Centered Targets](#centered-targets)
+- [Verification Speeds](#verification-speeds)
+- [Native Evidence](#native-evidence)
+- [Generated Documentation](#generated-documentation)
 - [Accessibility Contract](#accessibility-contract)
   - [No-op props on web](#no-op-props-on-web)
   - [Platform gaps](#platform-gaps)
-- [Generic vs Custom](#generic-vs-custom)
-  - [What the Generic Component System Absorbs](#what-the-generic-component-system-absorbs)
-  - [What the Generic Component System Cannot Absorb](#what-the-generic-component-system-cannot-absorb)
+- [Generic vs App](#generic-vs-app)
 - [Peer Dependencies](#peer-dependencies)
 - [Further Reading](#further-reading)
 
 ---
 ## Component Vocabulary
 
-The library uses four tiers. Atoms and molecules follow Brad Frost's atomic design taxonomy. Composites extend the hierarchy for components that compose other molecules (MenuButton composes Menu which composes MenuItem). Providers are context-only components that render no visual output.
+The library uses four tiers. Atoms and molecules follow Brad Frost's atomic design taxonomy. Composites extend the hierarchy for components that compose other molecules. Providers are context-only components that render no visual output.
 
-| Tier | Directory | Definition | Boundary |
-|---|---|---|---|
-| **Atom** | `atom/` | An irreducible primitive wrapping one RN element with token consumption and accessibility behavior | No composition of other library components. No domain knowledge |
-| **Molecule** | `molecule/` | A composition of atoms with interaction logic | No domain knowledge. Composes atoms only; never composes other molecules |
-| **Composite** | `composite/` | A composition of atoms, molecules, and other composites with coordination logic | No domain knowledge. May compose atoms, molecules, and other composites |
-| **Provider** | `provider/` | A context-only component that renders no visual output and consumes no tokens | No visual output. Registered at `Component.provider.[name]` |
-
-**Organisms and above are not library concepts.** Anything domain-aware (a product card, a cart summary, a checkout form) is an app-side screen component or an app-registered variant. It never ships in the component library. This bounds the library and answers the question: there is no `organism/` folder because organisms are app concerns.
-
-The composite tier exists because real design systems have deeper composition chains than atom-molecule can express. A `DataTable` composes `Table` which composes `TableRow` which composes `TableCell`. The boundary that matters is unchanged: **no domain knowledge**. A composite is still generic. A product card and a checkout form remain app concerns.
-
-The four-bucket exception model (below) handles components that deviate from the canonical set.
-
----
-
-## Atom Set
-
-The canonical atom set wraps primitive React Native elements. Each atom maps props to utility classes and applies accessibility behavior.
-
-| Atom | RN element | Key props |
+| Tier | Definition | Boundary |
 |---|---|---|
-| `View` | `View` | Layout, background, padding, margin |
-| `Text` | `Text` | Size, color, weight, family |
-| `Button` | `Pressable` | Variant, size, state, onPress, accessibilityLabel |
-| `Icon` | `Text` (vector icon) | Name, size, color |
-| `Image` | `Image` | Source, resize, aspect |
-| `TextInput` | `TextInput` | Value, placeholder, state, accessibilityLabel |
-| `Toggle` | `Switch` | Value, onValueChange, state |
-| `Tag` | `View` | Label, color, dismissible |
-| `BadgeIndicator` | `View` | Count, color, position |
-| `ProgressBar` | `View` (animated) | Value, color, size |
+| **Atom** | An irreducible primitive wrapping one RN element with token consumption and accessibility behavior | No composition of other library components. No domain knowledge |
+| **Molecule** | A composition of atoms with interaction logic | No domain knowledge. Composes atoms only |
+| **Composite** | A composition of atoms, molecules and other composites with coordination logic through React Context | No domain knowledge |
+| **Provider** | A context-only component that renders no visual output and consumes no tokens | No visual output |
 
-Adding an atom is a library change. The atom must follow the authoring contract, consume tokens through utility classes, and include accessibility behavior.
+**Organisms and above are not library concepts.** Anything domain-aware (a product card, a cart summary, a checkout form) is an app-side component. There is no `organism/` folder because organisms are app concerns.
+
+A **family** is the unit of specification, showcase entry, screenshot and documentation page: `Tabs`, `Tab`, `TabList`, `TabPanel` and `TabPanels` are five components in one family. A component that only makes sense inside its parent (`TabPanel` inside `Tabs`) is flagged `requires_parent` in the roster and is shown, tested and documented through its family.
+
+A composite coordinates its children through React Context, never through `React.Children.map` plus `cloneElement`, which breaks when children are wrapped in `React.memo` or `forwardRef`. Contexts are created once per system instance, not inside a factory body, so re-theming does not orphan mounted consumers. `ErrorBoundary` is the one class component in the library, because `componentDidCatch` has no hook equivalent.
 
 ---
 
-## Molecule Set
+## The Roster
 
-Molecules compose atoms with interaction logic. A molecule coordinates state across its child atoms but carries no domain knowledge.
+`data/roster.json` is the library's single list of components: one row per upstream export of the reference design systems plus the library's own additions, in build order. The roster is generated as a candidate from the pinned upstream packages' real export lists, then completed by hand. A row is never deleted; an export that will not be built is marked `not_applicable` with its reason. Every column is mandatory and `scripts/roster-check.js` rejects an empty one:
 
-| Molecule | Composes | Interaction |
-|---|---|---|
-| `Button` | Icon + Text + Pressable | Hover/press/disabled state resolution, icon + label layout, `kind` prop (`primary`, `secondary`, `tertiary`, `danger`, `ghost`) |
-| `Dropdown` | Button + View + Text | Open/close state, selection, accessibility focus management |
-| `Modal` | View + Text + Button | Visibility state, backdrop, focus trap |
-| `Card` | View + Text + Image | Layout, optional press state |
-| `ListItem` | View + Text + Icon + Separator | Selection, swipe actions, accessibility role |
-
-Adding a molecule is a library change. The molecule must compose atoms only, consume tokens through utility classes, and include accessibility behavior for its interaction pattern.
-
----
-
-## Composite Set
-
-Composites compose atoms, molecules, and other composites with coordination logic. A composite coordinates state across its children through React Context, not through prop drilling or `React.Children.map`. Examples include `Tabs`, `Accordion`, `Menu`, `DataTable`, `RadioButtonGroup`.
-
-| Composite | Composes | Coordination |
-|---|---|---|
-| `Menu` | MenuItem, View | Context for active item, roving tab index |
-| `Tabs` | Tab, TabList, TabPanel | Context for active tab, aria-controls wiring |
-| `Accordion` | AccordionItem | Context for expanded state |
-| `DataTable` | Table, TableRow, TableCell | Headless render-prop API for sort/select/expand |
-
-Adding a composite is a library change. The composite must use Context for parent-child coordination (never `React.Children.map` plus `cloneElement`, which breaks when children are wrapped in `React.memo` or `forwardRef`). Contexts are created once per loader instance, not inside `build`, so a `rebuild` does not orphan mounted Consumers.
-
----
-
-## Provider Set
-
-Providers are context-only components that render no visual output and consume no tokens. They are registered at `Component.provider.[name]`, matching the existing `Component.variant` and `Component.freeform` namespacing. They do not count toward the flat top-level key count.
-
-| Provider | Purpose |
+| Column | Holds |
 |---|---|
-| `Overlay` | Overlay stacking and z-index management |
-| `LiveRegionProvider` | Screen reader announcements through aria-live regions |
-| `Layer` | Elevation level context for nested surfaces |
-| `Theme` | Theme override context for subtrees |
-| `FeatureFlags` | Feature flag context for conditional rendering |
-| `IdPrefix` | ID prefix context for scoped id generation |
-| `FluidForm` | Form-level context for fluid label positioning |
-| `ErrorBoundary` | Error boundary for component subtrees |
+| `name`, `family`, `tier` | The component, its family and its tier |
+| `source` | `{ package, version, export }` - the upstream export this row accounts for, or `local` |
+| `description` | One sentence, written when the row is built; a placeholder on a built row fails the check |
+| `platform` | `{ support, fallback }` - see [Platforms](#platforms) |
+| `enums`, `behaviors` | The enum tokens the component switches on and the behaviors it composes |
+| `parent` | The family root a `requires_parent` component is composed inside |
+| `reference` | `{ kind: render-web / parse-rn / none, package }` - how the component is measured |
+| `carbon_twin`, `material_twin` | The upstream component the measurement compares against, or `none` |
+| `diff_budget` | Perceptual-diff allowance in percent |
+| `flags` | `deferred_gap`, `no_reference`, `web_only`, `requires_parent`, `superloom_decision`, `not_applicable` - each demands an explanation in `description` |
+| `status` | `pending`, `built`, `measured`, `frozen` |
 
-Adding a provider is a library change. The provider must be a Context provider, not a visual component. `ErrorBoundary` is the one component in the package that must be a class, because `componentDidCatch` has no hook equivalent.
+The registry, the showcase, the test harness and the documentation generator all iterate the roster. A component that is not a row does not exist.
+
+### Where vendor knowledge lives
+
+The library is generic. The names of the design systems it was built against appear in exactly four places: `data/roster.json`, `data/icons.json` (semantic icon name to upstream glyph name), `DECISIONS.md` (the settled decisions and the library idea, in prose) and `_test/` (the measurement oracles import the upstream packages). The purity gate fails on any occurrence of a vendor name under `src/`. Exceptions - a shape one system has that the other does not, a deferred anatomy, a component with no upstream reference - are written once, as roster flags with a note, and reach the documentation mechanically. A component's `notes.md` is vendor-free.
 
 ---
 
-## Authoring Contract
+## Anatomy, Behavior, Theme
 
-The library entry point is `createSystem(shared_libs, config, theme, breakpoint)`, which builds the shared infrastructure, registers every component factory, and returns a themed component registry. The system is the only entry point; there is no separate loader or build function.
+A component is three things kept apart:
 
-The contract:
+| Concern | Lives in | Changes when |
+|---|---|---|
+| **Behavior** | `behaviors/` - headless hooks with no rendering | An interaction pattern is added or fixed |
+| **Anatomy** | the component file - which parts exist, how they nest, which behaviors they compose, which tokens each part reads | A part is added or the nesting changes (a library release) |
+| **Appearance** | the theme - every value, every enum choice, every glyph | Never in the library |
 
-1. `createSystem` generates `CommonStyle` (the utility style map for the current theme) and wires every component via `make(factory)`
-2. Each component factory is `function (Lib, CONFIG, ERRORS, Parts, Registry, Style)` returning a React component
-3. The component maps props to utility classes: `size` to `font_size_[step]`, `color` to `font_[token]`, `weight` to `font_weight_[name]`
-4. Molecules compose atoms through the shared `Component` object, not through direct imports
-5. Directional layout uses `Parts.Direction`, a context-based direction provider. Components that need the writing direction call `Parts.Direction.useDirection()`. Logical style properties (`paddingStart`, `paddingEnd`, `marginStart`, `marginEnd`) mirror automatically under RTL and require no manual intervention. Directional icons use `Parts.Direction` with a `mirror` prop and `transform: [{ scaleX: -1 }]`
+### Behaviors
 
-Re-theming calls `createSystem` with a new theme, which re-derives `CommonStyle` and returns a fresh registry. The previous registry is never mutated; callers swap the reference. This is the runtime re-theming mechanism.
+A behavior is a reusable, headless hook: `controllable-state`, `press`, `keyboard`, `roving-tab-index`, `overlay`, `focus-trap`, `anchored-position`, `disclosure`, `paged-scroll`, `compound-context`. Each declares as exported data the props it accepts, the accessibility attributes it emits and the keys it handles; the documentation generator and the accessibility-tree test read that data. A component composes behaviors by name; it never re-implements one inline. `behaviors/ROBOTS.md` is the compact signature reference an author reads before composing.
 
-### Consumption Pattern
+### The context seam
 
-Component factory files use `export default function (Lib, CONFIG, ERRORS, Parts, Registry, Style) { ... }`, and `createSystem` imports them via `import viewFactory from './component/atom/view.js'`. The system entry point uses `export function createSystem (shared_libs, config, theme, breakpoint)`. See [Module Structure](../module-structure.md) for the full skeleton.
+The library entry point is `createSystem(shared_libs, config, theme)`. It validates the theme against the library's declared token subsets, builds the style utilities for that theme, registers every component factory from the roster and returns a themed component registry. Each component factory receives the system's shared infrastructure through its signature and never imports a mechanism directly; platform capabilities (navigation, file access, fonts) arrive through host-injected adapters in `shared_libs`. Re-theming calls `createSystem` with a new theme and swaps the registry reference; the previous registry is never mutated.
 
-Consumers that use a bundler (Vite, Metro) import `createSystem` directly.
-
-### Parts and the Style Contract
-
-The loader builds `Parts` once per instance from `parts/`. Components never import a mechanism directly; they receive `Parts` through their factory signature. Each part loader takes the mandatory uniform signature `(shared_libs, config, errors)`.
-
-`Style` is PascalCase with no trailing underscore, following the casing table for internally-assembled namespaced containers. It carries `utilities`, `tokens`, `breakpoint`, and `allBreakpoints`.
-
-Internal constants live in `data/style-contract.json`, not in config. Unit-conversion factors, numeric style property lists, and precision values are intrinsic data, not overridable configuration.
+Consumers that use a bundler (Vite, Metro) import `createSystem` directly. The public barrel exposes named exports and no default export, so a bundler can tree-shake unused components and consumers import an explicit surface.
 
 ---
 
 ## Theme Token Contract
 
-A component system requires its tokens from the Superloom token contract and declares the subset it requires and the subset it supports as exported data. `createSystem` calls `Themer.validateContract` with both lists: missing required tokens are one `TypeError` naming them all; unsupported provided tokens are one warning naming them all. No component source contains a color literal, reads a token by a name outside the contract, or falls back from one token to another; CI gates G24, G27, G28, and G29 enforce this. A hardcoded fallback would make an incomplete theme look complete while substituting the library's own design decisions; the correct behavior is to refuse to build so the theme author sees the gap.
+The Themer package owns the token contract (`Themer.getContract()`). The component library requires its tokens from that contract and declares the subset it requires and the subset it supports as exported data. `createSystem` calls `Themer.validateContract` with both lists: missing required tokens are one `TypeError` naming them all; unsupported provided tokens are one warning naming them all. No component source contains a color literal, a numeric size literal, a token name outside the contract, or a fallback from one token to another. A hardcoded fallback would make an incomplete theme look complete while substituting the library's own design decisions; the correct behavior is to refuse to build so the theme author sees the gap.
+
+Components read tokens through the system's generated style utilities and nothing else. Under strict mode an unknown utility name throws at render, which makes a headless roster walk a proof that every component's every token exists.
+
+### Enum tokens
+
+Where design systems answer a discrete question differently, the answer is an enum token and the component implements every listed value. The theme picks the value; the component never infers it from any other token. The enum groups are `feedback` (how a press, a field frame and a focus ring are drawn) and `anatomy` (where a field label sits, whether a switch handle grows, how a status marker is drawn, whether dialog actions stretch, whether a select shows a caret, how a slider handle is shaped). Enum values are named by what they do (`ripple`, `underline`, `floating`), never by a system. The roster's `enums` column records which enums a component switches on, and the test harness renders every value of each. See [Theming - Anatomy enums](theming.md#anatomy-enums) for the values.
+
+### Icon tokens
+
+Components draw icons by meaning: `close`, `chevron_down`, `warning`. Each semantic name is a token in the contract's `icon` group and its value - SVG path data with a viewBox and optional size variants - comes from the theme. The `Icon` atom is the only icon knowledge in the library: it reads the token, picks the exact size variant when the theme carries one and scales the default otherwise, passes the color token as `fill`, and renders through `react-native-svg` on every platform (a real DOM `<svg>` on web through its web build, native drawing on iOS and Android). The library exports `REQUIRED_ICONS`, validated at build time exactly like `REQUIRED_TOKENS`: a theme missing an icon the roster's components use fails to build, naming every missing icon. **No icon is ever substituted from another set.** A silent fallback passes every zero-console-error gate while the theme draws the wrong glyphs; it is how one design system's icons shipped under another's theme unnoticed. A brand overrides an icon with a layer, like any other token. Semantic names are added to `data/icons.json` when a component needs them, with every template's counterpart at once.
+
+### Contract requests
+
+A component that needs a token the contract lacks does not invent one and does not stop the batch. The request (token, requesting row, reason) is queued and applied at the next milestone as one contract version bump, followed by regeneration and republication of every template in dependency order and revalidation of every consumer. Never mid-batch, never one token at a time.
 
 ---
 
-## Named Barrel
+## Platforms
 
-A public barrel exposes named exports and no default export. This lets a bundler tree-shake unused components and forces consumers to import an explicit surface rather than receiving an opaque default.
+One file per component by default: React Native Web is itself the web projection, and a component that reads only tokens and behaviors renders identically everywhere. The roster records a platform answer for every row:
 
-A default export reintroduces a second surface that the barrel's named exports already cover. It defeats tree-shaking because the bundler cannot prove which named bindings the default carries. The rule: the package root and any registration barrel export named bindings only.
+| `platform.support` | Meaning |
+|---|---|
+| `both` | One implementation renders on web, iOS and Android |
+| `touch_degraded` | Renders everywhere; a pointer-only affordance (hover) degrades to press on touch, as the `fallback` says |
+| `adapter` | Needs a host capability (file access) through an injected adapter; without it the component draws nothing and reports |
+| `web` / `native` | Exists on one platform class only; the other draws nothing, silently, and the roster says so |
+| `split` | The component genuinely forks - see below |
+
+A component that genuinely forks uses the **three-unit split**: `XWeb`, `XNative`, and a public `X` that is a dispatcher only. Each half declares its platforms as data; a missing half draws nothing. No component other than a dispatcher may read the platform - a gate fails a `Platform.OS` read anywhere else. Platform APIs never arrive through direct imports; they arrive through host-injected adapters, so the library has no platform-specific dependency of its own.
 
 ---
 
-## Utility-Class Mapping
+## Component Folder
 
-Components read named utility classes rather than inline token lookups. The mapping is deterministic:
+Every component lives in its own folder with a fixed set of files. Each file is data the tests and the documentation generator read; none is decoration.
 
-| Prop | Utility class | Example |
+| File | Holds | Read by |
 |---|---|---|
-| `size` | `font_size_[step]` | `size="md"` to `font_size_md` |
-| `color` | `font_[token]` | `color="text_primary"` to `font_text_primary` |
-| `weight` | `font_weight_[name]` | `weight="semibold"` to `font_weight_semibold` |
-| `background` | `background_[token]` | `background="surface"` to `background_surface` |
-| `padding` | `p_[side]_[step]` | `padding="a_md"` to `p_a_md` |
-| `margin` | `m_[side]_[step]` | `margin="t_lg"` to `m_t_lg` |
-| `radius` | `br_[step]` | `radius="pill"` to `br_pill` |
+| `[name].js` (and `[name].web.js`, `[name].native.js` for a split) | Anatomy: parts, nesting, behaviors composed, tokens read per part | the system |
+| `api.js` | Props with types, defaults and one-line descriptions, as data | unit tests, docs |
+| `spec.js` | Geometry as token names per part (height, padding, radius, icon size, target size) and the enums the component switches on | purity gate, measurement, docs |
+| `sample.js` | The states row: every state, size and enum value the showcase renders | showcase, screenshots, gates |
+| `reference.js` | How to render or parse the upstream twin for measurement; present when `reference.kind` is not `none` | measurement |
+| `notes.md` | Vendor-free prose: composition rules, gotchas, why a part exists | docs (merged into the generated page) |
+| `[name].test.js` | Unit and accessibility tests, including the fire fixture for each assertion | `check`, `batch` |
 
-Spacing utilities use logical sides (`s`/`e`) for RTL. See [Theming](theming.md) for the full utility style reference.
-
----
-
-## Four-Bucket Exception Model
-
-Real apps need disciplined deviation and a clean way to abandon the token system entirely. The four-bucket model handles both.
-
-| Bucket | Location | Token access | Registry | Re-themes |
-|---|---|---|---|---|
-| **Canonical** | `atom/`, `molecule/`, or `composite/` | Full token access via `CommonStyle` | `Component.[name]` | Yes |
-| **Provider** | `provider/` | No token access. Context only | `Component.provider.[name]` | No |
-| **Structured variant** | `variant/` | Full token access via `CommonStyle` | `Component.variant.[name]` | Yes |
-| **Unstructured freeform** | `freeform/` | No token access. No `CommonStyle`. Raw styles only | `Component.freeform.[name]` | No |
-
-### Canonical
-
-The default. Atoms, molecules, and composites reading tokens through utility classes. This is the normal case.
-
-### Provider
-
-A context-only component that renders no visual output and consumes no tokens. It lives in `Component.provider`. It does not re-theme because it has no visual output to re-theme. See [Provider Set](#provider-set) for the full list.
-
-### Structured variant
-
-A different composition of the same atoms with the same tokens. Example: an outlined button variant shares `Button` + `Text` atoms but changes the background and border resolution. The variant is registered in `Component.variant` so it is discoverable. It re-themes when the theme changes because it reads the same `CommonStyle`.
-
-### Unstructured freeform
-
-A component that opts out of the token system entirely. It receives no `CommonStyle`, no theme, no tokens. It takes raw styles only. It lives in `Component.freeform`, a fenced namespace. It does not re-theme.
-
-The freeform bucket exists for components that cannot conform: a marketing hero, a chat bubble, a one-off animation. A future lint rule flags imports from `freeform/` so its use is a conscious decision.
-
-The rules are testable constraints:
-
-- A canonical component must not import from `variant/` or `freeform/`
-- A provider component must register in `Component.provider` and render no visual output
-- A variant component must register in `Component.variant`
-- A freeform component must not receive `CommonStyle` or `theme`
-- A freeform component must not appear outside `Component.freeform`
+The purity gate runs on every `check`: no literal where a token exists, no vendor name in `src/`, no platform read outside a dispatcher, no banned accessibility prop, every token name in `spec.js` present in the contract, `REQUIRED_TOKENS` and `REQUIRED_ICONS` equal to the union of what the components read.
 
 ---
 
 ## Interaction States
 
-Every interactive component supports a set of states. The state names are the standard interaction-state vocabulary. Some states are persistent (selected, checked, current, expanded, invalid), others are transient (hovered, pressed, focused). A component can be in multiple states simultaneously; the precedence rules are component-specific and documented per component family.
+Every interactive component supports the standard interaction-state vocabulary. Some states are persistent (selected, checked, current, expanded, invalid), others transient (hovered, pressed, focused). A component can be in several states at once; the precedence rules are per family and appear in its documentation.
 
 | State | Meaning | Visual treatment |
 |---|---|---|
 | `enabled` | Default resting state | Base token values |
-| `hovered` | Pointer over the component | `pseudoHover` color operation (lightens dark colors, darkens light ones) |
-| `pressed` | Component is being pressed | `pseudoPress` color operation (stronger shift than hover) |
-| `focused` | Component has keyboard or screen-reader focus | Focus ring or outline |
-| `disabled` | Component is non-interactive | `disabled` color operation (45% original + 55% white) |
-| `loading` | Component is performing an async action | Non-interactive, announces `aria-busy`, renders a `Loading` or `Skeleton` |
-| `selected` | Component is the active choice in a group | Authored selected token, not a pseudo-state derivation |
-| `checked` | Toggle/checkbox is on | Authored checked token |
-| `current` | Component marks the current page/step | Authored current token |
-| `expanded` | Component reveals additional content | `aria-expanded` semantics, visual indicator |
-| `invalid` | Component has a validation error | Authored error/invalid token |
+| `hovered` | Pointer over the component | Hover color tokens (derived by the theme, never by the component) |
+| `pressed` | Component is being pressed | `feedback.press` - the theme picks `highlight`, `opacity` or `ripple` |
+| `focused` | Keyboard or screen-reader focus | `feedback.focus` - `outline`, `inset` or `underline` |
+| `disabled` | Non-interactive | Disabled color tokens |
+| `loading` | Performing an async action | Non-interactive, `aria-busy`, renders a loading indicator or skeleton |
+| `selected` | The active choice in a group | Authored selected token, not a pseudo-state derivation |
+| `checked` | Toggle or checkbox is on | Authored checked token |
+| `current` | Marks the current page or step | Authored current token |
+| `expanded` | Reveals additional content | `aria-expanded` plus a visual indicator |
+| `invalid` | Has a validation error | Authored invalid token |
 
-The themer engine derives pseudo-state colors from base colors through the template's color operations. However, a design system may provide authored values for selected, checked, current, and invalid states rather than deriving them from pseudoHover or pseudoPress. The template declares which approach each token uses. A component must not assume a derived value when the template provides an authored one.
+**Selected is not pressed.** A selected tab retains its selected treatment at rest; pressed is a transient pointer-down visual, and both can hold at once. A border indicator is not a background fill and is not substituted for one unless the template's design system calls for an indicator border. The `focused` state renders a visible indicator on every platform.
 
-**Selected is not pressed.** A selected tab or navigation item retains its selected treatment at rest. A pressed state is a transient pointer-down visual. A component can be selected and pressed simultaneously; the selected indicator persists while the pressed fill overlays. A border indicator (such as a top border on a selected tab) is not equivalent to a background fill and must not be substituted for one unless the pinned design system specification explicitly calls for an indicator border.
-
-The `focused` state is the accessibility-visible state. It must render a visible focus indicator on every platform, including web (keyboard navigation) and native (VoiceOver/TalkBack focus).
+Every state of every component appears in its `sample.js`, so the showcase, the screenshots and the gates see all of them under every template.
 
 ---
 
-## Geometry and Fidelity Contract
+## Geometry and Fidelity
 
-A component's geometry (heights, paddings, border sides, icon sizes, target sizes, radius tokens, glyph names) is declared data, not an emergent result of padding and line height. The declaration is shared by the component and its tests, so a rendered size that drifts from the declaration fails a test instead of waiting for a human to notice. The normative visual specification is the pinned design system the template reproduces; the library expresses it in contract tokens and never in literals.
+### Spec as token names
 
-### Spec Sheets
+A component's geometry is declared data, not an emergent result of padding and line height. `spec.js` names every geometry value as a token reference; the template supplies the number. A raw number in a component library is one design system's opinion hardcoded, and the purity gate rejects it. Where a design system never specifies a value, the component uses a token from that system's own scale and the roster marks the row `superloom_decision`.
 
-`data/component-spec.js` holds one frozen sheet per covered component and `Parts.Spec(name)` returns it. A sheet names geometry through token references (`heightToken`, `radiusToken`, `iconSizeToken`) wherever contract tokens exist, and a field-specific `rawReason` where no token covers the value. A sheet never carries a bare number without a token reference or a reason. Components read the sheet; they do not repeat the values. Three tests hold the sheet honest:
+### Measurement against the upstream reference
 
-- **Spec validation:** every token name in a sheet resolves in the strict utility registry, and every geometry value matches the oracle generated from the pinned design system package.
-- **Geometry lint:** a numeric literal for a size, padding, or radius in component source is a defect. The lint resolves token references before comparing, so a sheet that reads `heightToken: 'size.size_medium'` is checked at 40, not at the token name.
-- **Assertion integrity:** each permanent test is paired with a way to disable the behavior it guards; the manifest proves the test fails when the behavior is off. A test that cannot be made to fire is not a gate.
+Fidelity to a reference design system is measured, not transcribed. For a row whose `reference.kind` is `render-web`, the test harness renders the pinned upstream web component in the same browser and reads its computed geometry (height, paddings, border sides, radius, font size, icon size); for `parse-rn`, it parses the pinned upstream React Native component's style objects. The library's rendering under the matching template must agree within one point, and the perceptual diff of the two screenshots must stay within the row's `diff_budget`. A value read from the upstream's source stylesheet by eye is a transcription: it cannot detect upstream drift and it ratifies whatever the reader believed. Every reference is a pinned published package version recorded in the roster's `source`, and regenerating the measurement is deterministic.
 
-A `spec-coverage.js` manifest lists every component as `specced` or `unspecced` with a reason; a component represented in either oracle may not remain `unspecced`. The `unspecced` count may not grow.
+A row flagged `no_reference` (a library addition with no upstream twin) is not measured against anything. It is held to contract validity, the structural and accessibility layers, and its own regression baseline, and its documentation says so. A row flagged `deferred_gap` draws the primary system's shape with the second system's tokens, and the gap is stated in its documentation until the anatomy is added.
 
-### Component Geometry Oracles
+### The five gate layers
 
-Geometry in a component library is declared data, and a **raw number in a component library is one design system's opinion hardcoded**. Every geometry value is a token reference; the template supplies the number. An oracle validates that the spec sheet agrees with the design system the template reproduces.
+No human decides whether a render is right. Five machine layers do, in this order, each with a recorded proof that it fires:
 
-A geometry oracle is generated from the **pinned published packages** of one design system and validates that system's defaults only. Carbon resolves in two stages: the layout scales are parsed from `@carbon/layout` SCSS, and each component's default size and density are parsed from its own `@carbon/styles` component SCSS (`layout.use('size', $default: ...)`). Material's per-component tokens are parsed from `@material/web/tokens/versions/<pin>/_md-comp-*.scss`.
-
-The **method taxonomy** is part of the contract: every entry is `parsed`, `inherited`, `transcribed`, or `none`, and the last two carry a reason. State plainly why: a transcribed value cannot detect upstream drift, so it is a declared weakness rather than an invisible one.
-
-**A deviation is declared, never assumed.** Where the implementation differs from a system's default, the spec sheet carries `sizeChoice` naming each system's value and the reason. Use the real case as the worked example: Carbon's button default is `lg` (48px) and this library ships 40px (`size="md"`).
-
-**A custom template needs no oracle.** The check for a scratch-built template is contract validity - the token exists and resolves - not equality with an external authority. This is what makes the method template-agnostic.
-
-The twelve-check matrix:
-
-| Check | Rule |
+| Layer | Asserts |
 |---|---|
-| C1 | Pin lock: the oracle records the source package version |
-| C2 | No transcription without a reason: every `transcribed` entry carries a `reason` |
-| C3 | Parse coverage floor: at least `textInput`, `button`, `search`, `tag`, `select` report `parsed` |
-| C4 | Idempotency: regenerating the oracle produces a byte-identical artifact (minus timestamp) |
-| C5 | Self-check constants: known shape and size values are asserted at generation time |
-| C6 | Ledger completeness: every ledger component has a `method` |
-| C7 | No orphans: a component in either oracle may not remain `unspecced` |
-| C8 | Spec-versus-oracle agreement: spec sheet geometry matches the oracle for `parsed` entries |
-| C9 | Cross-oracle declaration: disagreements between Carbon and Material are declared with `sizeChoice` |
-| C10 | Every geometry field, not only height: padding, radius, and icon size are checked |
-| C11 | CI regeneration drift gate: copied artifacts are byte-compared, never `git diff` |
-| C12 | Native projection: the oracle validates the native token projection, not the web one |
+| 1. Structure | The rendered DOM has the parts `spec.js` declares, with the roles and states the behaviors declare, for every sample under every template |
+| 2. Measurement | Geometry agrees with the upstream reference within one point (rows with a reference) |
+| 3. Perceptual diff | The screenshot differs from the reference render within `diff_budget` |
+| 4. Accessibility tree | The accessibility tree is identical across templates for the same sample - a theme changes appearance, never semantics |
+| 5. Regression baseline | Pixel-exact against the frozen baseline in the pinned container, once layers 1-4 have passed and the contact sheet was reviewed |
 
-Each check carries a fire test. A check without a recorded fire result is considered absent.
+A baseline is recorded only after layers 1 to 4 pass and the batch's contact sheet has been reviewed. A baseline taken from the first render ratifies whatever that render was, including its defects, and every later comparison confirms the defect. A human report of a wrong render becomes a new automatic check, never a one-off fix.
 
 ### Frame Ownership
 
-A field composite (password, search, number, date, combo box, select) has exactly one frame owner. The wrapper owns the border, the focus ring, the invalid state, and the disabled state; the inner `TextInput` renders `unframed`. Nested borders (a bordered input inside a bordered wrapper) are a defect, and so is a browser default focus outline: when the wrapper owns focus it renders the contract's focus treatment and suppresses the user agent outline.
+A field composite (password, search, number, date, combo box, select) has exactly one frame owner. The wrapper owns the border, the focus ring, the invalid state and the disabled state; the inner text input renders unframed. Nested borders and a user-agent focus outline are defects: when the wrapper owns focus it renders the contract's focus treatment and suppresses the browser default.
 
-The frame shape is a structure-tier token, `feedback.field`, with values `underline` (bottom border only, square corners) and `outline` (four sides). Components switch on the token; a brand layer changes the value. Every square corner reads `shape.radius_00`, so one layer override rounds fields, buttons, tiles, notifications, and menus together while pill shapes stay on `shape.radius_max`. If a component needs a code change to look right under a brand layer, the component hard-coded structure; fix the component, never widen the layer.
+The frame shape is `feedback.field`, with values `underline` (bottom border only) and `outline` (four sides). Every square corner reads the contract's zero-radius token, so one brand-layer override rounds fields, buttons, tiles, notifications and menus together while pill shapes stay on the maximum-radius token. If a component needs a code change to look right under a brand layer, the component hard-coded structure; fix the component, never widen the layer.
 
-React Native Web renders `TextInput` as an `<input>` with an intrinsic minimum width. The atom sets `minWidth: 0` so a field can shrink to its wrapper; composites do not patch this individually.
-
-### Icon Adapters Preserve Glyph Semantics
-
-Components emit semantic icon names (`close`, `chevron_down`, `visibility_off`, `trash`) from a committed manifest, `data/icon-names.json`. Each host adapter maps every manifest name to one glyph in its icon set; the manifest carries one column per host and a test asserts every name has every column and every referenced export exists. Applications use the same semantic names; an icon-name literal in application source that is not a manifest key or alias fails a unit test.
-
-An adapter renders the glyph as authored. Stroke glyphs depend on their own classes or attributes for `fill: none` and stroke width; an adapter that rewrites root styling with both fill and stroke turns open polylines into filled shapes. Icon size comes from the sheet's icon size tokens, never from a type set's font size.
-
-An unmapped name renders a visible fallback **and** reports `console.error`. A silent fallback passes every zero-console-error gate while the page shows placeholders.
+React Native Web renders a text input as an `<input>` with an intrinsic minimum width. The atom sets `minWidth: 0` so a field can shrink to its wrapper; composites do not patch this individually.
 
 ### Status Surface Triad
 
-Every status surface (inline, toast, actionable, static notification, callout, error state) uses the notification triad for a `kind`:
-
-| Role | Token |
-|---|---|
-| Fill | `color.notification_background_[kind]` |
-| Accent (leading border, icon) | `color.support_[kind]` |
-| Text | `color.text_primary`, `color.text_secondary` |
-| High contrast | `color.background_inverse`, `color.text_inverse`, `color.support_[kind]_inverse` |
-
-`support_[kind]` is an accent color, never a fill; a `support_*` fill with dark text fails the contrast floor. Status surfaces read geometry and the radius token from the shared `notification` sheet.
+Every status surface (inline, toast, actionable, static notification, callout, error state) uses the notification triad for a `kind`: the fill from `color.notification_background_[kind]`, the accent (leading border, icon) from `color.support_[kind]`, text from `color.text_primary` and `color.text_secondary`, and the inverse set for high contrast. `support_[kind]` is an accent color, never a fill; a `support_*` fill with dark text fails the contrast floor. Whether the marker is a bar plus icon or a plain icon is `anatomy.status_marker`.
 
 ### Centered Targets
 
-Every pressable meets a minimum target: field-adjacent controls (password toggle, clear, steppers, calendar) are `controlSize` square from the `textInput` sheet; notification dismiss is `dismissTargetSize`; every other pressable meets the shared `target.minSize` floor. A minimum size alone is not enough: the pressable centers its glyph (`alignItems`, `justifyContent` on a `View` or `Pressable`, never on the SVG itself, which rejects flex properties), so the visible glyph sits inside the hit region rather than in one corner. Every pressable also has an accessible name; a component that takes `title` and a caller that passes `children` (or the reverse) produces a nameless button, and the fidelity test rejects it.
+Every pressable meets a minimum target from the contract's target tokens and centres its glyph (`alignItems`, `justifyContent` on the pressable, never on the SVG, which rejects flex properties) so the glyph sits inside the hit region. Every pressable has an accessible name; a component that takes `title` and a caller that passes `children` (or the reverse) produces a nameless button, and the structure layer rejects it.
+
+---
+
+## Verification Speeds
+
+Verification is affordable because it runs at three speeds, and no speed does another's work:
+
+| Speed | When | Runs |
+|---|---|---|
+| `check <Name>` | After every edit to one component | Lint on the changed files, the purity gate, this component's unit and accessibility tests |
+| `batch` | After every 8-12 components | The whole unit suite, the showcase bundle, browser gate layers 1-3 for the batch's families under every template, measurement, screenshots and a contact sheet, documentation regeneration with a diff, and a machine-generated defects list |
+| `verify` | At milestones and before anything reaches `main` | Clean installs, the entire suite, the fire runner (every assertion shown to fail when its behavior is disabled), container baselines, the demo's own verification, and the native gate |
+
+Running the whole roster's browser suite after every component edit is the failure mode this table prevents: it made each fix cost the price of the library, and the loop stalled. Numeric evidence is written by scripts, never typed; a defects list is generated from machine output (component, check, expected, actual, location, screenshot) and never hand-extended.
+
+---
+
+## Native Evidence
+
+iOS and Android are observed on simulators in continuous integration at every milestone. An in-app walker screen in the demo host, reached by deep link, renders the whole roster under every template inside an error boundary, measures every component's layout, records which fonts actually loaded and reports as JSON; the job screenshots every family and uploads everything as artifacts. The gate asserts zero render errors, zero console errors, every theme-named font loaded, and measured geometry equal to the web run's within one point - the same tokens produce the same numbers on every platform. Simulator evidence is stated as simulator evidence; real-device fidelity is a separate, later claim. Until the first simulator run has passed, the library makes no native rendering claim.
+
+---
+
+## Generated Documentation
+
+Every family's documentation page is generated at every batch close from data the components already carry: props from `api.js`, tokens and enums from `spec.js`, behavior and accessibility from the behaviors' declared data, platforms, provenance and exceptions from the roster, and states from `sample.js` - merged with the family's `notes.md`, written by the component's author in the same pass. Nobody edits a generated page; regeneration is deterministic and the batch diff shows exactly what a component change did to its documentation. A roster flag that demands an explanation must be explained, or the batch does not close. The library's authoring guide, `docs/authoring.md`, plus `DECISIONS.md`, `behaviors/ROBOTS.md`, one exemplar folder, the current defects list and the contact sheet form the fixed briefing pack an author reads; never raw logs, never history.
 
 ---
 
 ## Accessibility Contract
 
-Components meet the accessibility contract through `aria-*` props, which React Native 0.71+ accepts as first-class aliases and React Native Web forwards to the DOM. State and value semantics are expressed through `aria-*` props, never through the deprecated `accessibilityState` or `accessibilityValue` props, which React Native Web does not forward to the DOM. `accessibilityRole` and `accessibilityLabel` remain correct and are used directly.
+Components meet the accessibility contract through `aria-*` props, which React Native 0.71+ accepts as first-class aliases and React Native Web forwards to the DOM. State and value semantics are expressed through `aria-*` props, never through the deprecated `accessibilityState` or `accessibilityValue` props, which React Native Web does not forward to the DOM. `accessibilityRole` and `accessibilityLabel` remain correct and are used directly. Behaviors emit these attributes; components do not hand-write them.
 
 | Requirement | Implementation |
 |---|---|
@@ -348,13 +263,15 @@ Components meet the accessibility contract through `aria-*` props, which React N
 | **State announcement** | `aria-checked`, `aria-expanded`, `aria-disabled`, `aria-selected`, `aria-invalid`, `aria-pressed`, `aria-current` through the `a11y` translator |
 | **Value semantics** | `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-valuetext` through the `a11y` translator |
 | **Relationships** | `aria-controls`, `aria-labelledby`, `aria-describedby`, `aria-owns`, `aria-activedescendant` through the `a11y` translator |
-| **Focus management** | Overlays that open/close (Modal, Dropdown, Popover) trap focus and restore on close |
+| **Focus management** | Overlays that open and close (Modal, Dropdown, Popover) trap focus and restore on close |
 | **Hit target** | Minimum 44x44 points on interactive components (iOS HIG), 48x48 dp (Android Material) |
 | **Focus indicator** | Visible focus ring or outline in the `focused` state |
 
+Gate layer 4 asserts the accessibility tree of every sample is identical under every template.
+
 ### No-op props on web
 
-The following React Native accessibility props are silent no-ops on web and must not be used. Use the `aria-*` equivalent instead.
+The following React Native accessibility props are silent no-ops on web and must not be used. Use the `aria-*` equivalent instead; the purity gate rejects the banned form.
 
 | Prop or API | Web behavior | Use instead |
 |---|---|---|
@@ -370,63 +287,36 @@ The following React Native accessibility props are silent no-ops on web and must
 
 ### Platform gaps
 
-`aria-*` is the one form that works on web, iOS, and Android. However, native platforms have gaps: `aria-live` is Android-only on native, `aria-modal` is iOS-only, and native has no table, tabpanel, or landmark roles. The library routes every gap through a mechanism (such as `useAnnounce` for live regions) rather than leaving it to individual component judgment.
+`aria-*` is the one form that works on web, iOS and Android. Native platforms have gaps: `aria-live` is Android-only on native, `aria-modal` is iOS-only, and native has no table, tabpanel or landmark roles. The library routes every gap through a behavior (such as `useAnnounce` for live regions) rather than leaving it to individual component judgment.
 
 ---
 
-## Generic vs Custom
+## Generic vs App
 
-The library ships generic atoms and molecules. Apps register their own variants and freeform components alongside the generic set.
-
-Example: a restaurant suite has a POS application and a customer ordering application. Both share the same atom set (Text, Button, Icon, Image). The POS uses large-touch variant buttons (a structured variant with bigger hit targets and higher contrast). The ordering app uses the canonical button. Both variants read the same tokens; they differ at the molecule and variant layer.
-
-App-registered variants live in the app's source, not in the library. The library provides the generic set and the extension points (`Component.variant`, `Component.freeform`). The app populates them.
-
-### What the Generic Component System Absorbs
-
-The generic component system is designed to absorb any standard design system that can be expressed through the Superloom token contract. Two reference template packages prove this: Carbon (IBM) and Material (Google). Each template fills the same 379 contract tokens with its own values; the component library interprets those tokens into React Native API calls without knowing which design system provided them.
-
-The generic system handles:
-
-- Border radius, border thickness, and border color
-- Background colors and surface layers
-- Text colors, font families, font sizes, line heights, and weights
-- Spacing scales for padding and margins
-- Focus rings and interaction state colors
-- Motion durations, easing curves (bezier), spring physics, and multi-segment curves
-- Shadow elevation levels
-- Layout dimensions (width, height, min/max constraints)
-
-### What the Generic Component System Cannot Absorb
-
-The generic system cannot handle visual concepts that have no token representation:
-
-- Custom artistic shapes (trapezoids, cloud-shaped CTAs, organic geometry) that require hardcoded SVG paths or custom drawing
-- Visual elements that cannot be expressed through border radius, border thickness, or background color
-- Animations with no contract token (e.g., a custom particle effect or a morphing shape)
-- Platform-specific rendering that bypasses the React Native component model
-
-A custom component system for these cases is a separate package. It declares its own required and supported token subset from the contract (or proposes contract additions for new concepts) and implements its own rendering and animation logic. The core Themer still validates whatever token subset that system declares as required.
+The library ships the generic roster. An application registers its own components alongside the registry - a large-touch point-of-sale button, a marketing hero - in the app's source, never in the library. An app component that reads tokens reads them through the same contract and re-themes with the system; one that opts out of tokens takes raw styles and does not re-theme, and the app names it as such. A shape no token can carry (a trapezoid call to action, a cloud-shaped field, a particle effect) is a different component system with its own declared token subset, not an exception inside this one.
 
 ---
 
 ## Peer Dependencies
 
-The component library declares its runtime dependencies as peer dependencies. The host app (the Expo project at `src/client/`) provides them.
+The component library declares its runtime dependencies as peer dependencies. The host app provides them.
 
 | Dependency | Why it is a peer |
 |---|---|
 | `react` | The host owns the React version |
 | `react-native` | The host owns the RN version (via Expo SDK) |
-| `@expo/vector-icons` | The host owns the icon set |
+| `react-native-svg` | The icon renderer on every platform; the host owns the version alongside `react-native` |
+| Superloom modules received through `shared_libs` (the Themer engine and its React extension) | Declared with caret ranges so the runtime contract is complete |
 
-The library never bundles these. Test apps inside the library pin real versions as dev dependencies for isolation.
+The library never bundles these. The test harness inside the library pins real versions as dev dependencies for isolation, and pins the upstream design system packages it measures against.
 
 ---
 
 ## Further Reading
 
-- [Theming](theming.md) - The themer that produces the tokens components consume
+- [Theming](theming.md) - The themer that produces the tokens, enums and icons components consume
+- [Fonts](fonts.md) - The font contract: theme names families, host loads files
 - [Client Loader](client-loader.md) - How the component loader enters the boot chain
 - [Client Architecture](client-architecture.md) - Why the library targets React Native Web
 - [Client Modules](client-modules.md) - The naming taxonomy for the component library package
+- [RN Testing](rn-testing.md) - Application UI acceptance gates

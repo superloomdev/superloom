@@ -91,6 +91,10 @@
   - [45. A unit test read a sibling host's `node_modules`, passed locally where every host was installed, and failed in the CI job that installs only its own directory](#_45-a-unit-test-read-a-sibling-host-s-node-modules-passed-locally-where-every-host-was-installed-and-failed-in-the-ci-job-that-installs-only-its-own-directory)
   - [46. A generated artifact hand-written to agree with the implementation](#_46-a-generated-artifact-hand-written-to-agree-with-the-implementation)
   - [47. A check whose pattern cannot match the real artifact format](#_47-a-check-whose-pattern-cannot-match-the-real-artifact-format)
+  - [48. Full-roster verification after every component edit stalled the loop](#_48-full-roster-verification-after-every-component-edit-stalled-the-loop)
+  - [49. Reference geometry transcribed from upstream stylesheets by judgment](#_49-reference-geometry-transcribed-from-upstream-stylesheets-by-judgment)
+  - [50. A silent icon fallback drew one design system's glyphs under another's theme](#_50-a-silent-icon-fallback-drew-one-design-system-s-glyphs-under-another-s-theme)
+  - [51. A visual baseline recorded from the first render ratified its defects](#_51-a-visual-baseline-recorded-from-the-first-render-ratified-its-defects)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -463,6 +467,14 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 **Cause:** Text presence and interaction success are necessary but not sufficient. A global font-size ceiling catches only extreme blowups and lets any wrong-but-smaller value through. Computed typography and layout geometry are deterministic in a fixed browser environment and can be asserted exactly, but only if a test reads them.
 
 **Fix:** Application-level acceptance uses four complementary gates: contract (exact generated token values), functional readiness (response, mount, console/request errors, interaction), geometric layout (exact typography, spacing, overflow, overlap, reflow at fixed viewports), and visual regression (`toHaveScreenshot` baselines). Deterministic values use exact assertions, not ranges. A global ceiling does not replace a semantic expectation.
+
+#### V9. Concurrent verification processes corrupt a shared generated test artifact
+
+**Symptom:** A standalone browser suite reports a failure from a production mutation it did not plant, while the fire suite reports that unrelated mutations did not fire or recover. Rerunning both commands sequentially passes.
+
+**Cause:** The fire harness (`npm run fire`) and the browser harness (a bundle rebuild plus Playwright) share one generated bundle. The fire process mutates production source and rebuilds that bundle for each negative control; a concurrent browser build overwrites it between the fire process's mutation, assertion, restoration, and clean recovery check. Each process then reads an artifact produced from a different source state than the one it believes it owns.
+
+**Fix:** Commands that mutate source or rewrite a shared generated artifact run exclusively and sequentially. In particular, never overlap a fire suite with bundle generation, Playwright, snapshot generation, or another fire suite when they share an output path. Parallelize only gates whose complete read/write sets are disjoint; a distinct process is not isolation when the filesystem artifact is shared.
 
 ## Rule Delivery
 
@@ -1416,6 +1428,54 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Evidence:** The plan close checker's blank-evidence rule matched zero of 14 genuinely blank lines because real plans write `- Label:` (a markdown list item) and the pattern required a line starting with a letter. The selftest used `SelftestBlankLabel:` (no dash), a format no real plan uses.
 
 **Fix/Lesson:** Every checker rule ships a fixture derived from a real artifact; a rule that cannot be shown firing on real input is treated as absent. Detection question: does the selftest's fixture format match the real artifact's format? If not, the rule is inert.
+
+---
+
+### 48. Full-roster verification after every component edit stalled the loop
+
+**Symptom:** Each component fix cost a full browser suite over the whole library, minutes per iteration, and the fix loop stopped converging: sessions ran out of context before a batch closed.
+
+**Cause:** One verification speed. The suite that proves a release was the same suite that ran after a one-line edit, so the cost of checking one component was the cost of checking all of them, multiplied by every template.
+
+**Evidence:** A component library's fidelity pass ran its complete Playwright suite for every row under every profile after each defect fix; a batch of eight components took the better part of a day of wall-clock verification and the plan tracking it grew past 150 KB.
+
+**Fix/Lesson:** Three speeds, and no speed does another's work: a per-component `check` (lint, purity gate, the component's own tests) after every edit; a `batch` (browser gates for the batch's families, measurement, screenshots, docs regeneration) every 8-12 components; a full `verify` (clean installs, entire suite, fire runner, baselines, native gate) at milestones only. Detection question: what does the smallest verification command run, and is it proportional to the change?
+
+---
+
+### 49. Reference geometry transcribed from upstream stylesheets by judgment
+
+**Symptom:** A spec sheet agreed with its oracle, both agreed with the upstream design system's documentation, and the rendered component still measured differently from the upstream component in a browser.
+
+**Cause:** The oracle values were read out of the upstream's SCSS by a person (or a model) resolving mixins, defaults and density overrides in their head. Each resolution was a judgment; a wrong one produced a confident number with a `parsed` label. Nothing compared the number to a real render.
+
+**Evidence:** A button height oracle read the root size default from one SCSS file while a component-level `layout.use` override in another file set a different default; both files were "parsed", and the resolved value was the reader's guess at which won.
+
+**Fix/Lesson:** Measure the rendered upstream component. For a web reference, render the pinned upstream package in the same browser and read computed geometry; for a React Native reference, parse the component's style objects, not its documentation. Transcription from a stylesheet is recorded as `transcribed` with a reason when it cannot be avoided, and it never earns the `parsed` label. Detection question: for each reference value, name the command that measured it from a render.
+
+---
+
+### 50. A silent icon fallback drew one design system's glyphs under another's theme
+
+**Symptom:** Every icon rendered, no console error, every zero-error gate green - and the Material theme showed Carbon's glyphs on every component, for weeks.
+
+**Cause:** The icon manifest had a column per host adapter, not per theme, and every host resolved every semantic name to the same icon set. Switching the theme switched colors, radii and type, and left the glyphs alone. Because a glyph did render, nothing was missing to report.
+
+**Evidence:** The icon manifest carried a Carbon column and a legacy column, no Material column; both host adapters imported the Carbon icon package. A notification under the Material theme drew Material colors around IBM's 32-grid warning triangle.
+
+**Fix/Lesson:** Icons are theme tokens: each template carries its own glyphs, the component library declares the icon names it requires, and a theme missing one fails to build naming every missing icon. Never draw a glyph from another set as a fallback; a fallback that renders something is invisible to every automated gate. Detection question: switch the template and diff the glyphs - if none changed, the icons were not coming from the theme.
+
+---
+
+### 51. A visual baseline recorded from the first render ratified its defects
+
+**Symptom:** Pixel-exact regression tests passed on every run while the component they guarded had a visible layout defect from its first day.
+
+**Cause:** The baseline screenshot was recorded from the first render, before any check had said the render was right. From then on the regression test asserted "unchanged", and unchanged included the defect. A later fix failed the test, and the failure was read as a regression.
+
+**Evidence:** A field composite recorded its baseline with a nested border (wrapper and inner input both framed); the frame-ownership fix six batches later broke the baseline and was initially reverted as a visual regression.
+
+**Fix/Lesson:** A baseline is the last gate, never the first. Record it only after the structural, measurement, perceptual-diff and accessibility layers pass and the batch's contact sheet has been reviewed; a baseline update is a reviewed event with the diff attached, never an automatic re-snapshot. Detection question: for each baseline, name the passing checks that preceded its recording.
 
 ---
 

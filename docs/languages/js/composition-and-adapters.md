@@ -106,7 +106,7 @@ The extension declares the parent as a peer dependency. This is the only tier wh
 
 An application's shared source defines ports for platform capabilities. Each build target supplies its own adapter set.
 
-The demo application defines three ports: Navigation, Icons, and Fonts. The Expo build target supplies one set; the web build target supplies another. These are not published packages. They are files inside the application's source tree.
+The demo application defines two ports: Navigation and Fonts. The Expo build target supplies one set; the web build target supplies another. Icons are not a port: a glyph is a theme token (`icon.*`) whose SVG path data arrives inside the template and is drawn by the component library's own renderer, so no host supplies an icon set. These are not published packages. They are files inside the application's source tree.
 
 ---
 
@@ -148,7 +148,7 @@ The loader is a pure build function. It is not memoized. The React context provi
 The `loader.validators.js` file exports a `validateAdapters` function. It runs before the container is built, so it uses raw `typeof` instead of the Utils type primitives:
 
 ```js
-const REQUIRED_ADAPTERS = ['Navigation', 'Icons', 'Fonts'];
+const REQUIRED_ADAPTERS = ['Navigation', 'Fonts'];
 
 validateAdapters: function (adapters) {
   if (adapters === null || typeof adapters !== 'object') {
@@ -180,7 +180,6 @@ A multi-target application defines one port per platform capability. The slot ta
 | Slot | Port defines | Adapter returns | Expo host | Web host |
 |---|---|---|---|---|
 | `Navigation` | `Link`, `Redirect` | `{ Link, Redirect }` | `expo-router` primitives | Browser history API |
-| `Icons` | `Glyph` | `{ Glyph }` | `@expo/vector-icons` | Text placeholder |
 | `Fonts` | `adapter`, `manifest` | `{ adapter, manifest }` | `expo-font` extension | No-op stub |
 
 Each host has its own directory under `hosts/`:
@@ -190,12 +189,10 @@ hosts/
   expo/
     adapters/
       navigation.js
-      icons.js
       fonts.js
   web/
     adapters/
       navigation.js
-      icons.js
       fonts.js
 ```
 
@@ -272,18 +269,16 @@ A test suite exercising an application supplies its own adapter set and calls th
 
 ```js
 import navigationAdapter from './adapters/navigation.js';
-import iconsAdapter from './adapters/icons.js';
 import fontsAdapter from './adapters/fonts.js';
 import loader from '../app-core/loader.js';
 
 const { Lib } = loader({
   Navigation: navigationAdapter,
-  Icons: iconsAdapter,
   Fonts: fontsAdapter
 });
 ```
 
-The stub adapters are minimal. The navigation stub returns an `<a>` element. The icons stub returns a text placeholder. The fonts stub resolves immediately with an empty manifest.
+The stub adapters are minimal. The navigation stub returns an `<a>` element. The fonts stub resolves immediately with an empty manifest.
 
 Three prohibitions:
 
@@ -299,11 +294,11 @@ Cross-reference: [module-testing.md](module-testing.md) covers module test loade
 
 The capability-not-vendor rule binds application slots identically to module slots. See [module-structure.md](module-structure.md) for the module-slot rule.
 
-The violation: an adapter that assigns `Lib.Ionicons`:
+The violation: an adapter that assigns `Lib.ExpoFont`:
 
 ```js
 export default function (Lib, config) {
-  Lib.Ionicons = Ionicons;
+  Lib.ExpoFont = expoFontAdapter;
   return {};
 };
 ```
@@ -313,12 +308,13 @@ The fix: the adapter returns a capability-named member, and the loader assigns t
 ```js
 export default function (Lib, config) {
   return {
-    Glyph: Ionicons
+    adapter: expoFontAdapter,
+    manifest
   };
 };
 ```
 
-The loader assigns: `Lib.Icons = adapters.Icons(Lib, {});`. The vendor name `Ionicons` appears in the adapter file and nowhere else. The container slot is `Lib.Icons`, named for the capability.
+The loader assigns: `Lib.FontAdapter = adapters.Fonts(Lib, {}).adapter;`. The vendor name `expo-font` appears in the adapter file and nowhere else. The container slot is named for the capability.
 
 ---
 
