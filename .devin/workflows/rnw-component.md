@@ -26,7 +26,7 @@ Ambiguous verb, missing name, or a name with no roster row: ask, never guess.
 
 ## Execution Contract (binding, every verb)
 
-1. **One component per run.** Touch only: its folder, `_test/[stem].test.js`, `component/contract.js`, `all.js`, `_test/fixtures/assertion-integrity.json`, its roster row in `data/roster.json`, and the regenerated `docs/components/[Family].md`. Anything else is a STOP.
+1. **One component per run.** Touch only: its folder, `_test/[stem].test.js`, `component/contract.js`, `all.js`, `_test/fixtures/assertion-integrity.json`, its roster row in `data/roster.json`, the regenerated `docs/components/[Family].md` and the regenerated `catalog.js`. Anything else is a STOP.
 2. **Phases run in order**, never skipped, merged or reordered.
 3. **No vendor names** in anything the package ships (`component/`, `behaviors/`, `components.js`, `all.js`, `README.md`, `ROBOTS.md`) or in `notes.md`. Vendor names belong in `data/`, `scripts/`, `DECISIONS.md` and `_test/` only.
 4. **No new behavior, token, enum value or icon name is invented in this run.** A missing behavior, a token the contract lacks, or an icon name absent from `data/icons.json` is a STOP with a written request (Phase B).
@@ -156,9 +156,9 @@ Files in this order; each written whole, by hand, from the embedded Standard:
 7. `_test/[stem].test.js`: render every `sample.js` state under all three templates; assert exact values read from the built theme (never ranges); assert every behavior-driven state (press, focus, disabled, selection) through the DOM; assert the accessibility answer for each state.
 8. `_test/fixtures/assertion-integrity.json`: one row per new assertion family - a literal `find`/`replace` in the component's source that must make one named test fail.
 9. `data/roster.json`: this row's `status` -> `built` (add), and replace a placeholder `description` with one sentence that states what the component arranges and explains every flag using the roster checker's phrases.
-10. Regenerate the family page:
+10. Regenerate the family page and the host catalog:
     ```bash
-    node scripts/docs-generate.js
+    node scripts/docs-generate.js && node scripts/catalog-generate.js
     ```
 
 ## Phase D - Check (convergence gate)
@@ -219,7 +219,7 @@ If this run exposed a failure mode the gates did not catch: journal it in `codeb
 - [ ] No vendor name in shipped files or `notes.md`; no framework import; no platform read outside `ctx.platform`; no banned accessibility prop; no literal where a token exists
 - [ ] `check: [Name] passed` twice with no edit between
 - [ ] Every new fire row `FIRED`
-- [ ] Roster check OK; family docs page regenerated
+- [ ] Roster check OK; family docs page and `catalog.js` regenerated
 - [ ] Contact sheet reviewed against the layer-4 checklist; findings fixed
 - [ ] Commit approved and made for this component only; batch/verify handed to the execution tier; STOPPED
 - [ ] New failure modes journaled; workflow and authoring guide amended if needed
