@@ -95,6 +95,7 @@
   - [49. Reference geometry transcribed from upstream stylesheets by judgment](#_49-reference-geometry-transcribed-from-upstream-stylesheets-by-judgment)
   - [50. A silent icon fallback drew one design system's glyphs under another's theme](#_50-a-silent-icon-fallback-drew-one-design-system-s-glyphs-under-another-s-theme)
   - [51. A visual baseline recorded from the first render ratified its defects](#_51-a-visual-baseline-recorded-from-the-first-render-ratified-its-defects)
+  - [52. An enforcement job read packages it never installed, and the local replay ran it against an install left by an earlier gate](#_52-an-enforcement-job-read-packages-it-never-installed-and-the-local-replay-ran-it-against-an-install-left-by-an-earlier-gate)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1476,6 +1477,16 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Evidence:** A field composite recorded its baseline with a nested border (wrapper and inner input both framed); the frame-ownership fix six batches later broke the baseline and was initially reverted as a visual regression.
 
 **Fix/Lesson:** A baseline is the last gate, never the first. Record it only after the structural, measurement, perceptual-diff and accessibility layers pass and the batch's contact sheet has been reviewed; a baseline update is a reviewed event with the diff attached, never an automatic re-snapshot. Detection question: for each baseline, name the passing checks that preceded its recording.
+
+---
+
+### 52. An enforcement job read packages it never installed, and the local replay ran it against an install left by an earlier gate
+
+**Symptom:** The local verify script replays every CI grep gate and reports them all green; on CI the gates job fails one of them with `ENOENT ... _test/node_modules/<package>/metadata.json`.
+
+**Cause:** A data-validation gate lived in the job that holds the `git grep` gates, which checks out and runs scripts but installs nothing. The script it called resolves the pinned upstream packages from `_test/node_modules`. Locally the replay ran the gate in the working tree, where `_test/node_modules` existed from an earlier test run, so the missing install step was invisible. Entry 45 is the same class for a unit-test job.
+
+**Fix/Lesson:** A CI job installs everything its steps read; a step that reads installed packages sits after an install step in the same job. The local replay reproduces the job's filesystem, not the developer's: before replaying a job's steps, set aside every `node_modules` that job does not itself install, and restore them afterwards. Detection question: for each gate that runs a script, which install step in its own job provides that script's imports?
 
 ---
 
