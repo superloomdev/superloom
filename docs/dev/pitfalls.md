@@ -96,6 +96,7 @@
   - [50. A silent icon fallback drew one design system's glyphs under another's theme](#_50-a-silent-icon-fallback-drew-one-design-system-s-glyphs-under-another-s-theme)
   - [51. A visual baseline recorded from the first render ratified its defects](#_51-a-visual-baseline-recorded-from-the-first-render-ratified-its-defects)
   - [52. An enforcement job read packages it never installed, and the local replay ran it against an install left by an earlier gate](#_52-an-enforcement-job-read-packages-it-never-installed-and-the-local-replay-ran-it-against-an-install-left-by-an-earlier-gate)
+  - [53. A custom-scheme deep link opened with `simctl openurl` stopped at the iOS "Open in" prompt](#_53-a-custom-scheme-deep-link-opened-with-simctl-openurl-stopped-at-the-ios-open-in-prompt)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1487,6 +1488,16 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** A data-validation gate lived in the job that holds the `git grep` gates, which checks out and runs scripts but installs nothing. The script it called resolves the pinned upstream packages from `_test/node_modules`. Locally the replay ran the gate in the working tree, where `_test/node_modules` existed from an earlier test run, so the missing install step was invisible. Entry 45 is the same class for a unit-test job.
 
 **Fix/Lesson:** A CI job installs everything its steps read; a step that reads installed packages sits after an install step in the same job. The local replay reproduces the job's filesystem, not the developer's: before replaying a job's steps, set aside every `node_modules` that job does not itself install, and restore them afterwards. Detection question: for each gate that runs a script, which install step in its own job provides that script's imports?
+
+---
+
+### 53. A custom-scheme deep link opened with `simctl openurl` stopped at the iOS "Open in" prompt
+
+**Symptom:** A simulator gate builds and installs the app, `xcrun simctl openurl booted "app://..."` returns `ok`, and nothing happens: no report, no route; the timeout screenshot shows the home screen with an "Open in <App>?" dialog.
+
+**Cause:** Current iOS asks the user to confirm a custom URL scheme opened from outside the app. `simctl openurl` delivers the URL to SpringBoard, which shows that dialog, and no `simctl` command can tap it. The same link on the Android emulator (`am start -a VIEW -d`) needs no confirmation, so a driver written against Android passes there and stalls on iOS. Reading the CLI output alone misleads: the opener reports success, and an unrelated line (the dev-client URL `expo run:ios` prints) looks like the cause.
+
+**Fix/Lesson:** Look at the failure screenshot before reading logs; the device shows the state, the log shows what was attempted. On iOS, drive an automated walk without a deep link: launch the app with `simctl launch` and have it pull its instructions from the test server (a build-time flag such as an `EXPO_PUBLIC_*` variable enables that mode and names the server), or use a tap-capable driver. Keep the deep-link path under test where the platform does not prompt.
 
 ---
 
