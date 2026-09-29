@@ -71,7 +71,7 @@ Replacing the template changes the visual system. Adding a layer adjusts it. An 
 
 ## Component systems consume the contract
 
-A component system is a library whose components read tokens through generated style utilities and nothing else. It never contains a color literal, never reads a token by a name outside the contract, and never falls back from one token to another.
+A component system is a library whose components read tokens through the component context and nothing else. It never contains a color literal, never reads a token by a name outside the contract, and never falls back from one token to another.
 
 At build time the system calls `Themer.validateContract(built, { required, supported })`:
 

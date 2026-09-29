@@ -185,6 +185,7 @@ Every module: entry file + `[name].config.js` + `[name].errors.js` + `[name].val
 | `/new-entity` | demo-server-js | Adding a domain entity to the demo server application |
 | `/demo-client-rnw` | demo-client-rnw | Pre-commit protocol and code quality for the demo RNW client |
 | `/rnw-components` | rnw-components | Pre-commit protocol and code quality for the RNW component library |
+| `/rnw-component [verb] [Name]` | superloom | Build one component of the generic RNW component library from its roster row - add (new component) or fix (existing component) - then hand the batch gates to the execution tier |
 | `/project-docs [create\|update\|audit]` | any product repo | Create, update, or audit the management layer (PROJECT.md, feature ledger, CHANGELOG.md) per `docs/principles/project-management.md` |
 | `/learn` | superloom | Capturing conversation knowledge into its canonical doc; hands off to `/finalize-docs` |
 | `/finalize-docs [check]` | superloom | After any docs or workflow change: validate to convergence, then propagate to the canonical AGENTS.md and embedded blocks. `check` = report-only |
