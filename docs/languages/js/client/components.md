@@ -78,7 +78,7 @@ The registry, the showcase, the test harness and the documentation generator all
 
 ### Where vendor knowledge lives
 
-The library is generic. The names of the design systems it was built against appear in exactly four places: `data/roster.json`, `data/icons.json` (semantic icon name to upstream glyph name), `DECISIONS.md` (the settled decisions and the library idea, in prose) and `_test/` (the measurement oracles import the upstream packages). The purity gate fails on any occurrence of a vendor name under `src/`. Exceptions - a shape one system has that the other does not, a deferred anatomy, a component with no upstream reference - are written once, as roster flags with a note, and reach the documentation mechanically. A component's `notes.md` is vendor-free.
+The library is generic. The names of the design systems it was built against appear in exactly four places: `data/` (the roster, the icon table and their candidate inputs), `scripts/` (the roster and icon tooling that reads the pinned upstream packages), `DECISIONS.md` (the settled decisions and the library idea, in prose) and `_test/` (the measurement oracles import the upstream packages). The purity gate fails on any occurrence of a vendor name in the shipped source, which is everything the package's `files` allowlist ships other than `data/roster.json`. Exceptions - a shape one system has that the other does not, a deferred anatomy, a component with no upstream reference - are written once, as roster flags with a note, and reach the documentation mechanically. A component's `notes.md` is vendor-free.
 
 ---
 
@@ -94,11 +94,11 @@ A component is three things kept apart:
 
 ### Behaviors
 
-A behavior is a reusable, headless hook: `controllable-state`, `press`, `keyboard`, `roving-tab-index`, `overlay`, `focus-trap`, `anchored-position`, `disclosure`, `paged-scroll`, `compound-context`. Each declares as exported data the props it accepts, the accessibility attributes it emits and the keys it handles; the documentation generator and the accessibility-tree test read that data. A component composes behaviors by name; it never re-implements one inline. `behaviors/ROBOTS.md` is the compact signature reference an author reads before composing.
+A behavior is a reusable, headless hook: controllable state, press, keyboard, roving tab index, overlay, focus trap, anchored position, disclosure, compound context. A hook that owns state returns its prop getters plus one flat `state` object and publishes the state's keys as data (`useButton.stateKeys`); the tests assert the rendered state equals the published keys, and a hook that owns no state is declared as such by name. Behaviors import no framework: one composer builds them all from the injected React, React Native, helpers and platform answer. A component composes behaviors by name from its context; it never re-implements one inline. `behaviors/ROBOTS.md` is the compact signature reference an author reads before composing.
 
 ### The context seam
 
-The library entry point is `createSystem(shared_libs, config, theme)`. It validates the theme against the library's declared token subsets, builds the style utilities for that theme, registers every component factory from the roster and returns a themed component registry. Each component factory receives the system's shared infrastructure through its signature and never imports a mechanism directly; platform capabilities (navigation, file access, fonts) arrive through host-injected adapters in `shared_libs`. Re-theming calls `createSystem` with a new theme and swaps the registry reference; the previous registry is never mutated.
+The library entry point is `createSystem(shared_libs, config, built, breakpoint, factories)`. `shared_libs` carries the frameworks the host loader imported once (`React`, `ReactNative`, `Svg` for `react-native-svg`) and the helpers (`Utils`, `Debug`, `Themer`); nothing in the library imports a framework, so it shares the host's single instance of each and a test hands in the web builds without a module-resolution hook. `built` is the native projection of a template and its layers. `createSystem` validates the theme against the library's declared requirements, rejects a theme built for the web projection, builds one component context, calls every factory in `factories` with it and returns a frozen registry. A factory is `export default function Name (ctx) { return function Name (props) { ... } }` with its spec sheet attached as `Name.spec`. The context is the only way a component reads the theme: `token`, `color`, `typeStyle`, `metric` (through the spec sheet), `enum` (checked against the contract's value list), `icon` and `focusPresentation`, each throwing on a token the theme lacks; it also carries the frameworks, the behaviors, the platform answer and the registry. Platform capabilities (navigation, file access, fonts) arrive through host-injected adapters in `shared_libs`. Re-theming calls `createSystem` with a new theme and swaps the registry reference; the previous registry is never mutated.
 
 Consumers that use a bundler (Vite, Metro) import `createSystem` directly. The public barrel exposes named exports and no default export, so a bundler can tree-shake unused components and consumers import an explicit surface.
 
@@ -108,7 +108,7 @@ Consumers that use a bundler (Vite, Metro) import `createSystem` directly. The p
 
 The Themer package owns the token contract (`Themer.getContract()`). The component library requires its tokens from that contract and declares the subset it requires and the subset it supports as exported data. `createSystem` calls `Themer.validateContract` with both lists: missing required tokens are one `TypeError` naming them all; unsupported provided tokens are one warning naming them all. No component source contains a color literal, a numeric size literal, a token name outside the contract, or a fallback from one token to another. A hardcoded fallback would make an incomplete theme look complete while substituting the library's own design decisions; the correct behavior is to refuse to build so the theme author sees the gap.
 
-Components read tokens through the system's generated style utilities and nothing else. Under strict mode an unknown utility name throws at render, which makes a headless roster walk a proof that every component's every token exists.
+Components read tokens through the context and nothing else. A read of a token the theme lacks throws at render, which makes a headless roster walk a proof that every component's every token exists.
 
 ### Enum tokens
 
@@ -142,7 +142,7 @@ A component that genuinely forks uses the **three-unit split**: `XWeb`, `XNative
 
 ## Component Folder
 
-Every component lives in its own folder with a fixed set of files. Each file is data the tests and the documentation generator read; none is decoration.
+Every component lives in its own folder, `component/[tier]/[family]/`, with a fixed set of files. Each file is data the tests and the documentation generator read; none is decoration.
 
 | File | Holds | Read by |
 |---|---|---|
@@ -152,9 +152,9 @@ Every component lives in its own folder with a fixed set of files. Each file is 
 | `sample.js` | The states row: every state, size and enum value the showcase renders | showcase, screenshots, gates |
 | `reference.js` | How to render or parse the upstream twin for measurement; present when `reference.kind` is not `none` | measurement |
 | `notes.md` | Vendor-free prose: composition rules, gotchas, why a part exists | docs (merged into the generated page) |
-| `[name].test.js` | Unit and accessibility tests, including the fire fixture for each assertion | `check`, `batch` |
+| `_test/[name].test.js` | Unit and accessibility tests for the component, beside the library's shared gates; each new assertion gets a row in the fire manifest (`_test/fixtures/assertion-integrity.json`) | `check`, `batch`, fire |
 
-The purity gate runs on every `check`: no literal where a token exists, no vendor name in `src/`, no platform read outside a dispatcher, no banned accessibility prop, every token name in `spec.js` present in the contract, `REQUIRED_TOKENS` and `REQUIRED_ICONS` equal to the union of what the components read.
+The purity gate runs on every `check`: no literal where a token exists, no vendor name in the shipped source, no platform read outside a dispatcher, no banned accessibility prop, every token name in `spec.js` present in the contract, `REQUIRED_TOKENS` and `REQUIRED_ICONS` equal to the union of what the components read.
 
 ---
 

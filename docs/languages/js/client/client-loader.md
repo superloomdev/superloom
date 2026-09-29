@@ -36,6 +36,8 @@ The `Lib` container holds every dependency the React tree needs. Each entry is e
 | `Lib` key | What it holds | How it enters |
 |---|---|---|
 | `Lib.React` | The React module | `import React from 'react'` in the loader only |
+| `Lib.ReactNative` | The React Native module (`react-native`, aliased to `react-native-web` by the web bundler) | `import * as ReactNative from 'react-native'` in the loader only; the component library reads `View`, `Text`, `Pressable`, `Platform` and the rest from here |
+| `Lib.Svg` | The `react-native-svg` module | `import * as Svg from 'react-native-svg'` in the loader only; the component library's `Icon` atom renders through it |
 | `Lib.Utils` | Core utility helper | `import utils from '@superloomdev/js-helper-utils'`; `utils(Lib)` |
 | `Lib.Debug` | Debug logging helper | `import debug from '@superloomdev/js-helper-debug'`; `debug(Lib)` |
 | `Lib.Themer` | Theme engine (buildTheme, resolve, emit, getCacheStats, clearCache, getContract, validateContract) | `import themer from '@superloomdev/js-client-helper-themer'`; `themer(Lib)` |
@@ -78,7 +80,7 @@ The adapter set is validated at boot before the container is built. A missing sl
 
 Dependency injection applies at the package boundary, not inside the app's own React files. The rule:
 
-- **Helper modules and framework packages** receive dependencies through `Lib`. They never import React directly. The loader injects `Lib.React` into the themer adapter, for example
+- **Helper modules and framework packages** receive dependencies through `Lib`. They never import React, React Native or `react-native-svg` directly. The loader injects `Lib.React` into the themer adapter, for example
 - **The app's own React files** (screens, layouts, context providers) keep idiomatic `import` statements. JSX and hooks are import-time bindings; injecting React into every component adds ceremony without benefit
 
 The boundary is the package edge. Inside the app, React is a peer dependency resolved normally. Outside the app (in published helper modules and the component library), React enters through `Lib`.
