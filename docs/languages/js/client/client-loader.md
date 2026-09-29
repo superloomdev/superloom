@@ -38,7 +38,7 @@ The `Lib` container holds every dependency the React tree needs. Each entry is e
 | `Lib.React` | The React module | `import React from 'react'` in the loader only |
 | `Lib.Utils` | Core utility helper | `import utils from '@superloomdev/js-helper-utils'`; `utils(Lib)` |
 | `Lib.Debug` | Debug logging helper | `import debug from '@superloomdev/js-helper-debug'`; `debug(Lib)` |
-| `Lib.Themer` | Theme engine (buildTheme, resolve, emit, cacheStats, clearCache, getContract, validateContract) | `import themer from '@superloomdev/js-client-helper-themer'`; `themer(Lib)` |
+| `Lib.Themer` | Theme engine (buildTheme, resolve, emit, getCacheStats, clearCache, getContract, validateContract) | `import themer from '@superloomdev/js-client-helper-themer'`; `themer(Lib)` |
 | `Lib.ThemerReact` | React extension for themer (ThemeProvider, hooks) | `import themerReact from '@superloomdev/js-client-helper-themer-ext-react'`; `themerReact({ React, Themer, Utils, Debug })` |
 | `Lib.Themes` | Reference theme profiles and brand layers | `import { profile, brands } from '../themes/brand-layers.js'` |
 | `Lib.Components` | Component system factory | `import { createSystem } from '@superloomdev/rnw-components'` |

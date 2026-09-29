@@ -158,10 +158,10 @@ The `feedback` group (`press`, `field`, `focus`) is the older enum group and fol
 Icons are the third piece of a theme, after values and enums. The `icon` group (contract version 4, value tier, type `icon`) holds one token per semantic name - `icon.close`, `icon.chevron_down`, `icon.warning` - and each value is SVG path data:
 
 ```text
-{ icon: true, viewBox: '0 0 32 32', paths: [{ d, fillRule? }], sizes?: { '16': paths, '20': paths, '24': paths } }
+{ icon: true, viewBox: '0 0 32 32', paths: [{ d, fillRule? }], sizes?: { '16': { viewBox, paths }, '20': { viewBox, paths }, '24': { viewBox, paths } } }
 ```
 
-The `icon: true` marker is the engine's convention for every object-valued literal (`shadow: true`, `spring: true`, `viewport: true`, `segments: true`); it is how the resolver knows the object is a value and not a rule. Only paths, no other SVG element, no colors: the component system passes its color token as the fill. `sizes` holds size-tuned variants where the upstream set publishes them, so a 16-pixel icon is the set's own 16-pixel glyph rather than a shrunk 32. The validator checks the shape, a non-empty `d` and a well-formed `viewBox`; emit passes the value through unchanged on every platform.
+The `icon: true` marker is the engine's convention for every object-valued literal (`shadow: true`, `spring: true`, `viewport: true`, `segments: true`); it is how the resolver knows the object is a value and not a rule. Only paths, no other SVG element, no colors: the component system passes its color token as the fill. `sizes` holds size-tuned variants where the upstream set publishes them, each with its own `viewBox` because small glyphs are often drawn on their own grid, so a 16-pixel icon is the set's own 16-pixel glyph rather than a shrunk 32. The validator checks the shape, a non-empty `d` and a well-formed `viewBox`; emit passes the value through unchanged on every platform.
 
 A template's generator produces the icon values from a pinned upstream icon package, once, at generation time - never at runtime. Conversion rules are the generator's: `path` elements are kept, `circle` and `rect` are converted to an equivalent path, foreign-object fallbacks and transparent helper paths are dropped, and a test asserts no mapped icon needed anything that was dropped. Redistributed icon sets carry their license in the template package's `NOTICE`. The semantic-name-to-upstream-glyph mapping is the one hand-authored table, kept beside the component library's roster, and every template supplies every name in it; a name one set lacks is recorded as such, never silently drawn from another set.
 
@@ -215,7 +215,7 @@ The extension module owns the generic React plumbing. The app owns everything th
 | What it is | Pure JS token engine | React bindings | Host code |
 | Knows about | Templates, layers, tokens | React context, hooks, state | Token bridging, fonts, components |
 | Does not know about | React, any vocabulary | Any specific vocabulary, fonts, components | The engine internals |
-| Exports | `buildTheme`, `cacheStats`, `clearCache` | `ThemeProvider`, `useTheme`, `useTokens`, `useThemeController`, `ThemeContext` | App-shaped hooks and provider |
+| Exports | `buildTheme`, `getCacheStats`, `clearCache` | `ThemeProvider`, `useTheme`, `useTokens`, `useThemeController`, `ThemeContext` | App-shaped hooks and provider |
 
 The `transform` function runs inside the extension's `useMemo`, so it recomputes only when inputs change. It receives the engine's built result and the current layers, and returns an object whose fields are merged into the context value. This is where the app bridges the engine's flat token map to its own vocabulary (`{ Color, Dimension, Font }`), validates font families against the font core registry, and builds the themed component library.
 
