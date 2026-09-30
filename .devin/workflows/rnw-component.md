@@ -103,7 +103,7 @@ export default function [Name] (ctx) {
 - Platform only through `ctx.platform` (`os`, `isNative`, `split({ web, native })`); `split` rows dispatch in `[stem].js` and render `null` for a missing half.
 - `Lib.Utils` primitives for type guards and emptiness (`isString`, `isNumber`, `isNullOrUndefined`, `isEmptyArray`, `isEmptyString`, `inArray`); callbacks are duck-typed.
 
-**Context reads** (`components.md` - The context seam): `ctx.token(name)`, `ctx.color(leaf)`, `ctx.typeStyle(leaf)`, `ctx.metric(Name, metric)`, `ctx.enum(name)`, `ctx.icon(name, size)`, `ctx.focusPresentation(focused)`, `ctx.pressPresentation(state, palette)` (`{ container, layer, engaged }`), `ctx.fieldPresentation(state, { height, paddingInline, radius, surface })` (`{ frame, label, raised, placeholder }`). Each throws on a token the theme lacks; nothing falls back from one token to another. A component that shows press or a field frame uses the presentation and always mounts the parts it may hide.
+**Context reads** (`components.md` - The context seam): `ctx.token(name)`, `ctx.color(leaf)`, `ctx.typeStyle(leaf)`, `ctx.metric(Name, metric)`, `ctx.enum(name)`, `ctx.icon(name, size)`, `ctx.focusPresentation(focused)`, `ctx.pressPresentation(state, palette)` (`{ container, layer, engaged }`), `ctx.fieldPresentation(state, { height, paddingInline, radius, surface, disabledBorder })` (`{ root, frame, label, raised, placeholder }`). Each throws on a token the theme lacks; nothing falls back from one token to another. A component that shows press or a field frame uses the presentation and always mounts the parts it may hide.
 
 **`spec.js`**: `export default Object.freeze({ metric: 'group.token', derived: { tokens: ['a', 'b'], operation: 'sum' | 'subtract' }, decided: { constant: N } })`. A `constant` exists only when the roster row carries `superloom_decision`.
 
@@ -111,7 +111,7 @@ export default function [Name] (ctx) {
 
 **`sample.js`**: `export default Object.freeze([ { label, props } ])` covering default, every enum value that changes the render, disabled, invalid where the component has it, and size extremes. Labels are unique.
 
-**`reference.js`** (rows with a reference): `export default Object.freeze({ kind, mount (React, upstream, props), parts: { root: '[selector]', ... } })`, with `kind` equal to the roster's `reference.kind`.
+**`reference.js`** (rows with a reference): `export default Object.freeze({ kind, mount (React, upstream, props), body?, parts: { [part]: { upstream: '[selector]', ours: '[selector]', measure: 'box' | 'text' | 'type', pseudo? } } })`, with `kind` equal to the roster's `reference.kind`; `mount` returns null for a state with no upstream counterpart; `body: { width }` for a component that fills its container. Select what is painted (an icon's `path`), never the mechanism.
 
 **`notes.md`**: vendor-free. One `## Decisions` section naming every roster flag the row carries in backticks (`no_reference`, `superloom_decision`, `deferred_gap`, `web_only`, `requires_parent`) with the reason, and one `## Platform` section stating what `platform.support` means for this row.
 

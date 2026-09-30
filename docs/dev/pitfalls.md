@@ -97,6 +97,7 @@
   - [51. A visual baseline recorded from the first render ratified its defects](#_51-a-visual-baseline-recorded-from-the-first-render-ratified-its-defects)
   - [52. An enforcement job read packages it never installed, and the local replay ran it against an install left by an earlier gate](#_52-an-enforcement-job-read-packages-it-never-installed-and-the-local-replay-ran-it-against-an-install-left-by-an-earlier-gate)
   - [53. A custom-scheme deep link opened with `simctl openurl` stopped at the iOS "Open in" prompt](#_53-a-custom-scheme-deep-link-opened-with-simctl-openurl-stopped-at-the-ios-open-in-prompt)
+  - [54. A render-comparison gate compared generated ids, so one gate failed on every labelled component and another could never fail](#_54-a-render-comparison-gate-compared-generated-ids-so-one-gate-failed-on-every-labelled-component-and-another-could-never-fail)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1508,6 +1509,26 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** Both gates render the same component more than once and compare the output: one compares accessibility trees across templates, the other compares `innerHTML` across enum values. React's `useId` returns a new id on every mount, so every render differs in its `id` and id-reference attributes. The identity gate therefore always saw a difference, and the coverage gate always saw a difference too, which is exactly the result it needed to pass. Icon, the only component built before them, has no ids, so neither gate had met one.
 
 **Fix/Lesson:** A gate that compares two renders normalizes what legitimately differs between mounts before comparing: serialize an id reference as the position of the element it points at (`@3`, or `@missing`), or blank id and id-reference attribute values. Prove the gate still fires on a planted defect after adding the normalization; a comparison gate that has never seen its subject vary can be vacuous. Detection question: does anything in the compared output change on remount even when the inputs are identical?
+
+---
+
+### 55. A pixel comparison between two pages measured the pages, not the component
+
+**Symptom:** A component whose measured geometry matched its rendered reference to the pixel still differed from it by 5 to 20 percent in the perceptual gate, and the contact sheet showed text in a serif fallback.
+
+**Cause:** Four page-level differences, each invisible to a geometry check. The test page loaded no font files, so text fell back to the browser default. The reference page's stylesheet set the body font, and the harness's own body rule overrode it. The reference stylesheet's reset zeroed heading margins and changed line heights, so every cell after the first sat at a fractional offset on one page and a whole-pixel one on the other, and each glyph edge was anti-aliased differently. The reference stylesheet also asked for grayscale font smoothing, which the test page did not.
+
+**Fix/Lesson:** Before comparing pixels across two pages, make the pages identical except for the component: serve the pinned font files and declare every family both sides name (including a native-style family name a mobile reference uses); set no body font in the harness; give every layout box around a cell an explicit whole-pixel size, or place each cell on a fixed row pitch; apply the reference's text smoothing to both pages; wait for `document.fonts.ready` before reading anything. Detection question: with the component removed, would the two pages render identically?
+
+---
+
+### 56. A cross-test gate lost its data when a sibling test failed
+
+**Symptom:** The browser accessibility-identity gate failed with "expected at least one key, received 0" the first time any other browser test in the file failed; it had passed while everything else passed.
+
+**Cause:** Three per-template blocks filled a module-level map in their `beforeAll` hooks, and a later test compared the map. A failing test makes the test runner discard the worker and start a new one for the remaining tests, which re-evaluates the module with an empty map.
+
+**Fix/Lesson:** A test never reads state that another test or another block's hook produced; it collects what it compares inside itself. Detection question: does this test still pass when run alone with `-g`?
 
 ---
 
