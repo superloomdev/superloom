@@ -1493,7 +1493,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 53. A custom-scheme deep link opened with `simctl openurl` stopped at the iOS "Open in" prompt
 
-**Symptom:** A simulator gate builds and installs the app, `xcrun simctl openurl booted "app://..."` returns `ok`, and nothing happens: no report, no route; the timeout screenshot shows the home screen with an "Open in <App>?" dialog.
+**Symptom:** A simulator gate builds and installs the app, `xcrun simctl openurl booted "app://..."` returns `ok`, and nothing happens: no report, no route; the timeout screenshot shows the home screen with an "Open in [App]?" dialog.
 
 **Cause:** Current iOS asks the user to confirm a custom URL scheme opened from outside the app. `simctl openurl` delivers the URL to SpringBoard, which shows that dialog, and no `simctl` command can tap it. The same link on the Android emulator (`am start -a VIEW -d`) needs no confirmation, so a driver written against Android passes there and stalls on iOS. Reading the CLI output alone misleads: the opener reports success, and an unrelated line (the dev-client URL `expo run:ios` prints) looks like the cause.
 
