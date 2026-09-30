@@ -103,7 +103,7 @@ export default function [Name] (ctx) {
 - Platform only through `ctx.platform` (`os`, `isNative`, `split({ web, native })`); `split` rows dispatch in `[stem].js` and render `null` for a missing half.
 - `Lib.Utils` primitives for type guards and emptiness (`isString`, `isNumber`, `isNullOrUndefined`, `isEmptyArray`, `isEmptyString`, `inArray`); callbacks are duck-typed.
 
-**Context reads** (`components.md` - The context seam): `ctx.token(name)`, `ctx.color(leaf)`, `ctx.typeStyle(leaf)`, `ctx.metric(Name, metric)`, `ctx.enum(name)`, `ctx.icon(name, size)`, `ctx.focusPresentation(focused)`. Each throws on a token the theme lacks; nothing falls back from one token to another.
+**Context reads** (`components.md` - The context seam): `ctx.token(name)`, `ctx.color(leaf)`, `ctx.typeStyle(leaf)`, `ctx.metric(Name, metric)`, `ctx.enum(name)`, `ctx.icon(name, size)`, `ctx.focusPresentation(focused)`, `ctx.pressPresentation(state, palette)` (`{ container, layer, engaged }`), `ctx.fieldPresentation(state, { height, paddingInline, radius, surface })` (`{ frame, label, raised, placeholder }`). Each throws on a token the theme lacks; nothing falls back from one token to another. A component that shows press or a field frame uses the presentation and always mounts the parts it may hide.
 
 **`spec.js`**: `export default Object.freeze({ metric: 'group.token', derived: { tokens: ['a', 'b'], operation: 'sum' | 'subtract' }, decided: { constant: N } })`. A `constant` exists only when the roster row carries `superloom_decision`.
 

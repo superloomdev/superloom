@@ -1501,6 +1501,16 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ---
 
+### 54. A render-comparison gate compared generated ids, so one gate failed on every labelled component and another could never fail
+
+**Symptom:** The first components that label a part through a generated id (a checkbox, a text field, a select) failed the accessibility-identity gate under every template, with trees that differ only in `aria-labelledby=_r_1_` against `_r_0_`. At the same time the enum-coverage gate passed a planted edit that made both values of an enum draw the same frame.
+
+**Cause:** Both gates render the same component more than once and compare the output: one compares accessibility trees across templates, the other compares `innerHTML` across enum values. React's `useId` returns a new id on every mount, so every render differs in its `id` and id-reference attributes. The identity gate therefore always saw a difference, and the coverage gate always saw a difference too, which is exactly the result it needed to pass. Icon, the only component built before them, has no ids, so neither gate had met one.
+
+**Fix/Lesson:** A gate that compares two renders normalizes what legitimately differs between mounts before comparing: serialize an id reference as the position of the element it points at (`@3`, or `@missing`), or blank id and id-reference attribute values. Prove the gate still fires on a planted defect after adding the normalization; a comparison gate that has never seen its subject vary can be vacuous. Detection question: does anything in the compared output change on remount even when the inputs are identical?
+
+---
+
 ## Adding a New Entry
 
 Whenever a new failure mode is discovered:
