@@ -98,6 +98,8 @@
   - [52. An enforcement job read packages it never installed, and the local replay ran it against an install left by an earlier gate](#_52-an-enforcement-job-read-packages-it-never-installed-and-the-local-replay-ran-it-against-an-install-left-by-an-earlier-gate)
   - [53. A custom-scheme deep link opened with `simctl openurl` stopped at the iOS "Open in" prompt](#_53-a-custom-scheme-deep-link-opened-with-simctl-openurl-stopped-at-the-ios-open-in-prompt)
   - [54. A render-comparison gate compared generated ids, so one gate failed on every labelled component and another could never fail](#_54-a-render-comparison-gate-compared-generated-ids-so-one-gate-failed-on-every-labelled-component-and-another-could-never-fail)
+  - [55. A pixel comparison between two pages measured the pages, not the component](#_55-a-pixel-comparison-between-two-pages-measured-the-pages-not-the-component)
+  - [56. A cross-test gate lost its data when a sibling test failed](#_56-a-cross-test-gate-lost-its-data-when-a-sibling-test-failed)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
