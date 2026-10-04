@@ -1534,6 +1534,26 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ---
 
+### 57. A focus ring drawn on one part left the browser's own ring on the focused element
+
+**Symptom:** A brand-reach test that collected every drawn outline in a component cell after focusing it found two rings on a checkbox and a select: the theme's ring on the box or frame, and a one-pixel `rgb(0, 95, 204)` ring on the focused pressable. Unit tests had asserted the theme's ring and the absence of an inline outline width on the pressable, and passed.
+
+**Cause:** The component drew its focus presentation on a child or parent of the focusable element, but the focusable element itself kept the user agent's `:focus-visible` outline. The web view resets that outline only on the elements it styles itself (a text input), not on a pressable view. A unit test reading inline styles cannot see a user-agent style.
+
+**Fix/Lesson:** When a focus ring is drawn on a part other than the focusable element, the focusable element sets `outlineStyle: 'none'`, and the unit test asserts it. A browser gate that proves focus presentation lists every element in the cell with a drawn outline after a keyboard focus and expects exactly the theme's ring. Detection question: after `Tab` reaches the component, how many outlines does the cell draw?
+
+---
+
+### 58. Measuring a web-component reference read its boxes mid-animation and through the wrong tree
+
+**Symptom:** The second-reference measurement of a floating label reported fractional positions that changed between runs (`y: -4.68`, then `13.24`), a slotted label's text style as the page body's, and a grouped selector that matched nothing.
+
+**Cause:** Three properties of a shadow-DOM reference. Its label animates after the value arrives, and `document.getAnimations()` does not list animations running inside shadow roots, so a readiness check that waited on the document's animations saw none. Slotted text is styled by an element inside the shadow root, not by the host whose text nodes it is. A comma-separated selector list cannot be split on a shadow-crossing combinator as one string.
+
+**Fix/Lesson:** Give a shadow-DOM reference a settle time before polling for quiet, read a slotted text's style from the shadow element that styles it (`styleOf`), and resolve selector alternatives one at a time, each crossing shadow roots segment by segment. Detection question: does the measurement give the same numbers on two consecutive runs, and is the font family the one the reference's own stylesheet names?
+
+---
+
 ## Adding a New Entry
 
 Whenever a new failure mode is discovered:
