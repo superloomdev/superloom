@@ -1554,6 +1554,16 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ---
 
+### 59. An app test host that had only ever rendered one component broke when the catalog grew
+
+**Symptom:** The application's offline test host passed for months, then failed the first time the component library shipped more than one component: every text-input cell reported `ReferenceError: document is not defined` from inside the web build of React Native, and, once that was supplied, the server-driven walker test ran the process out of memory after all its assertions had passed.
+
+**Cause:** Two latent defects that a one-component catalog could not reach. The web build's text input reads `document.activeElement` in a layout effect without a DOM guard; a test renderer runs effects, and Node has no `document`. Separately, the autopilot screen bumped a poll counter on every poll and re-rendered the whole walk with it; with one component a render took under the 20 ms test poll interval, with 62 cells it took longer, so poll updates queued faster than renders could drain them inside `act`. The same re-render ran every second on the device.
+
+**Fix/Lesson:** A test host supplies exactly the global a dependency reads unguarded (here a frozen `document` with `activeElement: null`, and no `window`, so the library's DOM detection stays off), never a whole DOM it does not need. State that changes often (a poll count, a clock) must not re-render an expensive subtree: build that subtree once per real input (`useMemo` on the command) so React skips it. A test whose expected count is "the whole catalog" must compute it for the subset the scenario walks. Detection question: does the host still pass when the catalog is ten times larger, and does any interval-driven state re-render a list?
+
+---
+
 ## Adding a New Entry
 
 Whenever a new failure mode is discovered:
