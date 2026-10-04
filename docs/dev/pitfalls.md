@@ -1564,6 +1564,16 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ---
 
+### 60. A native geometry gate failed on every cell because its web baseline was wrong
+
+**Symptom:** The first native milestone run walked all 62 cells on iOS and Android with zero errors, then failed 143-150 width checks per platform against the web walker: text-bearing cells were 3-19 points wider natively, fields and selects 100-150 points narrower, under every template alike.
+
+**Cause:** Four defects, three of them on the side treated as the reference. The web host's committed IBM Plex Sans files were HTML pages saved under `.ttf` names, so the browser drew a fallback face; the font check passed because it compared token names, not what the browser loaded. The web walker measured before its declared faces finished loading, so even Roboto was measured in the fallback. Neither host carried the mono families, so code text was drawn in each platform's own system monospace. And the one real component defect: the field and select grew from `flex: 1`, a zero basis in native layout, so in a container sized to its content they collapsed to their padding, while a browser input's intrinsic width hid it on the web.
+
+**Fix/Lesson:** A cross-platform comparison is only as good as its baseline: before blaming the platform under test, prove the reference drew the faces it names (`document.fonts` status after an explicit load, not the token), load every declared face before the first render, and carry every family a type set names on every host, from the same binaries. A component that fills its container states the frame it is shown in, and grows from its content (`flexBasis: 'auto'`), never from zero. Detection question: when every cell disagrees in the same direction under every template, is the baseline drawing what it names?
+
+---
+
 ## Adding a New Entry
 
 Whenever a new failure mode is discovered:
