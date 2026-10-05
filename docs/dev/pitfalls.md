@@ -1572,6 +1572,16 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Fix/Lesson:** A cross-platform comparison is only as good as its baseline: before blaming the platform under test, prove the reference drew the faces it names (`document.fonts` status after an explicit load, not the token), load every declared face before the first render, and carry every family a type set names on every host, from the same binaries. A component that fills its container states the frame it is shown in, and grows from its content (`flexBasis: 'auto'`), never from zero. Detection question: when every cell disagrees in the same direction under every template, is the baseline drawing what it names?
 
+
+---
+
+### 61. Android ignored every runtime-loaded font, and Linux Chromium hinted the baseline
+
+**Symptom:** After the web baseline drew its real fonts, the native gate still failed Android on monospace (91pt where the web measured 122pt) and on a few labels, and a percentage allowance seemed needed for short strings. Android widths were identical under the IBM Plex and the Roboto templates; iOS widths differed between them as the web's did.
+
+**Cause:** Two platform behaviors. The runtime font loader registers each face under an alias (`IBM Plex Sans_normal`), and Android resolves a `fontFamily` only by registered name, so it drew its system Roboto for every theme family; iOS resolves the family name inside the font file, so it worked there, and sans hid the fault because Plex Sans and Roboto are within a few points of each other. Separately, Chromium on Linux hints glyph advances to whole pixels by default, so the CI web walker measured `Error text` at 63px where the font's own advances give 65.19px, which macOS, iOS and Android all draw.
+
+**Fix/Lesson:** On Android, embed each theme family at build time as one font family with a face per weight (the `expo-font` config plugin's `android.fonts`), so `fontFamily` plus `fontWeight` resolve to the right file; carry exactly the weights the type sets name. Run any browser that produces cross-platform text measurements unhinted (`--font-render-hinting=none`). Reproduce a CI-only measurement in the CI image before reasoning about it, and never size a tolerance from residuals whose causes are unexplained. Detection question: does the same cell measure differently under two templates that name different families, on every platform?
 ---
 
 ## Adding a New Entry
