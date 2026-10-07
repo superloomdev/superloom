@@ -18,6 +18,7 @@ The theming system takes a template and a stack of layered values, derives a com
 - [Motion](#motion)
 - [Anatomy enums](#anatomy-enums)
 - [Icons](#icons)
+- [The role grid](#the-role-grid)
 - [What is not a token, and why](#what-is-not-a-token-and-why)
 - [The Cascade: Layers, Not Modes](#the-cascade-layers-not-modes)
 - [Resolve Then Emit](#resolve-then-emit)
@@ -146,10 +147,9 @@ Where two design systems draw the same component with a different shape, the cho
 | `anatomy.switch_handle` | `fixed`, `grows` | whether a switch handle keeps its size or grows when on |
 | `anatomy.status_marker` | `bar_icon`, `plain` | whether a status surface shows a leading bar plus icon or a plain icon |
 | `anatomy.dialog_actions` | `stretched`, `trailing` | whether dialog action buttons stretch across the footer or sit trailing |
-| `anatomy.caret` | `shown`, `hidden` | whether a select shows a caret glyph |
 | `anatomy.slider_handle` | `round`, `bar` | whether a slider handle is a disc or a bar |
 
-The `feedback` group (`press`, `field`, `focus`) is the older enum group and follows the same rule. An anatomy neither system has an answer for takes the plainest value in the default template. A shape that cannot be expressed as one of the listed values is a new value: a component release plus a contract version, recorded as a contract request until the next bump.
+The `feedback` group (`press`, `field`, `focus_trigger`) is the older enum group and follows the same rule. An enum decides structure or behaviour; which drawing a part shows is an icon role (see Icons), and how a part looks in each state is a role-grid cell (see The role grid). An anatomy neither system has an answer for takes the plainest value in the default template. A shape that cannot be expressed as one of the listed values is a new value: a component release plus a contract version, recorded as a contract request until the next bump.
 
 ---
 
@@ -166,6 +166,22 @@ The `icon: true` marker is the engine's convention for every object-valued liter
 A template's generator produces the icon values from a pinned upstream icon package, once, at generation time - never at runtime. Conversion rules are the generator's: `path` elements are kept, `circle` and `rect` are converted to an equivalent path, foreign-object fallbacks and transparent helper paths are dropped, and a test asserts no mapped icon needed anything that was dropped. Redistributed icon sets carry their license in the template package's `NOTICE`. The semantic-name-to-upstream-glyph mapping is the one hand-authored table, kept beside the component library's roster, and every template supplies every name in it; a name one set lacks is recorded as such, never silently drawn from another set.
 
 A brand overrides icons the way it overrides any token: a sparse layer with five `icon.*` values changes five glyphs and leaves the rest to the template. A theme sent from a server carries its icons as the same JSON, validated by the same `validateContract`.
+
+Some icon names are roles rather than glyphs: `icon.dropdown_indicator` (a select's trailing indicator), `icon.invalid` (the invalid marker of a field or a selection control), `icon.checked_indicator` and `icon.mixed_indicator` (a checkbox's marks). A component asks for the role; each template answers with the drawing its own design system uses there. Where the reference component draws its own shape instead of a glyph from its icon set (one system's select draws a 10 x 5 triangle, its checkbox draws its check from two rectangles), the template carries that drawing for the role, converted to path data at generation time and recorded in its icon provenance, so the role is exact without touching the plain glyph of the same shape that other components use.
+
+---
+
+## The role grid
+
+A component family states, for each part it draws in each state it draws it in, one role token per property: colour, width, space, type set, elevation. The grid covers the `field` family (text input, select and later field-like components), each `button` kind and the `selection` family (checkbox, later radio and switch), and is published as `getContract().grid`. A component reads only its cells for the state it is in, so a per-system difference (a ring drawn inside the edge or 2px outside it, an outline that darkens on hover and thickens on focus, a hover fill one system draws and another does not, an elevation a filled button gains on hover) is template data, never a branch in a component.
+
+- A cell exists where a reference system's own component tokens or styles name that part, state and property, or where two references measurably differ. A state no reference distinguishes reads its rest value, resolved by the template at generation time.
+- A cell is defined at family level. A member cell (`text_input_container_hover`, `select_outline_disabled`, `select_indicator_focus`) exists only where a reference gives one member a different value than its family, and every other template answers it with the family's value.
+- Every template answers every cell. A neutral or reference-shaped template points each cell at the semantic token the part draws in (an alias); a template generated from a design system's component token files fills each cell from them, and never completes one from another template.
+- A colour a design system states as a role at an opacity (a disabled label at 38%, a disabled outline at 12%) stays translucent (`rgba`), exact over any backdrop; a hover or pressed fill of an opaque container is the state layer flattened over that container. A pressed state that the reference draws as its hover layer under its pressed layer stacks both.
+- `feedback.focus_trigger` (`any` | `keyboard`) decides whether a ring shows on every focus or on keyboard focus only; a field shows its focus state on any focus under every system.
+
+The template audit (`auditRoles`) reads every button label over its own fill in each state it is read in and keeps every enabled cell distinct from its disabled one, compositing a translucent colour over the page first. A value a reference itself draws below the minimum is a listed exception in that template's tests, asserted to keep reproducing.
 
 ---
 
