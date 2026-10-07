@@ -1616,6 +1616,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** The harness read a positioned pseudo-element at its offset but not its margin; themed the second reference only with the colors the template's mapping table named, so every other system color fell back to the component's own defaults; and read a slotted label's style from the wrong shadow element and its opacity along the light-DOM parent rather than the slot it renders in.
 
 **Fix/Lesson:** A reference page is themed with the full scheme the template was generated from (the template records it), positions include margins, styles are read from the element that paints them, and opacities are walked along the rendering tree (`assignedSlot`, then parent, then shadow host). When a measurement and a screenshot disagree, sample the pixels; the pixel is the truth the gate must reproduce.
+
+### 66. An exemption one comparison honored and another did not
+
+**Symptom:** After a clean install brought in a newer browser, the fidelity gate failed a text field's invalid states against the second reference by a fraction of a percent over its pixel budget, in both schemes, while every part comparison agreed.
+
+**Cause:** The reference omits the field's error icon with a reason and a probe proving it never draws one, and ours draws the template's icon by design. The part comparison skipped the omitted part; the pixel comparison of the same screenshots still counted the icon, so the state sat just under the budget until a change in rasterization tipped it over.
+
+**Fix/Lesson:** An exemption is declared once and applied by every comparison that reads the same thing. The omission carries `mask`, and the pixel comparison leaves that part's box out of the comparison. A mask that would cover the part the component is compared around is rejected, with a fire row proving the rejection. A state that passes only by a margin smaller than a browser update is a defect waiting to surface; diagnose it from the saved screenshots before raising any budget.
 ---
 
 ## Adding a New Entry
