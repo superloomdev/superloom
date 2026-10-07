@@ -149,7 +149,7 @@ Where two design systems draw the same component with a different shape, the cho
 | `anatomy.dialog_actions` | `stretched`, `trailing` | whether dialog action buttons stretch across the footer or sit trailing |
 | `anatomy.slider_handle` | `round`, `bar` | whether a slider handle is a disc or a bar |
 
-The `feedback` group (`press`, `field`, `focus_trigger`) is the older enum group and follows the same rule. An enum decides structure or behaviour; which drawing a part shows is an icon role (see Icons), and how a part looks in each state is a role-grid cell (see The role grid). An anatomy neither system has an answer for takes the plainest value in the default template. A shape that cannot be expressed as one of the listed values is a new value: a component release plus a contract version, recorded as a contract request until the next bump.
+The `feedback` group (`press`, `field`, `focus_trigger`) is the older enum group and follows the same rule. An enum decides structure or behavior; which drawing a part shows is an icon role (see Icons), and how a part looks in each state is a role-grid cell (see The role grid). An anatomy neither system has an answer for takes the plainest value in the default template. A shape that cannot be expressed as one of the listed values is a new value: a component release plus a contract version, recorded as a contract request until the next bump.
 
 ---
 
@@ -173,15 +173,15 @@ Some icon names are roles rather than glyphs: `icon.dropdown_indicator` (a selec
 
 ## The role grid
 
-A component family states, for each part it draws in each state it draws it in, one role token per property: colour, width, space, type set, elevation. The grid covers the `field` family (text input, select and later field-like components), each `button` kind and the `selection` family (checkbox, later radio and switch), and is published as `getContract().grid`. A component reads only its cells for the state it is in, so a per-system difference (a ring drawn inside the edge or 2px outside it, an outline that darkens on hover and thickens on focus, a hover fill one system draws and another does not, an elevation a filled button gains on hover) is template data, never a branch in a component.
+A component family states, for each part it draws in each state it draws it in, one role token per property: color, width, space, type set, elevation. The grid covers the `field` family (text input, select and later field-like components), each `button` kind and the `selection` family (checkbox, later radio and switch), and is published as `getContract().grid`. A component reads only its cells for the state it is in, so a per-system difference (a ring drawn inside the edge or 2px outside it, an outline that darkens on hover and thickens on focus, a hover fill one system draws and another does not, an elevation a filled button gains on hover) is template data, never a branch in a component.
 
 - A cell exists where a reference system's own component tokens or styles name that part, state and property, or where two references measurably differ. A state no reference distinguishes reads its rest value, resolved by the template at generation time.
 - A cell is defined at family level. A member cell (`text_input_container_hover`, `select_outline_disabled`, `select_indicator_focus`) exists only where a reference gives one member a different value than its family, and every other template answers it with the family's value.
 - Every template answers every cell. A neutral or reference-shaped template points each cell at the semantic token the part draws in (an alias); a template generated from a design system's component token files fills each cell from them, and never completes one from another template.
-- A colour a design system states as a role at an opacity (a disabled label at 38%, a disabled outline at 12%) stays translucent (`rgba`), exact over any backdrop; a hover or pressed fill of an opaque container is the state layer flattened over that container. A pressed state that the reference draws as its hover layer under its pressed layer stacks both.
+- A color a design system states as a role at an opacity (a disabled label at 38%, a disabled outline at 12%) stays translucent (`rgba`), exact over any backdrop; a hover or pressed fill of an opaque container is the state layer flattened over that container. A pressed state that the reference draws as its hover layer under its pressed layer stacks both.
 - `feedback.focus_trigger` (`any` | `keyboard`) decides whether a ring shows on every focus or on keyboard focus only; a field shows its focus state on any focus under every system.
 
-The template audit (`auditRoles`) reads every button label over its own fill in each state it is read in and keeps every enabled cell distinct from its disabled one, compositing a translucent colour over the page first. A value a reference itself draws below the minimum is a listed exception in that template's tests, asserted to keep reproducing.
+The template audit (`auditRoles`) reads every button label over its own fill in each state it is read in and keeps every enabled cell distinct from its disabled one, compositing a translucent color over the page first. A value a reference itself draws below the minimum is a listed exception in that template's tests, asserted to keep reproducing.
 
 ---
 

@@ -222,7 +222,7 @@ Every status surface (inline, toast, actionable, static notification, callout, e
 
 ### Centered Targets
 
-Every pressable meets a minimum target from the contract's target tokens and centres its glyph (`alignItems`, `justifyContent` on the pressable, never on the SVG, which rejects flex properties) so the glyph sits inside the hit region. Every pressable has an accessible name; a component that takes `title` and a caller that passes `children` (or the reverse) produces a nameless button, and the structure layer rejects it.
+Every pressable meets a minimum target from the contract's target tokens and centers its glyph (`alignItems`, `justifyContent` on the pressable, never on the SVG, which rejects flex properties) so the glyph sits inside the hit region. Every pressable has an accessible name; a component that takes `title` and a caller that passes `children` (or the reverse) produces a nameless button, and the structure layer rejects it.
 
 ---
 
