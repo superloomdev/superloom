@@ -100,6 +100,21 @@
   - [54. A render-comparison gate compared generated ids, so one gate failed on every labelled component and another could never fail](#_54-a-render-comparison-gate-compared-generated-ids-so-one-gate-failed-on-every-labelled-component-and-another-could-never-fail)
   - [55. A pixel comparison between two pages measured the pages, not the component](#_55-a-pixel-comparison-between-two-pages-measured-the-pages-not-the-component)
   - [56. A cross-test gate lost its data when a sibling test failed](#_56-a-cross-test-gate-lost-its-data-when-a-sibling-test-failed)
+  - [57. A focus ring drawn on one part left the browser's own ring on the focused element](#_57-a-focus-ring-drawn-on-one-part-left-the-browser-s-own-ring-on-the-focused-element)
+  - [58. Measuring a web-component reference read its boxes mid-animation and through the wrong tree](#_58-measuring-a-web-component-reference-read-its-boxes-mid-animation-and-through-the-wrong-tree)
+  - [59. An app test host that had only ever rendered one component broke when the catalog grew](#_59-an-app-test-host-that-had-only-ever-rendered-one-component-broke-when-the-catalog-grew)
+  - [60. A native geometry gate failed on every cell because its web baseline was wrong](#_60-a-native-geometry-gate-failed-on-every-cell-because-its-web-baseline-was-wrong)
+  - [61. Android ignored every runtime-loaded font, and Linux Chromium hinted the baseline](#_61-android-ignored-every-runtime-loaded-font-and-linux-chromium-hinted-the-baseline)
+  - [62. A visual review passed twice while a planned gate stood unbuilt](#_62-a-visual-review-passed-twice-while-a-planned-gate-stood-unbuilt)
+  - [63. A part left out of a reference comparison hid a control that no longer read as itself](#_63-a-part-left-out-of-a-reference-comparison-hid-a-control-that-no-longer-read-as-itself)
+  - [64. Fidelity gaps arrived one review at a time](#_64-fidelity-gaps-arrived-one-review-at-a-time)
+  - [65. A reference page measured the wrong thing and the gate agreed with a defect](#_65-a-reference-page-measured-the-wrong-thing-and-the-gate-agreed-with-a-defect)
+  - [66. An exemption one comparison honored and another did not](#_66-an-exemption-one-comparison-honored-and-another-did-not)
+  - [67. A reach check written as an allowlist failed on correct output](#_67-a-reach-check-written-as-an-allowlist-failed-on-correct-output)
+  - [68. Local verify and CI tested different library commits](#_68-local-verify-and-ci-tested-different-library-commits)
+  - [69. Every native screenshot showed a system dialog, and the gate passed](#_69-every-native-screenshot-showed-a-system-dialog-and-the-gate-passed)
+  - [70. A primary-reference layout choice hard-coded where the second reference has no counterpart](#_70-a-primary-reference-layout-choice-hard-coded-where-the-second-reference-has-no-counterpart)
+  - [71. A pixel gate passed on macOS and failed on Linux CI](#_71-a-pixel-gate-passed-on-macos-and-failed-on-linux-ci)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1664,6 +1679,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** Linux Chromium draws text with LCD subpixel antialiasing and hinting; macOS draws grayscale and never hints. The page's `-webkit-font-smoothing: antialiased` has an effect on macOS only. Colored fringes and shifted glyph edges changed the pixels near text on one side of the comparison more than the other. The gates had only ever run on macOS, where verify runs, so the difference was never seen.
 
 **Fix/Lesson:** A pixel gate fixes how text is rasterized, the same way it fixes fonts and viewport. Launch the browser with `--disable-lcd-text` and `--font-render-hinting=none` so text is grayscale and unhinted on every OS. Before the first CI run of a new pixel gate, run it once in the CI's Linux browser image, because a local verify on another OS does not replay its rasterizer.
+
 ---
 
 ## Adding a New Entry
