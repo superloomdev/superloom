@@ -1624,6 +1624,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** The reference omits the field's error icon with a reason and a probe proving it never draws one, and ours draws the template's icon by design. The part comparison skipped the omitted part; the pixel comparison of the same screenshots still counted the icon, so the state sat just under the budget until a change in rasterization tipped it over.
 
 **Fix/Lesson:** An exemption is declared once and applied by every comparison that reads the same thing. The omission carries `mask`, and the pixel comparison leaves that part's box out of the comparison. A mask that would cover the part the component is compared around is rejected, with a fire row proving the rejection. A state that passes only by a margin smaller than a browser update is a defect waiting to surface; diagnose it from the saved screenshots before raising any budget.
+
+### 67. A reach check written as an allowlist failed on correct output
+
+**Symptom:** A brand-reach check committed one step earlier failed on its first run against the published packages: a button ring's page-color line, a checkbox outline darkening on focus and an invalid field thickening its error outline were all reported as wrong.
+
+**Cause:** The check could not run until the packages were published, so it was committed untested. It listed the colors focus may add (the brand's, plus the page color found by walking up from the focused element, which starts at the button's own fill), so every legitimate color a template draws on focus counted as a defect, and a focus shown by width alone counted as drawing nothing.
+
+**Fix/Lesson:** A reach check compares the same parts with and without the layer: a color the unlayered template draws there in a value the layer overrides must become the layer's value; anything else the template draws is its own business. Rings are read as zero-offset, zero-blur spread layers, never elevation shadows. A check whose inputs are not yet published is run against a local link before it is committed, and is proven by a planted defect of the class it guards (here, a role cell written as a literal the brand cannot reach).
 ---
 
 ## Adding a New Entry
