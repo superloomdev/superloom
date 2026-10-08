@@ -1656,6 +1656,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** The primary reference keeps a tall button's label where the default height puts it, at the top, and the component carried that rule in code. The second reference has no tall button sizes, so no fidelity comparison covers those states, and the vendor choice sat in a generic component unseen.
 
 **Fix/Lesson:** A layout choice a component makes for only some sizes or kinds is a design-system decision, so it is an anatomy enum the template answers, even when only one reference states it. When writing a branch in a component, ask whether a second design system could answer it differently; if so, it belongs in the template, not in code.
+
+### 71. A pixel gate passed on macOS and failed on Linux CI
+
+**Symptom:** The library's full local verify passed, including every browser fidelity test. The first push-triggered CI run of those tests failed four of them: a sampled pixel below a checkbox read `rgb(195, 234, 255)` against white, and two text-field states measured 2.03-2.1% against a 2% budget. A Linux container on the same machine reproduced the exact numbers.
+
+**Cause:** Linux Chromium draws text with LCD subpixel antialiasing and hinting; macOS draws grayscale and never hints. The page's `-webkit-font-smoothing: antialiased` has an effect on macOS only. Colored fringes and shifted glyph edges changed the pixels near text on one side of the comparison more than the other. The gates had only ever run on macOS, where verify runs, so the difference was never seen.
+
+**Fix/Lesson:** A pixel gate fixes how text is rasterized, the same way it fixes fonts and viewport. Launch the browser with `--disable-lcd-text` and `--font-render-hinting=none` so text is grayscale and unhinted on every OS. Before the first CI run of a new pixel gate, run it once in the CI's Linux browser image, because a local verify on another OS does not replay its rasterizer.
 ---
 
 ## Adding a New Entry
