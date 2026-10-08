@@ -148,6 +148,9 @@ Where two design systems draw the same component with a different shape, the cho
 | `anatomy.status_marker` | `bar_icon`, `plain` | whether a status surface shows a leading bar plus icon or a plain icon |
 | `anatomy.dialog_actions` | `stretched`, `trailing` | whether dialog action buttons stretch across the footer or sit trailing |
 | `anatomy.slider_handle` | `round`, `bar` | whether a slider handle is a disc or a bar |
+| `anatomy.button_label` | `top`, `center` | whether a button taller than the default height keeps its label where the default height puts it or centers it |
+
+A layout choice a component makes for only some sizes or kinds is an anatomy choice even when only one reference states it: a component that hard-codes one system's rule draws it under every template.
 
 The `feedback` group (`press`, `field`, `focus_trigger`) is the older enum group and follows the same rule. An enum decides structure or behavior; which drawing a part shows is an icon role (see Icons), and how a part looks in each state is a role-grid cell (see The role grid). An anatomy neither system has an answer for takes the plainest value in the default template. A shape that cannot be expressed as one of the listed values is a new value: a component release plus a contract version, recorded as a contract request until the next bump.
 

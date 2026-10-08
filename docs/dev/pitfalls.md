@@ -1640,6 +1640,22 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** The consumer links the library from a sibling checkout. Locally that checkout sat on the milestone branch; the CI workflow checked out the library with no ref, so it got `main`, which still required the old contract. While the theme packages kept their contract, the mismatch was invisible. A same-version republish that changes the contract makes `main` and the registry incompatible until the library branch merges.
 
 **Fix/Lesson:** A sibling dependency checked out by CI is pinned in one tracked file that every workflow reads, and the local verify refuses to start unless the sibling checkout is exactly that ref as last pushed, with a clean tree. A local pass and a CI pass then describe the same commit by construction. The pin returns to `main` in the same change that merges the branch it names.
+
+### 69. Every native screenshot showed a system dialog, and the gate passed
+
+**Symptom:** The native gate was green on Android (every report complete, every assertion passing), but all 21 Android family screenshots showed "Pixel Launcher isn't responding" over a dimmed app. The previous run's screenshots were clean.
+
+**Cause:** An emulator under load reports the launcher as not responding, and the prompt takes focus over the app. The measurements come from inside the app, so they were unaffected; the screenshots are taken from outside, and nothing checked what they showed. Only the reviewer reads them.
+
+**Fix/Lesson:** Evidence a reviewer is meant to read is checked before it is taken. The driver switches error prompts off, closes system dialogs, and requires the app's own activity to hold focus (from `dumpsys window`) before each screenshot; a screenshot of any other window fails the walk. A green gate whose evidence is unreadable is not a pass.
+
+### 70. A primary-reference layout choice hard-coded where the second reference has no counterpart
+
+**Symptom:** The contact-sheet read found the Material extra-large and 2x-large buttons drawing their label at the top of a pill. Every gate was green.
+
+**Cause:** The primary reference keeps a tall button's label where the default height puts it, at the top, and the component carried that rule in code. The second reference has no tall button sizes, so no fidelity comparison covers those states, and the vendor choice sat in a generic component unseen.
+
+**Fix/Lesson:** A layout choice a component makes for only some sizes or kinds is a design-system decision, so it is an anatomy enum the template answers, even when only one reference states it. When writing a branch in a component, ask whether a second design system could answer it differently; if so, it belongs in the template, not in code.
 ---
 
 ## Adding a New Entry
