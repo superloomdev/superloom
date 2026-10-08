@@ -1632,6 +1632,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** The check could not run until the packages were published, so it was committed untested. It listed the colors focus may add (the brand's, plus the page color found by walking up from the focused element, which starts at the button's own fill), so every legitimate color a template draws on focus counted as a defect, and a focus shown by width alone counted as drawing nothing.
 
 **Fix/Lesson:** A reach check compares the same parts with and without the layer: a color the unlayered template draws there in a value the layer overrides must become the layer's value; anything else the template draws is its own business. Rings are read as zero-offset, zero-blur spread layers, never elevation shadows. A check whose inputs are not yet published is run against a local link before it is committed, and is proven by a planted defect of the class it guards (here, a role cell written as a literal the brand cannot reach).
+
+### 68. Local verify and CI tested different library commits
+
+**Symptom:** A consumer's full local verify passed (every phase, every e2e test); the push-triggered CI failed its unit tests at once with `theme is missing required tokens` naming a token the new contract had removed.
+
+**Cause:** The consumer links the library from a sibling checkout. Locally that checkout sat on the milestone branch; the CI workflow checked out the library with no ref, so it got `main`, which still required the old contract. While the theme packages kept their contract, the mismatch was invisible. A same-version republish that changes the contract makes `main` and the registry incompatible until the library branch merges.
+
+**Fix/Lesson:** A sibling dependency checked out by CI is pinned in one tracked file that every workflow reads, and the local verify refuses to start unless the sibling checkout is exactly that ref as last pushed, with a clean tree. A local pass and a CI pass then describe the same commit by construction. The pin returns to `main` in the same change that merges the branch it names.
 ---
 
 ## Adding a New Entry
