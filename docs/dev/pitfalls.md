@@ -115,6 +115,16 @@
   - [69. Every native screenshot showed a system dialog, and the gate passed](#_69-every-native-screenshot-showed-a-system-dialog-and-the-gate-passed)
   - [70. A primary-reference layout choice hard-coded where the second reference has no counterpart](#_70-a-primary-reference-layout-choice-hard-coded-where-the-second-reference-has-no-counterpart)
   - [71. A pixel gate passed on macOS and failed on Linux CI](#_71-a-pixel-gate-passed-on-macos-and-failed-on-linux-ci)
+  - [72. An accessibility prop that worked everywhere else crashed the Android Release build](#_72-an-accessibility-prop-that-worked-everywhere-else-crashed-the-android-release-build)
+  - [73. An Android text box was three points taller than the token line height](#_73-an-android-text-box-was-three-points-taller-than-the-token-line-height)
+  - [74. A fixed-position popover shrank to a column of single glyphs on Android](#_74-a-fixed-position-popover-shrank-to-a-column-of-single-glyphs-on-android)
+  - [75. A debug short-circuit switched off the theme contract check for a whole batch](#_75-a-debug-short-circuit-switched-off-the-theme-contract-check-for-a-whole-batch)
+  - [76. A stylesheet loaded for one reference reached into the other reference's shadow DOM](#_76-a-stylesheet-loaded-for-one-reference-reached-into-the-other-reference-s-shadow-dom)
+  - [77. A borrowed cousin token hid a fidelity gap behind a deleted comparison](#_77-a-borrowed-cousin-token-hid-a-fidelity-gap-behind-a-deleted-comparison)
+  - [78. Web-only styles rendered differently on iOS and Android without failing any gate](#_78-web-only-styles-rendered-differently-on-ios-and-android-without-failing-any-gate)
+  - [79. An anchored layer flipped and never clamped on native because the viewport was zero](#_79-an-anchored-layer-flipped-and-never-clamped-on-native-because-the-viewport-was-zero)
+  - [80. The test page's own cell border pushed a perceptual diff over budget](#_80-the-test-page-s-own-cell-border-pushed-a-perceptual-diff-over-budget)
+  - [81. A unit test passed only while a timer had not fired yet](#_81-a-unit-test-passed-only-while-a-timer-had-not-fired-yet)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1679,6 +1689,86 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** Linux Chromium draws text with LCD subpixel antialiasing and hinting; macOS draws grayscale and never hints. The page's `-webkit-font-smoothing: antialiased` has an effect on macOS only. Colored fringes and shifted glyph edges changed the pixels near text on one side of the comparison more than the other. The gates had only ever run on macOS, where verify runs, so the difference was never seen.
 
 **Fix/Lesson:** A pixel gate fixes how text is rasterized, the same way it fixes fonts and viewport. Launch the browser with `--disable-lcd-text` and `--font-render-hinting=none` so text is grayscale and unhinted on every OS. Before the first CI run of a new pixel gate, run it once in the CI's Linux browser image, because a local verify on another OS does not replay its rasterizer.
+
+### 72. An accessibility prop that worked everywhere else crashed the Android Release build
+
+**Symptom:** The native gate's Android job timed out on every theme with no report and the timeout screenshot showed the launcher, while iOS and web passed. logcat showed the process dying about a second after launch.
+
+**Cause:** React Native backs `accessibilityRole` with the narrow TalkBack enum and throws `IllegalArgumentException` on any ARIA name it lacks (`option`, `listbox`, `tooltip`, `dialog`, and several more). iOS tolerates the same values, so the crash appeared only in the Android Release build, and the driver suppressed the error dialog that would have shown it.
+
+**Fix/Lesson:** Semantic names go through `role`, which maps the full ARIA vocabulary and degrades to a null mapping rather than a throw; `accessibilityRole` is only for values in the TalkBack set. A native walk that produces no report is a crash until logcat proves otherwise, so the driver captures logcat and the app pid on every timeout.
+
+### 73. An Android text box was three points taller than the token line height
+
+**Symptom:** Every tooltip cell measured three points taller on Android than on web and iOS (45x19 against 45x16), all templates and all states alike.
+
+**Cause:** The tooltip wrapped its string anchor in a bare React Native `Text` with no theme type, so each platform drew it in its own system font at its own default line height. Every other text run went through the library's `Text` atom and matched. The first fix set `includeFontPadding: false`, which shrank the box and hid the real cause.
+
+**Fix/Lesson:** Every text run in a component renders through the theme's `Text` atom (or an explicit `typeStyle`), never a bare platform `Text`. The anchor now does, with no platform style, and it measures within a point of the web on Android and iOS. When one component's text disagrees across platforms and the rest agree, look for the run that skipped the theme before switching off a platform default.
+
+### 74. A fixed-position popover shrank to a column of single glyphs on Android
+
+**Symptom:** Android screenshots showed the tooltip bubble drawing its label one character per line, though every measurement the gate checked on the cell itself was plausible. The Material dialog also ran off the screen, centered on its 640-wide showcase stage.
+
+**Cause:** React Native has no `position: fixed`. On native the layer fell back to `position: absolute` inside the component's own wrapper, and no overlay host was mounted anywhere. A column flex parent bounds an absolute child's cross axis to its own width (the 45-wide anchor), and `measureInWindow` window coordinates were applied inside that box. The first fix repaired it per component, branching on the platform inside the tooltip, which breaks the rule that only a dispatcher reads the platform.
+
+**Fix/Lesson:** Overlays render through one `OverlayHost` mounted at the app root, and the positioning behaviors own every layer mode. Inside a host a layer lives in the host's space on every platform: a covering scrim fills the host, and a menu sits at its `x`/`y` in it. On native, an anchored layer converts the anchor's window rect into host space and flips or clamps against the host's size. A host inside a bounded box (a showcase stage) keeps its layers in that box. Unhosted, a native overlay warns once. Prove the host is mounted before trusting any overlay screenshot.
+
+### 75. A debug short-circuit switched off the theme contract check for a whole batch
+
+**Symptom:** `createSystem` built under a theme package that lacked the newest tokens without complaint, and every gate stayed green.
+
+**Cause:** While a contract amendment was unpublished, a session edited `if (!presence.empty)` to `if (false && !presence.empty)` so local runs could proceed, and the edit stayed in the working tree. No gate fires on a disabled check, because its silence looks the same as a pass.
+
+**Fix/Lesson:** Read every line of a working tree you inherit before committing it, and grep added lines for `false &&`, `true ||`, `.only(` and `.skip(`. Unblock an unpublished dependency by publishing it or linking it locally, never by disabling the check that would notice.
+
+### 76. A stylesheet loaded for one reference reached into the other reference's shadow DOM
+
+**Symptom:** Material dialog actions measured 60px tall instead of 40, so the template answered an actions height of 100 instead of 80. The Modal action selector only came out right after the second reference page was decontaminated.
+
+**Cause:** The second reference rendered on the same page as the primary reference's stylesheet, whose global `*{box-sizing:inherit}` reset beat the Material web components' own `:host` rules inside their shadow trees.
+
+**Fix/Lesson:** Each reference renders on a page that loads only its own styles. The second reference page loads no primary stylesheet. When a reference measures an implausible number, check what else on the page can reach it before writing that number into a template.
+
+### 77. A borrowed cousin token hid a fidelity gap behind a deleted comparison
+
+**Symptom:** Menu shortcuts crowded their labels on every contact sheet. Later, the second-reference Menu measured 121 wide against 112 after its width comparison was restored.
+
+**Cause:** Menu read the field family's icon gap and the label's own type for its item gap and shortcut. The width comparisons that would have failed were deleted with a "waits on" note, which is an expected gap kept outside `expected-gaps.json`.
+
+**Fix/Lesson:** Each distinct visual run gets its own contract cell (`control.menu_item_gap`, `type.menu_item_shortcut`, `color.menu_item_shortcut`), and each template answers it from its own source. A comparison is never removed to wait for a cell; the gap goes into `expected-gaps.json`, where it expires.
+
+### 78. Web-only styles rendered differently on iOS and Android without failing any gate
+
+**Symptom:** Native screenshots showed a Material switch's state-layer halo at rest, a check mark on an unselected small switch, and every tooltip caret at the bubble's left edge. Geometry gates passed on all three platforms.
+
+**Cause:** `visibility: 'hidden'` is a web style that React Native ignores. A box centered with `left: 0, right: 0, margin: 'auto'` centers in CSS, but native layout keeps it at `left: 0`. The second attempt, `left: '50%'` with a negative half-width margin, still landed one padding short, because native layout resolves an absolute child's percentage against the parent's content box, not its padding box. The walker measures cell boxes, not paint inside them.
+
+**Fix/Lesson:** Hide with `opacity` or a transparent fill. Center an absolute part with a full-span absolute row (`left: 0, right: 0`) that centers an in-flow child, using no percentages or auto margins. The purity gate now rejects `visibility` in shipped source. Native screenshots get a layer-4 read every milestone, because a matching box can still hide a native-only drawing.
+
+### 79. An anchored layer flipped and never clamped on native because the viewport was zero
+
+**Symptom:** A bottom-placed tooltip drew above its anchor on iOS and Android, and a menu opened near the right edge ran off the screen.
+
+**Cause:** The positioning behaviors read `window.innerWidth`, which is undefined on native, so every placement computed against a 0x0 viewport. The hosted menu also measured from its open effect, before the host had mounted its surface.
+
+**Fix/Lesson:** On native the viewport comes from `Dimensions` (and the host's measured size when hosted). A layer the host mounts later measures from its own `onLayout`, not from the effect that opened it.
+
+### 80. The test page's own cell border pushed a perceptual diff over budget
+
+**Symptom:** The TextArea dark-scheme comparison against the second reference failed at 2.01% against a 2% budget on one machine and 2.02% on the Linux CI image, after passing at 2.00% on another. Every dark state sat between 1.4% and 2.0%, while the light states stayed under 0.9%.
+
+**Cause:** The measurement page lays cells out on a fixed 160px row pitch, and each cell draws a dashed border. A TextArea is taller than the row, so the cell's bottom border crossed the field. The shot is cropped to the field, and the field sits at a different offset in each cell, so the border appeared at a different height in each image. On a dark backdrop the line counts as a mismatch; on a light one it falls under the pixel threshold.
+
+**Fix/Lesson:** A measurement cell keeps its border's width but paints it transparent, so no measured position moves and no harness pixel enters a shot. A guard test fails if a measurement cell paints a border, outline or shadow. When one scheme's diffs all sit well above the other's for the same component, look for pixels the harness paints before tuning the component or the budget.
+
+### 81. A unit test passed only while a timer had not fired yet
+
+**Symptom:** A tooltip test failed in about one run in four on a faster machine, and had passed every run before. Nothing in the component or the test had changed.
+
+**Cause:** react-native-web answers `measureInWindow` from a `setTimeout`, and React's `act` waits for microtasks, not timers. The test read the caret's edge right after rendering. When the timer had not fired, it saw the unmeasured placement. When it had, the zero-size test anchor flipped the placement and the caret moved to the other edge.
+
+**Fix/Lesson:** A test of a measured layout waits for the measure explicitly (an `act` around a resolved timer) and asserts the measured result. An assertion that holds only before an asynchronous callback lands is a race, however often it passes.
 
 ---
 
