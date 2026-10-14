@@ -1770,6 +1770,22 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Fix/Lesson:** A test of a measured layout waits for the measure explicitly (an `act` around a resolved timer) and asserts the measured result. An assertion that holds only before an asynchronous callback lands is a race, however often it passes.
 
+### 82. A pseudo-element's line measured at its host's edge, not where it was drawn
+
+**Symptom:** An inset divider measured its line 16 points away from the reference's, although both drew the line at the same place on screen.
+
+**Cause:** The measurement read a pseudo-element's position as its `left` offset inside its host, which is right only for a positioned pseudo-element. The reference's line was an in-flow `::before` inside a host with 16px of inline padding, so it started inside the padding, and the harness reported it at the host's edge.
+
+**Fix/Lesson:** A positioned pseudo-element sits at its offset inside the host; an in-flow one sits inside the host's border and padding plus its own margin. When a measurement disagrees with what the screenshot shows, check how the harness locates the part before changing the component.
+
+### 83. A large link icon drew a different glyph than the reference
+
+**Symptom:** The large link's trailing icon measured 14.4 points tall at the top against the reference's 12.5, while the small and medium links matched.
+
+**Cause:** The reference renders its icon component at its default 16px glyph and its stylesheet scales the box to 20px. The icon atom picked the set's own 20px glyph for a 20-point box, which is drawn on a different grid.
+
+**Fix/Lesson:** The glyph a set draws and the box it is drawn in are two sizes. The icon atom takes `glyphSize` apart from `size`, and a component passes the glyph size its reference draws. Compare the painted path, not the box, when an icon disagrees.
+
 ---
 
 ## Adding a New Entry
