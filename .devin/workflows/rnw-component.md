@@ -192,7 +192,7 @@ Files in this order; each written whole, by hand, from the embedded Standard:
 
 ## Phase F - Hand off (STOP)
 
-1. Commit this component only (the tier guard runs in the hook):
+1. Commit this component only:
    ```bash
    git add -A && git commit -m "feat([family]): [add|fix] [Name]"
    ```

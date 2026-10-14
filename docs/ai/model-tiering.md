@@ -53,7 +53,9 @@ A plan entry that cannot be executed without asking what it means is a defect of
 
 ## Hand-off Within a Plan
 
-A plan whose steps alternate between judgment and execution tags every step `[HIGH]` (reasoning) or `[LOW]` (execution), and the two tiers hand off through the progress file, not through conversation:
+**One session with a sidekick (the default when the tool offers it).** A lead on the reasoning model and a sidekick on the execution model share one session. The lead decides, authors specs, tests, values and briefs, reviews every diff and contact sheet, and talks to the owner; the sidekick implements the lead's briefs, runs the gates and workflows, and reports with numbers and artifact paths. Steps carry no tier tags, nobody stops for a model switch, and no tier guard runs; the progress file and the briefs remain the memory between sessions, and numbers in evidence still come only from scripts.
+
+**Two sessions, switched by hand (when no sidekick is available).** A plan whose steps alternate between judgment and execution tags every step `[HIGH]` (reasoning) or `[LOW]` (execution), and the two tiers hand off through the progress file, not through conversation:
 
 - **`PROGRESS.md` carries a `TIER` field** beside the plan, part and step. It names the tier that owns the next step. Whoever finishes a step writes the next step's tier, prints exactly `>>> SWITCH TO LOW <<<` or `>>> SWITCH TO HIGH <<<`, and ends the turn. The owner switches the model and says "continue".
 - **A tier switch is a hard stop.** Before starting any step, the session compares the step's tag with `TIER`. If they differ, it writes the step's tier, prints the switch line and stops - it never starts the step in the same turn, and never chains a step of the other tier because the owner said "continue". If the tier the owner announces does not match the file, the session says so instead of working. A hand-off that is skipped once is skipped silently, because the model that skipped it is the one that would have noticed.

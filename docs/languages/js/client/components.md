@@ -58,7 +58,7 @@ A composite coordinates its children through React Context, never through `React
 
 ## The Roster
 
-`data/roster.json` is the library's single list of components: one row per upstream export of the reference design systems plus the library's own additions, in build order. The roster is generated as a candidate from the pinned upstream packages' real export lists, then completed by hand. A row is never deleted; an export that will not be built is marked `not_applicable` with its reason. Every column is mandatory and `scripts/roster-check.js` rejects an empty one:
+`data/roster.json` is the library's single list of components: one row per upstream export of the reference design systems plus the library's own additions, in build order. The roster is generated as a candidate from the pinned upstream packages' real export lists, then completed by hand. An export the library does not build is not a row: it is an entry in the roster's `excluded` list naming one of the declared exclusion rules (a release-stage prefix, product-specific UI, a second design system, a non-UI export, and so on; each rule is one sentence in the roster's `rules`). The roster check asserts every upstream export is a row or an excluded entry, never both, so an upstream upgrade cannot add an export nobody classified. Every column is mandatory and `scripts/roster-check.js` rejects an empty one:
 
 | Column | Holds |
 |---|---|
@@ -71,7 +71,7 @@ A composite coordinates its children through React Context, never through `React
 | `reference` | `{ kind: render-web / parse-rn / none, package }` - how the component is measured |
 | `carbon_twin`, `material_twin` | The upstream component the measurement compares against, or `none` |
 | `diff_budget` | Perceptual-diff allowance in percent |
-| `flags` | `deferred_gap`, `no_reference`, `web_only`, `requires_parent`, `superloom_decision`, `not_applicable` - each demands an explanation in `description` |
+| `flags` | `deferred_gap`, `no_reference`, `web_only`, `requires_parent`, `superloom_decision` - each demands an explanation in `description` |
 | `status` | `pending`, `built`, `measured`, `frozen` |
 
 The registry, the showcase, the test harness and the documentation generator all iterate the roster. A component that is not a row does not exist.

@@ -10,7 +10,7 @@ A lookup table of settled micro-conventions. One row per settled question, with 
 |---|---|---|---|
 | 1 | What tiers does the component library use? | Four tiers: `atom/`, `molecule/`, `composite/`, `provider/`. Atoms compose nothing. Molecules compose atoms only. Composites compose atoms, molecules, and other composites. Providers are context-only, render no visual output | `docs/languages/js/client/components.md` - Component Vocabulary |
 | 2 | Where do providers register? | A provider is a roster row with `tier: provider`, registered in the component registry like any other component; it renders no visual output and consumes no tokens | `docs/languages/js/client/components.md` - Component Vocabulary |
-| 3 | What is the exception model? | Roster flags: `deferred_gap`, `no_reference`, `web_only`, `requires_parent`, `superloom_decision`, `not_applicable`. Each flag demands an explanation in the row's `description` | `docs/languages/js/client/components.md` - The Roster |
+| 3 | What is the exception model? | Roster flags: `deferred_gap`, `no_reference`, `web_only`, `requires_parent`, `superloom_decision`. Each flag demands an explanation in the row's `description`; an upstream export that is not built is an `excluded` entry under a named rule, not a row | `docs/languages/js/client/components.md` - The Roster |
 
 ## Accessibility
 
