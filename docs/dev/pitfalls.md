@@ -132,6 +132,7 @@
   - [86. The native assert guessed what the web would draw in a narrower room](#_86-the-native-assert-guessed-what-the-web-would-draw-in-a-narrower-room)
   - [87. A design system's token file and its rendered component disagreed](#_87-a-design-system-s-token-file-and-its-rendered-component-disagreed)
   - [88. Steps that shrink in CSS held their width natively](#_88-steps-that-shrink-in-css-held-their-width-natively)
+  - [89. A state just under the pixel budget hid a real difference](#_89-a-state-just-under-the-pixel-budget-hid-a-real-difference)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1832,6 +1833,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** CSS flex items default to `flex-shrink: 1`, so the reference's 128-point steps shrink toward their 112-point minimum. React Native defaults `flexShrink` to 0, so the same declared width never gives.
 
 **Fix/Lesson:** Porting a flex layout from CSS means stating the shrink the CSS default implied. A row of fixed-width items that the reference lets shrink takes `flexShrink: 1` with the reference's minimum width.
+
+### 89. A state just under the pixel budget hid a real difference
+
+**Symptom:** The button set's three-button state passed the perceptual gate on macOS at 1.91% and failed on Linux CI at 2.04%, after the milestone merge. Every run on each platform gave the same number.
+
+**Cause:** Ours centered each wide button's label; the reference holds it at the start padding. No measured part covered the label's position inside a seat, so only the pixel budget saw it, and the budget sat between the two platforms' anti-aliasing.
+
+**Fix/Lesson:** A deterministic percentage near the budget is a difference until its diff image says otherwise; look at the images before calling it raster noise. The fix measured each seat's label as a part, so the measure gate now fails the same defect on every platform.
 
 ---
 

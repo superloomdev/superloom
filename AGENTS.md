@@ -175,6 +175,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **Cross-platform comparisons walk the web reference at each native platform's own grid width:** the assert refuses reports of different widths, cells compare directly within the pixel tolerances, and a cell body gives its content a definite maximum width so a percentage `maxWidth` resolves the same way on both platforms. Pitfalls entry 86
 - **The rendered component is the reference, not its token file:** when a measurement disagrees with a token-derived value, read the computed style of what actually paints, pseudo-elements included, and correct the template to the rendered value with that measurement cited. Pitfalls entry 87
 - **Porting a flex layout from CSS means stating the shrink the CSS default implied:** CSS flex items default to `flex-shrink: 1`, React Native to `flexShrink: 0`; a row of fixed-width items the reference lets shrink takes `flexShrink: 1` with the reference's minimum width. Pitfalls entry 88
+- **A deterministic perceptual percentage near the budget is a difference until its diff image says otherwise:** look at ours, upstream and the diff before calling it raster noise, and turn what the image shows into a measured part so the measure gate fails it on every platform. Pitfalls entry 89
 
 ## Boundaries
 
