@@ -125,6 +125,13 @@
   - [79. An anchored layer flipped and never clamped on native because the viewport was zero](#_79-an-anchored-layer-flipped-and-never-clamped-on-native-because-the-viewport-was-zero)
   - [80. The test page's own cell border pushed a perceptual diff over budget](#_80-the-test-page-s-own-cell-border-pushed-a-perceptual-diff-over-budget)
   - [81. A unit test passed only while a timer had not fired yet](#_81-a-unit-test-passed-only-while-a-timer-had-not-fired-yet)
+  - [82. A pseudo-element's line measured at its host's edge, not where it was drawn](#_82-a-pseudo-element-s-line-measured-at-its-host-s-edge-not-where-it-was-drawn)
+  - [83. A large link icon drew a different glyph than the reference](#_83-a-large-link-icon-drew-a-different-glyph-than-the-reference)
+  - [84. Hover and focus scrolled a tag's content sideways](#_84-hover-and-focus-scrolled-a-tag-s-content-sideways)
+  - [85. A size every template shares held a label every template sizes differently](#_85-a-size-every-template-shares-held-a-label-every-template-sizes-differently)
+  - [86. The native assert guessed what the web would draw in a narrower room](#_86-the-native-assert-guessed-what-the-web-would-draw-in-a-narrower-room)
+  - [87. A design system's token file and its rendered component disagreed](#_87-a-design-system-s-token-file-and-its-rendered-component-disagreed)
+  - [88. Steps that shrink in CSS held their width natively](#_88-steps-that-shrink-in-css-held-their-width-natively)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1785,6 +1792,46 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** The reference renders its icon component at its default 16px glyph and its stylesheet scales the box to 20px. The icon atom picked the set's own 20px glyph for a 20-point box, which is drawn on a different grid.
 
 **Fix/Lesson:** The glyph a set draws and the box it is drawn in are two sizes. The icon atom takes `glyphSize` apart from `size`, and a component passes the glyph size its reference draws. Compare the painted path, not the box, when an icon disagrees.
+
+### 84. Hover and focus scrolled a tag's content sideways
+
+**Symptom:** A dismissible tag measured its label, close control and glyph 10 points left of the reference, but only while hovered, focused or pressed. At rest it matched.
+
+**Cause:** The tag clipped its content with `overflow: hidden`, which makes the element a scroll container. Its close control's transparent press target was wider than the tag's end, and the pointer move and `focus()` both scroll a target into view, so the browser scrolled the tag's content by the overhang.
+
+**Fix/Lesson:** A press target larger than its face must not sit inside an ancestor with `overflow: hidden`. Clip the text itself (`numberOfLines` with `flexShrink`), not the box. A shift that appears only in interaction states and equals a target's overhang is a scroll, not a layout bug.
+
+### 85. A size every template shares held a label every template sizes differently
+
+**Symptom:** Under the second system, every small tag drew its label crossing the pill's outline. No gate failed.
+
+**Cause:** The small tag's height was a spec sum of two scale tokens, the same 18 points in every template, while the label's type set came from the template (a 20-point line there). The text overflowed a box that did not clip it, and the structural gates only checked the cell's bounds.
+
+**Fix/Lesson:** A dimension that must hold template-sized content is a template cell, never a sum every template shares. The catch became the structural check that text stays inside the box painted behind it, shown failing on the old templates first.
+
+### 86. The native assert guessed what the web would draw in a narrower room
+
+**Symptom:** Each new family broke the native gate in a new way: an aspect-ratio cell on the smaller phone, a toast's height, a progress row wider than the screen.
+
+**Cause:** The web reference was walked at desktop width and the native phones lay cells out in less room. The assert compensated with rules (a capped width bound, a height floor) that guessed the web's answer in a room it never measured, and every guess failed for some shape.
+
+**Fix/Lesson:** Compare like with like. The web reference is walked once per native platform at that platform's grid width, the assert refuses reports of different widths, and cells compare directly within the pixel tolerances. A cell body also gives its content a definite maximum width, so a percentage maximum resolves the same way on both platforms.
+
+### 87. A design system's token file and its rendered component disagreed
+
+**Symptom:** Every interactive tag measured 1.1 points wider than the second reference's chip on an 11-character label, and its container read transparent upstream although the chip was visibly filled.
+
+**Cause:** The chips' token file names a label tracking, but the chips' styles never apply it, so the rendered label computes `letter-spacing: normal`. The chips also paint their container on a `::before` layer, so the element the reference measured was transparent.
+
+**Fix/Lesson:** The rendered component is the reference, not its token file. When a measurement disagrees with a token-derived value, read the computed style of what actually paints, pseudo-elements included, and correct the template to the rendered value with that measurement cited.
+
+### 88. Steps that shrink in CSS held their width natively
+
+**Symptom:** A three-step progress indicator stayed 384 points wide on a phone with 344 points of room, while the reference shrinks its steps.
+
+**Cause:** CSS flex items default to `flex-shrink: 1`, so the reference's 128-point steps shrink toward their 112-point minimum. React Native defaults `flexShrink` to 0, so the same declared width never gives.
+
+**Fix/Lesson:** Porting a flex layout from CSS means stating the shrink the CSS default implied. A row of fixed-width items that the reference lets shrink takes `flexShrink: 1` with the reference's minimum width.
 
 ---
 
