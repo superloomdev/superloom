@@ -131,7 +131,7 @@ export default function [Name] (ctx) {
 
 ## Phase B - Row checks (read-only, STOP points)
 
-1. `status`: `add` requires `pending`; `fix` requires `built`, `measured` or `frozen`. `not_applicable` is never built. Mismatch: STOP.
+1. `status`: `add` requires `pending`; `fix` requires `built`, `measured` or `frozen`. An upstream export the library does not build is an `excluded` entry, not a row, and is never built. Mismatch: STOP.
 2. `parent` (row flag `requires_parent`): the parent must already be built (`status` not `pending`). If not: STOP and name the parent.
 3. Behaviors: every name in the row's `behaviors` must map to an existing hook in `behaviors/ROBOTS.md`. A missing one: STOP - a new behavior is its own authored change with its own tests.
 4. Enums: every token in the row's `enums` must be a contract enum:
