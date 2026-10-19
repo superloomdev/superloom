@@ -184,6 +184,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **A successful native install does not prove SDK peer compatibility:** declare host-owned versions from the installed SDK's compatibility manifest and verify fresh resolution instead of suppressing peer warnings. Pitfalls entry 95
 - **A native scene owns its background, foreground, safe area and route-local overlay lifetime:** geometry does not prove them; review simulator images and add old-image paint rejection and retained-scene portal checks without removing warm navigation. Pitfalls entry 96
 - **Stop an owned verifier process tree, not one PID:** verify mutating children exited, preserve incomplete attempts as incomplete, and check byte restoration before the next gate. Pitfalls entry 97
+- **Roster growth does not share one screenshot deadline:** parameterize pixel proofs by component, assert every visible sample is covered, and preserve self, blank and stale-gap checks without increasing timeouts or pixel thresholds. Pitfalls entry 98
 
 ## Boundaries
 

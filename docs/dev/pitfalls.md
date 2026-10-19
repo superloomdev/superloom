@@ -141,6 +141,7 @@
   - [95. Automatically installed peers drifted outside the host SDK's versions](#_95-automatically-installed-peers-drifted-outside-the-host-sdk-s-versions)
   - [96. Native geometry passed while the scene itself was visually wrong](#_96-native-geometry-passed-while-the-scene-itself-was-visually-wrong)
   - [97. A stopped verifier left its mutation runner alive](#_97-a-stopped-verifier-left-its-mutation-runner-alive)
+  - [98. A roster-sized screenshot proof shared one fixed test deadline](#_98-a-roster-sized-screenshot-proof-shared-one-fixed-test-deadline)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1915,6 +1916,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** Terminating the parent and browser processes had left the separate mutation-runner child alive. It continued planting mutations while another check read the same working tree.
 
 **Fix/Lesson:** Treat the verifier as an owned process tree, not one PID. Stop and verify every mutating child, preserve the incomplete run as incomplete, and check byte restoration before starting another gate.
+
+### 98. A roster-sized screenshot proof shared one fixed test deadline
+
+**Symptom:** The full browser suite passed locally, but CI timed out inside the pixel-pipeline proof after 30 seconds. The remaining comparisons passed.
+
+**Cause:** One test captured every visible sample sequentially under one deadline. Roster growth increased its work without increasing test isolation. The reported screenshot stability wait was the active operation when the whole test expired, not proof of a permanently unstable component.
+
+**Fix/Lesson:** Parameterize the proof by component and keep every visible sample, self-comparison, blank comparison and stale-gap assertion. Assert exact sample coverage per component. Keep the existing timeout and pixel thresholds; narrow the invisible-icon mutation to its named component proof.
 
 ## Adding a New Entry
 
