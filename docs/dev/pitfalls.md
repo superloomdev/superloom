@@ -133,6 +133,14 @@
   - [87. A design system's token file and its rendered component disagreed](#_87-a-design-system-s-token-file-and-its-rendered-component-disagreed)
   - [88. Steps that shrink in CSS held their width natively](#_88-steps-that-shrink-in-css-held-their-width-natively)
   - [89. A state just under the pixel budget hid a real difference](#_89-a-state-just-under-the-pixel-budget-hid-a-real-difference)
+  - [90. Browser cleanup erased the Node evidence from the same run](#_90-browser-cleanup-erased-the-node-evidence-from-the-same-run)
+  - [91. Capturing a screenshot changed the interaction being compared](#_91-capturing-a-screenshot-changed-the-interaction-being-compared)
+  - [92. An additional action inherited its owner's interaction phases](#_92-an-additional-action-inherited-its-owner-s-interaction-phases)
+  - [93. Equal focus colors were mistaken for the same semantic role](#_93-equal-focus-colors-were-mistaken-for-the-same-semantic-role)
+  - [94. Fractional line heights accumulated a native-only layout error](#_94-fractional-line-heights-accumulated-a-native-only-layout-error)
+  - [95. Automatically installed peers drifted outside the host SDK's versions](#_95-automatically-installed-peers-drifted-outside-the-host-sdk-s-versions)
+  - [96. Native geometry passed while the scene itself was visually wrong](#_96-native-geometry-passed-while-the-scene-itself-was-visually-wrong)
+  - [97. A stopped verifier left its mutation runner alive](#_97-a-stopped-verifier-left-its-mutation-runner-alive)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1843,6 +1851,70 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Fix/Lesson:** A deterministic percentage near the budget is a difference until its diff image says otherwise; look at the images before calling it raster noise. The fix measured each seat's label as a part, so the measure gate now fails the same defect on every platform.
 
 ---
+
+### 90. Browser cleanup erased the Node evidence from the same run
+
+**Symptom:** A batch finished its Node tests, then its browser tests passed, but the evidence collector could no longer find the Node TAP file.
+
+**Cause:** Playwright's `outputDir` was the common results directory. Starting the browser runner emptied that directory, including the earlier phase's TAP file.
+
+**Fix/Lesson:** Give destructive runner cleanup its own child directory. Keep durable phase reports outside it and test that running the later phase preserves the earlier phase's evidence.
+
+### 91. Capturing a screenshot changed the interaction being compared
+
+**Symptom:** The measured focus outline agreed with the reference, but the screenshot showed a different outline on the last long-list sample.
+
+**Cause:** Capture centered the cell again after opening its menu. The menu had increased the scrollable extent, so the second centering moved the page under a stationary pointer. A row received pointer entry and acquired a highlight after measurement but before capture.
+
+**Fix/Lesson:** Position the cell before entering the requested phase. Preserve that viewport through measurement and capture; assert that capture leaves both the viewport and active descendant unchanged.
+
+### 92. An additional action inherited its owner's interaction phases
+
+**Symptom:** A count-chip clear action was clicked as though it opened a menu, while a decorative caret caused an actionability timeout.
+
+**Cause:** The driver reused the main field's phase list for every extra target. It also treated a pointer-transparent painted caret as the element that must receive the event.
+
+**Fix/Lesson:** Carry each target's own phase contract through every collector. A painted target can supply a measured point while its real governing control receives the event; the driver must not invent an impossible locator action.
+
+### 93. Equal focus colors were mistaken for the same semantic role
+
+**Symptom:** A sparse brand's normal focus color reached the controls, but a probe still reported a leaked template color on an inverse count chip.
+
+**Cause:** The normal and inverse focus roles happened to share an unbranded RGB value. The probe inferred alias dependency from value equality, although the inverse role was independent. A second version incorrectly forced every control on an inverse surface to use inverse focus.
+
+**Fix/Lesson:** Compare against the built role palette in the actual surface context. An inverse surface may carry normal or inverse focus. Calibrate that distinction with a normal-surface leak that still fails, an explicit inverse override, and missing-focus and browser-ring failures that remain failures.
+
+### 94. Fractional line heights accumulated a native-only layout error
+
+**Symptom:** Android groups and notifications were two to four points taller than the same font and theme on the web; the widths agreed.
+
+**Cause:** A source type product was `18.00008`. React Native's Android line-height span applied `ceil` to each line, producing 19 pixels at density one. Integer-valued themes did not expose the difference.
+
+**Fix/Lesson:** Keep source tokens exact. Resolve final native text emission through the injected physical pixel grid, while retaining the web's own unit conversion. Test more than one density and prove that raw theme values are unchanged; do not round every token or enlarge a layout tolerance.
+
+### 95. Automatically installed peers drifted outside the host SDK's versions
+
+**Symptom:** Fresh installs succeeded, but the native host resolved animation peers newer than the versions its Expo SDK declared.
+
+**Cause:** The host did not declare those peers, so npm selected newer versions through transitive peer requirements. A successful install did not prove SDK compatibility.
+
+**Fix/Lesson:** Inspect the installed SDK's compatibility manifest and declare the host-owned compatible versions. Verify the resolved versions after a clean install rather than suppressing peer warnings or changing the SDK to fit an accidental resolution.
+
+### 96. Native geometry passed while the scene itself was visually wrong
+
+**Symptom:** Every component measured correctly, but dark native text appeared on a white page, status text crossed the notch, and a later Android route showed an earlier route's tooltips.
+
+**Cause:** Component styles were themed but their host scene was not. Safe-area layout was absent. A global portal outside the navigation stack still displayed layers owned by a retained inactive screen.
+
+**Fix/Lesson:** Review the actual simulator images before closure. A scene owns its page background, foreground, safe area and contained overlay lifetime; component geometry cannot prove those. Add a paint assertion that rejects the old image and a retained-scene ownership regression, while keeping warm navigation coverage.
+
+### 97. A stopped verifier left its mutation runner alive
+
+**Symptom:** A focused test failed against a source mutation nobody had just made, after the full verifier appeared to have stopped.
+
+**Cause:** Terminating the parent and browser processes had left the separate mutation-runner child alive. It continued planting mutations while another check read the same working tree.
+
+**Fix/Lesson:** Treat the verifier as an owned process tree, not one PID. Stop and verify every mutating child, preserve the incomplete run as incomplete, and check byte restoration before starting another gate.
 
 ## Adding a New Entry
 

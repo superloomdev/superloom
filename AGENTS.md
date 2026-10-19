@@ -176,6 +176,14 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **The rendered component is the reference, not its token file:** when a measurement disagrees with a token-derived value, read the computed style of what actually paints, pseudo-elements included, and correct the template to the rendered value with that measurement cited. Pitfalls entry 87
 - **Porting a flex layout from CSS means stating the shrink the CSS default implied:** CSS flex items default to `flex-shrink: 1`, React Native to `flexShrink: 0`; a row of fixed-width items the reference lets shrink takes `flexShrink: 1` with the reference's minimum width. Pitfalls entry 88
 - **A deterministic perceptual percentage near the budget is a difference until its diff image says otherwise:** look at ours, upstream and the diff before calling it raster noise, and turn what the image shows into a measured part so the measure gate fails it on every platform. Pitfalls entry 89
+- **Runner cleanup owns a child results directory, not every phase's evidence:** keep durable TAP and summary files outside it, and prove later runner startup preserves earlier reports. Pitfalls entry 90
+- **Capture preserves the measured interaction:** position before entering the phase, then keep the viewport and active descendant unchanged through measurement and screenshotting. Pitfalls entry 91
+- **Each additional target carries its own phase contract:** a pointer-transparent painted target supplies a measured point to its governing control, never an impossible locator action. Pitfalls entry 92
+- **Equal colors do not establish a semantic alias:** compare normal and inverse focus against the built palette in the painted surface context; retain rejection tests for normal leaks, explicit inverse overrides, missing focus and browser rings. Pitfalls entry 93
+- **Native text emission resolves line height on the injected physical pixel grid:** preserve raw theme values and web units, test multiple densities, and never hide per-line rounding accumulation by changing tokens or layout tolerances. Pitfalls entry 94
+- **A successful native install does not prove SDK peer compatibility:** declare host-owned versions from the installed SDK's compatibility manifest and verify fresh resolution instead of suppressing peer warnings. Pitfalls entry 95
+- **A native scene owns its background, foreground, safe area and route-local overlay lifetime:** geometry does not prove them; review simulator images and add old-image paint rejection and retained-scene portal checks without removing warm navigation. Pitfalls entry 96
+- **Stop an owned verifier process tree, not one PID:** verify mutating children exited, preserve incomplete attempts as incomplete, and check byte restoration before the next gate. Pitfalls entry 97
 
 ## Boundaries
 

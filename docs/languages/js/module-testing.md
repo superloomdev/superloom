@@ -69,17 +69,7 @@ The same test file (`_test/test.js`) runs against both tiers. The only differenc
 
 ### README Badges (Standard)
 
-Every module README must include **exactly 3 badges** at the top: Test, License, Node.js. Integration test status lives in the Testing section table (see below), not in the header - this keeps headers uniform across offline and service-dependent modules.
-
-**All modules (3 badges):**
-
-```markdown
-[![Test](https://github.com/superloomdev/superloom/actions/workflows/ci-publish-helper-modules.yml/badge.svg?branch=main)](https://github.com/superloomdev/superloom/actions/workflows/ci-publish-helper-modules.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-brightgreen.svg)](https://nodejs.org)
-```
-
-We use GitHub's **native badge endpoint** (served by GitHub, works with private repos). The label reads `Test` because the workflow is named `Test` in `ci-publish-helper-modules.yml` (`name: Test`). The badge reflects the status of the unified `ci-publish-helper-modules.yml` workflow on `main` - it turns red only if tests fail. Publish failures do not affect this badge because publish jobs are gated behind their test jobs and are no-ops when there is no version bump.
+README header badges follow the [canonical section order](module-docs.md#universal-readme-sections): license and runtime version only. Test and integration status belong with the Testing section below, not in the header.
 
 ### Testing Section (Standard)
 
