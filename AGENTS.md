@@ -185,6 +185,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **A native scene owns its background, foreground, safe area and route-local overlay lifetime:** geometry does not prove them; review simulator images and add old-image paint rejection and retained-scene portal checks without removing warm navigation. Pitfalls entry 96
 - **Stop an owned verifier process tree, not one PID:** verify mutating children exited, preserve incomplete attempts as incomplete, and check byte restoration before the next gate. Pitfalls entry 97
 - **Roster growth does not share one screenshot deadline:** parameterize pixel proofs by component, assert every visible sample is covered, and preserve self, blank and stale-gap checks without increasing timeouts or pixel thresholds. Pitfalls entry 98
+- **An assertion over DOM nodes passes identity, never the nodes:** `node:assert` formats a diff of both operands on failure, so `assert.equal(node === other, true, msg)` keeps strict identity while staying primitive; a mutation-checker child that dies without a normal test failure is no proof - refuse it and name the row; cap children with `--max-old-space-size` in CI and mirror the ceiling locally. Pitfalls entry 99
 
 ## Boundaries
 

@@ -142,6 +142,7 @@
   - [96. Native geometry passed while the scene itself was visually wrong](#_96-native-geometry-passed-while-the-scene-itself-was-visually-wrong)
   - [97. A stopped verifier left its mutation runner alive](#_97-a-stopped-verifier-left-its-mutation-runner-alive)
   - [98. A roster-sized screenshot proof shared one fixed test deadline](#_98-a-roster-sized-screenshot-proof-shared-one-fixed-test-deadline)
+  - [99. A failing assertion over two DOM nodes killed the CI runner, not the test](#_99-a-failing-assertion-over-two-dom-nodes-killed-the-ci-runner-not-the-test)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1924,6 +1925,14 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** One test captured every visible sample sequentially under one deadline. Roster growth increased its work without increasing test isolation. The reported screenshot stability wait was the active operation when the whole test expired, not proof of a permanently unstable component.
 
 **Fix/Lesson:** Parameterize the proof by component and keep every visible sample, self-comparison, blank comparison and stale-gap assertion. Assert exact sample coverage per component. Keep the existing timeout and pixel thresholds; narrow the invisible-icon mutation to its named component proof.
+
+### 99. A failing assertion over two DOM nodes killed the CI runner, not the test
+
+**Symptom:** A mutation-check CI job died with exit 143 ("the runner has received a shutdown signal") at the same row on three consecutive runs, each time at a row whose planted edit makes a focus assertion fail. The full suite passed locally on a 32 GB machine, and the row fired locally. The job's logs were sometimes unavailable because the run was still in progress or the Actions service was degraded, so the first two occurrences were misread as infrastructure.
+
+**Cause:** The assertion was `assert.equal(document.activeElement, rows[2])`. When it fails, `node:assert` formats a diff of both operands, and a DOM element in a Node DOM implementation is a very large circular graph. Formatting it exhausts the 7 GB GitHub runner, the kernel kills the runner process, and the job ends with 143 instead of a failing test. Locally the same formatting fits in memory, so the test fails normally and the mutation row "fires".
+
+**Fix/Lesson:** Pass primitive operands to assertions whose values are DOM nodes: `assert.equal(document.activeElement === rows[2], true, 'ArrowDown focuses gamma')`. Strict identity is preserved; only the operand type changes. In the mutation checker, a child that dies without a normal test failure (a signal, an exit status other than 1, or output without a failing-test marker) is not a proof that the mutation was caught - refuse it and name the row. Put a `--max-old-space-size` ceiling on the children in CI and mirror it locally so a blow-up fails the child with a heap error instead of taking the runner down. A failing row that CI cannot name three times in a row is a defect in the harness's failure path, not bad luck.
 
 ## Adding a New Entry
 
