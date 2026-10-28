@@ -168,7 +168,7 @@ module-name/
 
 ## Same-Version Republish for Generated Packages
 
-A generated reference theme package (e.g., Material, Carbon) completes its schemes from the default template at generation time. When the default template is republished at the same version with corrected values, the generated package must be regenerated and republished at the same version. The procedure:
+A generated reference theme package (e.g., Carbon) completes its schemes from the default template at generation time. When the default template is republished at the same version with corrected values, the generated package must be regenerated and republished at the same version (archived templates are excluded). The procedure:
 
 1. Regenerate all schemes from the corrected, registry-installed default template.
 2. Verify the installed default shasum equals the registry shasum before writing.

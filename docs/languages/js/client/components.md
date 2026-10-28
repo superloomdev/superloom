@@ -2,7 +2,7 @@
 
 > **Language:** JavaScript
 
-The component library is one generic React Native Web library. A component owns its **anatomy** (which parts exist and how they nest) and its **behavior** (state, keyboard, focus, accessibility) and nothing else. Every value it draws is a token read from the theme; every discrete shape choice is an enum token the theme picks and the component implements every value of; every glyph is an icon token whose value the theme carries. The library ships no colors, no font files and no icon files. A design system is a template package, and a new design system is a new template and zero component changes - a property proven continuously by rendering the whole roster under three templates. This page defines the vocabulary, the roster, the authoring contract, the platform model, the gates, and the accessibility contract.
+The component library is one generic React Native Web library. A component owns its **anatomy** (which parts exist and how they nest) and its **behavior** (state, keyboard, focus, accessibility) and nothing else. Every value it draws is a token read from the theme; every discrete shape choice is an enum token the theme picks and the component implements every value of; every glyph is an icon token whose value the theme carries. The library ships no colors, no font files and no icon files. A design system is a template package, and a new design system is a new template and zero component changes - a property proven continuously by rendering the whole roster under the two shipped templates. This page defines the vocabulary, the roster, the authoring contract, the platform model, the gates, and the accessibility contract.
 
 ## On This Page
 
@@ -69,7 +69,7 @@ A composite coordinates its children through React Context, never through `React
 | `enums`, `behaviors` | The enum tokens the component switches on and the behaviors it composes |
 | `parent` | The family root a `requires_parent` component is composed inside |
 | `reference` | `{ kind: render-web / parse-rn / none, package }` - how the component is measured |
-| `carbon_twin`, `material_twin` | The upstream component the measurement compares against, or `none` |
+| `carbon_twin` | The upstream component the measurement compares against, or `none` |
 | `diff_budget` | Perceptual-diff allowance in percent |
 | `flags` | `deferred_gap`, `no_reference`, `web_only`, `requires_parent`, `superloom_decision` - each demands an explanation in `description` |
 | `status` | `pending`, `built`, `measured`, `frozen` |
@@ -120,7 +120,7 @@ Components draw icons by meaning: `close`, `chevron_down`, `warning`. Each seman
 
 ### Contract requests
 
-A component that needs a token the contract lacks does not invent one and does not stop the batch. The request (token, requesting row, reason) is queued and applied at the next milestone as one contract version bump, followed by regeneration and republication of every template in dependency order and revalidation of every consumer. Never mid-batch, never one token at a time.
+A component that needs a token the contract lacks does not invent one and does not stop the batch. The request (token, requesting row, reason) is queued and applied at the next milestone as one contract version bump, followed by regeneration and republication of every shipped template in dependency order (archived templates are excluded) and revalidation of every consumer. Never mid-batch, never one token at a time.
 
 ---
 
@@ -192,7 +192,7 @@ A component's geometry is declared data, not an emergent result of padding and l
 
 Fidelity to a reference design system is measured, not transcribed. For a row whose `reference.kind` is `render-web`, the test harness renders the pinned upstream web component in the same browser and reads its computed geometry (height, paddings, border sides, radius, font size, icon size); for `parse-rn`, it parses the pinned upstream React Native component's style objects. The library's rendering under the matching template must agree within one point, and the perceptual diff of the two screenshots must stay within the row's `diff_budget`. A value read from the upstream's source stylesheet by eye is a transcription: it cannot detect upstream drift and it ratifies whatever the reader believed. Every reference is a pinned published package version recorded in the roster's `source`, and regenerating the measurement is deterministic.
 
-A row flagged `no_reference` (a library addition with no upstream twin) is not measured against anything. It is held to contract validity, the structural and accessibility layers, and its own regression baseline, and its documentation says so. A row flagged `deferred_gap` draws the primary system's shape with the second system's tokens, and the gap is stated in its documentation until the anatomy is added.
+A row flagged `no_reference` (a library addition with no upstream twin) is not measured against anything. It is held to contract validity, the structural and accessibility layers, and its own regression baseline, and its documentation says so. A row flagged `deferred_gap` draws the primary system's shape with another design system's tokens, and the gap is stated in its documentation until the anatomy is added.
 
 ### The five gate layers
 
