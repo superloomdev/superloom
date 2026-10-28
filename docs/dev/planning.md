@@ -65,7 +65,7 @@ __dev__/plans/
 
 The folder lives at `__dev__/plans/` at the **workspace root** (the parent directory containing all repo clones, e.g. `project-superloom/__dev__/plans/`). It is outside any git repository and is never committed. Plans span all repos in the workspace - not just one. The **rules** (this file) are tracked in `superloom`; the plan files themselves are personal and local only.
 
-**There is no index file.** Any number of plans can coexist in `plans/` - this explicitly supports multiple agents or work streams running in parallel. The plan file's own `**Status:**` field is the source of truth. At session start, read `__dev__/RUNBOOK.md` first (if it exists), then `PROGRESS.md`, then `ESCALATIONS.md`, then the plan named as `CURRENT`. Never select a plan by mtime when a `RUNBOOK.md` exists.
+**There is no index file.** Any number of plans can coexist in `plans/` - this explicitly supports multiple agents or work streams running in parallel. The plan file's own `**Status:**` field is the source of truth. In dev mode (see `../ai/agent-configuration.md` - Session Modes and Code Words), read `__dev__/RUNBOOK.md` first (if it exists), then `PROGRESS.md`, then `ESCALATIONS.md`, then the plan named as `CURRENT`. Never select a plan by mtime when a `RUNBOOK.md` exists.
 
 Plan numbers are zero-padded and **monotonic**: once `0023` exists, the next plan is `0024`, even if `0023` is later deleted. Numbers are never reused. The slug is a short kebab-case description.
 
@@ -316,7 +316,7 @@ When plans execute as a chain (multiple plans that must run in sequence), four s
 | `__dev__/ESCALATIONS.md` | Parked items. Written to, then the loop continues |
 | `__dev__/WORKFLOW-GAPS.md` | Findings the blind audit pass caught that the workflow missed |
 
-Read order at session start: `RUNBOOK.md`, `PROGRESS.md`, `ESCALATIONS.md`, then the plan named `CURRENT`. Never trust a conversation summary over `PROGRESS.md`.
+In dev mode (see `../ai/agent-configuration.md` - Session Modes and Code Words), read order at session start: `RUNBOOK.md`, `PROGRESS.md`, `ESCALATIONS.md`, then the plan named `CURRENT`. Never trust a conversation summary over `PROGRESS.md`.
 
 ### When the orchestration layer is warranted
 

@@ -18,6 +18,20 @@
 >
 > This file has a size budget: target 300 lines, hard ceiling 400 (`docs/ai/agent-configuration.md`). Content that would breach it moves to docs or workflows.
 
+
+## Session Modes - choose before any rule below
+
+| Code word | Mode | Do |
+|---|---|---|
+| `start` | **Use**: another project is the working project | Read `.devin/workflows/adopt.md` in this folder and follow it. The rules below describe Superloom's JavaScript reference: study them, never apply them to the other project's code. Never edit Superloom files. The project's own `AGENTS.md`, once written, governs |
+| `dev mode` | **Dev**: working on Superloom; a pasted Superloom plan prompt counts | Session ritual in AI Behavior Rules (`RUNBOOK.md` first) |
+
+- No code word: infer from the working project; if unclear ask "Use mode or dev mode?". `start` with no other project: offer to create one
+- Reply to a code word: at most 6 lines - bold tag cloud, then current plan or phase and next step
+- Dev mode tags: **AGENTS.md active** · **Dev mode** · **Golden Rule** · **Docs first** · **Two-pass check** · **No AI attribution** · **High / Low / Fusion / Lean Fusion understood**
+- Owner restates known rules: reply "Already known.", the tags, and "Next time, say start." (or "dev mode")
+- Owner vocabulary: **High** reasoning tier alone · **Low** execution tier alone · **Fusion** reasoning lead + execution sidekick · **Lean Fusion** lead reads only the prompt, `PROGRESS.md` tail and reports. `docs/ai/model-tiering.md`
+
 ## Persona
 
 Assist developers working on **Superloom**, a modular application framework and engineering reference built to run anywhere. Currently implemented in JavaScript. Backend runs on Docker (Express) and AWS Lambda; frontend documented (RNW/Expo stack). The architecture is language-independent; other languages are future expansions.
@@ -41,7 +55,7 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 
 ## AI Behavior Rules
 
-- **At session start:** read `__dev__/RUNBOOK.md` first (if it exists), then `PROGRESS.md`, then `ESCALATIONS.md`, then the plan named `CURRENT`. Never select a plan by mtime when a `RUNBOOK.md` exists. Use `/plan` for transitions. Full rules: `docs/dev/planning.md`
+- **In dev mode, at session start:** read `__dev__/RUNBOOK.md` first (if it exists), then `PROGRESS.md`, then `ESCALATIONS.md`, then the plan named `CURRENT`. Never select a plan by mtime when a `RUNBOOK.md` exists. Use `/plan` for transitions. Full rules: `docs/dev/planning.md`
 - Read a module's `README.md` before modifying it; **read `ROBOTS.md` before calling any module's functions** (compact signature reference)
 - Always run tests before returning: `npm install && npm test` from the module's `_test/` directory
 - **Two-pass check after any refactor touching 3+ functions:** Pass 1 logic + lint; Pass 2 re-read the full file (step comments, 3/2/1 spacing, banner widths, multi-line return objects, `};` combined with END banners, JSDoc indentation matching declarations), lint again. See `docs/languages/js/pitfalls-migration.md`
@@ -231,6 +245,7 @@ Every module: entry file + `[name].config.js` + `[name].errors.js` + `[name].val
 
 | Command | Repo | Use when |
 |---|---|---|
+| `start or /adopt [create\|refresh\|new]` | superloom (use mode) | Adopt Superloom's principles into another project in its own idiom, verify it stands alone, detach; refresh an adopted project; start a new one |
 | `/js-helper-module [create\|fix] [path]` | js-helper-modules | Build new modules and fix existing ones; one module per run. `fix` is also the retrofit verb after docs change |
 | `/js-helper-module-audit [path]` | js-helper-modules | Read-only deep audit with creator-diff and three-bucket drift classification; hands findings to `/js-helper-module fix` |
 | `/js-helper-module-publish [path]` | js-helper-modules | Pre-publish gate, CI registration, version bump, and release |

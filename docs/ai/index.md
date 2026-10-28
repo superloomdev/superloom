@@ -6,10 +6,10 @@ Superloom treats AI agents as a permanent development audience: code and documen
 
 | Document | Covers |
 |---|---|
-| [Agent Configuration](agent-configuration.md) | The `AGENTS.md` standard, tool-specific folders, the size budget, module-level `ROBOTS.md` |
+| [Agent Configuration](agent-configuration.md) | The `AGENTS.md` standard, tool-specific folders, the size budget, module-level `ROBOTS.md`, Session Modes and Code Words |
 | [Workflow Authoring](workflow-authoring.md) | How to write workflows agents execute with precision: phases, gates, evidence, convergence |
 | [Workflow Archetypes](workflow-archetypes.md) | Language-agnostic patterns that concrete workflow families are compiled from |
-| [Model Tiering](model-tiering.md) | Dividing work between expensive reasoning models and inexpensive execution models |
+| [Model Tiering](model-tiering.md) | Dividing work between expensive reasoning models and inexpensive execution models, including the Owner Vocabulary |
 
 ## The Operating Ideas
 

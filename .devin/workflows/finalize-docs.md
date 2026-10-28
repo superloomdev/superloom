@@ -435,10 +435,10 @@ Three allowed destination values, closed set:
 | `docs/languages/js/pitfalls-migration.md` | AI Behavior Rules (two-pass check reference) |
 | `docs/languages/js/versioning/bump-checklist.md` | Boundaries / Never (publish is CI-only) + Safe Terminal Patterns (pre-publish gate) |
 | `docs/languages/js/versioning/dependency-management.md` | AI Behavior Rules (peer dependencies rule) |
-| `docs/ai/agent-configuration.md` | Golden Rule callout (size budget + repo-local `AGENTS.md` note) + AI Behavior Rules (repository independence, release policy is repository-local) |
+| `docs/ai/agent-configuration.md` | Golden Rule callout (size budget + repo-local `AGENTS.md` note) + Session Modes (code-word table and reply rules) + AI Behavior Rules (repository independence, release policy is repository-local) |
 | `docs/ai/workflow-authoring.md` | Workflow Inventory (descriptions + authoring standard) |
 | `docs/ai/workflow-archetypes.md` | Workflow Inventory (archetype family pointer line) |
-| `docs/ai/model-tiering.md` | Workflow Inventory (model-tier split line) |
+| `docs/ai/model-tiering.md` | Session Modes (owner vocabulary line) + Workflow Inventory (model-tier split line) |
 | `docs/dev/pitfalls.md` | Safe Terminal Patterns (all entries) |
 | `docs/dev/testing-local-modules.md` | Safe Terminal Patterns (module testing contract) |
 | `docs/dev/cicd-publishing.md` | Safe Terminal Patterns (CI chained publishes) |
@@ -460,6 +460,8 @@ Three allowed destination values, closed set:
 | `docs/guide/getting-started.md` | not mirrored (reference material; project setup walkthrough) |
 | `docs/guide/ide-setup.md` | not mirrored (reference material; editor configuration recommendations) |
 | `docs/guide/creating-entities-js.md` | not mirrored (reference material; quick-start entity creation walkthrough) |
+| `docs/guide/adopting-superloom.md` | not mirrored (reference material; use-mode walkthrough looked up per adoption) |
+| `docs/principles/adopting-superloom.md` | not mirrored (reference material; use-mode doctrine and workflow contract looked up per adoption) |
 | `docs/principles/code-readability.md` | AI Behavior Rules (blank-line hierarchy, section banners, public/private grouping) |
 | `docs/principles/error-handling.md` | AI Behavior Rules (three-category error disposal, universal doctrine) |
 | `docs/principles/extending-to-a-language.md` | not mirrored (reference material; procedure for adding a language layer; rules already mirrored via server-architecture, validation, versioning-and-releases, testing) |

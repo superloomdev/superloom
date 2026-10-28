@@ -51,6 +51,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'Getting Started',   link: '/docs/guide/getting-started' },
+            { text: 'Use in Your Project', link: '/docs/guide/adopting-superloom' },
             { text: 'Creating Entities', link: '/docs/guide/creating-entities-js' },
             { text: 'IDE Setup',         link: '/docs/guide/ide-setup' },
           ],

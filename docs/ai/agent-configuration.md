@@ -7,6 +7,7 @@ How AI agents are configured across the Superloom workspace: which files exist, 
 - [The File Set](#the-file-set)
 - [AGENTS.md: the Open Standard](#agents-md-the-open-standard)
 - [AGENTS.md Is Compiled, Never Authored](#agents-md-is-compiled-never-authored)
+- [Session Modes and Code Words](#session-modes-and-code-words)
 - [The Size Budget](#the-size-budget)
 - [What Belongs In and Out](#what-belongs-in-and-out)
 - [Tool-Specific Folders](#tool-specific-folders)
@@ -45,6 +46,28 @@ Rules:
 This is the Golden Rule of agent configuration, and it has teeth because the failure mode is severe: a directly edited `AGENTS.md` asserts rules the documentation no longer contains, agents follow them confidently, and the divergence is invisible until it produces wrong work. The compile workflow maintains a section map (which documentation file feeds which `AGENTS.md` section), a rule inventory that catches source rules with no compressed mirror, and a verify mode that reports drift without writing.
 
 Even one-word fixes go through the source document. The compile is cheap; the drift is not.
+
+## Session Modes and Code Words
+
+> **Superloom serves two jobs, chosen by a code word before any other rule applies: `start` (use mode) and `dev mode`.**
+
+| Code word | Mode | Working project | The agent |
+|---|---|---|---|
+| `start` | Use | Another project, with this folder added to its workspace | Follows the adoption workflow from [Adopting Superloom](../principles/adopting-superloom.md). Treats the JavaScript rules in `AGENTS.md` as a worked example to study, never as rules for the other project's code. Never edits Superloom files. Once the project has its own `AGENTS.md`, that file governs |
+| `dev mode` | Dev | Superloom itself | Runs the [session ritual](../dev/planning.md): `RUNBOOK.md`, `PROGRESS.md`, `ESCALATIONS.md`, then the current plan |
+
+Rules:
+
+- **No code word:** infer the mode from the working project. When it is unclear, ask one line: "Use mode or dev mode?"
+- **A pasted Superloom plan prompt counts as `dev mode`.**
+- **`start` with no other project in the workspace** offers to create one ([Starting a New Project](../principles/adopting-superloom.md#starting-a-new-project)).
+- **The reply to a code word is at most six lines:** a bold tag cloud of two or three words per tag, then one line naming the current plan or phase and the next step. Nothing else.
+- **Repeated instructions.** When the owner restates rules the agent already holds, the agent replies "Already known.", shows the tag cloud, and adds "Next time, say start." (or "dev mode"). It does not re-explain the rules back.
+- **Owner vocabulary is understood without explanation:** High, Low, Fusion and Lean Fusion, as defined in [Model Tiering](model-tiering.md#owner-vocabulary).
+
+The reason: an owner who cannot see that the agent holds the rules repeats them in every session, which costs tokens and attention. A short, fixed acknowledgement makes the loaded state visible, and the code word removes the repetition.
+
+The adopted project's own `AGENTS.md` carries the same two-line ritual for its own work: `start` answers with the project's tag cloud and plan position ([The Detach Test](../principles/adopting-superloom.md#the-detach-test)).
 
 ## The Size Budget
 

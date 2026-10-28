@@ -1,6 +1,8 @@
 # Getting Started
 
 > **Audience.** Application developers building *with* Superloom. If you are contributing to the framework itself (helper modules, demo project, docs), start at [`../dev/README.md`](../dev/README.md) instead.
+>
+> Working in another language or an existing project that is not Superloom? See [Use Superloom in Your Project](adopting-superloom.md).
 
 A walkthrough that gets you from a clean machine to a running Superloom project. The framework is structured the same way regardless of language - models, services, controllers, interfaces - and each language has its own implementation guide. This guide covers the **JavaScript (Node.js)** implementation, which is the current reference implementation.
 

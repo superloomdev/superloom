@@ -150,5 +150,6 @@ The per-tier catalogs: [core](languages/js/catalog-core), [server](languages/js/
 | Write or review JavaScript modules | [JavaScript Implementation](languages/js/index) |
 | Configure AI agents for this codebase | [AI-Assisted Development](ai/index) |
 | Extend the framework to another language | [Extending to a Language](principles/extending-to-a-language) |
+| Adopt Superloom in your own project | [Adopting Superloom](principles/adopting-superloom) |
 | Set up your dev machine | [Developer Setup](dev/README) |
 | Provision infrastructure | [Operations](ops/README) |

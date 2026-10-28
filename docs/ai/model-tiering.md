@@ -5,6 +5,7 @@ AI-assisted development runs on models of very different cost and capability, an
 ## On This Page
 
 - [The Two Tiers](#the-two-tiers)
+- [Owner Vocabulary](#owner-vocabulary)
 - [The Division of Labor](#the-division-of-labor)
 - [Plans as the Interface](#plans-as-the-interface)
 - [Session Discipline](#session-discipline)
@@ -20,6 +21,25 @@ AI-assisted development runs on models of very different cost and capability, an
 | **Execution tier** | The least expensive model that follows procedures reliably | Throughput: running workflows, sweeps, full-file verification reads, commits, pipeline watching |
 
 The boundary is judgment. Work whose steps are already written belongs to the execution tier no matter how important it is; work that requires deciding among defensible options belongs to the reasoning tier no matter how small it looks. Importance is not the criterion. Ambiguity is.
+
+## Owner Vocabulary
+
+Short words the owner uses to name the session setup. Every agent understands them without asking:
+
+| Word | Meaning | Who reads and decides | Who edits and runs |
+|---|---|---|---|
+| **High** | One session on the reasoning tier alone | The session | The session |
+| **Low** | One session on the execution tier alone | Nobody; it follows a written plan and stops at owner gates | The session |
+| **Fusion** | One session: a reasoning-tier lead plus an execution-tier sidekick | The lead: decides, authors specs and tests, reviews every diff | The sidekick |
+| **Lean Fusion** | Fusion with the lead's reading cut to the minimum | The lead, from reports only | The sidekick, including reading the plan |
+
+**Lean Fusion rules**, for when the reasoning tier's tokens are the scarce resource:
+
+- **The lead reads only** the pasted session prompt, the last lines of `PROGRESS.md`, and the sidekick's reports. It opens another file only when a report's decision line names it.
+- **The lead does only:** one-line handoffs ("next unit" or "continue"); answers to decision lines in three lines or fewer, choosing one option; design no written plan settles; owner-level approvals; one review of the run's commits at the end.
+- **The sidekick does everything else:** reads the plan and briefs, edits, runs gates, commits and pushes to work branches, updates `PROGRESS.md`, writes the next session prompt.
+- **One handoff is one unit** under an hour, ending at a clean boundary with a report of at most fifteen lines: `UNIT`, `COMMITS`, `GATES`, `OUTSIDE-BRIEF`, `DECISION` (options with a recommendation, or "none"), `WARN`, `NEXT`.
+- **A sidekick that fails one unit twice** reports a decision line; the lead takes over hands-on work only when the sidekick fails the same unit twice more after the lead's answer.
 
 ## The Division of Labor
 

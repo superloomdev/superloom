@@ -82,6 +82,10 @@ git clone https://github.com/superloomdev/superloom.git
 
 Then start with [Getting Started](https://superloom.dev/docs/guide/getting-started) to set up a project, or [What is Superloom?](https://superloom.dev/docs/) to evaluate the framework first.
 
+## Use Superloom in your project
+
+Your project does not have to be JavaScript to use the engineering principles. Add this folder to your project's workspace and say `start`. Your agent writes your project's own version of the house style, then your project runs without Superloom. Guide: [Use Superloom in Your Project](https://superloom.dev/docs/guide/adopting-superloom).
+
 ## License
 
 [MIT](LICENSE) - free for commercial use.

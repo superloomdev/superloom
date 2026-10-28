@@ -34,6 +34,7 @@ Two support sections sit beside the layers:
 | **JavaScript module author** | [`languages/js/index.md`](languages/js/index.md) |
 | **AI agent** | Root `AGENTS.md`, then module-level `ROBOTS.md` files |
 | **Extending to a new language** | [`principles/extending-to-a-language.md`](principles/extending-to-a-language.md) |
+| **Adopting Superloom in a project** | [`principles/adopting-superloom.md`](principles/adopting-superloom.md) |
 | **Starting a new product from zero** | [`building-a-product/README.md`](building-a-product/README.md) |
 | **DevOps / infrastructure** | [`ops/README.md`](ops/README.md) |
 
