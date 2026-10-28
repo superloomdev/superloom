@@ -113,7 +113,7 @@
   - [67. A reach check written as an allowlist failed on correct output](#_67-a-reach-check-written-as-an-allowlist-failed-on-correct-output)
   - [68. Local verify and CI tested different library commits](#_68-local-verify-and-ci-tested-different-library-commits)
   - [69. Every native screenshot showed a system dialog, and the gate passed](#_69-every-native-screenshot-showed-a-system-dialog-and-the-gate-passed)
-  - [70. A primary-reference layout choice hard-coded where the second reference has no counterpart](#_70-a-primary-reference-layout-choice-hard-coded-where-the-second-reference-has-no-counterpart)
+  - [70. A primary-reference layout choice hard-coded where the web-component reference has no counterpart](#_70-a-primary-reference-layout-choice-hard-coded-where-the-web-component-reference-has-no-counterpart)
   - [71. A pixel gate passed on macOS and failed on Linux CI](#_71-a-pixel-gate-passed-on-macos-and-failed-on-linux-ci)
   - [72. An accessibility prop that worked everywhere else crashed the Android Release build](#_72-an-accessibility-prop-that-worked-everywhere-else-crashed-the-android-release-build)
   - [73. An Android text box was three points taller than the token line height](#_73-an-android-text-box-was-three-points-taller-than-the-token-line-height)
@@ -1505,11 +1505,11 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 50. A silent icon fallback drew one design system's glyphs under another's theme
 
-**Symptom:** Every icon rendered, no console error, every zero-error gate green - and the Material theme showed Carbon's glyphs on every component, for weeks.
+**Symptom:** Every icon rendered, no console error, every zero-error gate green - and the second theme showed Carbon's glyphs on every component, for weeks.
 
 **Cause:** The icon manifest had a column per host adapter, not per theme, and every host resolved every semantic name to the same icon set. Switching the theme switched colors, radii and type, and left the glyphs alone. Because a glyph did render, nothing was missing to report.
 
-**Evidence:** The icon manifest carried a Carbon column and a legacy column, no Material column; both host adapters imported the Carbon icon package. A notification under the Material theme drew Material colors around IBM's 32-grid warning triangle.
+**Evidence:** The icon manifest carried a Carbon column and a legacy column but none for the second theme; both host adapters imported the Carbon icon package. A notification under the second theme drew the second theme's colors around IBM's 32-grid warning triangle.
 
 **Fix/Lesson:** Icons are theme tokens: each template carries its own glyphs, the component library declares the icon names it requires, and a theme missing one fails to build naming every missing icon. Never draw a glyph from another set as a fallback; a fallback that renders something is invisible to every automated gate. Detection question: switch the template and diff the glyphs - if none changed, the icons were not coming from the theme.
 
@@ -1589,7 +1589,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 58. Measuring a web-component reference read its boxes mid-animation and through the wrong tree
 
-**Symptom:** The second-reference measurement of a floating label reported fractional positions that changed between runs (`y: -4.68`, then `13.24`), a slotted label's text style as the page body's, and a grouped selector that matched nothing.
+**Symptom:** The web-component reference's measurement of a floating label reported fractional positions that changed between runs (`y: -4.68`, then `13.24`), a slotted label's text style as the page body's, and a grouped selector that matched nothing.
 
 **Cause:** Three properties of a shadow-DOM reference. Its label animates after the value arrives, and `document.getAnimations()` does not list animations running inside shadow roots, so a readiness check that waited on the document's animations saw none. Slotted text is styled by an element inside the shadow root, not by the host whose text nodes it is. A comma-separated selector list cannot be split on a shadow-crossing combinator as one string.
 
@@ -1611,7 +1611,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Symptom:** The first native milestone run walked all 62 cells on iOS and Android with zero errors, then failed 143-150 width checks per platform against the web walker: text-bearing cells were 3-19 points wider natively, fields and selects 100-150 points narrower, under every template alike.
 
-**Cause:** Four defects, three of them on the side treated as the reference. The web host's committed IBM Plex Sans files were HTML pages saved under `.ttf` names, so the browser drew a fallback face; the font check passed because it compared token names, not what the browser loaded. The web walker measured before its declared faces finished loading, so even Roboto was measured in the fallback. Neither host carried the mono families, so code text was drawn in each platform's own system monospace. And the one real component defect: the field and select grew from `flex: 1`, a zero basis in native layout, so in a container sized to its content they collapsed to their padding, while a browser input's intrinsic width hid it on the web.
+**Cause:** Four defects, three of them on the side treated as the reference. The web host's committed IBM Plex Sans files were HTML pages saved under `.ttf` names, so the browser drew a fallback face; the font check passed because it compared token names, not what the browser loaded. The web walker measured before its declared faces finished loading, so even the second template's family was measured in the fallback. Neither host carried the mono families, so code text was drawn in each platform's own system monospace. And the one real component defect: the field and select grew from `flex: 1`, a zero basis in native layout, so in a container sized to its content they collapsed to their padding, while a browser input's intrinsic width hid it on the web.
 
 **Fix/Lesson:** A cross-platform comparison is only as good as its baseline: before blaming the platform under test, prove the reference drew the faces it names (`document.fonts` status after an explicit load, not the token), load every declared face before the first render, and carry every family a type set names on every host, from the same binaries. A component that fills its container states the frame it is shown in, and grows from its content (`flexBasis: 'auto'`), never from zero. Detection question: when every cell disagrees in the same direction under every template, is the baseline drawing what it names?
 
@@ -1620,9 +1620,9 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 61. Android ignored every runtime-loaded font, and Linux Chromium hinted the baseline
 
-**Symptom:** After the web baseline drew its real fonts, the native gate still failed Android on monospace (91pt where the web measured 122pt) and on a few labels, and a percentage allowance seemed needed for short strings. Android widths were identical under the IBM Plex and the Roboto templates; iOS widths differed between them as the web's did.
+**Symptom:** After the web baseline drew its real fonts, the native gate still failed Android on monospace (91pt where the web measured 122pt) and on a few labels, and a percentage allowance seemed needed for short strings. Android widths were identical under IBM Plex Sans and the second template's family; iOS widths differed between them as the web's did.
 
-**Cause:** Two platform behaviors. The runtime font loader registers each face under an alias (`IBM Plex Sans_normal`), and Android resolves a `fontFamily` only by registered name, so it drew its system Roboto for every theme family; iOS resolves the family name inside the font file, so it worked there, and sans hid the fault because Plex Sans and Roboto are within a few points of each other. Separately, Chromium on Linux hints glyph advances to whole pixels by default, so the CI web walker measured `Error text` at 63px where the font's own advances give 65.19px, which macOS, iOS and Android all draw.
+**Cause:** Two platform behaviors. The runtime font loader registers each face under an alias (`IBM Plex Sans_normal`), and Android resolves a `fontFamily` only by registered name, so it drew its system sans for every theme family; iOS resolves the family name inside the font file, so it worked there, and sans hid the fault because Plex Sans and the system sans are within a few points of each other. Separately, Chromium on Linux hints glyph advances to whole pixels by default, so the CI web walker measured `Error text` at 63px where the font's own advances give 65.19px, which macOS, iOS and Android all draw.
 
 **Fix/Lesson:** On Android, embed each theme family at build time as one font family with a face per weight (the `expo-font` config plugin's `android.fonts`), so `fontFamily` plus `fontWeight` resolve to the right file; carry exactly the weights the type sets name. Run any browser that produces cross-platform text measurements unhinted (`--font-render-hinting=none`). Reproduce a CI-only measurement in the CI image before reasoning about it, and never size a tolerance from residuals whose causes are unexplained. Detection question: does the same cell measure differently under two templates that name different families, on every platform?
 
@@ -1654,15 +1654,15 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 65. A reference page measured the wrong thing and the gate agreed with a defect
 
-**Symptom:** The checkbox box was drawn 3px left and 1px above the reference's box, the second reference's error colors never matched, and a disabled label compared as white: all with a passing or misleading measurement.
+**Symptom:** The checkbox box was drawn 3px left and 1px above the reference's box, the web-component reference's error colors never matched, and a disabled label compared as white: all with a passing or misleading measurement.
 
-**Cause:** The harness read a positioned pseudo-element at its offset but not its margin; themed the second reference only with the colors the template's mapping table named, so every other system color fell back to the component's own defaults; and read a slotted label's style from the wrong shadow element and its opacity along the light-DOM parent rather than the slot it renders in.
+**Cause:** The harness read a positioned pseudo-element at its offset but not its margin; themed the web-component reference only with the colors the template's mapping table named, so every other system color fell back to the component's own defaults; and read a slotted label's style from the wrong shadow element and its opacity along the light-DOM parent rather than the slot it renders in.
 
 **Fix/Lesson:** A reference page is themed with the full scheme the template was generated from (the template records it), positions include margins, styles are read from the element that paints them, and opacities are walked along the rendering tree (`assignedSlot`, then parent, then shadow host). When a measurement and a screenshot disagree, sample the pixels; the pixel is the truth the gate must reproduce.
 
 ### 66. An exemption one comparison honored and another did not
 
-**Symptom:** After a clean install brought in a newer browser, the fidelity gate failed a text field's invalid states against the second reference by a fraction of a percent over its pixel budget, in both schemes, while every part comparison agreed.
+**Symptom:** After a clean install brought in a newer browser, the fidelity gate failed a text field's invalid states against the web-component reference by a fraction of a percent over its pixel budget, in both schemes, while every part comparison agreed.
 
 **Cause:** The reference omits the field's error icon with a reason and a probe proving it never draws one, and ours draws the template's icon by design. The part comparison skipped the omitted part; the pixel comparison of the same screenshots still counted the icon, so the state sat just under the budget until a change in rasterization tipped it over.
 
@@ -1692,11 +1692,11 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Fix/Lesson:** Evidence a reviewer is meant to read is checked before it is taken. The driver switches error prompts off, closes system dialogs, and requires the app's own activity to hold focus (from `dumpsys window`) before each screenshot; a screenshot of any other window fails the walk. A green gate whose evidence is unreadable is not a pass.
 
-### 70. A primary-reference layout choice hard-coded where the second reference has no counterpart
+### 70. A primary-reference layout choice hard-coded where the web-component reference has no counterpart
 
-**Symptom:** The contact-sheet read found the Material extra-large and 2x-large buttons drawing their label at the top of a pill. Every gate was green.
+**Symptom:** The contact-sheet read found the second template's extra-large and 2x-large buttons drawing their label at the top of a pill. Every gate was green.
 
-**Cause:** The primary reference keeps a tall button's label where the default height puts it, at the top, and the component carried that rule in code. The second reference has no tall button sizes, so no fidelity comparison covers those states, and the vendor choice sat in a generic component unseen.
+**Cause:** The primary reference keeps a tall button's label where the default height puts it, at the top, and the component carried that rule in code. The web-component reference has no tall button sizes, so no fidelity comparison covers those states, and the vendor choice sat in a generic component unseen.
 
 **Fix/Lesson:** A layout choice a component makes for only some sizes or kinds is a design-system decision, so it is an anatomy enum the template answers, even when only one reference states it. When writing a branch in a component, ask whether a second design system could answer it differently; if so, it belongs in the template, not in code.
 
@@ -1726,7 +1726,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 74. A fixed-position popover shrank to a column of single glyphs on Android
 
-**Symptom:** Android screenshots showed the tooltip bubble drawing its label one character per line, though every measurement the gate checked on the cell itself was plausible. The Material dialog also ran off the screen, centered on its 640-wide showcase stage.
+**Symptom:** Android screenshots showed the tooltip bubble drawing its label one character per line, though every measurement the gate checked on the cell itself was plausible. The second template's dialog also ran off the screen, centered on its 640-wide showcase stage.
 
 **Cause:** React Native has no `position: fixed`. On native the layer fell back to `position: absolute` inside the component's own wrapper, and no overlay host was mounted anywhere. A column flex parent bounds an absolute child's cross axis to its own width (the 45-wide anchor), and `measureInWindow` window coordinates were applied inside that box. The first fix repaired it per component, branching on the platform inside the tooltip, which breaks the rule that only a dispatcher reads the platform.
 
@@ -1742,15 +1742,15 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 76. A stylesheet loaded for one reference reached into the other reference's shadow DOM
 
-**Symptom:** Material dialog actions measured 60px tall instead of 40, so the template answered an actions height of 100 instead of 80. The Modal action selector only came out right after the second reference page was decontaminated.
+**Symptom:** The web-component reference's dialog actions measured 60px tall instead of 40, so the template answered an actions height of 100 instead of 80. The Modal action selector only came out right after the web-component reference page was decontaminated.
 
-**Cause:** The second reference rendered on the same page as the primary reference's stylesheet, whose global `*{box-sizing:inherit}` reset beat the Material web components' own `:host` rules inside their shadow trees.
+**Cause:** The web-component reference rendered on the same page as the primary reference's stylesheet, whose global `*{box-sizing:inherit}` reset beat the web components' own `:host` rules inside their shadow trees.
 
-**Fix/Lesson:** Each reference renders on a page that loads only its own styles. The second reference page loads no primary stylesheet. When a reference measures an implausible number, check what else on the page can reach it before writing that number into a template.
+**Fix/Lesson:** Each reference renders on a page that loads only its own styles. The web-component reference page loads no primary stylesheet. When a reference measures an implausible number, check what else on the page can reach it before writing that number into a template.
 
 ### 77. A borrowed cousin token hid a fidelity gap behind a deleted comparison
 
-**Symptom:** Menu shortcuts crowded their labels on every contact sheet. Later, the second-reference Menu measured 121 wide against 112 after its width comparison was restored.
+**Symptom:** Menu shortcuts crowded their labels on every contact sheet. Later, the web-component reference's Menu measured 121 wide against 112 after its width comparison was restored.
 
 **Cause:** Menu read the field family's icon gap and the label's own type for its item gap and shortcut. The width comparisons that would have failed were deleted with a "waits on" note, which is an expected gap kept outside `expected-gaps.json`.
 
@@ -1758,7 +1758,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 78. Web-only styles rendered differently on iOS and Android without failing any gate
 
-**Symptom:** Native screenshots showed a Material switch's state-layer halo at rest, a check mark on an unselected small switch, and every tooltip caret at the bubble's left edge. Geometry gates passed on all three platforms.
+**Symptom:** Native screenshots showed the second template's switch drawing a state-layer halo at rest, a check mark on an unselected small switch, and every tooltip caret at the bubble's left edge. Geometry gates passed on all three platforms.
 
 **Cause:** `visibility: 'hidden'` is a web style that React Native ignores. A box centered with `left: 0, right: 0, margin: 'auto'` centers in CSS, but native layout keeps it at `left: 0`. The second attempt, `left: '50%'` with a negative half-width margin, still landed one padding short, because native layout resolves an absolute child's percentage against the parent's content box, not its padding box. The walker measures cell boxes, not paint inside them.
 
@@ -1774,7 +1774,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 80. The test page's own cell border pushed a perceptual diff over budget
 
-**Symptom:** The TextArea dark-scheme comparison against the second reference failed at 2.01% against a 2% budget on one machine and 2.02% on the Linux CI image, after passing at 2.00% on another. Every dark state sat between 1.4% and 2.0%, while the light states stayed under 0.9%.
+**Symptom:** The TextArea dark-scheme comparison against the web-component reference failed at 2.01% against a 2% budget on one machine and 2.02% on the Linux CI image, after passing at 2.00% on another. Every dark state sat between 1.4% and 2.0%, while the light states stayed under 0.9%.
 
 **Cause:** The measurement page lays cells out on a fixed 160px row pitch, and each cell draws a dashed border. A TextArea is taller than the row, so the cell's bottom border crossed the field. The shot is cropped to the field, and the field sits at a different offset in each cell, so the border appeared at a different height in each image. On a dark backdrop the line counts as a mismatch; on a light one it falls under the pixel threshold.
 
@@ -1814,7 +1814,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 85. A size every template shares held a label every template sizes differently
 
-**Symptom:** Under the second system, every small tag drew its label crossing the pill's outline. No gate failed.
+**Symptom:** Under the second template, every small tag drew its label crossing the pill's outline. No gate failed.
 
 **Cause:** The small tag's height was a spec sum of two scale tokens, the same 18 points in every template, while the label's type set came from the template (a 20-point line there). The text overflowed a box that did not clip it, and the structural gates only checked the cell's bounds.
 
@@ -1830,7 +1830,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 87. A design system's token file and its rendered component disagreed
 
-**Symptom:** Every interactive tag measured 1.1 points wider than the second reference's chip on an 11-character label, and its container read transparent upstream although the chip was visibly filled.
+**Symptom:** Every interactive tag measured 1.1 points wider than the web-component reference's chip on an 11-character label, and its container read transparent upstream although the chip was visibly filled.
 
 **Cause:** The chips' token file names a label tracking, but the chips' styles never apply it, so the rendered label computes `letter-spacing: normal`. The chips also paint their container on a `::before` layer, so the element the reference measured was transparent.
 

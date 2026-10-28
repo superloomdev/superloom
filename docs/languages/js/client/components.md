@@ -120,7 +120,7 @@ Components draw icons by meaning: `close`, `chevron_down`, `warning`. Each seman
 
 ### Contract requests
 
-A component that needs a token the contract lacks does not invent one and does not stop the batch. The request (token, requesting row, reason) is queued and applied at the next milestone as one contract version bump, followed by regeneration and republication of every shipped template in dependency order (archived templates are excluded) and revalidation of every consumer. Never mid-batch, never one token at a time.
+A component that needs a token the contract lacks does not invent one and does not stop the batch. The request (token, requesting row, reason) is queued and applied at the next milestone as one contract version bump, followed by regeneration and republication of every shipped template in dependency order and revalidation of every consumer. Never mid-batch, never one token at a time.
 
 ---
 
@@ -264,7 +264,7 @@ Components meet the accessibility contract through `aria-*` props, which React N
 | **Value semantics** | `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-valuetext` through the `a11y` translator |
 | **Relationships** | `aria-controls`, `aria-labelledby`, `aria-describedby`, `aria-owns`, `aria-activedescendant` through the `a11y` translator |
 | **Focus management** | Overlays that open and close (Modal, Dropdown, Popover) trap focus and restore on close |
-| **Hit target** | Minimum 44x44 points on interactive components (iOS HIG), 48x48 dp (Android Material) |
+| **Hit target** | Minimum 44x44 points on interactive components (iOS HIG), 48x48 dp (Android) |
 | **Focus indicator** | Visible focus ring or outline in the `focused` state |
 
 Gate layer 4 asserts the accessibility tree of every sample is identical under every template.

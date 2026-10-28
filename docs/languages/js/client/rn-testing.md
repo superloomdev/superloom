@@ -322,7 +322,6 @@ Unit tests do not claim browser layout coverage. Screenshot tests do not replace
 - WCAG 2.2 SC 1.4.10: no two-dimensional scrolling at 320 CSS px for vertical pages.
 - WCAG 2.2 SC 1.4.12: no clipping, overlap, or loss when line height, paragraph spacing, letter spacing, and word spacing are overridden to the criterion values.
 - Testing Library principle: functional locators prefer role/label/text; `data-testid` is reserved for geometry or otherwise inaccessible structure.
-- Material 3 official type scale is the authority for Material role values.
 
 #### Viewports and deterministic geometry
 
