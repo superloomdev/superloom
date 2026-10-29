@@ -18,7 +18,6 @@
 >
 > This file has a size budget: target 300 lines, hard ceiling 400 (`docs/ai/agent-configuration.md`). Content that would breach it moves to docs or workflows.
 
-
 ## Session Modes - choose before any rule below
 
 | Code word | Mode | Do |

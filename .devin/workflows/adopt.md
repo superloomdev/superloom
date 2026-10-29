@@ -53,7 +53,9 @@ Verb: create | refresh | new
 
 Read from `[SUPERLOOM]/docs/`, in full: `principles/engineering-philosophy.md`, `principles/adopting-superloom.md`, `principles/module-design.md`, `principles/composition-and-adapters.md`, `principles/file-archetypes.md`, `principles/code-readability.md`, `principles/error-handling.md`, `principles/testing.md`, `principles/documentation-authoring.md`, `ai/agent-configuration.md`, `ai/workflow-authoring.md`, `ai/model-tiering.md`. Read `languages/js/index.md` and `languages/js/module-structure.md` as the worked example only. Then read the platform owner's official guidelines for the project's platform (API design, interface guidelines, accessibility).
 
-Gate: one line per document read, plus the platform sources consulted with their URLs.
+**Sibling first.** When the owner names an already-adopted project on the same platform, read its `AGENTS.md`, `docs/platform/`, `docs/conventions.md` and design documents before the platform owner's guidelines. Inherit its answers; translate from Superloom only what the sibling does not answer. Record the sibling as the source in the digest.
+
+Gate: one line per document read, plus the platform sources consulted with their URLs, plus the sibling used or "none".
 
 ## Phase 3 - Digest and ask (hard gate)
 
@@ -113,7 +115,7 @@ Phases 0 to 2 as above. Then diff the project's principles against the current S
 
 ## Mode: new
 
-Ask for the project name and platform. Create the folder beside the workspace's other projects, run `git init`, then run `create` from Phase 1.
+Ask for the project name, the platform, and whether an adopted sibling on the same platform should be inherited. Create the folder beside the workspace's other projects, run `git init`, then run `create` from Phase 1.
 
 ## Loop-backs
 

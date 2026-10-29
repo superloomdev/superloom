@@ -138,3 +138,7 @@ When Superloom is added back to an adopted project and the owner says `start`, t
 ## Starting a New Project
 
 When `start` is said and no other project is in the workspace, the agent offers to create one: it asks for the name and platform, runs `git init` locally, and adopts. An adopted project's own `docs/platform/` new-project bootstrap document then lets it seed further projects on the same platform without Superloom, so a family of projects keeps one house style.
+
+> **A sibling outranks a fresh translation.** When the owner names an already-adopted project on the same platform, its platform layer, conventions, design language and agent setup are inherited first; Superloom fills only the gaps.
+
+The reason: the sibling's platform choices were already decided, reviewed and proven in real code. Translating again from the principles would produce defensible but different answers, and two projects by one owner would drift apart in style.
