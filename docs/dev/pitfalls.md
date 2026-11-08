@@ -143,6 +143,9 @@
   - [97. A stopped verifier left its mutation runner alive](#_97-a-stopped-verifier-left-its-mutation-runner-alive)
   - [98. A roster-sized screenshot proof shared one fixed test deadline](#_98-a-roster-sized-screenshot-proof-shared-one-fixed-test-deadline)
   - [99. A failing assertion over two DOM nodes killed the CI runner, not the test](#_99-a-failing-assertion-over-two-dom-nodes-killed-the-ci-runner-not-the-test)
+  - [100. A mutation runner reported correct tests as "matched no test" and "not a mutation proof"](#_100-a-mutation-runner-reported-correct-tests-as-matched-no-test-and-not-a-mutation-proof)
+  - [101. A structural bounds gate failed on a part its scroller had clipped to nothing](#_101-a-structural-bounds-gate-failed-on-a-part-its-scroller-had-clipped-to-nothing)
+  - [102. Cross-test accumulators and serial suites hid or invented end-to-end failures](#_102-cross-test-accumulators-and-serial-suites-hid-or-invented-end-to-end-failures)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1933,6 +1936,30 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** The assertion was `assert.equal(document.activeElement, rows[2])`. When it fails, `node:assert` formats a diff of both operands, and a DOM element in a Node DOM implementation is a very large circular graph. Formatting it exhausts the 7 GB GitHub runner, the kernel kills the runner process, and the job ends with 143 instead of a failing test. Locally the same formatting fits in memory, so the test fails normally and the mutation row "fires".
 
 **Fix/Lesson:** Pass primitive operands to assertions whose values are DOM nodes: `assert.equal(document.activeElement === rows[2], true, 'ArrowDown focuses gamma')`. Strict identity is preserved; only the operand type changes. In the mutation checker, a child that dies without a normal test failure (a signal, an exit status other than 1, or output without a failing-test marker) is not a proof that the mutation was caught - refuse it and name the row. Put a `--max-old-space-size` ceiling on the children in CI and mirror it locally so a blow-up fails the child with a heap error instead of taking the runner down. A failing row that CI cannot name three times in a row is a defect in the harness's failure path, not bad luck.
+
+### 100. A mutation runner reported correct tests as "matched no test" and "not a mutation proof"
+
+**Symptom:** A fire-style runner (plant a mutation, assert the named test fails, restore, assert it passes) failed on rows whose tests were correct: the restore run said the test pattern "matched no test", and two planted runs said "child termination is not a mutation proof" although the planted test did fail.
+
+**Cause:** The runner proves a result only from an indented result line in the last lines of output it keeps. `node --test` prints a top-level `test()` result unindented, so files without a `describe` never produce a qualifying line. Two set assertions failed with a `deepEqual` diff of about a thousand lines, which pushed the failure marker out of the kept tail. The batch speed never ran the runner, so both traps surfaced only at the milestone verify.
+
+**Fix/Lesson:** Wrap every node test file's tests in one `describe`. Write set assertions so a failure prints a bounded message: the first few missing and extra members plus both counts, asserted against `{ missing: [], extra: [], counts: [0, 0] }`. Run the mutation runner at least once per batch, not only at the milestone.
+
+### 101. A structural bounds gate failed on a part its scroller had clipped to nothing
+
+**Symptom:** The bounds gate reported a tab painting past its cell's right edge, although the tab sat inside a horizontal scroller that ended inside the cell.
+
+**Cause:** The gate intersects each part's box with every clipping ancestor and skipped a part only when both the painted width and height were zero. A part clipped to nothing horizontally keeps its full height and an `x` at its own left edge, past the cell, so the empty remainder failed the right bound.
+
+**Fix/Lesson:** A painted rectangle with zero width or zero height paints nothing: skip it when either is zero.
+
+### 102. Cross-test accumulators and serial suites hid or invented end-to-end failures
+
+**Symptom:** A per-family brand-reach suite in serial mode reported one family and skipped every later one; switched to parallel mode, its final "every reach was exercised" test failed with zero counts while every family test had counted.
+
+**Cause:** A serial describe skips the rest after the first failure. In default mode the test runner restarts the worker after a failing test, which resets module-level state, so an aggregate test reads counters from only the tests after the last restart.
+
+**Fix/Lesson:** Parameterize by family and assert each family's own coverage (when the family drew text, the brand reached some of it; when it has focusable parts, the brand reached some of them) inside that family's test. Never aggregate across tests through module state.
 
 ## Adding a New Entry
 

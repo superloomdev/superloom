@@ -22,10 +22,12 @@ The component library is one generic React Native Web library. A component owns 
 - [Geometry and Fidelity](#geometry-and-fidelity)
   - [Spec as token names](#spec-as-token-names)
   - [Measurement against the upstream reference](#measurement-against-the-upstream-reference)
+  - [Designed Overhang](#designed-overhang)
   - [The five gate layers](#the-five-gate-layers)
   - [Frame Ownership](#frame-ownership)
   - [Status Surface Triad](#status-surface-triad)
   - [Centered Targets](#centered-targets)
+  - [Host-Safe Rendering](#host-safe-rendering)
 - [Verification Speeds](#verification-speeds)
 - [Native Evidence](#native-evidence)
 - [Generated Documentation](#generated-documentation)
@@ -194,6 +196,10 @@ Fidelity to a reference design system is measured, not transcribed. For a row wh
 
 A row flagged `no_reference` (a library addition with no upstream twin) is not measured against anything. It is held to contract validity, the structural and accessibility layers, and its own regression baseline, and its documentation says so. A row flagged `deferred_gap` draws the primary system's shape with another design system's tokens, and the gap is stated in its documentation until the anatomy is added.
 
+### Designed Overhang
+
+Some reference parts paint outside the component's own box by design: a list marker hangs before the item's start edge, an overflow icon is translated below its trigger. The structural bounds gate stays as it is and the part is not moved. The sample frame reserves the room a host must leave, as a `hang` on the logical start or bottom edge applied as padding on the cell body in both the library page and the reference page, so the fidelity crop holds the hanging part on both sides. A logical start flips under right-to-left, as the reference's `inset-inline-start` does.
+
 ### The five gate layers
 
 No human decides whether a render is right. Five machine layers do, in this order, each with a recorded proof that it fires:
@@ -207,6 +213,8 @@ No human decides whether a render is right. Five machine layers do, in this orde
 | 5. Regression baseline | Pixel-exact against the frozen baseline in the pinned container, once layers 1-4 have passed and the contact sheet was reviewed |
 
 A baseline is recorded only after layers 1 to 4 pass and the batch's contact sheet has been reviewed. A baseline taken from the first render ratifies whatever that render was, including its defects, and every later comparison confirms the defect. A human report of a wrong render becomes a new automatic check, never a one-off fix.
+
+A contrast failure names a foreground and the stack of surfaces composited behind it. Read the stack before calling it the component's: when the backdrop is the template's own fill under the template's own link color, the pair is a template defect and the fix is data (a different step for that fill), regenerated and republished, never a component change or an exception.
 
 ### Frame Ownership
 
@@ -224,6 +232,20 @@ Every status surface (inline, toast, actionable, static notification, callout, e
 
 Every pressable meets a minimum target from the contract's target tokens and centers its glyph (`alignItems`, `justifyContent` on the pressable, never on the SVG, which rejects flex properties) so the glyph sits inside the hit region. Every pressable has an accessible name; a component that takes `title` and a caller that passes `children` (or the reverse) produces a nameless button, and the structure layer rejects it.
 
+### Host-Safe Rendering
+
+| Rule | Why |
+|---|---|
+| A measurement that decides what renders is state, never only a ref | Writing a width to a ref triggers no render; the fit count waits for an unrelated layout and the first paint shows every item |
+| A cap known before measurement applies before measurement | A `maxVisible`-style limit is data, not a measurement result; the unmeasured paint must not exceed it |
+| A zero flex basis belongs to children sharing a row (`flex`); an unflexed root keeps `auto` | On a column host the main axis is vertical, so a zero basis with no growth collapses the root to zero height |
+| A hosted layer's space is its host's measured box, zero until measured, never the window | A fixed layer inside a transformed stage resolves against the stage; the window is the wrong box |
+| A layer sized from its space does not paint until the space is measured | Otherwise its first paint shows it at another size, and a structural gate can sample that paint |
+| A surface that opens with the focus takes it in the commit its items mount | A key pressed between the open and an effect-time focus reaches the trigger and is lost |
+| A decorative layer (a scroll fade, a measuring seat) is hidden from assistive technology | The accessibility tree must not change with geometry the template decides |
+| A pointer-only seat the reference keeps out of the tab order (a clear button, a caret, a tab's close) stays out of it, and still draws the contract's focus treatment when focused | A component never shows the browser's own focus ring |
+| A part's element shape is the same in every form class and template (a header that can scroll is always a scroll container) | A layout wrapper that appears in one form changes the accessibility tree that must be identical everywhere |
+
 ---
 
 ## Verification Speeds
@@ -233,10 +255,12 @@ Verification is affordable because it runs at three speeds, and no speed does an
 | Speed | When | Runs |
 |---|---|---|
 | `check <Name>` | After every edit to one component | Lint on the changed files, the purity gate, this component's unit and accessibility tests |
-| `batch` | After every 8-12 components | The whole unit suite, the showcase bundle, browser gate layers 1-3 for the batch's families under every template, measurement, screenshots and a contact sheet, documentation regeneration with a diff, and a machine-generated defects list |
+| `batch` | After every 8-12 components | The whole unit suite, the showcase bundle, browser gate layers 1-3 for the batch's families under every template, measurement, screenshots and a contact sheet, documentation regeneration with a diff, and a machine-generated defects list, and the demo host's end-to-end suite against the batch head |
 | `verify` | At milestones and before anything reaches `main` | Clean installs, the entire suite, the fire runner (every assertion shown to fail when its behavior is disabled), container baselines, the demo's own verification, and the native gate |
 
 Running the whole roster's browser suite after every component edit is the failure mode this table prevents: it made each fix cost the price of the library, and the loop stalled. Numeric evidence is written by scripts, never typed; a defects list is generated from machine output (component, check, expected, actual, location, screenshot) and never hand-extended.
+
+The library's own gates render each component in a harness built for measurement; they never render through an application host. A host finds a class of defects no harness can: a width written only to a ref (no re-render follows the measurement), a root whose zero flex basis collapses on a column host's main axis, a hosted layer sized before its host reported a box, a decorative layer exposed to assistive technology. A host suite that last ran many rows ago reports all of them at the milestone at once; run it at every batch close.
 
 ---
 
