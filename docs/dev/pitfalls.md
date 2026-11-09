@@ -146,6 +146,9 @@
   - [100. A mutation runner reported correct tests as "matched no test" and "not a mutation proof"](#_100-a-mutation-runner-reported-correct-tests-as-matched-no-test-and-not-a-mutation-proof)
   - [101. A structural bounds gate failed on a part its scroller had clipped to nothing](#_101-a-structural-bounds-gate-failed-on-a-part-its-scroller-had-clipped-to-nothing)
   - [102. Cross-test accumulators and serial suites hid or invented end-to-end failures](#_102-cross-test-accumulators-and-serial-suites-hid-or-invented-end-to-end-failures)
+  - [103. Android text and fields measured taller and wider than the web from the same tokens](#_103-android-text-and-fields-measured-taller-and-wider-than-the-web-from-the-same-tokens)
+  - [104. A whole-roster native walk reported each cell's first layout](#_104-a-whole-roster-native-walk-reported-each-cell-s-first-layout)
+  - [105. An operating-system control was exempted from the comparison when it could be seated](#_105-an-operating-system-control-was-exempted-from-the-comparison-when-it-could-be-seated)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -1960,6 +1963,30 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** A serial describe skips the rest after the first failure. In default mode the test runner restarts the worker after a failing test, which resets module-level state, so an aggregate test reads counters from only the tests after the last restart.
 
 **Fix/Lesson:** Parameterize by family and assert each family's own coverage (when the family drew text, the brand reached some of it; when it has focusable parts, the brand reached some of them) inside that family's test. Never aggregate across tests through module state.
+
+### 103. Android text and fields measured taller and wider than the web from the same tokens
+
+**Symptom:** On Android only, a 16-point line laid out 19 points high, a notification body wrapped one line earlier, every small field stood 8 to 12 points above its frame, and a row of four text items was up to four points wider than the web run.
+
+**Cause:** Three React Native Android defaults have no CSS counterpart: font padding around an explicit line height, a quality line-break strategy instead of greedy breaking, and the native text input's own vertical padding. Separately, Android rounds each text run up to a whole point of width, so one rounding allowance per cell is too small for a row of runs.
+
+**Fix/Lesson:** Neutralize the defaults once, in the wrapper every text run and input goes through (`includeFontPadding: false`, `textBreakStrategy: 'simple'`, single-line `textAlignVertical: 'center'`, zero vertical input padding), never per component. Size the width allowance per platform from the rounding rule; never pad a token or widen the height allowance to absorb a default.
+
+### 104. A whole-roster native walk reported each cell's first layout
+
+**Symptom:** On iOS, a fluid button set measured as one row instead of stacked and a multiline tag set measured at the wrong height, while the same family walked alone measured correctly.
+
+**Cause:** The walker reported once layouts had been quiet for a short timer. A measured layout's corrective render commits in JavaScript at once, but its mount waits on the UI thread behind the whole-roster transaction of about two thousand cells, so the timer expired before the correction's layout arrived and the report held the first layout.
+
+**Fix/Lesson:** Start the quiet period only after the layout of a marker rendered in a final confirming commit has arrived; every mount queued before it lands first. A fixed timer after the last layout seen is never proof that a native host has settled.
+
+### 105. An operating-system control was exempted from the comparison when it could be seated
+
+**Symptom:** A native switch cell differed from its drawn twin by the size of the operating system's switch, and the first answer marked the cell by data and skipped it in the cross-platform assert.
+
+**Cause:** The operating system control was laid out as the cell's content, so its fixed size replaced the drawn component's geometry.
+
+**Fix/Lesson:** Keep the drawn label, strut, row and state text and center the operating system control in the box the drawn track would occupy, with overflow visible, so the cell matches its drawn twin and compares like every other cell. Prefer a construction that makes the comparison hold over an exemption; a host missing the adapter the template asks for is a failure.
 
 ## Adding a New Entry
 
