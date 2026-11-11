@@ -30,7 +30,7 @@ Ambiguous verb, missing name, or a name with no roster row: ask, never guess.
 2. **Phases run in order**, never skipped, merged or reordered.
 3. **No vendor names** in anything the package ships (`component/`, `behaviors/`, `components.js`, `all.js`, `README.md`, `ROBOTS.md`) or in `notes.md`. Vendor names belong in `data/`, `scripts/`, `DECISIONS.md` and `_test/` only.
 4. **No new behavior, token, enum value or icon name is invented in this run.** A missing behavior, a token the contract lacks, or an icon name absent from `data/icons.json` is a STOP with a written request (Phase B).
-5. **Tier.** This workflow is authored work (HIGH). It never runs `npm run batch`, `npm run verify`, the fire runner over the whole manifest, a publish, or a push; those are the Phase F hand-off.
+5. **Tier.** This workflow is authored work (HIGH). It never runs `npm run batch`, `npm run verify`, the fire runner over the whole manifest, a publish, or a push; those are the Phase F hand-off. In a Fusion session the lead reads the briefing pack and authors every file (Phases A to C and the Phase E review); the sidekick runs the commands of Phases B, C step 10, D and E and reports their output, and edits nothing (`docs/ai/model-tiering.md` - Owner Vocabulary).
 6. **When uncertain, STOP**: report what is seen, ask, wait.
 
 ## Command Execution Rules

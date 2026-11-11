@@ -20,6 +20,7 @@
   - [Verification-integrity pitfalls](#verification-integrity-pitfalls)
 - [Rule Delivery](#rule-delivery)
   - [1. AI attribution trailers appear in commits despite a documented ban](#_1-ai-attribution-trailers-appear-in-commits-despite-a-documented-ban)
+  - [2. A sidekick rationed its context against a counter it was told to ignore](#_2-a-sidekick-rationed-its-context-against-a-counter-it-was-told-to-ignore)
 - [CI/CD Publishing](#ci-cd-publishing)
   - [1. `Bind for 127.0.0.1:NNNN failed: port is already allocated` in CI](#_1-bind-for-127-0-0-1-nnnn-failed-port-is-already-allocated-in-ci)
   - [2. `PROTOCOL_CONNECTION_LOST` only in CI](#_2-protocol-connection-lost-only-in-ci)
@@ -541,6 +542,14 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 **Fix:** Every repo an agent commits to must carry the no-attribution rule in its own `AGENTS.md`, stated in full (not by reference). The rule must explicitly say it overrides any tool's built-in commit template. Three of five workspace repos had no `AGENTS.md`; all four now have self-contained copies with the rule stated verbatim.
 
 **Generalization:** A rule's reach equals the set of files an agent actually reads. A rule present in a repo the agent never opens during a session is invisible. Delivery is not authoring; a rule undelivered is a rule unenforced.
+
+### 2. A sidekick rationed its context against a counter it was told to ignore
+
+**Symptom:** In one session a sidekick ended six handoffs in a row with "context exhausted", each with less work done than the one before. The lead recorded that the sidekick could no longer work and escalated for a process change.
+
+**Cause:** The tool showed the sidekick a context usage counter on every turn, with the instruction to ignore it because the context is summarized automatically at the limit. The sidekick treated the counter as a budget and stopped short of the limit each time, so the summary never ran, although it had run earlier in the same session. The lead accepted the claim, narrowed each brief and told the sidekick to stop when short, which confirmed the behavior.
+
+**Fix:** Where the tool summarizes a full context automatically, a context usage counter is not a budget. A sidekick never ends a handoff to save context, and a report that names context as its reason is answered with "continue", never with a narrower brief. Before changing a process on a capacity claim, read the tool's own record: the usage it reported, and whether the context had already been summarized in that session.
 
 ---
 

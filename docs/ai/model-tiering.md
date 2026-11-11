@@ -30,10 +30,22 @@ Short words the owner uses to name the session setup. Every agent understands th
 |---|---|---|---|
 | **High** | One session on the reasoning tier alone | The session | The session |
 | **Low** | One session on the execution tier alone | Nobody; it follows a written plan and stops at owner gates | The session |
-| **Fusion** | One session: a reasoning-tier lead plus an execution-tier sidekick | The lead: decides, authors specs and tests, reviews every diff | The sidekick |
-| **Lean Fusion** | Fusion with the lead's reading cut to the minimum | The lead, from reports only | The sidekick, including reading the plan |
+| **Fusion** | One session: a reasoning-tier lead plus an execution-tier sidekick | The lead: reads the code, decides, and authors every tracked file | The lead edits; the sidekick runs commands and reports |
+| **Lean Fusion** | Fusion with the lead's reading cut to the minimum; applies only when the owner names it | The lead, from reports only | The sidekick, including reading the plan |
 
-**Lean Fusion rules**, for when the reasoning tier's tokens are the scarce resource:
+**Fusion rules**, the default whenever a tool pairs a lead with a sidekick:
+
+- **The lead authors.** The lead writes every character of source, tests, specs, data, configuration and documentation, after reading the code it changes.
+- **The sidekick runs.** Installs, builds, checks, test suites, probes, publication steps from a written recipe, and pipeline or device waits. It reports exit codes, counts, each failing test's name with its expected and actual values, and artifact paths.
+- **The sidekick edits no tracked file.** A file produced by a script it runs (generated documentation, a lockfile, evidence) is that script's output, and the lead reviews it. A fix the sidekick sees is a line in its report, never an edit.
+- **A workflow keeps its steps and changes hands.** The lead performs a workflow's authoring and mutation steps; the sidekick runs its command and verification steps.
+- **The boundary is checked mechanically.** The lead stages its work before each handoff. An unstaged change to a tracked file after the handoff, outside the generated paths, was written by the sidekick: the lead restores it and repeats the handoff.
+- **The sidekick never ends a handoff to save context** where the tool summarizes a full context automatically. A context usage counter is then not a budget ([pitfall](../dev/pitfalls.md#rule-delivery)). A report that names context as its reason is answered with "continue", never with a narrower brief.
+- **Bulk mechanical editing is not Fusion work.** A workspace-wide rename or sweep runs as a Low session from a written plan, or under Lean Fusion when the owner names it.
+
+The reason: a sidekick that authors makes the lead pay three times for one change. The lead writes a brief, the sidekick re-reads the same sources to act on it, and the lead reviews and reworks the result. A wrong guess arrives as a plausible diff. When the lead authors, the judgment is spent once, and the sidekick's low cost goes where it is safe: running, waiting and reporting.
+
+**Lean Fusion rules**, for when the owner names it because the reasoning tier's tokens are the scarce resource:
 
 - **The lead reads only** the pasted session prompt, the last lines of `PROGRESS.md`, and the sidekick's reports. It opens another file only when a report's decision line names it.
 - **The lead does only:** one-line handoffs ("next unit" or "continue"); answers to decision lines in three lines or fewer, choosing one option; design no written plan settles; owner-level approvals; one review of the run's commits at the end.
@@ -55,6 +67,8 @@ Short words the owner uses to name the session setup. Every agent understands th
 
 The corollary for the reasoning tier: **it does not spend its context on mechanical volume.** Full-file verification reading is execution-tier work even when a reasoning-tier session discovered the need for it; the reasoning session writes the instruction into the plan and ends.
 
+The table assigns work to a tier, and a tier that works alone (a Low session) both edits and runs. A Fusion sidekick takes only the run-and-report share of the execution rows; the editing share stays with the lead ([Owner Vocabulary](#owner-vocabulary)).
+
 ## Plans as the Interface
 
 Tiers cooperate through the persistent plan files of the [Planning System](../dev/planning.md), not through shared conversation context:
@@ -70,10 +84,11 @@ A plan entry that cannot be executed without asking what it means is a defect of
 - **One phase, one session.** Long conversations are the cost multiplier, since every call re-sends everything. End sessions at phase boundaries; write state to the plan; start the next phase clean.
 - **Never mix authoring and mechanical execution in one session.** A design discussion dragging behind a sweep pass taxes every remaining call with dead context.
 - **A session states its plan position at start** (which plan, which step) and updates the plan at end. The ritual is what makes fresh sessions cheap.
+- **A long run starts a session; it never ends a long one.** A waiting session is not free: a tool can re-send the waiting lead's whole context at intervals to keep it cached. Start a run of an hour or more in a fresh session, while the context is small.
 
 ## Hand-off Within a Plan
 
-**One session with a sidekick (the default when the tool offers it).** A lead on the reasoning model and a sidekick on the execution model share one session. The lead decides, authors specs, tests, values and briefs, reviews every diff and contact sheet, and talks to the owner; the sidekick implements the lead's briefs, runs the gates and workflows, and reports with numbers and artifact paths. Steps carry no tier tags, nobody stops for a model switch, and no tier guard runs; the progress file and the briefs remain the memory between sessions, and numbers in evidence still come only from scripts.
+**One session with a sidekick (the default when the tool offers it).** A lead on the reasoning model and a sidekick on the execution model share one session under the Fusion rules of [Owner Vocabulary](#owner-vocabulary). The lead decides, authors every tracked file, reviews generated output and contact sheets, and talks to the owner. The sidekick runs the gates and the commands the lead names, and reports with numbers and artifact paths. Steps carry no tier tags, nobody stops for a model switch, and no tier guard runs. The progress file and the plan remain the memory between sessions, and numbers in evidence still come only from scripts.
 
 **Two sessions, switched by hand (when no sidekick is available).** A plan whose steps alternate between judgment and execution tags every step `[HIGH]` (reasoning) or `[LOW]` (execution), and the two tiers hand off through the progress file, not through conversation:
 
