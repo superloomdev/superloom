@@ -41,6 +41,7 @@ These are concept-level rules. The adopted documents restate each one in their o
 | Platform and third-party APIs sit behind project-owned interfaces | [Composition and Adapters](composition-and-adapters.md) |
 | One responsibility per module; one composition root wires everything once | [Module Design](module-design.md) |
 | Every file kind has a normative skeleton; conformance is checked element by element | [File Archetypes](file-archetypes.md) |
+| A step comment on every block, by the full rule set; a checker in lint enforces it | [Code Readability](code-readability.md#step-comments) |
 | Three error categories with three disposals; frozen error catalogs | [Error Handling](error-handling.md) |
 | Fakes over real system calls in tests; assertions pin exact values | [Testing](testing.md) |
 | Rule, reason, example; derived artifacts are compiled, never edited; pitfall journals | [Documentation Authoring](documentation-authoring.md) |
@@ -56,7 +57,8 @@ Each row below is a question the adopted platform layer answers concretely, the 
 
 | Superloom answer in JavaScript | The adopted layer fixes |
 |---|---|
-| 3/2/1 blank-line spacing, banner comments | The platform's own spacing and section markers, as its official formatter and IDE assume |
+| 3/2/1 blank-line spacing, banner comments | The platform's own spacing and section markers, as its official formatter and IDE assume; under a formatter's blank-line cap the hierarchy compresses and banners carry the largest break ([The formatter wins](code-readability.md#vertical-rhythm)) |
+| Step-comment conformance gate in the JavaScript workflows | A step-comment checker in the platform's lint command, proven to fire on a planted block ([Mechanical Enforcement](code-readability.md#mechanical-enforcement)) |
 | Verb catalog and return shapes | A verb catalog expressed in the platform's naming guidelines, with banned placeholder names |
 | Success and error envelopes | The platform's error idiom (typed errors, result types) mapped onto the three categories |
 | Loader and `shared_libs` injection | The platform's dependency injection at one composition root |
@@ -84,7 +86,8 @@ The adopted project receives this set. Names are fixed so every adopted project 
 
 | Path | Audience | Holds |
 |---|---|---|
-| `AGENTS.md` | AI | Session block, code words, hard rules, commands, document map. Target 200 lines, hard ceiling 300 |
+| `AGENTS.md` | AI | Session block, code words, hard rules, commands, document map, the Memory section. Target 200 lines, hard ceiling 300 |
+| `MEMORY.md` | AI | Tracked working memory: current state, notes, log with the reasons, pitfalls ([Working Memory](../ai/agent-configuration.md#working-memory-memory-md)) |
 | `CLAUDE.md` and tool folders | AI | One-line pointer to `AGENTS.md`; tool skill folders are symlinks to `.agents/skills/` |
 | `.agents/skills/` | AI | Canonical project workflows, tool-neutral, including a conformance audit |
 | `docs/principles/` | AI | The universal rules restated in the project's words |
@@ -93,16 +96,18 @@ The adopted project receives this set. Names are fixed so every adopted project 
 | `docs/references.md` | AI | Inspiration log, permissive licenses only |
 | `docs/ai/` | AI | Agent operation: read path, cheap scan order, model vocabulary, hand-off rules, tool configuration |
 | `docs/plans/` | AI | The code migration plan and later plans |
-| `README.md`, `CONTRIBUTING.md`, `LICENSE` | Human | What the project is, how to contribute, the credit line |
+| `README.md`, `CONTRIBUTING.md`, `LICENSE` | Human | What the project is, how to contribute, the credit line; `README.md` ends with a short "For AI agents" section in the agent register |
 
 A project that already has documents keeps them; adoption maps them into this layout and records the mapping in the digest.
 
 ## Two Registers of Writing
 
-| Register | Where | Style |
-|---|---|---|
-| Agent-facing | `AGENTS.md`, `docs/`, skills | Flight-manual English: short declarative lines, tables over prose, one term per concept, no filler |
-| Human-facing | Code comments, `README.md`, `CONTRIBUTING.md`, user interface copy | Plain complete English, no abbreviations, readable by a developer with no agent |
+The adopted project writes each file in the register of its audience, as [Two Registers](documentation-authoring.md#two-registers) defines. The agent register is ASD-STE100 Simplified Technical English; the human register is plain, complete English.
+
+| Register | Files |
+|---|---|
+| Agent | `AGENTS.md`, `MEMORY.md`, `docs/principles/`, `docs/platform/`, `docs/ai/`, decision records, `docs/conventions.md`, plans, skills, the closing "For AI agents" section of `README.md` |
+| Human | `README.md` above its closing section, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, operator guides, code comments and docstrings, interface copy |
 
 The reason: agent documents are read on every session and their length is a recurring cost; code is read by humans who inherit the project and must not need an agent to understand it.
 

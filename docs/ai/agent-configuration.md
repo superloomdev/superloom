@@ -14,6 +14,8 @@ How AI agents are configured across the Superloom workspace: which files exist, 
 - [Repository Independence](#repository-independence)
 - [Module-Level ROBOTS.md](#module-level-robots-md)
 - [Personal Configuration](#personal-configuration)
+- [Working Memory: MEMORY.md](#working-memory-memory-md)
+- [Owner Reports](#owner-reports)
 - [Commit and Attribution Policy](#commit-and-attribution-policy)
 - [Release Policy Is Repository-Local](#release-policy-is-repository-local)
 - [Autonomous Execution](#autonomous-execution)
@@ -27,6 +29,7 @@ How AI agents are configured across the Superloom workspace: which files exist, 
 | `ROBOTS.md` | Each module | Yes | Compact per-module API reference: signatures, return shapes, critical behavior |
 | Workflow files | Tool folder in the repository that owns the procedure | Yes | Step-by-step procedures invoked on demand; see [Workflow Authoring](workflow-authoring.md) |
 | Personal meta-instructions | Workspace root tool folder | No | Individual operating preferences, not framework rules |
+| `MEMORY.md` | Adopted project root | Yes | Working memory: current state, the reasons behind changes, measurements, pitfalls ([Working Memory](#working-memory-memory-md)) |
 
 ## AGENTS.md: the Open Standard
 
@@ -132,6 +135,52 @@ Every published module carries a `ROBOTS.md`: the compact, agent-facing API refe
 ## Personal Configuration
 
 Individual developers keep personal agent instructions (working style, meta-preferences, personal plan conventions) in the workspace-level tool folder, outside every repository, never committed. Framework rules never live there: anything a second developer's agent would need is by definition framework content and belongs in the committed set.
+
+## Working Memory: MEMORY.md
+
+> **An adopted project keeps a tracked `MEMORY.md` at its root. Agents read it after `AGENTS.md` and update it in the same commit as the work. Git records what changed; `MEMORY.md` records why, what was measured, what was tried, and what the next session must know.**
+
+| Section | Holds | Rule |
+|---|---|---|
+| Current state | The repository as it is now, one fact per line | Rewritten at the end of each session; its first line is `**Updated:** [date] · [author]` |
+| Notes | Facts a reader must know: untested platforms, known limits | A note is removed when it stops being true |
+| Log | One entry per session, newest first, headed `### [YYYY-MM-DD] · [author] · [title]` | Sections Changed, Why, Verified and Pitfalls, each only when it has content. An entry is never edited by another author; a correction is a new entry |
+| Pitfalls | Lessons that cost time and apply beyond one session | Appended at the end |
+
+Rules:
+
+- **Author format:** `[git-user] ([harness])`. The harness is the tool that ran the session, all lowercase, words joined by hyphens, naming the product and its surface rather than the vendor or the model (`claude-code`, `claude-desktop`, `devin`). A person working without a tool writes the git user alone.
+- **Same commit as the work**, or a `docs(memory):` commit directly after it. A session that changes code, documentation or a decision updates the file.
+- **Facts only.** Measurements carry units. A decision record or document is named, not repeated.
+- **Nothing private.** No host names, addresses, machine paths, container identifiers, tokens, keys, device serials or personal details. The git user is the only identity in the file.
+- **AI product names** appear only in the entry headings and the `Updated` line, because the author format names the harness. The project's audit script allows them there and nowhere else in the repository.
+- **Register:** the agent register ([Two Registers](../principles/documentation-authoring.md#two-registers)).
+- **Compaction:** when the log passes about 400 lines, an admin (the owner, or a person the owner names) merges the entries older than the last release into one entry per release. Each decision keeps its reason, each measurement and each open pitfall stays. The compaction is its own commit, `docs(memory): compact`; git keeps the full text.
+
+How it relates to the other memory files:
+
+| File | Tracked | Scope | Holds | Updated |
+|---|---|---|---|---|
+| `MEMORY.md` | Yes | One adopted repository | Current state, reasons, measurements, pitfalls | Each session that changes the repository, in the same commit |
+| `__dev__/PROGRESS.md` | No | The Superloom workspace | Position in the running plan chain | After every gate ([Progress Journal](../dev/autonomous-execution.md#progress-journal)) |
+| Pitfall journals | Yes | One documentation domain of Superloom | Symptom, cause and lesson of a diagnosed failure | Before the fix ([Pitfall Journals](../principles/documentation-authoring.md#pitfall-journals)) |
+
+In an adopted project, the Pitfalls section of `MEMORY.md` is the project's only pitfall journal; a second journal would split one kind of knowledge across two homes. Superloom's own repositories carry no `MEMORY.md`: the constitution's knowledge goes to `docs/` by the Golden Rule, and plan state stays in `__dev__/`, outside every repository.
+
+The reason: a fresh session starts with no memory, and a commit log says what changed but not why, what was measured or what failed. A short tracked file that every session reads and updates carries that context across sessions, tools and people without a conversation transcript.
+
+## Owner Reports
+
+The rule: **the final summary of a task is quick-glance bullets in four groups, in this order.** One line per bullet. A group with nothing to report reads "none".
+
+| Group | Holds |
+|---|---|
+| Done | What was finished, each with its evidence: the gate, the count, the commit |
+| Changed | The files and the behavior that changed |
+| Overridden | Each instruction, rule or plan step not followed as written, and why |
+| Choices made | Each decision taken without asking, with the option chosen |
+
+The reason: the owner reads the report to decide what to check, not to relive the session. Fixed groups put the two items that need the owner's eye, overrides and unasked choices, where they cannot be missed. A plan's fixed closing message carries this report inside it.
 
 ---
 

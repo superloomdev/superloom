@@ -79,6 +79,8 @@ description: [one line: what it does and its verbs]
 
 The closing checklist is not decoration: the executor fills it at the final gate, each tick pointing to where in the conversation the evidence lives, and an unticked line blocks completion. It is the user's one-screen audit of the whole run.
 
+**A workflow is written in the agent register**, ASD-STE100 Simplified Technical English ([Two Registers](../principles/documentation-authoring.md#two-registers)): one instruction per sentence, an instruction of 20 words or fewer, the condition before the command, the imperative, and one name for one thing. Headings, step numbers, gate names, commands and output templates stay stable when a workflow is reworded, because plans and other workflows refer to them. An embedded block keeps the meaning of its source and is written in the same register.
+
 ## Embedded Content and the Compile Rule
 
 Property 1 (self-containment) collides with the single-source-of-truth rule: embedded checklists and skeletons duplicate canonical documentation. The resolution is the same as for `AGENTS.md`:

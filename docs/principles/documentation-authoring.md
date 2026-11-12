@@ -5,6 +5,7 @@ This is the contract for writing and maintaining Superloom documentation itself:
 ## On This Page
 
 - [Voice](#voice)
+- [Two Registers](#two-registers)
 - [The Rule, Reason, Example Pattern](#the-rule-reason-example-pattern)
 - [Prose Mechanics](#prose-mechanics)
 - [Banned Vocabulary](#banned-vocabulary)
@@ -27,6 +28,35 @@ The documentation speaks as a senior practitioner dictating house style: declara
 - **Third person for reference prose.** Describe the module, the rule, the system, not the reader. "The loader validates configuration at initialization", not "you should validate your configuration". A bare imperative is reserved for genuine command steps in a procedure.
 - **Confidence with mechanism.** Every strong claim carries its reasoning in the same breath. A claim without an adjacent mechanism is marketing, and marketing is out of scope.
 - **Generic over specific.** Framework rules use placeholders (`[module]`, `[entity]`, `[lang]`), never real module or project names. Specific examples belong in the specific module's own documentation.
+
+## Two Registers
+
+The rule: **every file has one audience, and the audience sets the register.** A file that agents read as working context is written in the agent register. A file that people read is written in the human register, with the voice and mechanics of this document.
+
+| Register | Style | Files in Superloom | Files in an adopted project |
+|---|---|---|---|
+| Agent | ASD-STE100 Simplified Technical English | `AGENTS.md`, workflow files, skill wrappers, plans and their working files in `__dev__/` | `AGENTS.md`, `MEMORY.md`, `docs/principles/`, `docs/platform/`, `docs/ai/`, decision records, `docs/conventions.md`, plans, skills, the closing "For AI agents" section of `README.md` |
+| Human | The voice and prose mechanics in this document | `docs/` (the public site), `README.md` above its closing section, module READMEs, code comments | `README.md` above its closing section, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, operator guides, code comments and docstrings, interface copy |
+
+Superloom's `docs/` stay in the human register because they are the public site; `AGENTS.md` carries their rules to agents in the agent register. Every `README.md` ends with a short "For AI agents" section in the agent register: the read order, the commands to run before a commit, and the files that hold the rules.
+
+The agent register applies the writing rules of ASD-STE100, the controlled language of aircraft maintenance manuals:
+
+| Rule | Detail |
+|---|---|
+| Short sentences | An instruction has 20 words or fewer. A descriptive sentence has 25 words or fewer. A code name, a path, or a number with its unit counts as one word |
+| One instruction per sentence | Two actions share a sentence only when they happen at the same time |
+| Condition first | "If the build fails, stop the run." Never the command first and the condition after it |
+| Imperative and active | Instructions use the imperative; descriptions use the active voice and the simple present tense |
+| No omitted words | Keep the subject, the verb and the articles. No contractions. No semicolons: split the sentence |
+| One word, one meaning | The same technical name every time. A noun cluster has three words or fewer |
+| Structure over paragraphs | Numbered steps, tables and vertical lists. A paragraph has one topic and six sentences or fewer |
+
+Superloom applies the STE writing rules, not the STE dictionary. The one-term-per-concept rule and the banned vocabulary list below take the dictionary's place.
+
+The reason: an agent reads its files at the start of every session, so each extra word costs on every run, and an ambiguous sentence produces a confident wrong action. Short, regular sentences have one reading. People read the human-register files, where a full explanation is worth its length.
+
+Example. Human register: "A sidekick never ends a handoff to save context where the tool summarizes a full context automatically." Agent register: "Do not end a handoff to save context. The tool summarizes a full context automatically."
 
 ## The Rule, Reason, Example Pattern
 
