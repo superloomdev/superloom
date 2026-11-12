@@ -90,6 +90,13 @@ Your project does not have to be JavaScript to use the engineering principles. A
 
 [MIT](LICENSE) - free for commercial use.
 
+## For AI agents
+
+- Read `AGENTS.md` first. It is compiled from `docs/`. Do not edit it directly.
+- In this repository, say `dev mode`. In another project, say `start` and follow `.devin/workflows/adopt.md`.
+- After a change in `docs/` or `.devin/workflows/`, run `/finalize-docs`.
+- Write agent files in Simplified Technical English. The rules are in `docs/principles/documentation-authoring.md`.
+
 ---
 
 <div align="center">
