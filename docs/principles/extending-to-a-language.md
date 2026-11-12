@@ -25,7 +25,7 @@ Each principles document poses questions a language layer must answer concretely
 
 | Principles document | The language layer must fix |
 |---|---|
-| [Code Readability](code-readability.md) | Exact blank-line counts, banner syntax and widths, comment syntax, documentation-header format, casing per identifier kind |
+| [Code Readability](code-readability.md) | Exact blank-line counts (compressed under a formatter's cap), banner syntax and widths, comment syntax, documentation-header format, casing per identifier kind, and the step-comment checker that runs in lint |
 | [File Archetypes](file-archetypes.md) | The full archetype catalog with one complete skeleton per archetype |
 | [Module Design](module-design.md) | Loader signature, companion file names, container conventions, interface slot order, package manifest rules |
 | [Error Handling](error-handling.md) | Envelope field names, catalog file shape, freezing mechanism, error prefix format |
@@ -40,7 +40,7 @@ Every answer follows the same document pattern: open by naming the principle imp
 
 1. **Read the principles layer end to end.** Every document, in full. The implementation must answer all of it, and gaps discovered late force rework.
 2. **Fix the archetype catalog first.** Archetypes drive everything else: once the file shapes exist, formatting, module structure, and testing rules have concrete objects to attach to.
-3. **Write the skeletons before the prose.** A skeleton forces every undecided detail to the surface. Prose written first hides gaps behind generality.
+3. **Write the skeletons before the prose.** A skeleton forces every undecided detail to the surface. Prose written first hides gaps behind generality. Every function body in a skeleton shows its step comments, and the step-comment checker is written and wired into lint before the first module, so the skeletons are its first clean run.
 4. **Build the first foundation module against the skeletons.** The first real module is the trial of the whole layer. Every friction point found while building it is a documentation defect; fix the documents, not just the module.
 5. **Wire the pipeline.** Registry, test-then-publish automation, and the pre-publish gate, per [Versioning and Releases](versioning-and-releases.md).
 6. **Add the implementations table rows.** One row per principles document, linking to the new layer. This is the only edit the core receives.

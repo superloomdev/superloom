@@ -11,6 +11,7 @@ This document states the universal readability rules. Exact counts, banner width
 - [Section Banners](#section-banners)
 - [Public and Private Grouping](#public-and-private-grouping)
 - [Step Comments](#step-comments)
+- [Mechanical Enforcement](#mechanical-enforcement)
 - [Function Documentation Headers](#function-documentation-headers)
 - [Naming](#naming)
 - [Prose Quality in Code](#prose-quality-in-code)
@@ -46,6 +47,8 @@ The universal hierarchy has three levels:
 The reason: spacing that varies by author carries no information; spacing that follows a fixed hierarchy is a structural signal a reader processes without conscious effort. When the same counts appear in every file, a violation is visible at a glance, and a reviewer who sees an unusual gap knows something structural is wrong.
 
 Each language implementation fixes the exact counts (JavaScript uses 3/2/1) and the edge cases (spacing around control-flow blocks, after early returns, inside object literals).
+
+**The formatter wins.** When the language's standard formatter caps blank lines, the hierarchy compresses to fit under the cap, and section banners carry the largest break instead of a third blank line. Under a cap of two, the counts become 2/2/1: two between sections, two between functions, one between blocks. The formatter stays the single source of layout truth, because a rule that fights the formatter is undone on every save.
 
 ---
 
@@ -83,6 +86,32 @@ This is the most opinionated rule in the framework, and the most defended. The r
 - **Comments force decomposition.** A block that cannot be described in one line is two blocks. The rule pushes functions toward small, nameable steps.
 
 Step comments state *what and why*, never *how*: the code already says how. They also never reference internal documentation paths; a comment must be understandable with the file alone.
+
+What counts as a block, and which blocks need a comment, is fixed. These rules hold in every language:
+
+| Rule | Detail |
+|---|---|
+| Every block gets a one-line step comment | A block is one to five statements that do one thing; one blank line separates blocks. The first block of a function is commented too. No exception for short functions: a one-statement body still gets its comment |
+| Every branch, loop and exception handler is its own block | Each `if`, loop and `try` starts a new block with its own comment, and so does the statement after it. The comment says what the branch decides and what happens inside it |
+| The guard after a call is its own block | A call and the check of its result are two steps, two comments: "Read the record", then "Return the failure if the read failed" |
+| Every return is commented | Success and failure returns alike, each with a comment directly above it. A return inside a branch body of one or two statements is covered by the branch's comment |
+| A loop or branch body with more than two statements gets a comment per step | The comment above the loop states what the sweep does; a body of one or two statements stays dense under it |
+| A catch block's comment states the fallback | It says what happens instead, not that the call failed |
+| One blank line follows the function's documentation header | The first step comment opens the body after that blank line |
+
+Test files keep the arrange, act, assert layout without step comments; the test name states what is checked. Test doubles are code and follow every rule above.
+
+---
+
+## Mechanical Enforcement
+
+The rule: **every language layer ships a step-comment checker that runs inside its lint command, and lint fails on any finding.**
+
+The checker reads each function body and reports every block whose first line has no comment directly above it: the first statement of a body, a statement after a blank line, each branch, loop and exception handler, the statement after one, and each return outside a short branch body. It also reports a documentation header with no blank line after it. The checker proves presence, not quality; review still judges what a comment says.
+
+The reason: step comments are the one rule a compiler, a test suite and a type checker cannot see. A rule that no tool checks decays in the first translation to a new language and in the first generated file, and the decay stays invisible until a person reads the code. A checker turns the rule into a gate that costs nothing per run.
+
+Before a team trusts an empty result, the checker is shown to fire on a planted block with no comment. A language layer that has no checker yet records the gap in its formatting document and enforces the rule by a manual gate until the checker ships.
 
 ---
 

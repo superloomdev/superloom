@@ -21,6 +21,7 @@
 - [Rule Delivery](#rule-delivery)
   - [1. AI attribution trailers appear in commits despite a documented ban](#_1-ai-attribution-trailers-appear-in-commits-despite-a-documented-ban)
   - [2. A sidekick rationed its context against a counter it was told to ignore](#_2-a-sidekick-rationed-its-context-against-a-counter-it-was-told-to-ignore)
+  - [3. An adoption wrote a weaker step-comment rule than the framework's](#_3-an-adoption-wrote-a-weaker-step-comment-rule-than-the-framework-s)
 - [CI/CD Publishing](#ci-cd-publishing)
   - [1. `Bind for 127.0.0.1:NNNN failed: port is already allocated` in CI](#_1-bind-for-127-0-0-1-nnnn-failed-port-is-already-allocated-in-ci)
   - [2. `PROTOCOL_CONNECTION_LOST` only in CI](#_2-protocol-connection-lost-only-in-ci)
@@ -531,6 +532,14 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 
 **Fix:** Commands that mutate source or rewrite a shared generated artifact run exclusively and sequentially. In particular, never overlap a fire suite with bundle generation, Playwright, snapshot generation, or another fire suite when they share an output path. Parallelize only gates whose complete read/write sets are disjoint; a distinct process is not isolation when the filesystem artifact is shared.
 
+#### V10. A word-boundary escape made two sweep arms match nothing
+
+**Symptom:** The CommonJS sweep and the `void identifier;` sweep of the module workflows reported clean on files that contained `require('x')` and `void other;`. The workshop found it only when it planted each violation before trusting a clean sweep.
+
+**Cause:** The patterns used `\b` inside `git grep -E`. POSIX extended regular expressions do not define `\b`; some regex libraries accept it as a GNU extension and others treat it as a literal, so the same pattern matches on one machine and never on another, with no error.
+
+**Fix:** Write the boundary as a character class: `(^|[^A-Za-z0-9_$])require\(` instead of `\brequire\(`. Prove each sweep fires on a planted line on the machine that runs it before trusting an empty result.
+
 ## Rule Delivery
 
 ### 1. AI attribution trailers appear in commits despite a documented ban
@@ -550,6 +559,16 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 **Cause:** The tool showed the sidekick a context usage counter on every turn, with the instruction to ignore it because the context is summarized automatically at the limit. The sidekick treated the counter as a budget and stopped short of the limit each time, so the summary never ran, although it had run earlier in the same session. The lead accepted the claim, narrowed each brief and told the sidekick to stop when short, which confirmed the behavior.
 
 **Fix:** Where the tool summarizes a full context automatically, a context usage counter is not a budget. A sidekick never ends a handoff to save context, and a report that names context as its reason is answered with "continue", never with a narrower brief. Before changing a process on a capacity claim, read the tool's own record: the usage it reported, and whether the context had already been summarized in that session.
+
+### 3. An adoption wrote a weaker step-comment rule than the framework's
+
+**Symptom:** A project adopted in a second language wrote "step comments for functions with I/O or more than about ten lines". Short functions, branch blocks and returns had no comment, and nothing failed. The weaker rule was found only when the owner compared the code with the framework's own modules.
+
+**Cause:** The principle said only "every logical block gets a step comment". The detailed rules (no exception for short functions, the guard after a call, every return, the catch fallback) lived in the JavaScript formatting document, which an adoption reads only as a worked example. No language layer had a mechanical check, so a weaker translation passed every gate.
+
+**Fix:** The detailed rules live in the principle, in language-neutral form, and every language layer ships a step-comment checker that runs in its lint command. An adoption shows step comments in every skeleton body and proves the checker fires on a planted block before it trusts a clean run.
+
+**Generalization:** A rule that lives only in one language's document is a suggestion to every other language. Universal rules live in the principles layer, and a soft rule that no tool checks decays in the first translation.
 
 ---
 

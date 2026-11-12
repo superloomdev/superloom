@@ -146,6 +146,7 @@ let CONFIG;
   *********************************************************************/
   const loader = function (shared_libs, config, errors) {
 
+    // Inject the shared libraries, the config and the error catalog
     Lib = shared_libs;
     CONFIG = config;
     ERRORS = errors;
@@ -276,6 +277,7 @@ export default function loader (shared_libs, config) {
     [resource]: null
   };
 
+  // Build and return the public interface for this instance
   return createInterface(Lib, CONFIG, ERRORS, Validators, state);
 
 };/////////////////////////// Module-Loader END /////////////////////////////////
@@ -325,13 +327,16 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators, state) {
       // Ensure the [resource] is initialized
       await _[ModuleName].initIfNot();
 
+      // Start the performance timer for this operation
       const start_ms = Lib.Utils.getUnixTimeInMilliSeconds();
 
+      // Run the operation; a driver failure becomes an error envelope
       try {
 
         // Execute [operation] against the [resource]
         const result = await state.[resource].[operation](options);
 
+        // Log the roundtrip time
         Lib.Debug.performanceAuditLog('End', '[ModuleName] [functionName]', start_ms);
 
         // Return successful response with [result fields]
@@ -343,6 +348,7 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators, state) {
 
       } catch (error) {
 
+        // Fall back to the catalog error; log the driver detail at debug only
         Lib.Debug.debug('[ModuleName] [functionName] failed', {
           type: ERRORS.[ERROR_TYPE].type,
           message: error.message,
@@ -406,6 +412,7 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators, state) {
   };//////////////////////////Private Functions END//////////////////////////////
 
 
+  // Return the public interface
   return [ModuleName];
 
 };/////////////////////////// createInterface END //////////////////////////////
@@ -617,6 +624,7 @@ export default function loader (shared_libs, config, errors) {
   CONFIG = config;
   ERRORS = errors;
 
+  // Return the part's public object
   return PartName;
 
 };
@@ -633,15 +641,23 @@ When a part needs a per-instance closure:
 
 ```javascript
 export default function loader (shared_libs, config, errors) {
+
+  // Build and return a part bound to this call's dependencies
   return createInterface(shared_libs, config, errors);
+
 };
 
 const createInterface = function (Lib, CONFIG, ERRORS) {
+
+  // Public object for this part
   const PartName = {
     // ... methods close over Lib, CONFIG, ERRORS from this call
     // Body shape and step comments: see the factory skeleton worked example
   };
+
+  // Return the part's public object
   return PartName;
+
 };
 ```
 
@@ -807,6 +823,7 @@ export default function loader (shared_libs, config) {
   // Validate config immediately so misconfiguration fails at startup
   Validators.validateConfig(CONFIG);
 
+  // Return the public interface
   return [Name];
 
 };///////////////////////////// Module-Loader END ///////////////////////////////
@@ -914,6 +931,7 @@ export default function loader (shared_libs, errors) {
   Lib = shared_libs;
   ERRORS = errors;
 
+  // Return the public interface
   return [Name];
 
 };///////////////////////////// Module-Loader END ///////////////////////////////
@@ -1312,6 +1330,7 @@ const createInterface = function (Lib, CONFIG, ERRORS, Validators) {
   };/////////////////////////// Private Functions END //////////////////////////
 
 
+  // Return the public Store interface
   return Store;
 
 };/////////////////////////// createInterface END //////////////////////////////

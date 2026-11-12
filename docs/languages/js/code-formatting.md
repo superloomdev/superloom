@@ -149,9 +149,11 @@ let CONFIG;
 /////////////////////////// Module-Loader START ////////////////////////////////
 export default function loader (shared_libs, config) {
 
+  // Inject the shared libraries and the config
   Lib = shared_libs;
   CONFIG = config;
 
+  // Return the public interface
   return ModuleName;
 
 };//////////////////////////// Module-Loader END /////////////////////////////////
@@ -553,6 +555,7 @@ When the JSDoc block is nested inside an indented context (e.g. a method inside 
     *********************************************************************/
     getValue: function () {
 
+      // Return the stored value
       return this.value;
 
     }
@@ -583,7 +586,53 @@ Write comments as a teammate would explain the line, not as marketing or referen
 - Inside `try`/`catch`, the `catch` block's first comment explains the **fallback behavior**, not that the try failed
 - **No exceptions for short functions.** Even a single-block function with one `await` and one `if` still gets its opening step comment
 - Use plain, direct language in comments: `// Return a service error if the driver call failed` not `// Bubble up the error`
-- **A loop body is not one block.** The comment above the loop states what the iteration accomplishes. Once the body carries more than two operations, each distinct operation inside it gets its own step comment, separated by a blank line. A body of one or two tight operations stays dense under the loop's own comment
+- **A loop body is not one block.** The comment above the loop states what the iteration accomplishes. Once the body carries more than two operations, each distinct operation inside it gets its own step comment, separated by a blank line. A body of one or two tight operations stays dense under the loop's own comment. The same holds for the body of an `if`
+- **Every `if`, loop, `switch` and `try` starts its own block.** It gets its own step comment, stating what the branch decides and what happens inside it, and the statement after its closing brace starts a new block with its own comment
+- **The guard after a call is its own block.** A call and the check of its result are two steps: the call under one comment, a blank line, then the `if` under its own comment (`// Return a service error if the driver call failed`)
+- **Every `return` has a step comment directly above it**, in every function, not only I/O functions: bare returns, envelope returns, `return null;` and final returns alike. A `return` inside an `if` body of one or two statements is covered by the `if`'s comment
+- **Every statement that opens a block after a blank line gets a comment**, including `const start_ms = ...` timing captures, `performanceAuditLog` calls and the first `Lib.Debug.debug` call in a `catch`
+
+A block that skips its comment because it is "obvious" is the drift these rules catch:
+
+```javascript
+const result = await store.deleteExpired(instance);
+if (result.success === false) {
+  return {
+    success: false,
+    deleted_count: 0,
+    error: ERRORS.SERVICE_UNAVAILABLE
+  };
+}
+
+return {
+  success: true,
+  deleted_count: result.deleted_count,
+  error: null
+};
+```
+
+The same body with each step commented:
+
+```javascript
+// Delete expired rows in the store
+const result = await store.deleteExpired(instance);
+
+// Return a service error if the store call failed
+if (result.success === false) {
+  return {
+    success: false,
+    deleted_count: 0,
+    error: ERRORS.SERVICE_UNAVAILABLE
+  };
+}
+
+// Report how many rows were deleted
+return {
+  success: true,
+  deleted_count: result.deleted_count,
+  error: null
+};
+```
 
 The loop's own comment covers the sweep; the operations inside it are commented individually:
 
@@ -645,7 +694,11 @@ Every public function that performs I/O (database, network, file, queue, externa
 5. **Every error return.** Each `return { success: false, ... }` block, including the catch-block return
 6. **Every early-return branch.** Idempotency short-circuits, not-found paths, no-op guards
 
-This set is the audit floor, not the ceiling: blocks outside this list still follow the universal every-logical-block rule above. The set exists so a reviewer or verification gate can check comment coverage mechanically: locate the six block kinds, confirm each is preceded by a comment. The step-comment conformance gate in the build and audit workflows checks exactly this set (see the [workflow archetypes](../../ai/workflow-archetypes.md)); the worked function body in the [factory skeleton](module-structure#helper-module-pattern-factory) demonstrates it.
+This set is the audit floor, not the ceiling: blocks outside this list still follow the universal every-logical-block rule above. The set exists so a reviewer or verification gate can check comment coverage mechanically: locate the six block kinds, confirm each is preceded by a comment. The step-comment conformance gate in the build and audit workflows checks this set and every rule above (see the [workflow archetypes](../../ai/workflow-archetypes.md)); the worked function body in the [factory skeleton](module-structure#helper-module-pattern-factory) demonstrates it.
+
+#### Mechanical Check
+
+[Code Readability](../../principles/code-readability.md#mechanical-enforcement) requires a step-comment checker in every language's lint command. The JavaScript layer does not ship one yet: the shared ESLint configuration has no step-comment rule, so `npm run lint` passes a body with no comments. Until the rule ships, the build and audit workflows enforce these rules by a manual gate that reads every function body. When the rule ships, it runs in every module's `npm run lint` and the manual gate keeps only the quality judgment.
 
 ### Adapter and Driver Lazy-Load Pattern
 

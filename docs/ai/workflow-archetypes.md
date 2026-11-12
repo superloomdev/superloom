@@ -55,7 +55,7 @@ The family pattern exists because:
 1. **Re-ground** - Re-read the constitution docs (the embedded Standard's re-ground set), re-derive the fingerprint from a clean reference module, output a binding-rules checklist with citations.
 2. **Audit** - Enumerate every file, read each twice, skeleton conformance diff, assemble gap list grouped by severity (S1 correctness, S2 consistency, S3 cosmetic, sweeps, docs, naming).
 3. **Apply** - Fix findings in severity order. Mechanical sweeps, naming, documentation in compile order (ROBOTS last).
-4. **Verify to convergence** - Lint, clean-install tests, sweep battery, JSDoc indentation, performance-audit ownership, companion and injection checks, step-comment conformance (every function body checked against the mandatory step-comment set in the language's formatting doc), skeleton conformance re-diff. Two consecutive clean passes required.
+4. **Verify to convergence** - Lint, clean-install tests, sweep battery, JSDoc indentation, performance-audit ownership, companion and injection checks, step-comment conformance (the language's step-comment checker exits clean once the language has one, and every function body is read against the step-comment rules in the language's formatting doc, because the checker proves presence, not quality), skeleton conformance re-diff. Two consecutive clean passes required.
 5. **Present** - Verification checklist, change report, explicit user approval before any mutation.
 
 **Key properties:**
