@@ -44,9 +44,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.WEBSITE_DEPLOY_AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.WEBSITE_DEPLOY_AWS_REGION }}
 
+      # A page address without .html must serve the page, not the site's fallback shell
+      - name: Add extension-free page copies
+        run: |
+          find website/DIST -name '*.html' ! -name 'index.html' ! -name '404.html' -exec sh -c 'cp "$1" "${1%.html}"' _ {} \;
+
+      # Files with an extension sync with detected types; the extension-free copies sync as HTML
       - name: Sync to S3
         run: |
-          aws s3 sync website/DIST/ s3://${{ secrets.WEBSITE_DEPLOY_S3_BUCKET }} --delete
+          aws s3 sync website/DIST/ s3://${{ secrets.WEBSITE_DEPLOY_S3_BUCKET }} --delete --exclude "*" --include "*.*"
+          aws s3 sync website/DIST/ s3://${{ secrets.WEBSITE_DEPLOY_S3_BUCKET }} --delete --exclude "*.*" --content-type "text/html; charset=utf-8"
 
       - name: Invalidate CloudFront cache
         run: |
