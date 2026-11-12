@@ -223,8 +223,8 @@ Mandatory checks for agent-register files:
 
 // turbo
 ```bash
-# Cwd = project-superloom (workspace root)
-python3 __dev__/audits/ste-check.py codebase-superloom/AGENTS.md codebase-superloom/.devin/workflows/*.md
+# Cwd = codebase-superloom
+python3 website/scripts/ste-check.py AGENTS.md .devin/workflows/*.md
 ```
 
 Before you trust a zero result, prove that the STE check finds a planted sentence with a semicolon.
@@ -407,7 +407,7 @@ Each section in `AGENTS.md` mirrors a specific subtree of `docs/`. If a new docs
 **P1.0 - Coverage gate (hard gate).** Before any P1 work, run the coverage script. It confirms that each `docs/**/*.md` file has a row in this table:
 
 ```
-bash __dev__/audits/section-map-coverage.sh [repo-root]
+bash website/scripts/section-map-coverage.sh [repo-root]
 ```
 
 If the script reports unmapped files, add a row for each of them before you continue. A file with no mirror destination gets `not mirrored (reference material)` with a reason. Do not skip this step. An unmapped file is invisible to P3, and its rules drop out of `AGENTS.md` without a sign.

@@ -6,6 +6,7 @@ AI-assisted development runs on models of very different cost and capability, an
 
 - [The Two Tiers](#the-two-tiers)
 - [Owner Vocabulary](#owner-vocabulary)
+- [Fusion Handoff Checks](#fusion-handoff-checks)
 - [The Division of Labor](#the-division-of-labor)
 - [Plans as the Interface](#plans-as-the-interface)
 - [Session Discipline](#session-discipline)
@@ -37,9 +38,10 @@ Short words the owner uses to name the session setup. Every agent understands th
 
 - **The lead authors.** The lead writes every character of source, tests, specs, data, configuration and documentation, after reading the code it changes.
 - **The sidekick runs.** Installs, builds, checks, test suites, probes, publication steps from a written recipe, and pipeline or device waits. It reports exit codes, counts, each failing test's name with its expected and actual values, and artifact paths.
-- **The sidekick edits no tracked file.** A file produced by a script it runs (generated documentation, a lockfile, evidence) is that script's output, and the lead reviews it. A fix the sidekick sees is a line in its report, never an edit.
+- **The sidekick edits no file outside its scratch folder.** A file produced by a script it runs (generated documentation, a lockfile, evidence) is that script's output, declared in the brief, and the lead reviews it. A fix the sidekick sees is a line in its report, never an edit. It deletes only files it created in the same handoff.
+- **The lead commits; the sidekick publishes.** A commit message is authored content, so the lead stages and commits. The sidekick pushes, publishes, dispatches and watches CI from the brief's exact commands.
 - **A workflow keeps its steps and changes hands.** The lead performs a workflow's authoring and mutation steps; the sidekick runs its command and verification steps.
-- **The boundary is checked mechanically.** The lead stages its work before each handoff. An unstaged change to a tracked file after the handoff, outside the generated paths, was written by the sidekick: the lead restores it and repeats the handoff.
+- **The boundary is checked mechanically** ([Fusion Handoff Checks](#fusion-handoff-checks)). The lead stages its work and takes a snapshot before each handoff. Any change after the handoff outside the scratch folder and the declared outputs was made by the sidekick: the lead restores it and repeats the handoff.
 - **The sidekick never ends a handoff to save context** where the tool summarizes a full context automatically. A context usage counter is then not a budget ([pitfall](../dev/pitfalls.md#rule-delivery)). A report that names context as its reason is answered with "continue", never with a narrower brief.
 - **Bulk mechanical editing is not Fusion work.** A workspace-wide rename or sweep runs as a Low session from a written plan, or under Lean Fusion when the owner names it.
 
@@ -53,6 +55,22 @@ The reason: a sidekick that authors makes the lead pay three times for one chang
 - **One handoff is one unit** under an hour, ending at a clean boundary with a report of at most fifteen lines: `UNIT`, `COMMITS`, `GATES`, `OUTSIDE-BRIEF`, `DECISION` (options with a recommendation, or "none"), `WARN`, `NEXT`.
 - **A sidekick that fails one unit twice** reports a decision line; the lead takes over hands-on work only when the sidekick fails the same unit twice more after the lead's answer.
 
+## Fusion Handoff Checks
+
+A sidekick cannot tell which files the lead made, so the checks never ask it to. Ownership is decided by state captured before the handoff, and every difference after it is named.
+
+| Check | Rule |
+|---|---|
+| Ownership | The lead stages its work in each repository and records a snapshot of every repository file and of the workspace folder (path, size, modification time, each repository's commit) immediately before the handoff |
+| Scratch | The brief names one scratch folder. The sidekick creates files only there and in the system temporary folder, and deletes only files it created in that handoff |
+| Declared outputs | The brief lists the paths that the scripts it runs may rewrite (generated docs, lockfiles, evidence). A change there is reported as script output for the lead to review, not as a write |
+| After the handoff | A verify step compares the current state with the snapshot and prints each added, changed and deleted file outside the scratch folder and the declared outputs, and each commit made. The count must be zero; the lead restores anything else |
+| Stop rules | Each step runs once. A transient registry error gets the documented retries. The same error twice stops that step: the sidekick reports the exact error lines and continues with the next independent step. It never edits a file, changes a command or disables a check to make a step pass, and never stops to save context |
+| Report evidence | Every identifier in a report (run, commit, version, URL) is copied from the output of the command that established it. The lead confirms that a CI run's commit is the commit that was pushed |
+| Lead takeover | A step that fails twice for the same reason after the lead's answer becomes the lead's |
+
+The lead does not edit the workspace while a handoff it is waiting on runs; when it must (a non-blocking handoff), it takes a new snapshot first. The reason for capturing state rather than trusting rules: a sidekick that means well still "cleans up" files it believes are stale, and a rule it misreads is invisible until the file is missed. A snapshot turns every such act into a named line the lead reviews.
+
 ## The Division of Labor
 
 | Work | Tier | Why |
@@ -63,7 +81,7 @@ The reason: a sidekick that authors makes the lead pay three times for one chang
 | Executing a workflow end to end | Execution | The seven properties of [Workflow Authoring](workflow-authoring.md) exist precisely to make this safe |
 | Mechanical sweeps, renames, full-file double reads | Execution | High token volume, zero ambiguity |
 | Verification passes, lint and test loops, CI watching | Execution | Written pass conditions; no judgment |
-| Website builds, compilations, commits per written instructions | Execution | Procedural |
+| Website builds, compilations, pushes and publication per written instructions | Execution | Procedural |
 
 The corollary for the reasoning tier: **it does not spend its context on mechanical volume.** Full-file verification reading is execution-tier work even when a reasoning-tier session discovered the need for it; the reasoning session writes the instruction into the plan and ends.
 

@@ -22,6 +22,9 @@
   - [1. AI attribution trailers appear in commits despite a documented ban](#_1-ai-attribution-trailers-appear-in-commits-despite-a-documented-ban)
   - [2. A sidekick rationed its context against a counter it was told to ignore](#_2-a-sidekick-rationed-its-context-against-a-counter-it-was-told-to-ignore)
   - [3. An adoption wrote a weaker step-comment rule than the framework's](#_3-an-adoption-wrote-a-weaker-step-comment-rule-than-the-framework-s)
+  - [4. A sidekick deleted files it had not created, and the write check passed](#_4-a-sidekick-deleted-files-it-had-not-created-and-the-write-check-passed)
+  - [5. A second session overwrote the plan's state file while the first was using it](#_5-a-second-session-overwrote-the-plan-s-state-file-while-the-first-was-using-it)
+  - [6. A sidekick report cited the wrong CI run](#_6-a-sidekick-report-cited-the-wrong-ci-run)
 - [CI/CD Publishing](#ci-cd-publishing)
   - [1. `Bind for 127.0.0.1:NNNN failed: port is already allocated` in CI](#_1-bind-for-127-0-0-1-nnnn-failed-port-is-already-allocated-in-ci)
   - [2. `PROTOCOL_CONNECTION_LOST` only in CI](#_2-protocol-connection-lost-only-in-ci)
@@ -569,6 +572,30 @@ Failures where the agent's *report* is wrong rather than its code. These are the
 **Fix:** The detailed rules live in the principle, in language-neutral form, and every language layer ships a step-comment checker that runs in its lint command. An adoption shows step comments in every skeleton body and proves the checker fires on a planted block before it trusts a clean run.
 
 **Generalization:** A rule that lives only in one language's document is a suggestion to every other language. Universal rules live in the principles layer, and a soft rule that no tool checks decays in the first translation.
+
+### 4. A sidekick deleted files it had not created, and the write check passed
+
+**Symptom:** During a workflow self-test, a sidekick removed six files from an untracked workshop folder because they "would pollute the audit". Its report mentioned it in passing. The write check reported zero writes.
+
+**Cause:** The Fusion rule said "the sidekick edits no tracked file", and the write check compared only the tracked files of the repositories after the handoff. Untracked workspace folders had no rule and no check, and a sidekick cannot tell which files the lead made.
+
+**Fix:** The sidekick does not need to know who made a file. The lead takes a snapshot of the repositories and the workspace folder before each handoff. The sidekick creates files only in the scratch folder its brief names and deletes only files it created in that handoff. The check after the handoff compares every file with the snapshot and names each addition, change and deletion outside the scratch folder and the declared script outputs.
+
+### 5. A second session overwrote the plan's state file while the first was using it
+
+**Symptom:** A session paused a plan by writing a note into the plan's state file. Meanwhile a second session on the same plan closed a unit and rewrote the state file, and the pause note disappeared. The first session's progress line then named a unit that was already closed.
+
+**Cause:** Nothing records which session works on the workspace. Both sessions followed the same read order, and the later write won.
+
+**Fix:** Before writing plan state, read the state file again and compare it with what the session read at its start. A difference means another session is active: stop and tell the owner. Run one session per plan at a time.
+
+### 6. A sidekick report cited the wrong CI run
+
+**Symptom:** A report named the run it watched by one identifier and linked a different, older run, whose commit was the previous one.
+
+**Cause:** The sidekick wrote the identifier from memory of an earlier listing, not from the output of the command that proved the result.
+
+**Fix:** A report copies every identifier (run, commit, version, URL) from the output of the command that established it, and the lead checks that the run's commit is the commit that was pushed.
 
 ---
 

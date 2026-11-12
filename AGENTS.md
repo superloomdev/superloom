@@ -220,6 +220,9 @@ Three layers under `docs/` (superloom repo). Full index: `docs/README.md`.
 - **Seat an operating-system control in the geometry of the drawn component. Never exempt it from comparison.** A host without the adapter that the template asks for fails. Pitfalls entry 105
 - **A context usage counter is not a budget when the tool summarizes a full context automatically.** A sidekick never ends a handoff to save context. Answer a report that names context with "continue". Pitfalls, Rule Delivery entry 2
 - **A universal rule lives in the principles layer, and a tool checks it.** A rule only in one language document is a suggestion to other languages. Pitfalls, Rule Delivery entry 3
+- **A snapshot, not the sidekick's judgment, decides ownership.** A sidekick deleted untracked files that it believed were stale, and a check of tracked files missed it. Pitfalls, Rule Delivery entry 4
+- **Read the plan state file again before you write it.** If it changed since the session start, another session is active. Stop and tell the owner. Pitfalls, Rule Delivery entry 5
+- **Copy each identifier in a report from the command that proved it.** Confirm that a CI run's commit is the pushed commit. Pitfalls, Rule Delivery entry 6
 
 ## Boundaries
 
@@ -282,6 +285,8 @@ Each module has an entry file, `[name].config.js`, `[name].errors.js`, `[name].v
 - Each workflow is written in the agent register (STE). When you reword a workflow, keep its headings, step numbers, gate names, commands and output templates.
 - Model tiers: one lead and sidekick session is the default under the Fusion rules. `docs/ai/model-tiering.md`
 - The lead writes each character of source, tests, specs, data and docs. It does the authoring and mutation steps of a workflow.
-- The sidekick runs installs, builds, gates, probes, recipe publication steps and waits. It reports exit codes, counts, failing tests with expected and actual values, and artifact paths. It edits no tracked file. The lead reviews script output that the sidekick generates.
-- The lead stages its work before each handoff. An unstaged change after the handoff, outside generated paths, is a sidekick write. Restore it.
+- The sidekick runs installs, builds, gates, probes, recipe publication steps and waits. It reports exit codes, counts, failing tests with expected and actual values, and artifact paths. It edits no file outside its scratch folder and deletes only files it created in the handoff. The lead reviews script output that the sidekick generates.
+- The lead commits, because a commit message is authored content. The sidekick pushes, publishes, dispatches and watches CI.
+- Fusion handoff checks: the lead stages its work and takes a snapshot of the repositories and the workspace folder before each handoff. The brief names the scratch folder and the declared script outputs. After the handoff, each change outside them is a sidekick write. Restore it. `docs/ai/model-tiering.md` - Fusion Handoff Checks
+- Sidekick stop rules: run each step once. The same error twice stops that step, and the sidekick reports the exact error lines. It never edits a file or changes a command to make a step pass. It copies each identifier from command output.
 - Bulk mechanical editing runs as a Low session or under named Lean Fusion. A run of an hour or more starts a fresh session. It never ends a long one. The `TIER`-tagged two-session hand-off applies only when no sidekick is available.

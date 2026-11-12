@@ -247,8 +247,8 @@ The generator verifies itself with a headless workshop against dummy modules. Th
 8. **Check the register.** Each generated file must pass the STE check with zero findings:
    // turbo
    ```bash
-   # Cwd = project-superloom (workspace root)
-   python3 __dev__/audits/ste-check.py [target-repo]/.devin/workflows/[prefix].md [target-repo]/.devin/workflows/[prefix]-audit.md [target-repo]/.devin/workflows/[prefix]-publish.md
+   # Cwd = codebase-superloom
+   python3 website/scripts/ste-check.py [target-repo]/.devin/workflows/[prefix].md [target-repo]/.devin/workflows/[prefix]-audit.md [target-repo]/.devin/workflows/[prefix]-publish.md
    ```
 
 9. **Write the workshop verdict:**
