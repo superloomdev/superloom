@@ -20,6 +20,7 @@ The complete rule set for writing unit tests. Follow it exactly and any reviewer
   - [8. No console.log in tests](#_8-no-console-log-in-tests)
   - [9. Test inputs and expected outputs must be explicit](#_9-test-inputs-and-expected-outputs-must-be-explicit)
   - [10. No mutation side effects between tests](#_10-no-mutation-side-effects-between-tests)
+  - [11. Assertion operands are primitives or plain data](#_11-assertion-operands-are-primitives-or-plain-data)
 - [How to Write Tests for a New Module (Step by Step)](#how-to-write-tests-for-a-new-module-step-by-step)
 - [Reference - Assertion Methods](#reference-assertion-methods)
 - [Reference - Test Output](#reference-test-output)
@@ -199,6 +200,22 @@ it('should round correctly', function () {
 ### 10. No mutation side effects between tests
 
 Each `it()` must be independent. Do not rely on state from a previous test. If setup is needed, declare it inside the `describe` block.
+
+### 11. Assertion operands are primitives or plain data
+
+Never pass a live object to an assertion: a DOM node, a list of nodes, an event, a style object, a rendered test instance. When the assertion fails, `node:assert` keeps both operands and the reporter formats them, and such an object is a graph with no practical end. One failing `assert.equal(container.querySelector('[role="menu"]'), null)` has taken 367 GB of memory.
+
+```javascript
+// Wrong: a failure formats the node
+assert.equal(container.querySelector('[role="menu"]'), null);
+assert.equal(document.activeElement, button);
+
+// Right: a failure prints true or false
+assert.equal(container.querySelector('[role="menu"]') === null, true, 'the menu is closed');
+assert.equal(document.activeElement === button, true, 'the trigger holds focus');
+```
+
+A test host that renders (a component library, an application's `_test/`) loads an assertion guard before the tests. The guard replaces a live operand by a short label, so an operand that slips through costs a few words. It has a mode that refuses live operands outright; that mode is the default once a suite has none. See [Testing](../../principles/testing.md#test-structure-and-naming) and the [pitfalls journal](../../dev/pitfalls.md), entries 99 and 107.
 
 ---
 
