@@ -154,6 +154,8 @@
   - [103. Android text and fields measured taller and wider than the web from the same tokens](#_103-android-text-and-fields-measured-taller-and-wider-than-the-web-from-the-same-tokens)
   - [104. A whole-roster native walk reported each cell's first layout](#_104-a-whole-roster-native-walk-reported-each-cell-s-first-layout)
   - [105. An operating-system control was exempted from the comparison when it could be seated](#_105-an-operating-system-control-was-exempted-from-the-comparison-when-it-could-be-seated)
+  - [106. A memory guard that read resident size missed a 367 GB runaway](#_106-a-memory-guard-that-read-resident-size-missed-a-367-gb-runaway)
+  - [107. A written lesson stood in for a mechanism, and a killed test counted as a failing test](#_107-a-written-lesson-stood-in-for-a-mechanism-and-a-killed-test-counted-as-a-failing-test)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---

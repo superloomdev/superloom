@@ -8,6 +8,7 @@ Tests in this framework are part of the module contract: every module carries it
 - [The Test Tiers](#the-test-tiers)
 - [Self-Contained Suites](#self-contained-suites)
 - [Test Structure and Naming](#test-structure-and-naming)
+- [Containment](#containment)
 - [The Environment Boundary](#the-environment-boundary)
 - [What Gets Tested](#what-gets-tested)
 - [Language Implementations](#language-implementations)
