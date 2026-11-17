@@ -45,7 +45,18 @@ A service-dependent module's suite owns its service lifecycle end to end: the te
 - **Behavioral names.** Every test reads as `should [expected behavior] when [condition]`. The name states the contract being verified, so a failure report is meaningful without opening the file.
 - **Arrange, act, assert.** Each test body has the three phases in order, visually separated. One behavior per test; a test asserting two behaviors is two tests.
 - **Assertions pin exact values.** An assertion states the one exact outcome the contract requires, never a range or a disjunction that multiple behaviors could satisfy. An assertion loose enough for both the correct behavior and a bug to pass was written to pass, not to verify, and it will mask the bug. If the exact value cannot be known in advance, the setup is nondeterministic and the setup is what gets fixed, not the assertion. Ranges are acceptable only for genuinely nondeterministic quantities (durations, timestamps), and then as tight as the nondeterminism allows.
+- **Assertion operands are primitives or plain data.** An assertion never receives a live object: a DOM node, a rendered instance, an event, a style object. Compare identity or a property and assert the Boolean or the value. When such an assertion fails, the assertion library formats both operands, and a live object is a graph with no practical end; the failure then costs memory without bound instead of printing a message. The test host enforces this, so the rule does not depend on memory. See the [pitfalls journal](../dev/pitfalls.md), entries 99 and 107.
+- **A failure message is bounded.** A failing assertion prints a message of a known maximum size: a set comparison prints the first few missing and extra members and both counts, never the two full sets.
 - **One example domain per module.** All tests, documentation examples, and fixtures within a module use the same domain example. Mixed example domains are noise.
+
+## Containment
+
+A test, a build or a browser run can allocate memory without bound, and no written rule stops a process. Every such run is started through a guard that watches the whole process tree and stops it.
+
+- **The measure is footprint.** The guard reads each process's footprint: resident, compressed and swapped memory together. Resident size alone is not a measure of memory, because an operating system under pressure moves pages out of it as fast as they are allocated.
+- **The system has a floor.** The guard also stops the run when the operating system reports critical memory pressure, whatever the per-process numbers say.
+- **Limit the piece, not the job.** A single test has a time limit of a minute or two, and a stuck test is ended and reported as failed while the run continues. A job made of many pieces (a full suite, a native build, a device walk) keeps a long limit. Time never stands in for the memory ceiling: a runaway can take all memory in well under any useful time limit.
+- **A kill is never a result.** A run the guard or the system killed proves nothing about the code under test. It is reported as broken, never as passed and never as a failing test.
 
 ## The Environment Boundary
 

@@ -2043,6 +2043,22 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Fix/Lesson:** Keep the drawn label, strut, row and state text and center the operating system control in the box the drawn track would occupy, with overflow visible, so the cell matches its drawn twin and compares like every other cell. Prefer a construction that makes the comparison hold over an exemption; a host missing the adapter the template asks for is a failure.
 
+### 106. A memory guard that read resident size missed a 367 GB runaway
+
+**Symptom:** The machine ran out of application memory during a full mutation run. The operating system's memory report named one test process at 367 GB, 103 seconds old, with only 2.1 GB resident and the rest compressed. The process guard wrapped that run with a 3 GB per-process ceiling and sampled it four times a second, and it never fired. A background watchdog with a 16 GB ceiling did not fire either. In every earlier run the same guard had killed the same test within two seconds.
+
+**Cause:** Both the guard and the watchdog read resident size (`ps` `rss`). Resident size counts only the pages in physical memory now. Under memory pressure macOS compresses and swaps a process's pages as fast as the process allocates them, so resident size stays low while the process's real memory, its footprint, grows without bound. The guard had worked earlier only because the machine had free memory and the pages stayed resident. A wall-clock limit would not have helped: at the measured rate, 60 seconds is about 200 GB.
+
+**Fix/Lesson:** Measure footprint, not resident size: resident plus compressed plus swapped memory (`footprint` on macOS, `VmRSS` plus `VmSwap` on Linux), and take the larger of the two readings so a failed reading never lowers the number. Stop the run as well when the operating system itself reports critical memory pressure, whatever the per-process numbers say. Give a background watchdog the same measure. Prove the measure with the incident's own numbers in a unit test (2.1 GB resident, 367 GB footprint must count as 367 GB), because the condition cannot be staged on demand. A containment that was only ever seen to work on an idle machine is untested for the case it exists for.
+
+### 107. A written lesson stood in for a mechanism, and a killed test counted as a failing test
+
+**Symptom:** The runaway in entry 106 was a known failure. Entry 99 and two later project lessons already said that a failing assertion over a DOM node makes the assertion library format the whole node graph. The rule was "write the operand as a primitive", applied by hand. More than a hundred assertions still passed live nodes, each harmless until the day it failed. Four mutation rows had failed this way on every run for weeks: the guard killed each at its ceiling, the runner recorded the kill as proof that the mutation was caught, and the run stayed green. On the day of entry 106 the fourth row was not killed; its test process died by itself after 104 seconds, the runner saw exit status 1 and a failure marker for the file, and recorded a normal failing test.
+
+**Cause:** Three gaps. A lesson that depends on every author remembering it is not enforced. A kill was accepted as evidence about the code under test, although a kill only says that the harness lost control. And the runner's proof check accepted a file-level failure line, which a dead test process also prints, as if a named test had failed.
+
+**Fix/Lesson:** Put the rule where no author can forget it: the test host wraps the assertion functions once, before any test file loads, so that an operand that is a live object (a DOM node, a rendered instance, an event, a style object) is compared by identity and reported by a short label, and the assertion library never formats it. Record every such call in a census mode, rewrite each site by hand to primitive operands, then switch the wrapper to refuse live operands outright. In a mutation runner, a kill by the guard or by the system is always a broken row, never a pass, and a failure counts only when a named test failed, not when the test file's process ended. When the same lesson is written down a second time, the second entry must be a mechanism.
+
 ## Adding a New Entry
 
 Whenever a new failure mode is discovered:
