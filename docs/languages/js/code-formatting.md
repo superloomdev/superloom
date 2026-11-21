@@ -367,7 +367,7 @@ A name never starts with an underscore. A name is anything the code declares: an
 | `_test` | The test folder of a module |
 | A name owned elsewhere | A name the language, the platform or a third party owns (`__dirname`, `__proto__`, a framework's reserved file name, an upstream object's own member) |
 
-Text is not a name: a citation in a comment, a regular expression, a path, and a **name tail**, a string that ends a `snake_case` token name and is joined to its base where it is written. A value that is compared, used as a key, passed on or returned is a state, not a tail: it takes the plain state word (`hover`, `active`, `focus`, `disabled`, `selected`, and one word for the resting state), and one helper adds the tail when the token name is built. The underscore between the words of a `snake_case` name is a separator; it never leads. An enforcement gate fails a leading underscore outside the exceptions; a rename is decided by reading each occurrence, never by a search and replace.
+Text is not a name: a citation in a comment, a regular expression, a path, and a **name tail**. A name tail is a string that ends a `snake_case` token name and is joined to its base where it is written. A value that is compared, used as a key, passed on or returned is a state, not a tail. It takes the plain state word: `hover`, `active`, `focus`, `disabled`, `selected`, and one word for the resting state. One helper adds the tail when the token name is built. The underscore between the words of a `snake_case` name is a separator; it never leads. An enforcement gate fails a leading underscore outside the exceptions; a rename is decided by reading each occurrence, never by a search and replace.
 
 ### Parameter Naming
 

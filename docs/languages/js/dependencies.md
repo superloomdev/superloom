@@ -91,7 +91,7 @@ Every module MUST declare in `peerDependencies` every Superloom module it consum
 
 **Version ranges.** Superloom modules use caret style: `^1.0.0`. A framework peer such as `react` or `react-native` uses `>=`, because the module supports a span of major versions and the host owns the version. Not `>=` for Superloom peers; not `^` for framework peers.
 
-**Reference packages are exact.** A package that a test suite installs as the reference it measures against (an upstream design system, a renderer whose output is compared) is pinned to an exact version, and every transitive copy of its scope is pinned through `overrides`. The suites delete the lockfile before every install, so a range would resolve again on each run and move the reference with no change to the code under test. After a clean install, every installed copy of the scope must match its pin. Moving to a newer reference is its own unit of work with a baseline run ([pitfall 108](../../dev/pitfalls.md#_108-upstream-ranges-resolved-again-on-every-clean-install)).
+**Reference packages are exact.** A test suite can install a package as the reference it measures against, such as an upstream design system. That package is pinned to an exact version, and every transitive copy of its scope is pinned through `overrides`. The suites delete the lockfile before every install, so a range would resolve again on each run and move the reference with no change to the code under test. After a clean install, every installed copy of the scope must match its pin. Moving to a newer reference is its own unit of work with a baseline run ([pitfall 108](../../dev/pitfalls.md#_108-upstream-ranges-resolved-again-on-every-clean-install)).
 
 ### Module Acquisition Rules
 

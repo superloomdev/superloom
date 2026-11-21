@@ -41,7 +41,7 @@ If the verb is not clear, the name is missing, or the name has no roster row, as
 
 ## The Standard (embedded; sources cited)
 
-> Compiled from `codebase-superloom/docs/languages/js/client/components.md` (Component Folder, The context seam, Theme Token Contract, Platforms, Accessibility Contract, Geometry and Fidelity) and the library's `docs/authoring.md`. When one of them changes, update this block in the same session (`docs/ai/workflow-authoring.md` - Embedded Content and the Compile Rule).
+> Compiled from `codebase-superloom/docs/languages/js/client/components.md` (Component Vocabulary, Component Folder, The context seam, Theme Token Contract, Platforms, Accessibility Contract, Geometry and Fidelity) and the library's `docs/authoring.md`. When one of them changes, update this block in the same session (`docs/ai/workflow-authoring.md` - Embedded Content and the Compile Rule).
 
 **Folder** (`components.md` - Component Folder):
 
@@ -128,6 +128,7 @@ export default function [Name] (ctx) {
 - A component that fills its container also exports `FRAME = Object.freeze({ width })`. This is the catalog's `frame`. Each showcase and walker lays the component out at that width.
 - A part that grows from its content uses `flexGrow: 1, flexShrink: 1, flexBasis: 'auto'`. Do not use `flex: 1`, because its basis is zero on native.
 - A truncating sample sets `width`, not `maxWidth`.
+- A `requires_parent` row mounts each sample inside its parent. Each state sets `wrappers: [{ component, props, reference }]`, first entry outermost.
 
 **`reference.js`** (rows with a reference): `export default Object.freeze({ kind, mount (React, upstream, props), body?, parts: { [part]: { upstream: '[selector]', ours: '[selector]', measure: 'box' | 'text' | 'type', pseudo? } } })`.
 

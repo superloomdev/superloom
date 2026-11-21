@@ -429,8 +429,8 @@ The destination has one of three values (a closed set):
 | `docs/principles/engineering-philosophy.md` | Persona + Golden Rule callout + AI Behavior Rules (before-inventing-search, reserved vocabulary, comments never cite `docs/`, idempotency guards compare fingerprints) |
 | `docs/principles/documentation-authoring.md` | Golden Rule callout + AI Behavior Rules (no plan references, two registers, STE rules, site-form anchors, generated On This Page blocks) |
 | `docs/principles/project-management.md` | AI Behavior Rules (product management layer) |
-| `docs/principles/testing.md` | AI Behavior Rules (assertions pin exact values) |
-| `docs/languages/js/code-formatting.md` | AI Behavior Rules (step comments, two-pass check) |
+| `docs/principles/testing.md` | AI Behavior Rules (assertions pin exact values, assertion operands, containment) |
+| `docs/languages/js/code-formatting.md` | AI Behavior Rules (step comments, two-pass check, no leading underscore) |
 | `docs/languages/js/project-structure.md` | Directory Map |
 | `docs/languages/js/error-handling.md` | AI Behavior Rules (three-category error disposal + wrapper purity + service translation) |
 | `docs/languages/js/module-structure.md` | mirrored to workflow: js-helper-module |
@@ -441,7 +441,7 @@ The destination has one of three values (a closed set):
 | `docs/languages/js/composition-and-adapters.md` | AI Behavior Rules (composition and adapters doctrine, JS-specific) + Documentation Map |
 | `docs/languages/js/validation.md` | AI Behavior Rules (type-guard primitive rule) |
 | `docs/languages/js/client/client-modules.md` | AI Behavior Rules (client naming taxonomy + loader-pattern rule) |
-| `docs/languages/js/client/components.md` | AI Behavior Rules (component accessibility aria-* rule + theme token contract + named barrel) |
+| `docs/languages/js/client/components.md` | AI Behavior Rules (component accessibility aria-* rule + theme token contract + named barrel) + Safe Terminal Patterns (walk settle limit, parented samples) |
 | `docs/languages/js/client/theming.md` | AI Behavior Rules (RNW native projection rule + scheme versus variant doctrine + generated artifact provenance) |
 | `docs/languages/js/client/fonts.md` | AI Behavior Rules (theme-names/host-loads contract + manifest style entry rule) |
 | `docs/languages/js/client/client-loader.md` | not mirrored (reference material: the Lib container table of the loader is looked up for each task) |
@@ -451,7 +451,7 @@ The destination has one of three values (a closed set):
 | `docs/languages/js/function-naming.md` | AI Behavior Rules (verb-first naming rule, banned verbs) |
 | `docs/languages/js/publishing.md` | Boundaries / Never (publish is CI-only) + Safe Terminal Patterns (same-version republish for generated packages) |
 | `docs/languages/js/module-thoughts-file.md` | Directory Map (THOUGHTS.md in standard files list) |
-| `docs/languages/js/dependencies.md` | AI Behavior Rules (peer dependencies declare full runtime contract) |
+| `docs/languages/js/dependencies.md` | AI Behavior Rules (peer dependencies declare full runtime contract) + Safe Terminal Patterns (reference packages are exact) |
 | `docs/languages/js/module-docs.md` | Directory Map (standard files per module line) |
 | `docs/languages/js/index.md` | AI Behavior Rules (two-form naming rule) |
 | `docs/languages/js/catalog-client.md` | not mirrored (reference material: the naming taxonomy rule comes from `client/client-modules.md`) |

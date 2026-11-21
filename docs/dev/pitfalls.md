@@ -472,9 +472,9 @@ Same root cause as S1. Always use `write_to_file` or `edit` instead.
 
 #### A5. A command guard read file text as commands and passed a command by one word
 
-**Symptom:** A workspace hook meant to stop unguarded test runs blocked harmless commands whose heredoc or quoted text mentioned the runner, and let a real unguarded run through because the guard's name appeared elsewhere in the same command line.
+**Symptom:** A workspace hook that stops unguarded test runs blocked harmless commands whose heredoc or quoted text named the runner. It also let a real unguarded run through, because the guard's name appeared elsewhere in the same command line.
 
-**Cause:** The hook matched words in the whole command string. Text written into a file, a quoted argument and a comment looked the same to it as a command, and one occurrence of the guard's name anywhere approved every command in the line.
+**Cause:** The hook matched words in the whole command string. To it, text written into a file, a quoted argument and a comment looked like commands. One occurrence of the guard's name anywhere approved every command in the line.
 
 **Fix:** Parse the command line the way the shell does: heredoc bodies, quoted strings and comments are text; `bash -c`, `eval` and command substitutions are commands. Decide each command separately, by its own first word and whether that command itself runs inside the guard. Keep a self-test of known cases, and replay the hook over the commands of earlier sessions before trusting a rewrite: it must block the real unguarded runs and nothing else.
 
@@ -2092,9 +2092,9 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Symptom:** A mutation runner failed twice locally with no summary. Its log stopped while its child processes went on running for another twelve minutes. No guard or system kill was recorded. On Linux CI the same script printed its summary.
 
-**Cause:** On macOS, Node writes standard output to a pipe asynchronously. The script ran each child with a blocking call and never returned to the event loop, so once one large write (about 64 KB) filled the pipe, every later line queued in memory. `process.exit(1)` then discarded the queue together with the summary. Linux writes pipes synchronously, which hid the problem in CI.
+**Cause:** On macOS, Node writes standard output to a pipe asynchronously. The script ran each child with a blocking call and never returned to the event loop. Once one large write (about 64 KB) filled the pipe, every later line queued in memory. `process.exit(1)` then discarded the queue together with the summary. Linux writes pipes synchronously, which hid the problem in CI.
 
-**Fix/Lesson:** A script that blocks between writes writes its progress and summary synchronously (`fs.writeSync` to the descriptor or to its log file), or it sets the exit code and lets the process end on its own instead of calling `process.exit`. A run that ends without its summary is treated as broken, never as a result.
+**Fix/Lesson:** A script that blocks between writes writes its progress and summary synchronously, with `fs.writeSync` to the descriptor or to its log file. Otherwise it sets the exit code and lets the process end on its own, without `process.exit`. A run that ends without its summary is treated as broken, never as a result.
 
 ### 110. Nested guards truncated one shared log
 
@@ -2122,7 +2122,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 ### 113. A locator resolved again for each index walked into content that an earlier step had opened
 
-**Symptom:** A brand-reach end-to-end check reported failures on a date picker's calendar day buttons, parts the check had not meant to visit, and compared their paint with the wrong reference elements.
+**Symptom:** A brand-reach end-to-end check reported failures on a date picker's calendar day buttons, which it had not meant to visit. It compared their paint with the wrong reference elements.
 
 **Cause:** The check resolved its list of focusable parts again for every index. Focusing the date field opened the calendar, so the next resolution included the calendar's buttons and every later index pointed at a different element. Paint was also matched by element position, which the opened calendar shifted.
 
@@ -2132,9 +2132,9 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Symptom:** A second test brand, built to tell focus roles apart (entry 93), reported a focus leak on a secondary button's inset ring in a light scheme.
 
-**Cause:** The brand had also recolored the inverse focus color. In that scheme its value was white, the same value as the page background and the button's inner ring, so parts that drew the background looked like parts that still drew the template's focus color.
+**Cause:** The brand had also recolored the inverse focus color. In that scheme its value was white, the same value as the page background and the button's inner ring. Parts that drew the background then looked like parts that still drew the template's focus color.
 
-**Fix/Lesson:** A role brand can only isolate a value that it makes unique. Mark a leak only for values a unit test proves unique under that brand (the focus and interactive values), and name every token that shares such a value in the unbranded build so the test fails when the layer is incomplete. Never recolor a value that also stands for a neutral surface.
+**Fix/Lesson:** A role brand can only isolate a value that it makes unique. Mark a leak only for values that a unit test proves unique under that brand, such as the focus and interactive values. The test names every token that shares such a value in the unbranded build, so it fails when the layer is incomplete. Never recolor a value that also stands for a neutral surface.
 
 ### 115. A native walk that never went quiet never reported
 
@@ -2142,7 +2142,7 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 
 **Cause:** The walker reported only after the layout had been quiet for a set time (entry 104). One cell kept changing its height by one point, so the quiet period never began and the walk ended on the outer timeout without evidence.
 
-**Fix/Lesson:** A wait for a quiet layout has its own limit. When the limit passes after every cell has been measured, post the report anyway with an `unsettled` list: each moving cell, its number of changes and the sizes it moves between. The assertion step fails a report whose list is not empty. A timeout that names nothing is a defect in the harness.
+**Fix/Lesson:** A wait for a quiet layout has its own limit. When the limit passes after every cell has been measured, post the report anyway with an `unsettled` list. The list names each moving cell, its number of changes and the sizes it moves between. The assertion step fails a report whose list is not empty. A timeout that names nothing is a defect in the harness.
 
 ### 116. A member that requires its parent grew without bound when sampled alone on native
 
