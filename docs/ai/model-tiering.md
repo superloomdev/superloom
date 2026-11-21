@@ -61,7 +61,7 @@ A sidekick cannot tell which files the lead made, so the checks never ask it to.
 
 | Check | Rule |
 |---|---|
-| Ownership | The lead stages its work in each repository and records a snapshot of every repository file and of the workspace folder (path, size, modification time, each repository's commit) immediately before the handoff |
+| Ownership | The lead stages its work in each repository and records a snapshot of every repository file and of the workspace folder (path, size, modification time, each repository's commit, and each staged file's content id) immediately before the handoff. A file whose modification time moved but whose content id still equals the staged one was rewritten byte for byte (a planted mutation that was restored, a regenerated file that did not change): it is counted as touched, not as a write |
 | Scratch | The brief names one scratch folder. The sidekick creates files only there and in the system temporary folder, and deletes only files it created in that handoff |
 | Declared outputs | The brief lists the paths that the scripts it runs may rewrite (generated docs, lockfiles, evidence). A change there is reported as script output for the lead to review, not as a write |
 | After the handoff | A verify step compares the current state with the snapshot and prints each added, changed and deleted file outside the scratch folder and the declared outputs, and each commit made. The count must be zero; the lead restores anything else |

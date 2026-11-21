@@ -130,7 +130,7 @@ npx expo run:ios           # Builds and runs on iOS Simulator or device
 npx expo run:android       # Builds and runs on Android emulator or device
 ```
 
-Prebuild generates native project directories from `app.json` configuration. Under Continuous Native Generation, `ios/` and `android/` are added to `.gitignore` on project creation. Committing them causes EAS and prebuild to skip regeneration, which is the unwanted behavior. Running `expo prebuild --clean` regenerates them from scratch.
+Prebuild generates native project directories from `app.json` configuration. Under Continuous Native Generation, `ios/` and `android/` are added to `.gitignore` on project creation. Committing them causes EAS and prebuild to skip regeneration, which is the unwanted behavior. Running `expo prebuild --clean` regenerates them from scratch. A local native build that must match CI starts as CI does: `expo prebuild --clean`, then the native package install, then the build. A generated folder left from an earlier install goes stale after a clean install of the JavaScript packages ([pitfall 117](../../../dev/pitfalls.md#_117-a-local-native-build-failed-on-a-stale-generated-project-folder)).
 
 No Expo account is needed for any of these commands.
 

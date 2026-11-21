@@ -56,6 +56,7 @@ A test, a build or a browser run can allocate memory without bound, and no writt
 
 - **The measure is footprint.** The guard reads each process's footprint: resident, compressed and swapped memory together. Resident size alone is not a measure of memory, because an operating system under pressure moves pages out of it as fast as they are allocated.
 - **The system has a floor.** The guard also stops the run when the operating system reports critical memory pressure, whatever the per-process numbers say.
+- **A long run starts on normal pressure.** Before a run of many minutes, read the operating system's own pressure level, not its free-memory figure. When the level is not normal, find the process that holds the memory by footprint, compressed memory included, and name it. A process that belongs to other work is reported to its owner, never stopped by the run ([pitfall 118](../dev/pitfalls.md#_118-memory-pressure-stayed-at-warning-while-half-of-memory-was-free)).
 - **Limit the piece, not the job.** A single test has a time limit of a minute or two, and a stuck test is ended and reported as failed while the run continues. A job made of many pieces (a full suite, a native build, a device walk) keeps a long limit. Time never stands in for the memory ceiling: a runaway can take all memory in well under any useful time limit.
 - **A kill is never a result.** A run the guard or the system killed proves nothing about the code under test. It is reported as broken, never as passed and never as a failing test.
 

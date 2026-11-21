@@ -156,6 +156,17 @@
   - [105. An operating-system control was exempted from the comparison when it could be seated](#_105-an-operating-system-control-was-exempted-from-the-comparison-when-it-could-be-seated)
   - [106. A memory guard that read resident size missed a 367 GB runaway](#_106-a-memory-guard-that-read-resident-size-missed-a-367-gb-runaway)
   - [107. A written lesson stood in for a mechanism, and a killed test counted as a failing test](#_107-a-written-lesson-stood-in-for-a-mechanism-and-a-killed-test-counted-as-a-failing-test)
+  - [108. Upstream ranges resolved again on every clean install](#_108-upstream-ranges-resolved-again-on-every-clean-install)
+  - [109. A script lost its last lines on macOS when it exited after blocking calls](#_109-a-script-lost-its-last-lines-on-macos-when-it-exited-after-blocking-calls)
+  - [110. Nested guards truncated one shared log](#_110-nested-guards-truncated-one-shared-log)
+  - [111. Mutation rows that could not fail](#_111-mutation-rows-that-could-not-fail)
+  - [112. A planted mutation that did not parse counted as a caught mutation](#_112-a-planted-mutation-that-did-not-parse-counted-as-a-caught-mutation)
+  - [113. A locator resolved again for each index walked into content that an earlier step had opened](#_113-a-locator-resolved-again-for-each-index-walked-into-content-that-an-earlier-step-had-opened)
+  - [114. A role brand that recolored a shared neutral value invented a leak](#_114-a-role-brand-that-recolored-a-shared-neutral-value-invented-a-leak)
+  - [115. A native walk that never went quiet never reported](#_115-a-native-walk-that-never-went-quiet-never-reported)
+  - [116. A member that requires its parent grew without bound when sampled alone on native](#_116-a-member-that-requires-its-parent-grew-without-bound-when-sampled-alone-on-native)
+  - [117. A local native build failed on a stale generated project folder](#_117-a-local-native-build-failed-on-a-stale-generated-project-folder)
+  - [118. Memory pressure stayed at warning while half of memory was free](#_118-memory-pressure-stayed-at-warning-while-half-of-memory-was-free)
 - [Adding a New Entry](#adding-a-new-entry)
 
 ---
@@ -458,6 +469,14 @@ Same root cause as S1. Always use `write_to_file` or `edit` instead.
 **Symptom:** A pre-existing `.env` file gets overwritten and the developer loses their local credentials.
 
 **Fix:** The agent's allowed write locations are spelled out in `AGENTS.md` "Boundaries". `.env` is in the **Never** category (except `__dev__/.env`, which is the user's personal workspace). For new env keys, update `.env.example` files only.
+
+#### A5. A command guard read file text as commands and passed a command by one word
+
+**Symptom:** A workspace hook meant to stop unguarded test runs blocked harmless commands whose heredoc or quoted text mentioned the runner, and let a real unguarded run through because the guard's name appeared elsewhere in the same command line.
+
+**Cause:** The hook matched words in the whole command string. Text written into a file, a quoted argument and a comment looked the same to it as a command, and one occurrence of the guard's name anywhere approved every command in the line.
+
+**Fix:** Parse the command line the way the shell does: heredoc bodies, quoted strings and comments are text; `bash -c`, `eval` and command substitutions are commands. Decide each command separately, by its own first word and whether that command itself runs inside the guard. Keep a self-test of known cases, and replay the hook over the commands of earlier sessions before trusting a rewrite: it must block the real unguarded runs and nothing else.
 
 ### Verification-integrity pitfalls
 
@@ -2060,6 +2079,94 @@ Never use a file-level `/* eslint-disable */` for this - it suppresses the rule 
 **Cause:** Three gaps. A lesson that depends on every author remembering it is not enforced. A kill was accepted as evidence about the code under test, although a kill only says that the harness lost control. And the runner's proof check accepted a file-level failure line, which a dead test process also prints, as if a named test had failed.
 
 **Fix/Lesson:** Put the rule where no author can forget it: the test host wraps the assertion functions once, before any test file loads, so that an operand that is a live object (a DOM node, a rendered instance, an event, a style object) is compared by identity and reported by a short label, and the assertion library never formats it. Record every such call in a census mode, rewrite each site by hand to primitive operands, then switch the wrapper to refuse live operands outright. In a mutation runner, a kill by the guard or by the system is always a broken row, never a pass, and a failure counts only when a named test failed, not when the test file's process ended. When the same lesson is written down a second time, the second entry must be a mechanism.
+
+### 108. Upstream ranges resolved again on every clean install
+
+**Symptom:** Reference numbers that the suite measures against moved between two runs with no change to the code under test.
+
+**Cause:** The test install deletes its lockfile before every install so that it never runs against a stale tree. With the lockfile gone, every version range of the upstream reference packages resolved again, and the foundation packages followed each new upstream release.
+
+**Fix/Lesson:** Pin every package of a reference scope to an exact version: the named packages in `devDependencies`, every transitive copy in `overrides`. Check after a clean install that every installed copy of the scope matches its pin. An update to the reference is then a deliberate unit of work with its own baseline run, not a side effect of an install. See [Dependency Strategy](../languages/js/dependencies.md#injected-dependencies-are-peer-dependencies).
+
+### 109. A script lost its last lines on macOS when it exited after blocking calls
+
+**Symptom:** A mutation runner failed twice locally with no summary. Its log stopped while its child processes went on running for another twelve minutes. No guard or system kill was recorded. On Linux CI the same script printed its summary.
+
+**Cause:** On macOS, Node writes standard output to a pipe asynchronously. The script ran each child with a blocking call and never returned to the event loop, so once one large write (about 64 KB) filled the pipe, every later line queued in memory. `process.exit(1)` then discarded the queue together with the summary. Linux writes pipes synchronously, which hid the problem in CI.
+
+**Fix/Lesson:** A script that blocks between writes writes its progress and summary synchronously (`fs.writeSync` to the descriptor or to its log file), or it sets the exit code and lets the process end on its own instead of calling `process.exit`. A run that ends without its summary is treated as broken, never as a result.
+
+### 110. Nested guards truncated one shared log
+
+**Symptom:** A long local mutation run ended early and left only a 60-line tail. The failing rows were not in it.
+
+**Cause:** Each row of the run started its child under its own guard, and every guard truncated the same default log file at start. Each row overwrote the evidence of the rows before it.
+
+**Fix/Lesson:** A run that starts other guarded runs gives itself its own log file, and the local runner writes that log where the CI step writes its output. Read the summary from the outer log, never from the shared default log of the last child.
+
+### 111. Mutation rows that could not fail
+
+**Symptom:** A full mutation run reported two rows that never fired: the planted change was in place and the named test still passed.
+
+**Cause:** The planted code had no effect on the output. One component set a disabled flag on its root on top of the flag from its shared behavior, so removing the behavior's flag changed nothing. Another component read a size token and drew it nowhere; the size came from a child component.
+
+**Fix/Lesson:** A mutation row that has not been seen to fail in a full run is unproven, and it can be dead. Fix the code so the planted value is the only source of the output (one owner per property), then prove the row fires. A token that a component reads must reach a drawn part, and the test asserts the part that draws it.
+
+### 112. A planted mutation that did not parse counted as a caught mutation
+
+**Symptom:** Four mutation rows had always reported their mutation caught. When the runner began to refuse test files that fail to load, all four were broken.
+
+**Cause:** Each planted edit left the source unparseable: half a statement, a cut conditional expression, an extra parenthesis. The test file failed to load with a `SyntaxError`, and the runner had counted that load failure as the named test failing.
+
+**Fix/Lesson:** A plant must leave valid source that changes one behavior. The runner counts only a named test's failing assertion as proof and reports a file that fails to load as a broken row. When a plant is rewritten, run its row alone and read the failing assertion.
+
+### 113. A locator resolved again for each index walked into content that an earlier step had opened
+
+**Symptom:** A brand-reach end-to-end check reported failures on a date picker's calendar day buttons, parts the check had not meant to visit, and compared their paint with the wrong reference elements.
+
+**Cause:** The check resolved its list of focusable parts again for every index. Focusing the date field opened the calendar, so the next resolution included the calendar's buttons and every later index pointed at a different element. Paint was also matched by element position, which the opened calendar shifted.
+
+**Fix/Lesson:** Resolve the list of parts once, when the page opens, and keep those handles for the whole loop. Compare paint by a stable identity of the part (an id written on the part), never by position in a list that the test itself can change.
+
+### 114. A role brand that recolored a shared neutral value invented a leak
+
+**Symptom:** A second test brand, built to tell focus roles apart (entry 93), reported a focus leak on a secondary button's inset ring in a light scheme.
+
+**Cause:** The brand had also recolored the inverse focus color. In that scheme its value was white, the same value as the page background and the button's inner ring, so parts that drew the background looked like parts that still drew the template's focus color.
+
+**Fix/Lesson:** A role brand can only isolate a value that it makes unique. Mark a leak only for values a unit test proves unique under that brand (the focus and interactive values), and name every token that shares such a value in the unbranded build so the test fails when the layer is incomplete. Never recolor a value that also stands for a neutral surface.
+
+### 115. A native walk that never went quiet never reported
+
+**Symptom:** On iOS the second full walk of each dark theme timed out with no report. Every cell had been measured (662 of 662), and the timeout named nothing.
+
+**Cause:** The walker reported only after the layout had been quiet for a set time (entry 104). One cell kept changing its height by one point, so the quiet period never began and the walk ended on the outer timeout without evidence.
+
+**Fix/Lesson:** A wait for a quiet layout has its own limit. When the limit passes after every cell has been measured, post the report anyway with an `unsettled` list: each moving cell, its number of changes and the sizes it moves between. The assertion step fails a report whose list is not empty. A timeout that names nothing is a defect in the harness.
+
+### 116. A member that requires its parent grew without bound when sampled alone on native
+
+**Symptom:** On iOS one layout cell, a grid column sampled on its own, measured about 190 000 points tall and moved by one point on every layout pass. The web drew it at its normal height.
+
+**Cause:** The column's automatic track is `flexGrow: 1` with `flexBasis: '0%'`, which is meant to grow along its grid row. With no grid around it, it grew along the cell body's height instead, which on native sits inside a scroll view with no definite height. The exact feedback loop in the native layout engine was not traced; mounting the column inside its grid ended it.
+
+**Fix/Lesson:** A component flagged as requiring its parent is sampled inside that parent everywhere: showcase, walker and reference. A unit test pins the wrapper and the direction in which the track grows, and a mutation row proves the test fails without the wrapper. Changing the walker's cell alignment did not change the result, because the column was outside any grid.
+
+### 117. A local native build failed on a stale generated project folder
+
+**Symptom:** A local iOS walk failed in `pod install` before the build started. The same commit built on the CI runner.
+
+**Cause:** The generated native folder (`ios/`, ignored by git) was twelve days old. It no longer matched the freshly installed JavaScript packages, and the build reused it.
+
+**Fix/Lesson:** A local native build starts the way CI starts: regenerate the native folder from the app configuration (`expo prebuild --clean`), run the native package install, then build. See [React Native environment setup](../languages/js/client/rn-environment-setup.md).
+
+### 118. Memory pressure stayed at warning while half of memory was free
+
+**Symptom:** The system's memory pressure level stayed at warning for more than 25 minutes after a long run had ended. Half of the memory was free and swap use was small. The largest processes by resident size were editor windows.
+
+**Cause:** Another application's virtual machine held about 3 GB resident and about 5 GB more in the memory compressor. Resident size, the default column of most process lists, does not show compressed memory, so the process list did not explain the pressure.
+
+**Fix/Lesson:** Read the system's own pressure level before a long run, not the free memory figure. When the level is not normal, find the holder by footprint including compressed memory (on macOS `top -o cmprs`), and name it. A process that belongs to other work is reported to its owner, never stopped by the run's agent.
 
 ## Adding a New Entry
 

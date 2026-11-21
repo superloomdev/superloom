@@ -117,6 +117,8 @@ The stamp is content-based. After a successful full verify, the runner writes `.
 
 The hash script is `scripts/content-hash.sh`. The stamp file is gitignored.
 
+The full verify runs after the last edit, and only when every focused check of the changed parts is green. A full run can take hours, and starting it on a known failure spends them to show that failure again.
+
 To enable the hook, run this once per clone:
 
 ```sh
@@ -138,6 +140,12 @@ The historical failure modes are:
 5. **Unmapped step**: a CI step with no local mapping. The census check fails with an UNMAPPED line.
 
 Each fixture is planted in the working tree, run, observed failing, restored byte-for-byte, and re-run clean. The evidence is recorded.
+
+A plant proves only what it changes:
+
+- **The planted source is valid.** A plant changes one behavior and leaves code that loads. Only a named test's failing assertion counts as the proof; a file that fails to load and a process the guard or the system killed are broken rows ([pitfall 112](pitfalls.md#_112-a-planted-mutation-that-did-not-parse-counted-as-a-caught-mutation)).
+- **The planted value reaches the output.** A row that a full run has never seen fail is unproven. When it does not fail, the code has a second source for the same output or reads a value it never draws; the code is fixed, not the row ([pitfall 111](pitfalls.md#_111-mutation-rows-that-could-not-fail)).
+- **A long run keeps its own log.** A runner that starts guarded children writes its output to its own log, so that no child overwrites it ([pitfall 110](pitfalls.md#_110-nested-guards-truncated-one-shared-log)).
 
 ## A Repository Without Playwright
 

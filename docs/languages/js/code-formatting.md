@@ -24,6 +24,7 @@ The complete style guide for JavaScript code in Superloom modules. ESLint enforc
   - [Function Naming](#function-naming)
   - [Module Naming](#module-naming)
   - [Module Terminology (Consistent Across Modules)](#module-terminology-consistent-across-modules)
+  - [No Leading Underscore](#no-leading-underscore)
   - [Parameter Naming](#parameter-naming)
   - [Shared ESLint Configuration](#shared-eslint-configuration)
   - [Uniform Factory Signatures](#uniform-factory-signatures)
@@ -353,6 +354,20 @@ Use category-based naming so related modules sort and group together:
 | `loader` | Dependency injection function |
 | `shared_libs` | Parameter name for the `Lib` argument in `loader` |
 | `config_module` | Parameter name for module configuration in `loader` |
+
+### No Leading Underscore
+
+A name never starts with an underscore. A name is anything the code declares: an identifier, a parameter, a property or data key, a page global, a file or a folder. A leading underscore is a second spelling of the same word, and every consumer then has to strip it or compare against it.
+
+| Exception | Definition |
+|---|---|
+| `_[Name]` | The private enclosure of a module ([Private Functions Enclosure](#private-functions-enclosure)) |
+| `_config` | The private configuration key of an entity, passed by the loader to server layers only |
+| `_emit`, `_listenerCount` | The test-side members of an event stub ([unit test authoring](unit-test-authoring.md)) |
+| `_test` | The test folder of a module |
+| A name owned elsewhere | A name the language, the platform or a third party owns (`__dirname`, `__proto__`, a framework's reserved file name, an upstream object's own member) |
+
+Text is not a name: a citation in a comment, a regular expression, a path, and a **name tail**, a string that ends a `snake_case` token name and is joined to its base where it is written. A value that is compared, used as a key, passed on or returned is a state, not a tail: it takes the plain state word (`hover`, `active`, `focus`, `disabled`, `selected`, and one word for the resting state), and one helper adds the tail when the token name is built. The underscore between the words of a `snake_case` name is a separator; it never leads. An enforcement gate fails a leading underscore outside the exceptions; a rename is decided by reading each occurrence, never by a search and replace.
 
 ### Parameter Naming
 
