@@ -232,7 +232,7 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'Released under the MIT License.',
+      message: 'Released under the MIT License. <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms of Service</a>',
       copyright: 'Copyright © 2025-present Superloom',
     },
 
